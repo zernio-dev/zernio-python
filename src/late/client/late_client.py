@@ -65,6 +65,7 @@ from ..resources import (
     MentionsResource,
     MessagesResource,
     MessagingAdsResource,
+    MetricsResource,
     PhoneNumbersResource,
     PostsResource,
     ProductCatalogsResource,
@@ -238,6 +239,7 @@ class Zernio(BaseClient):
         self.mentions = MentionsResource(self)
         self.messages = MessagesResource(self)
         self.messaging_ads = MessagingAdsResource(self)
+        self.metrics = MetricsResource(self)
         self.phone_numbers = PhoneNumbersResource(self)
         self.posts = PostsResource(self)
         self.product_catalogs = ProductCatalogsResource(self)

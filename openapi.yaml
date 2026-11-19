@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.692.1"
+  version: "1.697.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -214,6 +214,7 @@ x-documentation:
     - `review.deleted` - Google Business Profile stopped returning this review, for example after Google's spam filter removed it. Detected by polling: fires usually 6 to 12 hours after the review disappears, only for locations covered by a webhook subscribed to `review.deleted` or `review.restored`. If the review comes back, `review.restored` fires. May arrive for a review id you never received `review.new` for. A review hidden and restored by Google may produce `review.deleted` followed by `review.restored`, and a `review.updated` can arrive for a review previously reported by `review.deleted` (it is restored on the next check).
     - `review.restored` - A review reported by `review.deleted` is returned by Google again. Same payload as `review.new`.
     - `conversion.received` - Zernio stored an event sent to `POST /v1/events`, by the relay or by a connected source (lead forms, stores, HubSpot), new or a newer version. `conversion.campaign` is the campaign it counts for.
+    - `tracking_site.ready` - A tracked website's tag is confirmed on it: by its store or Tag Manager install, or by its first real visit for a pasted line. `trackingSite` is the site as `GET /v1/tracking-sites/{siteId}` returns it.
     - `lead.received` - New lead submitted against a Meta Lead Gen (Instant) Form or a Google Ads lead form (`account.platform` tells them apart). `lead.fields` is the question-key → answer map; `lead.formId`/`lead.adId` give provenance.
     - `ad.status_changed` - Ad, ad set, or campaign changed status on the ad platform (Meta: `in_process_ad_objects` entry/exit and `with_issues_ad_objects` violations)
     - `ad.created` - An ad was created through Zernio (`source` is `zernio`) or detected by the sync (`source` is `platform`). Never for history loaded when an account connects, nor for ads older than 7 days
@@ -536,6 +537,10 @@ tags:
     description: |
       Post and account analytics across platforms (insights, demographics, follower history,
       best time to post, content decay, and aggregated metrics).
+  - name: Metrics
+    description: |
+      One endpoint per entity (posts, accounts, insights, inbox, ads, campaigns and ad accounts) to read metrics with the same
+      parameters: a scope, a date window, metrics, granularity and groupBy. `GET /v1/metrics/catalog` lists what each entity accepts.
   - name: Inbox Analytics
     description: |
       Inbox messaging analytics: message volume, a day by hour heatmap, source breakdown, response
@@ -753,7 +758,7 @@ tags:
       - Messages: `message.received`, `message.sent`, `message.edited`, `message.deleted`, `message.delivered`, `message.read`, `message.played`, `message.failed`, `reaction.received`, `referral.received`, `conversation.started`, `conversation.control_changed`
       - Calls: `call.received`, `call.ended`, `call.failed`, `call.permission_request`, `call.transcript_segment`, `call.recording_ready`
       - Engagement and leads: `comment.received`, `mention.received`, `review.new`, `review.updated`, `review.deleted`, `review.restored`, `lead.received`
-      - Ads: `ad.status_changed`, `ad.created`, `ad.updated`, `campaign.created`, `campaign.updated`, `ad_set.created`, `ad_set.updated`, `ad.review.approved`, `ad.review.rejected`, `ad.delivery_issue`, `campaign.budget.depleted`, `ad_account.status_changed`, `campaign.status_changed`, `ad.video.processed`, `ad_rule.triggered`
+      - Ads: `ad.status_changed`, `ad.created`, `ad.updated`, `campaign.created`, `campaign.updated`, `ad_set.created`, `ad_set.updated`, `ad.review.approved`, `ad.review.rejected`, `ad.delivery_issue`, `campaign.budget.depleted`, `ad_account.status_changed`, `campaign.status_changed`, `ad.video.processed`, `ad_rule.triggered`, `tracking_site.ready`
       - WhatsApp: `whatsapp.template.status_updated`, `whatsapp.template.category_updated`, `whatsapp.account.name_status_updated`, `whatsapp.account.quality_updated`, `whatsapp.account.status_updated`, `whatsapp.account.alert_received`, `whatsapp.contact.identity_changed`, `whatsapp.automatic_event`
       - WhatsApp numbers: `whatsapp.number.activated`, `whatsapp.number.declined`, `whatsapp.number.action_required`, `whatsapp.number.verification_required`, `whatsapp.number.suspended`, `whatsapp.number.reactivated`, `whatsapp.number.released`, `whatsapp.number.kyc_submitted`
       - Telephony: `phone_number.stock_available`, `verification.approved`, `verification.failed`, `sms.registration.action_required`, `sms.registration.status_updated`, `branded_calling.identity.status_updated`, `branded_calling.identity.action_required`, `branded_calling.number.status_updated`, `rcs.agent.status_updated`
@@ -1099,6 +1104,104 @@ components:
       description: Recommended delay before retrying, in seconds.
       schema: { type: integer, example: 60 }
   responses:
+    MetricsBadRequest:
+      x-summary: 'The query is invalid: read `param` and `error`, fix that field and resend.'
+      description: 'The query is invalid: an unknown or repeated parameter, a missing or second scope, a metric, groupBy, include or sort the entity does not have, or a window past its limit. `param` names the field. `GET /v1/metrics/catalog` lists what each entity accepts.'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            groupBy:
+              summary: Unknown groupBy
+              value:
+                error: posts metrics cannot group by country.
+                type: invalid_request_error
+                code: invalid_field_value
+                param: groupBy
+            scope:
+              summary: No scope
+              value:
+                error: posts metrics take exactly one of postId, platformPostId, accountId, profileId.
+                type: invalid_request_error
+                code: invalid_field_value
+                param: postId
+            range:
+              summary: Window too long
+              value:
+                error: accounts metrics read at most 366 days; this range has 1036.
+                type: invalid_request_error
+                code: invalid_field_value
+                param: fromDate
+            unknownParameter:
+              summary: Unknown parameter
+              value:
+                error: 'Unrecognized key: "foo"'
+                type: invalid_request_error
+                code: invalid_field_value
+    MetricsAdsForbidden:
+      x-summary: 'The caller has no ads access or no profile it can read: use a usage-based plan or the Ads add-on, or a key with access to the profile.'
+      description: '`ads_addon_required`: the account has no ads access (included on usage-based plans). `insufficient_permissions`: the API key can read no profile. Also returned for a restricted key without the `ads` resource group.'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: Ads add-on required
+            type: permission_error
+            code: ads_addon_required
+    MetricsRateLimited:
+      x-summary: 'Too many requests: wait `Retry-After` seconds, then spread the calls out.'
+      description: |-
+        A limit on your request rate was reached. `details.scope` says which one:
+
+        - absent: your plan's API limit.
+        - `post-analytics`, `account-insights`, `ad-analytics` or `campaign-analytics`: the team's cap of 300 reads per 30 seconds for that group.
+        - `account_route`: 120 reads per hour of one account on one account-level endpoint.
+        - `team_budget`: the team spent its analytics compute budget of 24 seconds per 30-second window. `Retry-After` counts to the end of the window.
+        - `in_flight`: too many of the team's analytics reads are running at once.
+
+        `team_budget` and `in_flight` apply to posts, accounts, ads, campaigns and ad accounts reads.
+      headers:
+        Retry-After:
+          description: Seconds to wait before retrying.
+          schema:
+            type: integer
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/ErrorResponse'
+              - type: object
+                properties:
+                  details:
+                    type: object
+                    properties:
+                      scope:
+                        type: string
+                        enum:
+                          - post-analytics
+                          - account-insights
+                          - ad-analytics
+                          - campaign-analytics
+                          - account_route
+                          - team_budget
+                          - in_flight
+                      limit:
+                        type: number
+                      window:
+                        type: string
+                      retryAfterSeconds:
+                        type: integer
+          example:
+            error: This team used its 24 seconds of analytics query time for this 30s window. Retry after 9 seconds.
+            type: rate_limit_error
+            code: rate_limited
+            details:
+              scope: team_budget
+              limit: 24
+              window: 30s
+              retryAfterSeconds: 9
     CrmForbidden:
       x-summary: "The CRM refused: reconnect it to grant a missing scope (`crm_scope_missing`), or fix the connected user's access (`crm_access_denied`)."
       description: |-
@@ -1776,6 +1879,1570 @@ components:
                   effective_account_limit: 2000
                   current_account_count: 2000
   schemas:
+    MetricsCatalogResponse:
+      type: object
+      required:
+        - data
+        - pagination
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/MetricEntity'
+        pagination:
+          $ref: '#/components/schemas/MetricsPagination'
+    MetricsPagination:
+      type: object
+      required:
+        - nextCursor
+        - hasMore
+      properties:
+        nextCursor:
+          type:
+            - string
+            - 'null'
+          description: Send it back as `cursor`, with the same query, for the next page. null on the last page.
+        hasMore:
+          type: boolean
+    MetricsFreshness:
+      type: object
+      required:
+        - stale
+        - staleSince
+      properties:
+        stale:
+          type: boolean
+          description: True when the analytics backend was over capacity and part of this answer came from a stored copy instead of a live read.
+        staleSince:
+          description: 'With stale=true: when the oldest stored copy used stopped being fresh.'
+          type:
+            - string
+            - 'null'
+    MetricEntity:
+      type: object
+      properties:
+        entity:
+          type: string
+          enum:
+            - posts
+            - accounts
+            - inbox
+            - insights
+            - ads
+            - campaigns
+            - ad-accounts
+        path:
+          type: string
+        requiredScope:
+          type: array
+          items:
+            type: string
+        maxScopeIds:
+          type: object
+          additionalProperties:
+            type: integer
+        maxRangeDays:
+          type: integer
+        defaultRangeDays:
+          anyOf:
+            - type: integer
+            - type: 'null'
+          description: null when fromDate and toDate are required.
+        granularities:
+          type: array
+          items:
+            type: string
+            enum:
+              - total
+              - day
+              - week
+              - month
+        sorts:
+          type: array
+          items:
+            type: string
+        maxSortedRows:
+          anyOf:
+            - type: integer
+            - type: 'null'
+          description: How deep a list sorted by a metric can be read. null when the entity has no metric sort or the depth has no cap.
+        includes:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+              description:
+                type: string
+              platforms:
+                anyOf:
+                  - type: array
+                    items:
+                      type: string
+                  - type: 'null'
+              maxRangeDays:
+                anyOf:
+                  - type: integer
+                  - type: 'null'
+            required:
+              - name
+              - description
+              - platforms
+              - maxRangeDays
+        groupBy:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+              description:
+                type: string
+              maxCardinality:
+                type: integer
+            required:
+              - name
+              - description
+              - maxCardinality
+        attributions:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+              description:
+                type: string
+              maxRangeDays:
+                type: integer
+            required:
+              - name
+              - description
+              - maxRangeDays
+        origins:
+          type: array
+          items:
+            type: string
+        metrics:
+          type: array
+          items:
+            $ref: '#/components/schemas/MetricDefinition'
+      required:
+        - entity
+        - path
+        - requiredScope
+        - maxScopeIds
+        - maxRangeDays
+        - defaultRangeDays
+        - granularities
+        - sorts
+        - maxSortedRows
+        - includes
+        - groupBy
+        - attributions
+        - origins
+        - metrics
+    MetricDefinition:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        unit:
+          type: string
+          enum:
+            - count
+            - milliseconds
+            - percent
+            - seconds
+            - minutes
+            - ratio
+            - money
+            - position
+            - score
+          description: ratio is a plain ratio (0 to 1 for a rate); money is in the account currency, or the unit and currency meta.units gives; position is a rank where 1 is the top; score runs from 0 to 100.
+        additive:
+          type: boolean
+        source:
+          type: string
+          enum:
+            - stored
+            - live
+          description: 'stored: read from what Zernio synced; live: read from the platform on each request.'
+        platforms:
+          type: array
+          items:
+            type: string
+        freshness:
+          type: string
+        granularities:
+          type: array
+          items:
+            type: string
+            enum:
+              - total
+              - day
+              - week
+              - month
+      required:
+        - name
+        - description
+        - unit
+        - additive
+        - source
+        - platforms
+        - freshness
+        - granularities
+    PostMetricRow:
+      type: object
+      properties:
+        date:
+          description: The day, with granularity=day.
+          type: string
+        postId:
+          description: The Zernio post, null for a post published outside Zernio.
+          type:
+            - string
+            - 'null'
+        externalPostId:
+          description: The synced post, null while a published post waits for its first sync.
+          type:
+            - string
+            - 'null'
+        accountId:
+          type: string
+        profileId:
+          type:
+            - string
+            - 'null'
+        platform:
+          type: string
+        platformPostId:
+          type:
+            - string
+            - 'null'
+        platformPostUrl:
+          type:
+            - string
+            - 'null'
+        publishedAt:
+          type:
+            - string
+            - 'null'
+        lastSyncedAt:
+          type:
+            - string
+            - 'null'
+        syncStatus:
+          type: string
+          enum:
+            - synced
+            - pending
+            - unavailable
+        syncError:
+          anyOf:
+            - type: object
+              properties:
+                code:
+                  type:
+                    - string
+                    - 'null'
+                message:
+                  type: string
+              required:
+                - code
+                - message
+            - type: 'null'
+        isOwner:
+          type:
+            - boolean
+            - 'null'
+        isAd:
+          type:
+            - boolean
+            - 'null'
+        metrics:
+          type: object
+          additionalProperties:
+            type:
+              - number
+              - 'null'
+          description: Each metric asked; null when the platform does not report it or no snapshot exists yet.
+        breakdowns:
+          type: object
+          additionalProperties:
+            anyOf:
+              - $ref: '#/components/schemas/PostMetricBreakdown'
+              - type: 'null'
+        post:
+          anyOf:
+            - $ref: '#/components/schemas/PostMetricContent'
+            - type: 'null'
+        authenticity:
+          description: With include=authenticity; null until the post has been scored.
+          anyOf:
+            - $ref: '#/components/schemas/PostMetricAuthenticity'
+            - type: 'null'
+        samples:
+          description: 'With include=samples: the readings of the publication, oldest first.'
+          type: array
+          items:
+            $ref: '#/components/schemas/PostMetricSample'
+      required:
+        - postId
+        - externalPostId
+        - accountId
+        - profileId
+        - platform
+        - platformPostId
+        - platformPostUrl
+        - publishedAt
+        - lastSyncedAt
+        - syncStatus
+        - syncError
+        - isOwner
+        - isAd
+        - metrics
+    PostMetricMediaItem:
+      type: object
+      properties:
+        type:
+          type: string
+        url:
+          type:
+            - string
+            - 'null'
+        thumbnail:
+          type:
+            - string
+            - 'null'
+        altText:
+          type: string
+        mediaStatus:
+          type: string
+          enum:
+            - unavailable
+        unavailableReason:
+          type: string
+          enum:
+            - platform_withheld
+      required:
+        - type
+        - url
+        - thumbnail
+    PostMetricBreakdown:
+      type: object
+      additionalProperties:
+        type: number
+    PostMetricContent:
+      type: object
+      properties:
+        content:
+          type:
+            - string
+            - 'null'
+        contentNotRetained:
+          type: boolean
+        thumbnailUrl:
+          type:
+            - string
+            - 'null'
+        mediaType:
+          type:
+            - string
+            - 'null'
+        mediaItems:
+          type: array
+          items:
+            $ref: '#/components/schemas/PostMetricMediaItem'
+        videoDurationSeconds:
+          type:
+            - number
+            - 'null'
+        mediaProductType:
+          type: string
+        isAiGenerated:
+          type: boolean
+        isSharedToFeed:
+          type: boolean
+        mediaAudioType:
+          type: string
+      required:
+        - content
+        - thumbnailUrl
+        - mediaType
+        - mediaItems
+        - videoDurationSeconds
+    PostMetricSample:
+      type: object
+      properties:
+        syncedAt:
+          type: string
+          description: When Zernio read the numbers from the platform.
+        views:
+          type: number
+        likes:
+          type: number
+        comments:
+          type: number
+        shares:
+          description: null on platforms that do not return the counter, unlike a real 0.
+          type:
+            - number
+            - 'null'
+        saves:
+          description: null on platforms that do not return the counter, unlike a real 0.
+          type:
+            - number
+            - 'null'
+        watchSeconds:
+          description: Average watch time; null when the platform gives no watch signal.
+          type:
+            - number
+            - 'null'
+        completionRate:
+          description: null when the platform gives no watch signal.
+          type:
+            - number
+            - 'null'
+      required:
+        - syncedAt
+        - views
+        - likes
+        - comments
+        - shares
+        - saves
+        - watchSeconds
+        - completionRate
+    PostMetricAuthenticity:
+      type: object
+      properties:
+        score:
+          type: integer
+          description: 0 to 100; higher looks more organic.
+        confidence:
+          type: number
+          description: How much data the score rests on, 0 to 1.
+        reasons:
+          type: array
+          items:
+            type: object
+            properties:
+              code:
+                type: string
+              weight:
+                type: number
+                description: Points taken off 100.
+            required:
+              - code
+              - weight
+          description: Each factor that lowered the score.
+        version:
+          type: string
+        computedAt:
+          type: string
+        sampleCount:
+          type: integer
+      required:
+        - score
+        - confidence
+        - reasons
+        - version
+        - computedAt
+        - sampleCount
+    PostMetricGroup:
+      type: object
+      properties:
+        postId:
+          type:
+            - string
+            - 'null'
+        externalPostId:
+          type:
+            - string
+            - 'null'
+        platforms:
+          type: array
+          items:
+            type: string
+        accountIds:
+          type: array
+          items:
+            type: string
+        publications:
+          type: integer
+        metrics:
+          type: object
+          additionalProperties:
+            type:
+              - number
+              - 'null'
+      required:
+        - postId
+        - externalPostId
+        - platforms
+        - accountIds
+        - publications
+        - metrics
+    PostMetricSlot:
+      type: object
+      properties:
+        dayOfWeek:
+          type: integer
+          description: UTC weekday the posts were published, 1 (Monday) to 7.
+        hour:
+          type: integer
+          description: UTC hour the posts were published, 0 to 23.
+        postCount:
+          type: integer
+          description: Posts published in the slot that have been synced at least once.
+        metrics:
+          type: object
+          additionalProperties:
+            type:
+              - number
+              - 'null'
+          description: Each metric asked, summed over each post's latest snapshot; engagementRate pools them. null when no platform of the slot reports it.
+      required:
+        - dayOfWeek
+        - hour
+        - postCount
+        - metrics
+    PostMetricAge:
+      type: object
+      properties:
+        postAge:
+          type: string
+          description: 'Time since publishing: 0-6h, 6-12h, 12-24h, 1-2d, 2-7d, 7-30d or 30d+.'
+        postCount:
+          type: integer
+          description: Posts with engagement that had a snapshot at that age.
+        metrics:
+          type: object
+          additionalProperties:
+            type:
+              - number
+              - 'null'
+          description: 'engagementShareOfFinal: the average share of each post''s final engagement it had reached at that age, in percent.'
+      required:
+        - postAge
+        - postCount
+        - metrics
+    PostMetricFormat:
+      type: object
+      properties:
+        format:
+          type: string
+          enum:
+            - image
+            - video
+            - carousel
+            - text
+          description: gif counts as image, document as text.
+        postCount:
+          type: integer
+          description: Posts of the format published in the range.
+        metrics:
+          type: object
+          additionalProperties:
+            type:
+              - number
+              - 'null'
+          description: Each metric asked, summed over the newest posts of the range up to meta.metricsSample.limit; engagementRate pools them.
+      required:
+        - format
+        - postCount
+        - metrics
+    PostMetricChange:
+      type: object
+      properties:
+        accountId:
+          type: string
+        profileId:
+          type: string
+        platform:
+          type: string
+        platformPostId:
+          type: string
+        publishedAt:
+          type: string
+        syncedAt:
+          type: string
+          description: 'When the account''s sync cycle that read these numbers started. Not an order: resume with the cursor only.'
+        deleted:
+          type: boolean
+          description: True when the post was removed from the platform.
+        metrics:
+          type: object
+          additionalProperties:
+            type:
+              - number
+              - 'null'
+          description: Each metric asked, as the platform reported it in this change; null when the post's platform does not report it.
+        breakdowns:
+          type: object
+          additionalProperties:
+            anyOf:
+              - $ref: '#/components/schemas/PostMetricBreakdown'
+              - type: 'null'
+      required:
+        - accountId
+        - profileId
+        - platform
+        - platformPostId
+        - publishedAt
+        - syncedAt
+        - deleted
+        - metrics
+    AccountMetricRow:
+      type: object
+      properties:
+        date:
+          type: string
+          description: 'Start of the period: the day, the Monday of the week or the first of the month, never before fromDate. With granularity=total, fromDate.'
+        accountId:
+          description: With groupBy=account.
+          type:
+            - string
+            - 'null'
+        platform:
+          description: With groupBy=account or groupBy=platform.
+          type:
+            - string
+            - 'null'
+        profileId:
+          description: With groupBy=account.
+          type:
+            - string
+            - 'null'
+        username:
+          description: With groupBy=account.
+          type:
+            - string
+            - 'null'
+        metrics:
+          type: object
+          additionalProperties:
+            type:
+              - number
+              - 'null'
+          description: Each metric asked; null when no account in the row reports it or no follower snapshot exists in the period.
+      required:
+        - date
+        - accountId
+        - platform
+        - profileId
+        - username
+        - metrics
+    PostMetricsResponse:
+      type: object
+      required:
+        - data
+        - pagination
+        - meta
+      properties:
+        data:
+          type: array
+          items:
+            anyOf:
+              - $ref: '#/components/schemas/PostMetricRow'
+              - $ref: '#/components/schemas/PostMetricGroup'
+              - $ref: '#/components/schemas/PostMetricSlot'
+              - $ref: '#/components/schemas/PostMetricAge'
+              - $ref: '#/components/schemas/PostMetricFormat'
+              - $ref: '#/components/schemas/PostMetricChange'
+        pagination:
+          $ref: '#/components/schemas/MetricsPagination'
+        meta:
+          allOf:
+            - type: object
+              required:
+                - entity
+                - granularity
+                - fromDate
+                - toDate
+                - missingIds
+                - total
+              properties:
+                entity:
+                  type: string
+                  const: posts
+                granularity:
+                  type: string
+                  enum:
+                    - total
+                    - day
+                fromDate:
+                  type:
+                    - string
+                    - 'null'
+                toDate:
+                  type:
+                    - string
+                    - 'null'
+                missingIds:
+                  type: array
+                  items:
+                    type: string
+                  description: Ids asked that match no published post the caller can read.
+                total:
+                  anyOf:
+                    - type: integer
+                    - type: 'null'
+                  description: 'With include=total: the posts the list holds, counted on the first page and carried by the cursor.'
+                metricsSample:
+                  description: 'With groupBy=format: how many of the newest posts the metrics sum, and the most it reads. Below limit, every post of the range is counted.'
+                  type: object
+                  properties:
+                    posts:
+                      type: integer
+                    limit:
+                      type: integer
+                  required:
+                    - posts
+                    - limit
+            - $ref: '#/components/schemas/MetricsFreshness'
+    AccountMetricsResponse:
+      type: object
+      required:
+        - data
+        - pagination
+        - meta
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/AccountMetricRow'
+        pagination:
+          $ref: '#/components/schemas/MetricsPagination'
+        meta:
+          allOf:
+            - type: object
+              required:
+                - entity
+                - granularity
+                - groupBy
+                - attribution
+                - fromDate
+                - toDate
+              properties:
+                entity:
+                  type: string
+                  const: accounts
+                granularity:
+                  type: string
+                  enum:
+                    - total
+                    - day
+                    - week
+                    - month
+                groupBy:
+                  type: string
+                  enum:
+                    - account
+                    - platform
+                    - none
+                attribution:
+                  type: string
+                  enum:
+                    - publish
+                    - received
+                fromDate:
+                  type: string
+                toDate:
+                  type: string
+            - $ref: '#/components/schemas/MetricsFreshness'
+    AdMetricRow:
+      type: object
+      properties:
+        adId:
+          type: string
+        name:
+          type: string
+        platform:
+          type: string
+        status:
+          type: string
+        currency:
+          type:
+            - string
+            - 'null'
+        summary:
+          type: object
+          properties:
+            spend:
+              type: number
+            impressions:
+              type: number
+            reach:
+              type: number
+              description: Deduplicated across days for Meta ads when the platform returns it.
+            clicks:
+              type: number
+            engagement:
+              type: number
+            ctr:
+              type: number
+            cpc:
+              type: number
+            cpm:
+              type: number
+            conversions:
+              type: number
+            allConversions:
+              type: number
+            costPerConversion:
+              type: number
+            actions:
+              type: object
+              additionalProperties:
+                type: number
+            actionValues:
+              type: object
+              additionalProperties:
+                type: number
+            purchaseValue:
+              type: number
+            roas:
+              type: number
+            costPerAction:
+              type: object
+              additionalProperties:
+                type: number
+            outboundClicks:
+              type: number
+            outboundClicksCtr:
+              type: number
+            inlineLinkClicks:
+              type: number
+            inlineLinkClickCtr:
+              type: number
+            uniqueClicks:
+              type: number
+            uniqueCtr:
+              type: number
+            funnel:
+              type: object
+              additionalProperties:
+                type: number
+            engagementBreakdown:
+              type: object
+              additionalProperties:
+                type: number
+            videoPlayActions:
+              type: number
+            video30SecWatchedActions:
+              type: number
+            videoThruplayWatchedActions:
+              type: number
+            videoP25WatchedActions:
+              type: number
+            videoP50WatchedActions:
+              type: number
+            videoP75WatchedActions:
+              type: number
+            videoP95WatchedActions:
+              type: number
+            videoP100WatchedActions:
+              type: number
+            videoAvgTimeWatchedActions:
+              type: number
+            video2SecWatchedActions:
+              type: number
+            video6SecWatchedActions:
+              type: number
+            video6SecFocusedViews:
+              type: number
+            costPerThruplay:
+              type: number
+            lastSyncedAt:
+              type:
+                - string
+                - 'null'
+            qualityRanking:
+              type: string
+            engagementRateRanking:
+              type: string
+            conversionRateRanking:
+              type: string
+            videoTotalWatchTime:
+              description: 'Reading one ad: average watch time times plays, summed over the days.'
+              type: number
+          required:
+            - spend
+            - impressions
+            - reach
+            - clicks
+            - engagement
+            - ctr
+            - cpc
+            - cpm
+            - conversions
+            - allConversions
+            - costPerConversion
+            - actions
+            - actionValues
+            - purchaseValue
+            - roas
+            - costPerAction
+            - outboundClicks
+            - outboundClicksCtr
+            - inlineLinkClicks
+            - inlineLinkClickCtr
+            - uniqueClicks
+            - uniqueCtr
+            - funnel
+            - engagementBreakdown
+            - videoPlayActions
+            - video30SecWatchedActions
+            - videoThruplayWatchedActions
+            - videoP25WatchedActions
+            - videoP50WatchedActions
+            - videoP75WatchedActions
+            - videoP95WatchedActions
+            - videoP100WatchedActions
+            - videoAvgTimeWatchedActions
+            - video2SecWatchedActions
+            - video6SecWatchedActions
+            - video6SecFocusedViews
+            - costPerThruplay
+            - lastSyncedAt
+          description: The ad over fromDate to toDate, money in the ad account currency.
+        daily:
+          description: 'With granularity=day: one point per day.'
+          type: array
+          items:
+            type: object
+            properties:
+              spend:
+                type: number
+              impressions:
+                type: number
+              reach:
+                type: number
+                description: Deduplicated across days for Meta ads when the platform returns it.
+              clicks:
+                type: number
+              engagement:
+                type: number
+              ctr:
+                type: number
+              cpc:
+                type: number
+              cpm:
+                type: number
+              conversions:
+                type: number
+              allConversions:
+                type: number
+              costPerConversion:
+                type: number
+              actions:
+                type: object
+                additionalProperties:
+                  type: number
+              actionValues:
+                type: object
+                additionalProperties:
+                  type: number
+              purchaseValue:
+                type: number
+              roas:
+                type: number
+              costPerAction:
+                type: object
+                additionalProperties:
+                  type: number
+              outboundClicks:
+                type: number
+              outboundClicksCtr:
+                type: number
+              inlineLinkClicks:
+                type: number
+              inlineLinkClickCtr:
+                type: number
+              uniqueClicks:
+                type: number
+              uniqueCtr:
+                type: number
+              funnel:
+                type: object
+                additionalProperties:
+                  type: number
+              engagementBreakdown:
+                type: object
+                additionalProperties:
+                  type: number
+              videoPlayActions:
+                type: number
+              video30SecWatchedActions:
+                type: number
+              videoThruplayWatchedActions:
+                type: number
+              videoP25WatchedActions:
+                type: number
+              videoP50WatchedActions:
+                type: number
+              videoP75WatchedActions:
+                type: number
+              videoP95WatchedActions:
+                type: number
+              videoP100WatchedActions:
+                type: number
+              videoAvgTimeWatchedActions:
+                type: number
+              video2SecWatchedActions:
+                type: number
+              video6SecWatchedActions:
+                type: number
+              video6SecFocusedViews:
+                type: number
+              costPerThruplay:
+                type: number
+              date:
+                type: string
+              qualityRanking:
+                type: string
+              engagementRateRanking:
+                type: string
+              conversionRateRanking:
+                type: string
+            required:
+              - spend
+              - impressions
+              - reach
+              - clicks
+              - engagement
+              - ctr
+              - cpc
+              - cpm
+              - conversions
+              - allConversions
+              - costPerConversion
+              - actions
+              - actionValues
+              - purchaseValue
+              - roas
+              - costPerAction
+              - outboundClicks
+              - inlineLinkClicks
+              - uniqueClicks
+              - funnel
+              - engagementBreakdown
+              - videoPlayActions
+              - video30SecWatchedActions
+              - videoThruplayWatchedActions
+              - videoP25WatchedActions
+              - videoP50WatchedActions
+              - videoP75WatchedActions
+              - videoP95WatchedActions
+              - videoP100WatchedActions
+              - video2SecWatchedActions
+              - video6SecWatchedActions
+              - video6SecFocusedViews
+              - costPerThruplay
+              - date
+        breakdowns:
+          description: 'With breakdowns: read live from the platform.'
+          type: object
+          additionalProperties: {}
+        unsupportedBreakdowns:
+          type: array
+          items:
+            type: string
+        breakdownHints:
+          type: object
+          additionalProperties:
+            type: string
+        breakdownsRange: {}
+        breakdownErrors:
+          type: array
+          items: {}
+        breakdownDroppedMetrics:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: string
+      required:
+        - adId
+        - name
+        - platform
+        - status
+        - currency
+        - summary
+    AdMetricsResponse:
+      type: object
+      required:
+        - data
+        - meta
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/AdMetricRow'
+        meta:
+          allOf:
+            - type: object
+              required:
+                - fromDate
+                - toDate
+                - backfillPending
+                - missingIds
+              properties:
+                fromDate:
+                  type:
+                    - string
+                    - 'null'
+                toDate:
+                  type:
+                    - string
+                    - 'null'
+                backfillPending:
+                  type: boolean
+                  description: True while older metrics for the window are still being fetched from the platform.
+                missingIds:
+                  type: array
+                  items:
+                    type: string
+                  description: Asked ids that are not ads the caller can see.
+            - $ref: '#/components/schemas/MetricsFreshness'
+    CampaignMetricRow:
+      type: object
+      properties:
+        platform:
+          type: string
+        adAccountId:
+          type: string
+        campaignId:
+          type: string
+        results:
+          type: object
+          additionalProperties:
+            type: number
+          description: Each uploaded result metric summed over the range, by metric key.
+      required:
+        - platform
+        - adAccountId
+        - campaignId
+        - results
+    CampaignMetricsResponse:
+      type: object
+      required:
+        - data
+        - pagination
+        - meta
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/CampaignMetricRow'
+        pagination:
+          $ref: '#/components/schemas/MetricsPagination'
+        meta:
+          allOf:
+            - type: object
+              required:
+                - fromDate
+                - toDate
+              properties:
+                fromDate:
+                  type: string
+                toDate:
+                  type: string
+            - $ref: '#/components/schemas/MetricsFreshness'
+    AdAccountMetricsResponse:
+      type: object
+      required:
+        - results
+        - meta
+      properties:
+        results:
+          type: object
+          additionalProperties:
+            type: number
+          description: Each uploaded result metric summed over the range, by metric key.
+        meta:
+          allOf:
+            - type: object
+              required:
+                - fromDate
+                - toDate
+              properties:
+                fromDate:
+                  type: string
+                toDate:
+                  type: string
+            - $ref: '#/components/schemas/MetricsFreshness'
+    InsightMetricRow:
+      type: object
+      required:
+        - date
+        - breakdown
+        - dimension
+        - dimensionId
+        - metrics
+      properties:
+        date:
+          type:
+            - string
+            - 'null'
+          description: The day with granularity=day; fromDate with granularity=total; null for a lifetime total. With groupBy=demographic, the day the breakdown describes (meta.toDate). With groupBy=keyword, the first day of the months reported (meta.fromDate).
+        breakdown:
+          type:
+            - string
+            - 'null'
+          description: 'With groupBy: the segment kind, such as age, country, hour or keyword; on Search Console, the dimensions grouped, such as query,country.'
+        dimension:
+          type:
+            - string
+            - 'null'
+          description: 'With groupBy: the segment value, such as 25-34, US, the hour 0 to 23 as Instagram reports it, or the search keyword. Search Console: the value when one dimension is grouped, null otherwise (see dimensions).'
+        dimensionId:
+          type:
+            - string
+            - 'null'
+          description: 'With groupBy=demographic on LinkedIn: the platform id of the segment.'
+        dimensions:
+          type: object
+          additionalProperties:
+            type: string
+          description: 'Search Console with groupBy: the value of each dimension, such as { query, country }. country is an ISO 3166-1 alpha-3 code in lowercase; device is DESKTOP, MOBILE or TABLET.'
+        metrics:
+          type: object
+          additionalProperties:
+            type:
+              - number
+              - 'null'
+          description: Each metric asked; null when the platform did not report it for the period.
+    InsightRetentionPoint:
+      type: object
+      required:
+        - elapsedVideoTimeRatio
+        - audienceWatchRatio
+        - relativeRetentionPerformance
+        - startedWatching
+        - stoppedWatching
+        - totalSegmentImpressions
+      properties:
+        elapsedVideoTimeRatio:
+          type: number
+          description: Position in the video, 0.01 to 1.
+        audienceWatchRatio:
+          type: number
+          description: Share of viewers watching at this position; above 1 when viewers rewind or loop.
+        relativeRetentionPerformance:
+          type: number
+          description: 0 to 1, against videos of similar length.
+        startedWatching:
+          type: integer
+        stoppedWatching:
+          type: integer
+        totalSegmentImpressions:
+          type: integer
+    InsightRetentionCurve:
+      type: object
+      required:
+        - fromDate
+        - toDate
+        - provisionalSince
+        - durationSeconds
+        - segmentMetricsAvailable
+        - points
+      properties:
+        fromDate:
+          type: string
+          description: fromDate when given; otherwise the publish date, so the curve covers the video lifetime.
+        toDate:
+          type: string
+        provisionalSince:
+          type:
+            - string
+            - 'null'
+        durationSeconds:
+          type:
+            - number
+            - 'null'
+        segmentMetricsAvailable:
+          type: boolean
+          description: False when YouTube has no startedWatching and stoppedWatching for the video; they read 0.
+        points:
+          type: array
+          items:
+            $ref: '#/components/schemas/InsightRetentionPoint'
+          description: Up to 100 points, ascending; empty when YouTube has no curve, as on videos with very few views.
+    InsightMetricsResponse:
+      type: object
+      required:
+        - data
+        - pagination
+        - meta
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/InsightMetricRow'
+        pagination:
+          $ref: '#/components/schemas/MetricsPagination'
+        meta:
+          type: object
+          required:
+            - entity
+            - accountId
+            - platformPostId
+            - platform
+            - granularity
+            - groupBy
+            - timeframe
+            - fromDate
+            - toDate
+            - unavailableMetrics
+            - units
+            - dataDelay
+            - provisionalSince
+            - stale
+          properties:
+            entity:
+              type: string
+              const: insights
+            accountId:
+              type: string
+            platformPostId:
+              type:
+                - string
+                - 'null'
+            platform:
+              type: string
+            granularity:
+              type: string
+              enum:
+                - total
+                - day
+            groupBy:
+              type: string
+              description: none, demographic, hour, keyword, or the Search Console dimensions grouped, such as query,country.
+            timeframe:
+              type:
+                - string
+                - 'null'
+              enum:
+                - this_week
+                - this_month
+                - null
+              description: 'Instagram demographics: the period Instagram aggregated.'
+            fromDate:
+              type:
+                - string
+                - 'null'
+              description: Null for a lifetime or snapshot demographic breakdown.
+            toDate:
+              type:
+                - string
+                - 'null'
+            unavailableMetrics:
+              type: array
+              description: Metrics asked that the platform could not answer for this account, with the reason.
+              items:
+                type: object
+                required:
+                  - metric
+                  - reason
+                  - message
+                properties:
+                  metric:
+                    type: string
+                  reason:
+                    type: string
+                  message:
+                    type: string
+            units:
+              type: object
+              description: 'Monetary metrics: the unit and currency the platform reports them in. Demographic metrics: count, share (0 to 1) or percent (0 to 100).'
+              additionalProperties:
+                type: object
+                required:
+                  - unit
+                  - currency
+                properties:
+                  unit:
+                    type: string
+                  currency:
+                    type:
+                      - string
+                      - 'null'
+            dataDelay:
+              type:
+                - string
+                - 'null'
+              description: 'How late the platform reports these metrics, in words. Search Console: the rows cover final days only.'
+            provisionalSince:
+              type:
+                - string
+                - 'null'
+              description: First day the platform may still revise or have missing. Post insights only; null on account insights and when every day is final.
+            stale:
+              type: boolean
+              description: True when the platform refused the refresh and the answer is the last stored copy.
+        retentionCurve:
+          $ref: '#/components/schemas/InsightRetentionCurve'
+          description: With include=retentionCurve on a YouTube video.
+    ResponseTimeBucket:
+      type: object
+      required:
+        - label
+        - lowerSeconds
+        - upperSeconds
+      properties:
+        label:
+          type: string
+        lowerSeconds:
+          type: integer
+        upperSeconds:
+          type:
+            - integer
+            - 'null'
+          description: null for the open-ended last bucket.
+    InboxMetricRow:
+      type: object
+      required:
+        - date
+        - metrics
+      properties:
+        date:
+          type: string
+          description: 'Start of the period: the day or the Monday of the week, never before fromDate. With granularity=total, fromDate.'
+        accountId:
+          type: string
+          description: With groupBy=account.
+        platform:
+          type: string
+          description: With groupBy=account or groupBy=platform.
+        source:
+          type:
+            - string
+            - 'null'
+          description: With groupBy=source; null for messages with no source recorded, such as messages received.
+        dayOfWeek:
+          type: integer
+          description: 'With groupBy=hourOfWeek: 1 is Monday, 7 is Sunday, in UTC.'
+        hour:
+          type: integer
+          description: 'With groupBy=hourOfWeek: 0 to 23, in UTC.'
+        responseTimeBucket:
+          $ref: '#/components/schemas/ResponseTimeBucket'
+          description: With groupBy=responseTimeBucket.
+        account:
+          type:
+            - object
+            - 'null'
+          description: With include=account; null when the account no longer exists.
+          properties:
+            username:
+              type:
+                - string
+                - 'null'
+            displayName:
+              type:
+                - string
+                - 'null'
+        conversationId:
+          type: string
+          description: 'With groupBy=conversation or conversationId: the Zernio conversation id, or the id logged with the messages when the conversation no longer exists.'
+        firstMessageAt:
+          type:
+            - string
+            - 'null'
+          description: 'With conversation rows: first message, read receipt or failure in the period, UTC. null for a conversation read by id with no activity in the period.'
+        lastMessageAt:
+          type:
+            - string
+            - 'null'
+          description: 'With conversation rows: last message, read receipt or failure in the period, UTC.'
+        conversation:
+          type:
+            - object
+            - 'null'
+          description: With include=conversation; null when the conversation no longer exists.
+          properties:
+            platformConversationId:
+              type: string
+            participantName:
+              type:
+                - string
+                - 'null'
+            participantUsername:
+              type:
+                - string
+                - 'null'
+            participantPicture:
+              type:
+                - string
+                - 'null'
+            lastMessage:
+              type:
+                - string
+                - 'null'
+        metrics:
+          type: object
+          additionalProperties:
+            type:
+              - number
+              - 'null'
+          description: Each metric asked; response times are null when no message received got a reply.
+    InboxMetricsResponse:
+      type: object
+      required:
+        - data
+        - pagination
+        - meta
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/InboxMetricRow'
+        pagination:
+          $ref: '#/components/schemas/MetricsPagination'
+          description: Pages groupBy=conversation; every other read fits one page.
+        meta:
+          allOf:
+            - type: object
+              required:
+                - entity
+                - granularity
+                - groupBy
+                - fromDate
+                - toDate
+                - total
+                - totalIsCapped
+              properties:
+                entity:
+                  type: string
+                  const: inbox
+                granularity:
+                  type: string
+                  enum:
+                    - total
+                    - day
+                    - week
+                groupBy:
+                  type: array
+                  items:
+                    type: string
+                fromDate:
+                  type: string
+                toDate:
+                  type: string
+                total:
+                  type:
+                    - integer
+                    - 'null'
+                  description: 'With groupBy=conversation and include=total: the conversations the list holds, up to 100,000.'
+                totalIsCapped:
+                  type: boolean
+                  description: true when the conversation list holds more than 100,000 conversations.
+            - $ref: '#/components/schemas/MetricsFreshness'
     VoiceCallLineRates:
       type: [object, "null"]
       properties:
@@ -2394,6 +4061,7 @@ components:
         createdAt: { type: string, format: date-time }
         succeededAt: { type: [string, "null"], format: date-time }
         hasInvoice: { type: boolean, description: 'The paid payment has an invoice (getTopupInvoice): every balance top-up paid since 2026-11-05 (unless charged without one for a Stripe credit balance), and Checkout payments before 2026-10-29. Every paid payment has a card receipt (getTopupReceipt).' }
+        bonusCents: { type: [integer, "null"], description: 'Bonus credit added with this payment and not taken back, in cents. Null when there is none.' }
     AutoRecharge:
       type: object
       required: [enabled, belowCents, toCents, monthlyLimitCents, alertBelowCents, disabledReason, disabledCause, retryCount, nextRetryAt, monthRechargedCents]
@@ -5885,7 +7553,7 @@ components:
           type: array
           items:
             type: string
-            enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.permissions_changed, account.ads.initial_sync_completed, account.ads.sync_failed, account.ads.sync_recovered, analytics.synced, post.tracking_completed, post.authenticity_changed, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, call.transcript_segment, call.recording_ready, message.sent, message.edited, message.deleted, message.delivered, message.read, message.played, message.failed, reaction.received, referral.received, comment.received, mention.received, review.new, review.updated, review.deleted, review.restored, lead.received, conversion.received, ad.status_changed, ad.created, ad.updated, campaign.created, campaign.updated, ad_set.created, ad_set.updated, ad.review.approved, ad.review.rejected, ad.delivery_issue, campaign.budget.depleted, ad_account.status_changed, campaign.status_changed, ad.video.processed, ad_rule.triggered, automation.check.completed, automation.action.applied, automation.action.failed, automation.action.unknown, automation.alert.opened, automation.alert.escalated, automation.alert.resolved, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.account.quality_updated, whatsapp.account.status_updated, whatsapp.account.alert_received, whatsapp.contact.identity_changed, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, api.changelog.published, sms.registration.action_required, sms.registration.status_updated, branded_calling.identity.status_updated, branded_calling.identity.action_required, branded_calling.number.status_updated, rcs.agent.status_updated, commerce.product.created, commerce.product.updated, commerce.product.deleted, commerce.order.created, commerce.order.updated, commerce.order.refunded, contact.tag_added, contact.tag_removed, contact.field_changed, sequence.enrolled, sequence.exited, workflow.run.started, workflow.run.completed, workflow.run.failed, support.run.completed, support.run.failed, campaign_submission.received, campaign_submission.flagged, campaign_submission.pending_review, campaign_submission.approved, campaign_submission.rejected, creator_campaign.budget_exhausted, creator_campaign.closed, campaign_payout.payable, campaign_payout.settled, campaign_payout.failed, campaign_participant.joined, campaign_participant.suspended, campaign_participant.removed, account.rate_limited, account.privacy_request, calendar.event.created, calendar.event.updated, calendar.event.deleted, email.sent, email.opened, email.link_clicked, email.thread_replied, email.send_failed, email.bounced, email.updated, email.deleted, file.created, file.updated, file.deleted, file.picked, contact.updated, contact.deleted, balance.low, balance.empty, balance.charged, campaign_participant.pending, campaign_participant.approved, campaign_participant.denied, campaign_draft.submitted, campaign_draft.approved, campaign_draft.revision_requested, campaign_draft.rejected, campaign_sample.requested, campaign_sample.approved, campaign_sample.shipped, campaign_sample.declined, notification.sent]
+            enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.permissions_changed, account.ads.initial_sync_completed, account.ads.sync_failed, account.ads.sync_recovered, analytics.synced, post.tracking_completed, post.authenticity_changed, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, call.transcript_segment, call.recording_ready, message.sent, message.edited, message.deleted, message.delivered, message.read, message.played, message.failed, reaction.received, referral.received, comment.received, mention.received, review.new, review.updated, review.deleted, review.restored, lead.received, conversion.received, tracking_site.ready, ad.status_changed, ad.created, ad.updated, campaign.created, campaign.updated, ad_set.created, ad_set.updated, ad.review.approved, ad.review.rejected, ad.delivery_issue, campaign.budget.depleted, ad_account.status_changed, campaign.status_changed, ad.video.processed, ad_rule.triggered, automation.check.completed, automation.action.applied, automation.action.failed, automation.action.unknown, automation.alert.opened, automation.alert.escalated, automation.alert.resolved, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.account.quality_updated, whatsapp.account.status_updated, whatsapp.account.alert_received, whatsapp.contact.identity_changed, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, api.changelog.published, sms.registration.action_required, sms.registration.status_updated, branded_calling.identity.status_updated, branded_calling.identity.action_required, branded_calling.number.status_updated, rcs.agent.status_updated, commerce.product.created, commerce.product.updated, commerce.product.deleted, commerce.order.created, commerce.order.updated, commerce.order.refunded, contact.tag_added, contact.tag_removed, contact.field_changed, sequence.enrolled, sequence.exited, workflow.run.started, workflow.run.completed, workflow.run.failed, support.run.completed, support.run.failed, campaign_submission.received, campaign_submission.flagged, campaign_submission.pending_review, campaign_submission.approved, campaign_submission.rejected, creator_campaign.budget_exhausted, creator_campaign.closed, campaign_payout.payable, campaign_payout.settled, campaign_payout.failed, campaign_participant.joined, campaign_participant.suspended, campaign_participant.removed, account.rate_limited, account.privacy_request, calendar.event.created, calendar.event.updated, calendar.event.deleted, email.sent, email.opened, email.link_clicked, email.thread_replied, email.send_failed, email.bounced, email.updated, email.deleted, file.created, file.updated, file.deleted, file.picked, contact.updated, contact.deleted, balance.low, balance.empty, balance.charged, campaign_participant.pending, campaign_participant.approved, campaign_participant.denied, campaign_draft.submitted, campaign_draft.approved, campaign_draft.revision_requested, campaign_draft.rejected, campaign_sample.requested, campaign_sample.approved, campaign_sample.shipped, campaign_sample.declined, notification.sent]
           description: Events subscribed to
         isActive:
           type: boolean
@@ -8275,6 +9943,27 @@ components:
               type: string
             username:
               type: string
+        timestamp:
+          type: string
+          format: date-time
+          description: 'UTC time at which Zernio generated this event (set once when the event payload is built, before delivery is queued). Retries and redeliveries keep the original value, so it reflects the event, not the delivery attempt.'
+    WebhookPayloadTrackingSite:
+      type: object
+      description: Webhook payload for tracking_site.ready events.
+      required: [id, event, trackingSite, profileId, timestamp]
+      properties:
+        id:
+          type: string
+          description: 'Stable webhook event ID: the dedupe key, also sent as the X-Zernio-Event-Id header. It follows the site and the moment its tag was confirmed.'
+        profiles: { $ref: '#/components/schemas/WebhookProfiles' }
+        test:
+          type: boolean
+          description: 'Always true when present: only a sample sent by POST /v1/webhooks/test with an event carries it. Real deliveries never do.'
+        event:
+          type: string
+          enum: [tracking_site.ready]
+        trackingSite: { $ref: '#/components/schemas/TrackingSite' }
+        profileId: { type: string }
         timestamp:
           type: string
           format: date-time
@@ -17304,11 +18993,69 @@ components:
       properties:
         message:
           type: string
+    PostRetryRequest:
+      type: object
+      description: 'Optional. Omit the body to retry every failed or pending platform of the post.'
+      properties:
+        platforms:
+          type: array
+          minItems: 1
+          description: 'Retry only these platforms. Platforms not listed are left as they are, so a platform that already published is never posted twice. Each entry matches the post platforms with that `platform` and, when given, that `accountId`.'
+          items:
+            type: object
+            required: [platform]
+            properties:
+              platform:
+                type: string
+                example: twitter
+                description: 'Platform slug, matching `post.platforms[].platform`.'
+              accountId:
+                type: string
+                description: 'Account id of the platform to retry. Needed only when the post targets the same platform on more than one account.'
+    PostRetryPlatformResult:
+      type: object
+      required: [platform, accountId, retried, status, error, errorCategory, errorSource, platformErrorCode]
+      properties:
+        platform:
+          type: string
+          description: 'Platform slug, matching `post.platforms[].platform`.'
+        accountId:
+          type: string
+          description: 'Account id of this platform.'
+        retried:
+          type: boolean
+          description: 'Whether this request retried the platform. False for a platform that had already published, or one left out of `platforms`.'
+        status:
+          type: string
+          example: failed
+          description: 'Status after the retry: pending, processing, published, failed, cancelled, uploading.'
+        error:
+          type: [string, "null"]
+          description: 'Failure message for this platform, or null when it did not fail.'
+        errorCategory:
+          type: [string, "null"]
+          example: user_content
+          description: 'Stable failure category (for example `auth_expired`, `account_issue`, `user_content`, `platform_error`), or null.'
+        errorSource:
+          type: [string, "null"]
+          example: user
+          description: 'Who caused the failure (`user`, `platform` or `system`), or null.'
+        platformErrorCode:
+          type: [integer, "null"]
+          description: 'Error code returned by the platform, when it sent one.'
     PostRetryResponse:
       type: object
       properties:
         message:
           type: string
+        error:
+          type: string
+          description: 'Present on a 207 only: summary of why the retry did not fully succeed.'
+        platformResults:
+          type: array
+          description: 'One entry per platform of the post, in `post.platforms[]` order.'
+          items:
+            $ref: '#/components/schemas/PostRetryPlatformResult'
         post:
           $ref: '#/components/schemas/Post'
     # Profiles Responses
@@ -27463,6 +29210,51 @@ webhooks:
       responses:
         '200':
           description: Webhook received successfully
+  tracking_site.ready:
+    post:
+      operationId: onTrackingSiteReady
+      summary: Tracking site ready event
+      description: |
+        A tracked website's tag is confirmed on it, so its `setup.status` turned `ready`.
+
+        ### When it fires
+
+        Once the store app or Tag Manager install put the tag on the site, or, for a pasted line (or a Webflow site waiting on its next publish), with the site's first visit that is not a bot. A visit after that fires nothing.
+
+        `trackingSite` is the site as `GET /v1/tracking-sites/{siteId}` returns it, without `proxy.secret`.
+
+        ### Deduplication
+
+        The event `id` follows the site and the moment its tag was confirmed. Deduplicate on it.
+      tags: [Webhook Events]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/WebhookPayloadTrackingSite' }
+            example:
+              id: 00000000-0000-4000-8000-000000000000
+              event: tracking_site.ready
+              timestamp: '2026-01-15T10:00:00Z'
+              trackingSite:
+                id: 6720f1c2a9b3c4d5e6f70812
+                profileId: 507f1f77bcf86cd799439012
+                name: shop.example.com
+                status: active
+                domains: [shop.example.com]
+                install: { method: snippet, storeAccountId: null, tagManagerContainer: null }
+                checks:
+                  - { key: script, status: passed, detail: null, checkedAt: '2026-01-15T10:00:00.000Z' }
+                setup: { status: ready }
+                createdAt: '2026-01-15T10:00:00.000Z'
+                updatedAt: '2026-01-15T10:00:00.000Z'
+              profileId: 507f1f77bcf86cd799439012
+              profiles:
+                - id: 507f1f77bcf86cd799439012
+                  externalId: cus_8f3a2
+      responses:
+        '200':
+          description: Webhook received successfully
   lead.received:
     post:
       operationId: onLeadReceived
@@ -32157,6 +33949,1602 @@ paths:
   # ============================================
   # Analytics
   # ============================================
+  /v1/metrics/catalog:
+    get:
+      x-resource-group: analytics
+      operationId: getMetricsCatalog
+      tags:
+        - Metrics
+      summary: List the metrics, groupings and limits of each metrics endpoint
+      description: |-
+        Describes each metrics endpoint (`GET /v1/metrics/posts`, `/accounts`, `/insights`, `/inbox`, `/ads`, `/campaigns` and `/ad-accounts`): the scope it needs, the most ids per scope, the longest and default date window, the granularities, sorts, includes, groupBy values, attributions and every metric with its unit, platforms and freshness.
+
+        Read it once and cache it: it changes only when Zernio adds a metric or a grouping. Filter with `entity` and `platform` to get only what one screen needs. No analytics add-on is needed to read it.
+      parameters:
+        - name: entity
+          in: query
+          schema:
+            type: string
+            enum:
+              - posts
+              - accounts
+              - inbox
+              - insights
+              - ads
+              - campaigns
+              - ad-accounts
+          description: Only this entity.
+        - name: platform
+          in: query
+          schema:
+            type: string
+            enum:
+              - tiktok
+              - instagram
+              - facebook
+              - youtube
+              - linkedin
+              - twitter
+              - threads
+              - pinterest
+              - reddit
+              - bluesky
+              - googlebusiness
+              - telegram
+              - snapchat
+              - whatsapp
+              - discord
+              - slack
+              - google
+              - microsoft
+              - openai
+          description: Only the metrics, sorts, includes and groupBy values this platform has. Every entity is still listed.
+      responses:
+        '200':
+          description: One entry per entity.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MetricsCatalogResponse'
+              examples:
+                posts:
+                  summary: posts on Instagram, trimmed
+                  value:
+                    data:
+                      - entity: posts
+                        path: /v1/metrics/posts
+                        requiredScope:
+                          - postId
+                          - platformPostId
+                          - accountId
+                          - profileId
+                        maxScopeIds:
+                          postId: 100
+                          platformPostId: 100
+                          accountId: 25
+                          profileId: 1
+                        maxRangeDays: 366
+                        defaultRangeDays: 90
+                        granularities:
+                          - total
+                          - day
+                        sorts:
+                          - published-desc
+                          - published-asc
+                          - impressions-desc
+                          - reach-desc
+                        maxSortedRows: 1000
+                        includes:
+                          - name: post
+                            description: Content, media and publishing details of each post.
+                            platforms: null
+                            maxRangeDays: null
+                          - name: total
+                            description: Number of posts the list holds, counted on the first page and carried in the cursor. Ranges of up to 92 days.
+                            platforms: null
+                            maxRangeDays: 92
+                        groupBy:
+                          - name: post
+                            description: Sums the platforms a post was published to into one row.
+                            maxCardinality: 100
+                          - name: dayOfWeek
+                            description: 'With hour: one row per UTC weekday (1 is Monday) and hour the posts were published, summing each post''s latest metrics. A list of accountId or profileId, granularity=total, ranges up to 92 days. Metrics impressions, reach, likes, comments, shares, saves, clicks, views, engagement, engagementRate.'
+                            maxCardinality: 7
+                        attributions: []
+                        origins:
+                          - all
+                          - zernio
+                          - external
+                        metrics:
+                          - name: impressions
+                            description: Times the post was shown.
+                            unit: count
+                            additive: true
+                            source: stored
+                            platforms:
+                              - instagram
+                              - facebook
+                              - twitter
+                              - linkedin
+                              - threads
+                              - pinterest
+                            freshness: about 90 min for posts up to 7 days old, then every 24 to 72 h
+                            granularities:
+                              - total
+                              - day
+                          - name: reach
+                            description: Unique accounts that saw the post.
+                            unit: count
+                            additive: true
+                            source: stored
+                            platforms:
+                              - instagram
+                              - facebook
+                              - tiktok
+                              - linkedin
+                            freshness: about 90 min for posts up to 7 days old, then every 24 to 72 h
+                            granularities:
+                              - total
+                              - day
+                    pagination:
+                      nextCursor: null
+                      hasMore: false
+        '400':
+          $ref: '#/components/responses/MetricsBadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/ResourceGroupForbidden'
+        '429':
+          $ref: '#/components/responses/AnalyticsRateLimited'
+  /v1/metrics/posts:
+    get:
+      x-resource-group: analytics
+      operationId: getPostMetrics
+      tags:
+        - Metrics
+      summary: Read post metrics by id, day by day, as a list, or grouped
+      description: |-
+        Reads the metrics Zernio synced for published posts, Zernio posts and posts published outside Zernio alike. Send exactly one scope: `postId`, `platformPostId`, `accountId` or `profileId`, or read the change feed with `changedSince`.
+
+        - **By id** (`postId` or `platformPostId`, up to 100): one row per publication. Ids that match no post you can read come back in `meta.missingIds`.
+        - **One post day by day**: one id with `granularity=day`.
+        - **A list** (`accountId` up to 25, or one `profileId` with an optional `platform`): posts published in the window, newest first, paged with `cursor`. `sort` orders it by a metric (`likes-desc`, `engagement-desc`...), up to the 1,000 best posts. `include=total` counts the list on the first page (windows up to 92 days).
+
+        Grouped with `groupBy`:
+
+        - `post`: sums the platforms each post id was published to into one row (by id, `granularity=total`).
+        - `dayOfWeek,hour`: one row per UTC weekday and hour the posts were published, summing each post's latest metrics. The newer way to read `GET /v1/analytics/best-time`.
+        - `postAge`: the share of its final engagement a post had reached at each age (0-6h to 30d+), `engagementShareOfFinal`. The newer way to read `GET /v1/analytics/content-decay`. Defaults to the last 60 days.
+        - `format`: one row per format (image, video, carousel, text). The newer way to read `GET /v1/analytics/format-breakdown`.
+
+        `dayOfWeek,hour`, `postAge` and `format` take a list scope (`accountId` or `profileId`), `granularity=total`, windows up to 92 days, and answer in one page.
+
+        Includes on rows read by id or in a list (`include`, comma-separated):
+
+        - `post`: content, media and publishing details.
+        - `samples`: one reading per analytics sync, oldest first, the newest 500 per post, narrowed by `fromDate` and `toDate` on the sync time. Posts read by `postId` or `platformPostId` only, up to 10, with `granularity=total` and no `groupBy`. The newer way to read `GET /v1/analytics/samples`.
+        - `authenticity`: the stored authenticity score with its confidence, reasons, model version, sample count and when it was computed; null until the post has been scored. The `authenticityScore` metric carries the score alone (0 to 100).
+        - `impressionSources`, `audienceTypes`, `audienceCountries`, `retentionCurve`: breakdowns on the platforms that report them.
+
+        Change feed with `changedSince`:
+
+        - `changedSince=now` answers no rows and a starting cursor; send each `pagination.nextCursor` back as `changedSince` to get one `PostMetricChange` row per post whose metrics changed since then, oldest change first.
+        - It reads every account the key can read, narrowed with one `profileId` and `platform`. It takes `metrics` from the feed's list and the breakdown includes, nothing else.
+        - Changes are kept 7 days and a cursor older than 6 days is refused. The feed and its cursors are the same as `GET /v1/analytics/delta`, of which it is the newer way to read.
+
+        Without `fromDate` and `toDate` a list reads the last 90 days; the window is at most 366 days. `GET /v1/metrics/catalog?entity=posts` lists every metric, sort, include and groupBy, with the platforms that report each. A metric is `null` when the platform does not report it or the post has no snapshot yet.
+
+        Each team has an analytics compute budget of 24 seconds per 30-second window across these reads, on top of the per-group cap: a request that would pass it is refused with 429 `details.scope: team_budget` before it runs.
+      parameters:
+        - name: postId
+          in: query
+          description: Comma-separated post ids (Zernio or external), up to 100.
+          schema:
+            type: string
+            minLength: 1
+        - name: platformPostId
+          in: query
+          description: Comma-separated ids the platform gave the posts (a TikTok video id, a tweet id), up to 100.
+          schema:
+            type: string
+            minLength: 1
+        - name: accountId
+          in: query
+          description: Comma-separated account ids, up to 25.
+          schema:
+            type: string
+            minLength: 1
+        - name: profileId
+          in: query
+          description: One profile id.
+          schema:
+            type: string
+            minLength: 1
+        - name: metrics
+          in: query
+          description: Comma-separated metric names from the catalog. Defaults to every metric.
+          schema:
+            type: string
+            minLength: 1
+        - name: groupBy
+          in: query
+          description: Comma-separated groupings from the catalog, at most 2.
+          schema:
+            type: string
+            minLength: 1
+        - name: fromDate
+          in: query
+          description: First day, inclusive (YYYY-MM-DD, UTC).
+          schema:
+            type: string
+            format: date
+        - name: toDate
+          in: query
+          description: Last day, inclusive (YYYY-MM-DD, UTC).
+          schema:
+            type: string
+            format: date
+        - name: platform
+          in: query
+          description: Only with profileId.
+          schema:
+            type: string
+            enum:
+              - tiktok
+              - instagram
+              - facebook
+              - youtube
+              - linkedin
+              - twitter
+              - threads
+              - pinterest
+              - reddit
+              - bluesky
+              - googlebusiness
+              - telegram
+              - snapchat
+              - whatsapp
+              - discord
+              - slack
+        - name: granularity
+          in: query
+          description: day reads one post.
+          schema:
+            default: total
+            type: string
+            enum:
+              - total
+              - day
+        - name: origin
+          in: query
+          description: Lists only. Defaults to all.
+          schema:
+            type: string
+            enum:
+              - all
+              - zernio
+              - external
+        - name: sort
+          in: query
+          description: A sort from the catalog, such as published-desc or likes-desc.
+          schema:
+            type: string
+            minLength: 1
+        - name: include
+          in: query
+          description: Comma-separated includes from the catalog.
+          schema:
+            type: string
+            minLength: 1
+        - name: changedSince
+          in: query
+          description: 'now (no rows, the starting cursor) or the previous pagination.nextCursor: one row per post whose metrics changed since, oldest first, across every account the key reads. Narrow with profileId and platform. Changes are kept 7 days; cursors older than 6 days are refused.'
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 600
+        - name: limit
+          in: query
+          description: Rows per page, 50 by default, 100 at most.
+          schema:
+            default: 50
+            type: integer
+            exclusiveMinimum: 0
+            maximum: 100
+        - name: cursor
+          in: query
+          description: pagination.nextCursor of the previous page, sent with the same query.
+          schema:
+            type: string
+            minLength: 1
+      responses:
+        '200':
+          description: 'Rows of the shape the query asks for: `PostMetricRow` by id and in lists, `PostMetricGroup` with groupBy=post, `PostMetricSlot` with groupBy=dayOfWeek,hour, `PostMetricAge` with groupBy=postAge, `PostMetricFormat` with groupBy=format, `PostMetricChange` with changedSince.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostMetricsResponse'
+              examples:
+                list:
+                  summary: List of an account
+                  value:
+                    data:
+                      - postId: null
+                        externalPostId: 6aaa5987eb4e429f85a7999b
+                        accountId: 6a439d4a9d9472faae2d4426
+                        profileId: 69bd1cff5cae6f967072b9c9
+                        platform: linkedin
+                        platformPostId: urn:li:share:7505910077015384064
+                        platformPostUrl: https://www.linkedin.com/feed/update/urn:li:share:7505910077015384064
+                        publishedAt: '2026-09-16T08:46:55.644Z'
+                        lastSyncedAt: '2026-09-16T10:54:13Z'
+                        syncStatus: unavailable
+                        syncError:
+                          code: null
+                          message: Platform returned all-zero analytics for a post that previously had data; keeping last known values.
+                        isOwner: null
+                        isAd: false
+                        metrics:
+                          impressions: 111
+                          reach: 75
+                          likes: 6
+                          comments: 1
+                          shares: 0
+                          engagement: 7
+                          engagementRate: 6.31
+                    pagination:
+                      nextCursor: eyJxIjoiMVhVX09JT213YUhMNi1lQyIsImZyb21EYXRlIjoiMjAyNi0wOC0yMiIsInRvRGF0ZSI6IjIwMjYtMTEtMTkiLCJ0b3RhbCI6bnVsbCwiYXQiOiIyMDI2LTA5LTExVDE1OjMxOjEyLjI4MloiLCJpZCI6IjZhYTQzNGZiMTQ2ZDZkOGViM2NmZjc1NCJ9.4kwfZ00SMxQ_3ItOvLtpyw
+                      hasMore: true
+                    meta:
+                      entity: posts
+                      granularity: total
+                      fromDate: '2026-08-22'
+                      toDate: '2026-11-19'
+                      missingIds: []
+                      total: null
+                      stale: false
+                      staleSince: null
+                byIdWithPost:
+                  summary: By id with include=post
+                  value:
+                    data:
+                      - postId: null
+                        externalPostId: 6aaa5987eb4e429f85a7999b
+                        accountId: 6a439d4a9d9472faae2d4426
+                        profileId: 69bd1cff5cae6f967072b9c9
+                        platform: linkedin
+                        platformPostId: urn:li:share:7505910077015384064
+                        platformPostUrl: https://www.linkedin.com/feed/update/urn:li:share:7505910077015384064
+                        publishedAt: '2026-09-16T08:46:55.644Z'
+                        lastSyncedAt: '2026-09-16T10:54:13Z'
+                        syncStatus: unavailable
+                        syncError:
+                          code: null
+                          message: Platform returned all-zero analytics for a post that previously had data; keeping last known values.
+                        isOwner: null
+                        isAd: false
+                        metrics:
+                          impressions: 111
+                          likes: 6
+                          comments: 1
+                          engagementRate: 6.31
+                        post:
+                          content: |-
+                            Meta's own AI agent for WhatsApp is now connectable right through Zernio.
+
+                            It answers customers directly using the bu...
+                          thumbnailUrl: https://media.licdn.com/dms/image/example/feedshare-shrink_1280/0/example.jpg
+                          mediaType: image
+                          mediaItems:
+                            - type: image
+                              url: https://media.licdn.com/dms/image/example/feedshare-shrink_1280/0/example.jpg
+                              thumbnail: https://media.licdn.com/dms/image/example/feedshare-shrink_1280/0/example.jpg
+                          videoDurationSeconds: null
+                    pagination:
+                      nextCursor: null
+                      hasMore: false
+                    meta:
+                      entity: posts
+                      granularity: total
+                      fromDate: null
+                      toDate: null
+                      missingIds: []
+                      total: null
+                      stale: false
+                      staleSince: null
+                samples:
+                  summary: By id with include=samples, samples trimmed
+                  value:
+                    data:
+                      - postId: null
+                        externalPostId: 6ac901c60159517735540842
+                        accountId: 69ca62446cb7b8cf4cb13603
+                        profileId: 69bd1c7bc676d8fe197960bb
+                        platform: facebook
+                        platformPostId: '811889972008357_1622197019375225'
+                        platformPostUrl: https://www.facebook.com/122117325795039178/posts/1622197019375225?substory_index=1622197019375225
+                        publishedAt: '2026-10-09T14:21:06.000Z'
+                        lastSyncedAt: '2026-11-19T06:35:53Z'
+                        syncStatus: synced
+                        syncError: null
+                        isOwner: true
+                        isAd: null
+                        metrics:
+                          likes: 2
+                        samples:
+                          - syncedAt: '2026-11-17T02:37:43.000Z'
+                            views: 0
+                            likes: 2
+                            comments: 0
+                            shares: 0
+                            saves: null
+                            watchSeconds: null
+                            completionRate: null
+                          - syncedAt: '2026-11-18T04:16:29.000Z'
+                            views: 0
+                            likes: 2
+                            comments: 0
+                            shares: 0
+                            saves: null
+                            watchSeconds: null
+                            completionRate: null
+                          - syncedAt: '2026-11-19T06:35:53.000Z'
+                            views: 0
+                            likes: 2
+                            comments: 0
+                            shares: 0
+                            saves: null
+                            watchSeconds: null
+                            completionRate: null
+                    pagination:
+                      nextCursor: null
+                      hasMore: false
+                    meta:
+                      entity: posts
+                      granularity: total
+                      fromDate: null
+                      toDate: null
+                      missingIds: []
+                      total: null
+                      stale: false
+                      staleSince: null
+                dayByDay:
+                  summary: One post day by day
+                  value:
+                    data:
+                      - date: '2026-09-16'
+                        postId: null
+                        externalPostId: 6aaa5987eb4e429f85a7999b
+                        accountId: 6a439d4a9d9472faae2d4426
+                        profileId: 69bd1cff5cae6f967072b9c9
+                        platform: linkedin
+                        platformPostId: urn:li:share:7505910077015384064
+                        platformPostUrl: https://www.linkedin.com/feed/update/urn:li:share:7505910077015384064
+                        publishedAt: '2026-09-16T08:46:55.644Z'
+                        lastSyncedAt: null
+                        syncStatus: unavailable
+                        syncError:
+                          code: null
+                          message: Platform returned all-zero analytics for a post that previously had data; keeping last known values.
+                        isOwner: null
+                        isAd: false
+                        metrics:
+                          impressions: 111
+                          likes: 6
+                    pagination:
+                      nextCursor: null
+                      hasMore: false
+                    meta:
+                      entity: posts
+                      granularity: day
+                      fromDate: '2026-09-15'
+                      toDate: '2026-09-20'
+                      missingIds: []
+                      total: null
+                      stale: false
+                      staleSince: null
+                groupByPost:
+                  summary: groupBy=post
+                  value:
+                    data:
+                      - postId: null
+                        externalPostId: 6aaa5987eb4e429f85a7999b
+                        platforms:
+                          - linkedin
+                        accountIds:
+                          - 6a439d4a9d9472faae2d4426
+                        publications: 1
+                        metrics:
+                          impressions: 111
+                          likes: 6
+                    pagination:
+                      nextCursor: null
+                      hasMore: false
+                    meta:
+                      entity: posts
+                      granularity: total
+                      fromDate: null
+                      toDate: null
+                      missingIds: []
+                      total: null
+                      stale: false
+                      staleSince: null
+                publishSlots:
+                  summary: groupBy=dayOfWeek,hour, trimmed
+                  value:
+                    data:
+                      - dayOfWeek: 1
+                        hour: 9
+                        postCount: 1
+                        metrics:
+                          engagement: 13
+                          engagementRate: 1.94
+                      - dayOfWeek: 2
+                        hour: 8
+                        postCount: 2
+                        metrics:
+                          engagement: 37
+                          engagementRate: 1.73
+                      - dayOfWeek: 2
+                        hour: 14
+                        postCount: 2
+                        metrics:
+                          engagement: 28
+                          engagementRate: 0.53
+                    pagination:
+                      nextCursor: null
+                      hasMore: false
+                    meta:
+                      entity: posts
+                      granularity: total
+                      fromDate: '2026-08-22'
+                      toDate: '2026-11-19'
+                      missingIds: []
+                      total: null
+                      stale: false
+                      staleSince: null
+                formats:
+                  summary: groupBy=format
+                  value:
+                    data:
+                      - format: image
+                        postCount: 15
+                        metrics:
+                          impressions: 16812
+                          reach: 9076
+                          views: 0
+                          likes: 189
+                          comments: 24
+                          shares: 2
+                          saves: 0
+                          engagement: 215
+                          engagementRate: 1.28
+                    pagination:
+                      nextCursor: null
+                      hasMore: false
+                    meta:
+                      entity: posts
+                      granularity: total
+                      fromDate: '2026-08-22'
+                      toDate: '2026-11-19'
+                      missingIds: []
+                      total: null
+                      metricsSample:
+                        posts: 15
+                        limit: 4000
+                      stale: false
+                      staleSince: null
+        '400':
+          $ref: '#/components/responses/MetricsBadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '402':
+          $ref: '#/components/responses/AnalyticsAddonRequired'
+        '403':
+          $ref: '#/components/responses/ResourceGroupForbidden'
+        '429':
+          $ref: '#/components/responses/MetricsRateLimited'
+        '503':
+          $ref: '#/components/responses/TemporarilyUnavailable'
+  /v1/metrics/accounts:
+    get:
+      x-resource-group: analytics
+      operationId: getAccountMetrics
+      tags:
+        - Metrics
+      summary: Read follower and post totals per account, platform or scope over time
+      description: |-
+        Reads followers, the account counters the platform reports (media count, video count...) and the totals of the posts each account published, per account, per platform or for the whole scope, for the whole window or by day, week or month.
+
+        - Scope: exactly one of `accountId` (up to 25) or `profileId` (one, with an optional `platform`).
+        - `groupBy`: `account` (the default, one row per account and period), `platform` or `none`.
+        - `granularity`: `total` (the default), `day`, `week` (rows start on Monday) or `month`. A row's `date` is the start of its period, never before `fromDate`.
+        - `attribution`: `publish` (the default) counts each post on the day it was published; `received` counts each interaction on the day it arrived, for windows up to 92 days.
+        - `granularity=week&groupBy=platform&metrics=postCount,engagementRate`: how many posts each platform got per week and their pooled engagement rate. The newer way to read `GET /v1/analytics/posting-frequency`.
+
+        Without `fromDate` and `toDate` it reads the last 90 days; the window is at most 366 days. Followers are one value per day, taken at 02:00 UTC. `GET /v1/metrics/catalog?entity=accounts` lists every metric with the platforms that report it.
+
+        Each team has an analytics compute budget of 24 seconds per 30-second window across these reads: a request that would pass it is refused with 429 `details.scope: team_budget` before it runs.
+      parameters:
+        - name: accountId
+          in: query
+          description: Comma-separated account ids, up to 25.
+          schema:
+            type: string
+            minLength: 1
+        - name: profileId
+          in: query
+          description: One profile id.
+          schema:
+            type: string
+            minLength: 1
+        - name: metrics
+          in: query
+          description: Comma-separated metric names from the catalog. Defaults to every metric.
+          schema:
+            type: string
+            minLength: 1
+        - name: groupBy
+          in: query
+          description: Comma-separated groupings from the catalog, at most 2.
+          schema:
+            type: string
+            minLength: 1
+        - name: fromDate
+          in: query
+          description: First day, inclusive (YYYY-MM-DD, UTC).
+          schema:
+            type: string
+            format: date
+        - name: toDate
+          in: query
+          description: Last day, inclusive (YYYY-MM-DD, UTC).
+          schema:
+            type: string
+            format: date
+        - name: platform
+          in: query
+          description: Only with profileId.
+          schema:
+            type: string
+            enum:
+              - tiktok
+              - instagram
+              - facebook
+              - youtube
+              - linkedin
+              - twitter
+              - threads
+              - pinterest
+              - reddit
+              - bluesky
+              - googlebusiness
+              - telegram
+              - snapchat
+              - whatsapp
+              - discord
+              - slack
+        - name: granularity
+          in: query
+          schema:
+            default: total
+            type: string
+            enum:
+              - total
+              - day
+              - week
+              - month
+        - name: attribution
+          in: query
+          schema:
+            default: publish
+            type: string
+            enum:
+              - publish
+              - received
+        - name: limit
+          in: query
+          description: Rows per page, 50 by default, 100 at most.
+          schema:
+            default: 50
+            type: integer
+            exclusiveMinimum: 0
+            maximum: 100
+        - name: cursor
+          in: query
+          description: pagination.nextCursor of the previous page, sent with the same query.
+          schema:
+            type: string
+            minLength: 1
+      responses:
+        '200':
+          description: One row per account, platform or scope, and period.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountMetricsResponse'
+              examples:
+                total:
+                  summary: Whole window, one row per account
+                  value:
+                    data:
+                      - date: '2026-08-22'
+                        accountId: 6a904f0277555aae0104a807
+                        platform: instagram
+                        profileId: 69d8c8f04614ff9d98614bc3
+                        username: appgetinvoice_es
+                        metrics:
+                          followers: 4
+                          followersGrowth: 0
+                          followersGrowthPercent: 0
+                          mediaCount: 41
+                          videoCount: null
+                          impressions: 0
+                          likes: 0
+                          comments: 0
+                          engagement: 0
+                          postCount: 0
+                    pagination:
+                      nextCursor: null
+                      hasMore: false
+                    meta:
+                      entity: accounts
+                      granularity: total
+                      groupBy: account
+                      attribution: publish
+                      fromDate: '2026-08-22'
+                      toDate: '2026-11-19'
+                      stale: false
+                      staleSince: null
+                weeklyByPlatform:
+                  summary: granularity=week&groupBy=platform, trimmed
+                  value:
+                    data:
+                      - date: '2026-08-24'
+                        accountId: null
+                        platform: instagram
+                        profileId: null
+                        username: null
+                        metrics:
+                          followers: 4
+                          likes: 0
+                      - date: '2026-08-31'
+                        accountId: null
+                        platform: instagram
+                        profileId: null
+                        username: null
+                        metrics:
+                          followers: 4
+                          likes: 0
+                    pagination:
+                      nextCursor: null
+                      hasMore: false
+                    meta:
+                      entity: accounts
+                      granularity: week
+                      groupBy: platform
+                      attribution: publish
+                      fromDate: '2026-08-22'
+                      toDate: '2026-11-19'
+                      stale: false
+                      staleSince: null
+        '400':
+          $ref: '#/components/responses/MetricsBadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '402':
+          $ref: '#/components/responses/AnalyticsAddonRequired'
+        '403':
+          $ref: '#/components/responses/ResourceGroupForbidden'
+        '429':
+          $ref: '#/components/responses/MetricsRateLimited'
+        '503':
+          $ref: '#/components/responses/TemporarilyUnavailable'
+  /v1/metrics/insights:
+    get:
+      x-resource-group: analytics
+      operationId: getInsightMetrics
+      tags:
+        - Metrics
+      summary: Read live account or post insights from the platform
+      description: |-
+        Reads insights the platform computes and Zernio does not store (page views, profile visits, watch time, audience demographics...), live from the platform, for one account or one of its posts (`platformPostId`).
+
+        Platforms: Facebook, Instagram, LinkedIn, TikTok, YouTube, Pinterest, Google Business and Google Search Console. Another platform answers 400 on `accountId`, a disconnected account 401 `account_disconnected`, and a platform error the platform's own code under `platformError`.
+
+        - `granularity`: `total` (the default) or `day`.
+        - `groupBy=demographic` with one metric and `breakdown` (age, gender, country, city...): one row per audience segment. LinkedIn: organizations only.
+        - `groupBy=hour`: Instagram followers online per day and hour of the last 30 days.
+        - `groupBy=keyword`: Google Business search keywords, one row per keyword, paged with `cursor`.
+
+        Google Search Console answers clicks, impressions, ctr (0 to 1) and position (1 is the top), final days only:
+
+        - Without groupBy: the site totals. `granularity=day` adds the date.
+        - `groupBy` combines any of `query`, `page`, `country` and `device` (`groupBy=query,country`): one row per combination, most clicks first, with each value in `dimensions`.
+        - Pages with `limit` (up to 25,000, 1,000 by default) and `cursor`.
+        - `include=retentionCurve` with a YouTube `platformPostId`: the audience retention curve.
+
+        Without `fromDate` and `toDate` it reads the last 30 days; the window is at most 541 days. `GET /v1/metrics/catalog?entity=insights&platform=...` lists each platform's metrics. Metrics the platform cannot answer for this account are listed in `meta.unavailableMetrics` instead of failing the request.
+
+        Each request calls the platform: read each account every few minutes at most. These reads share the `account-insights` cap and the 120 reads per hour of one account.
+      parameters:
+        - name: accountId
+          in: query
+          required: true
+          description: One account id.
+          schema:
+            type: string
+        - name: metrics
+          in: query
+          description: Comma-separated metric names (up to 25). Defaults to the platform's default metrics. `GET /v1/metrics/catalog?entity=insights&platform=...` lists them.
+          schema:
+            type: string
+            minLength: 1
+        - name: platformPostId
+          in: query
+          description: 'One post of the account, by its platform id: answers the post''s live insights instead of the account''s.'
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 200
+        - name: granularity
+          in: query
+          description: Defaults to total; groupBy=hour answers per day.
+          schema:
+            type: string
+            enum:
+              - total
+              - day
+        - name: groupBy
+          in: query
+          description: 'demographic: audience segments (age, gender, country...). hour: Instagram followers online per day and hour, last 30 days. keyword: Google Business search keywords per month. query, page, country, device: Google Search Console, combined with commas (groupBy=query,country).'
+          schema:
+            type: string
+            minLength: 1
+        - name: breakdown
+          in: query
+          description: 'With groupBy=demographic: comma-separated segments. Defaults to the platform''s default segments.'
+          schema:
+            type: string
+            minLength: 1
+        - name: timeframe
+          in: query
+          description: Instagram demographics only. Defaults to this_month.
+          schema:
+            type: string
+            enum:
+              - this_week
+              - this_month
+        - name: cursor
+          in: query
+          description: 'With groupBy=keyword or a Search Console account: pagination.nextCursor of the previous page, sent with the same query.'
+          schema:
+            type: string
+            minLength: 1
+        - name: limit
+          in: query
+          description: 'Search Console accounts only: rows per page. Defaults to 1,000.'
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 25000
+        - name: include
+          in: query
+          description: 'With platformPostId on YouTube: retentionCurve adds the audience retention curve.'
+          schema:
+            type: string
+            minLength: 1
+        - name: fromDate
+          in: query
+          description: First day, inclusive (YYYY-MM-DD, UTC). Defaults to 30 days before toDate. The window is at most 541 days.
+          schema:
+            type: string
+            format: date
+        - name: toDate
+          in: query
+          description: Last day, inclusive (YYYY-MM-DD, UTC). Defaults to today.
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: One row per period, or per segment with groupBy.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InsightMetricsResponse'
+              examples:
+                facebookDaily:
+                  summary: Facebook page by day, trimmed
+                  value:
+                    data:
+                      - date: '2026-11-11'
+                        breakdown: null
+                        dimension: null
+                        dimensionId: null
+                        metrics:
+                          page_media_view: 28297
+                          page_post_engagements: 752
+                          page_follows: 2423
+                          followers_gained: 3
+                          followers_lost: 0
+                      - date: '2026-11-12'
+                        breakdown: null
+                        dimension: null
+                        dimensionId: null
+                        metrics:
+                          page_media_view: 29136
+                          page_post_engagements: 695
+                          page_follows: 2432
+                          followers_gained: 6
+                          followers_lost: 0
+                    pagination:
+                      nextCursor: null
+                      hasMore: false
+                    meta:
+                      entity: insights
+                      accountId: 69ca62446cb7b8cf4cb13603
+                      platformPostId: null
+                      platform: facebook
+                      granularity: day
+                      groupBy: none
+                      timeframe: null
+                      fromDate: '2026-11-10'
+                      toDate: '2026-11-12'
+                      unavailableMetrics: []
+                      units: {}
+                      dataDelay: Meta page insights may be delayed up to 24 hours. Metrics reflect the current (post-November 2025) Graph API names. Monetization earnings are approximate and Meta restates them after the fact.
+                      provisionalSince: null
+                      stale: false
+                googleBusinessKeywords:
+                  summary: Google Business groupBy=keyword
+                  value:
+                    data: []
+                    pagination:
+                      nextCursor: null
+                      hasMore: false
+                    meta:
+                      entity: insights
+                      accountId: 6a0357e15e333c052951d766
+                      platformPostId: null
+                      platform: googlebusiness
+                      granularity: total
+                      groupBy: keyword
+                      timeframe: null
+                      fromDate: '2026-08-01'
+                      toDate: '2026-10-31'
+                      unavailableMetrics: []
+                      units:
+                        impressions:
+                          unit: count
+                          currency: null
+                        impressions_threshold:
+                          unit: count
+                          currency: null
+                      dataDelay: 'Monthly totals. Google reports keywords with few impressions as a threshold only: impressions is null and impressions_threshold holds the bound.'
+                      provisionalSince: null
+                      stale: false
+                searchConsoleTotals:
+                  summary: Search Console site totals
+                  value:
+                    data:
+                      - date: '2026-10-01'
+                        breakdown: null
+                        dimension: null
+                        dimensionId: null
+                        metrics:
+                          clicks: 3
+                          impressions: 128
+                          ctr: 0.0234375
+                          position: 4.9765625
+                    pagination:
+                      nextCursor: null
+                      hasMore: false
+                    meta:
+                      entity: insights
+                      accountId: 6afdc3fa8955df190da36504
+                      platformPostId: null
+                      platform: googlesearchconsole
+                      granularity: total
+                      groupBy: none
+                      timeframe: null
+                      fromDate: '2026-10-01'
+                      toDate: '2026-10-31'
+                      unavailableMetrics: []
+                      units:
+                        clicks:
+                          unit: count
+                          currency: null
+                        impressions:
+                          unit: count
+                          currency: null
+                        ctr:
+                          unit: ratio
+                          currency: null
+                        position:
+                          unit: position
+                          currency: null
+                      dataDelay: 'Final days only: Search Console settles its numbers over 2 to 3 days, in Pacific time.'
+                      provisionalSince: null
+                      stale: false
+                searchConsoleByQueryAndCountry:
+                  summary: Search Console groupBy=query,country&limit=3
+                  value:
+                    data:
+                      - date: '2026-10-01'
+                        breakdown: query,country
+                        dimension: null
+                        dimensionId: null
+                        dimensions:
+                          query: ayrshare alternatives
+                          country: usa
+                        metrics:
+                          clicks: 0
+                          impressions: 1
+                          ctr: 0
+                          position: 1
+                      - date: '2026-10-01'
+                        breakdown: query,country
+                        dimension: null
+                        dimensionId: null
+                        dimensions:
+                          query: getlate
+                          country: fra
+                        metrics:
+                          clicks: 0
+                          impressions: 1
+                          ctr: 0
+                          position: 2
+                      - date: '2026-10-01'
+                        breakdown: query,country
+                        dimension: null
+                        dimensionId: null
+                        dimensions:
+                          query: getlate
+                          country: pak
+                        metrics:
+                          clicks: 0
+                          impressions: 1
+                          ctr: 0
+                          position: 1
+                    pagination:
+                      nextCursor: eyJxIjoiV1Z5M3FKb3lHeHdlaVRMaCIsImZyb21EYXRlIjoiMjAyNi0xMC0wMSIsInRvRGF0ZSI6IjIwMjYtMTAtMzEiLCJzdGFydFJvdyI6M30._hvQHnbiR4W-zSIcOcwFbg
+                      hasMore: true
+                    meta:
+                      entity: insights
+                      accountId: 6afdc3fa8955df190da36504
+                      platformPostId: null
+                      platform: googlesearchconsole
+                      granularity: total
+                      groupBy: query,country
+                      timeframe: null
+                      fromDate: '2026-10-01'
+                      toDate: '2026-10-31'
+                      unavailableMetrics: []
+                      units:
+                        clicks:
+                          unit: count
+                          currency: null
+                        impressions:
+                          unit: count
+                          currency: null
+                        ctr:
+                          unit: ratio
+                          currency: null
+                        position:
+                          unit: position
+                          currency: null
+                      dataDelay: 'Final days only: Search Console settles its numbers over 2 to 3 days, in Pacific time.'
+                      provisionalSince: null
+                      stale: false
+        '400':
+          $ref: '#/components/responses/MetricsBadRequest'
+        '401':
+          description: 'Missing or invalid API key, or the account is disconnected (`code: account_disconnected`, `action: reconnect`).'
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ErrorResponse'
+                  - type: object
+                    properties:
+                      action:
+                        type: string
+                        enum:
+                          - reconnect
+              example:
+                error: This linkedin account is disconnected. Please reconnect it to continue.
+                code: account_disconnected
+                action: reconnect
+        '402':
+          $ref: '#/components/responses/AnalyticsAddonRequired'
+        '403':
+          $ref: '#/components/responses/ResourceGroupForbidden'
+        '429':
+          $ref: '#/components/responses/MetricsRateLimited'
+        '503':
+          $ref: '#/components/responses/TemporarilyUnavailable'
+  /v1/metrics/inbox:
+    get:
+      x-resource-group: analytics
+      operationId: getInboxMetrics
+      tags:
+        - Metrics
+      summary: Read message volume and response times
+      description: |-
+        Counts messages received, sent, read and failed, conversations and replies, and response times (median, p90, p99, mean, min, max) across the inbox, from the messages Zernio logged.
+
+        - Scope: `conversationId` (up to 25, one row per conversation), `accountId` (up to 25) or one `profileId`. Without a scope, every account the key can read.
+        - `groupBy` (at most 2): `account`, `platform`, `source`, `hourOfWeek` (one row per UTC weekday and hour), `responseTimeBucket` (with `metrics=replied`) or `conversation` (paged with `cursor`, `include=total` counts up to 100,000).
+        - `granularity`: `total` (the default), `day` or `week`.
+        - `include=account` adds usernames to account rows; `include=conversation` adds the participant and last message to conversation rows.
+
+        Response time metrics are returned only when named in `metrics`. Without `fromDate` and `toDate` it reads the last 30 days; the window is at most 90 days. `GET /v1/metrics/catalog?entity=inbox` lists every metric, sort and groupBy.
+      parameters:
+        - name: conversationId
+          in: query
+          description: 'Comma-separated conversation ids (Zernio or platform), up to 25: one row per conversation.'
+          schema:
+            type: string
+            minLength: 1
+        - name: accountId
+          in: query
+          description: Comma-separated account ids, up to 25.
+          schema:
+            type: string
+            minLength: 1
+        - name: profileId
+          in: query
+          description: One profile id.
+          schema:
+            type: string
+            minLength: 1
+        - name: metrics
+          in: query
+          description: Comma-separated metric names from the catalog. Defaults to the counts; response times only when named.
+          schema:
+            type: string
+            minLength: 1
+        - name: groupBy
+          in: query
+          description: 'Comma-separated groupings from the catalog, at most 2: account, conversation, platform, source, hourOfWeek, responseTimeBucket.'
+          schema:
+            type: string
+            minLength: 1
+        - name: fromDate
+          in: query
+          description: First day, inclusive (YYYY-MM-DD, UTC). Defaults to 30 days before toDate. The window is at most 90 days.
+          schema:
+            type: string
+            format: date
+        - name: toDate
+          in: query
+          description: Last day, inclusive (YYYY-MM-DD, UTC). Defaults to today.
+          schema:
+            type: string
+            format: date
+        - name: platform
+          in: query
+          description: A messaging platform, such as instagram or whatsapp.
+          schema:
+            type: string
+            maxLength: 30
+            pattern: ^[a-z]+$
+        - name: source
+          in: query
+          description: Only messages sent from this source, such as api or broadcast. Not with response time metrics.
+          schema:
+            type: string
+            maxLength: 40
+            pattern: ^[a-z_-]+$
+        - name: granularity
+          in: query
+          schema:
+            type: string
+            enum:
+              - total
+              - day
+              - week
+            default: total
+        - name: sort
+          in: query
+          description: A sort from the catalog, such as messages-desc. With granularity=total.
+          schema:
+            type: string
+            minLength: 1
+        - name: include
+          in: query
+          description: 'Comma-separated includes from the catalog: account, conversation, total.'
+          schema:
+            type: string
+            minLength: 1
+        - name: limit
+          in: query
+          description: Rows returned with groupBy=account (10 by default, 100 at most) or groupBy=conversation (50 by default, 1,000 at most).
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 1000
+        - name: cursor
+          in: query
+          description: 'With groupBy=conversation: pagination.nextCursor of the previous page.'
+          schema:
+            type: string
+            minLength: 1
+      responses:
+        '200':
+          description: One row per period and group.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InboxMetricsResponse'
+              examples:
+                byPlatform:
+                  summary: groupBy=platform
+                  value:
+                    data:
+                      - date: '2026-10-21'
+                        platform: facebook
+                        metrics:
+                          received: 12
+                          sent: 0
+                          messages: 12
+                          read: 0
+                          failed: 0
+                          conversations: 8
+                      - date: '2026-10-21'
+                        platform: whatsapp
+                        metrics:
+                          received: 6
+                          sent: 0
+                          messages: 6
+                          read: 1
+                          failed: 0
+                          conversations: 3
+                    pagination:
+                      nextCursor: null
+                      hasMore: false
+                    meta:
+                      entity: inbox
+                      granularity: total
+                      groupBy:
+                        - platform
+                      fromDate: '2026-10-21'
+                      toDate: '2026-11-19'
+                      total: null
+                      totalIsCapped: false
+                      stale: false
+                      staleSince: null
+                conversations:
+                  summary: groupBy=conversation&include=conversation, trimmed
+                  value:
+                    data:
+                      - date: '2026-10-21'
+                        conversationId: 6a31813ac0b7f7cdf660c540
+                        accountId: 6a2121ca2b2567671ac368fc
+                        platform: whatsapp
+                        firstMessageAt: '2026-11-17T16:12:53Z'
+                        lastMessageAt: '2026-11-18T09:36:09Z'
+                        conversation:
+                          platformConversationId: '15555550123'
+                          participantName: Alex Rivera
+                          participantUsername: '+15555550123'
+                          participantPicture: null
+                          lastMessage: Do you ship to Canada?
+                        metrics:
+                          received: 3
+                          sent: 0
+                          messages: 3
+                          read: 0
+                          failed: 0
+                    pagination:
+                      nextCursor: eyJxIjoiaGFDSzkyeUpIaUxRM3JfYyIsImZyb21EYXRlIjoiMjAyNi0xMC0yMSIsInRvRGF0ZSI6IjIwMjYtMTEtMTkiLCJzb3J0VmFsdWUiOiIyMDI2LTExLTE2IDE0OjQ2OjEwIiwibGFzdE1lc3NhZ2VBdCI6IjIwMjYtMTEtMTYgMTQ6NDY6MTAiLCJhY2NvdW50SWQiOiI2OWNhNjI0NDZjYjdiOGNmNGNiMTM2MDMiLCJjb252ZXJzYXRpb25JZCI6IjZhZjkxNWVlMzFkMmRhOGJiZDRiNzVhZCIsInRvdGFsIjpudWxsLCJ0b3RhbElzQ2FwcGVkIjpmYWxzZX0.dtfKt8_YyEA23CxROMw4Eg
+                      hasMore: true
+                    meta:
+                      entity: inbox
+                      granularity: total
+                      groupBy:
+                        - conversation
+                      fromDate: '2026-10-21'
+                      toDate: '2026-11-19'
+                      total: null
+                      totalIsCapped: false
+                      stale: false
+                      staleSince: null
+        '400':
+          $ref: '#/components/responses/MetricsBadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/ResourceGroupForbidden'
+        '429':
+          $ref: '#/components/responses/MetricsRateLimited'
+        '503':
+          $ref: '#/components/responses/TemporarilyUnavailable'
+  /v1/metrics/ads:
+    get:
+      x-resource-group: ads
+      operationId: getAdMetrics
+      tags:
+        - Metrics
+      summary: Read ad metrics by id, or one ad day by day with breakdowns
+      description: |-
+        Reads the delivery and conversion metrics Zernio synced from the ad networks for up to 100 Zernio ad ids (`adId`, as `GET /v1/ads` returns them). Ids you cannot read come back in `meta.missingIds`.
+
+        - `granularity=day` with one ad: one point per day.
+        - `breakdowns` with one ad: read live from the network (age, gender, country, placement...), with `attributionWindows` for Meta.
+
+        Without `fromDate` and `toDate` it reads the last 90 days; the window is at most 730 days. `meta.backfillPending` is true while older days are still being fetched. Money is in the ad account currency (`currency`). `GET /v1/metrics/catalog?entity=ads` lists every metric with the networks that report it.
+      parameters:
+        - name: adId
+          in: query
+          required: true
+          description: Comma-separated Zernio ad ids, up to 100.
+          schema:
+            type: string
+            minLength: 1
+        - name: granularity
+          in: query
+          description: day reads one ad, one point per day.
+          schema:
+            default: total
+            type: string
+            enum:
+              - total
+              - day
+        - name: fromDate
+          in: query
+          description: Without fromDate and toDate, the last 90 days.
+          schema:
+            type: string
+            format: date
+        - name: toDate
+          in: query
+          description: Last day, inclusive (YYYY-MM-DD, UTC).
+          schema:
+            type: string
+            format: date
+        - name: breakdowns
+          in: query
+          description: Comma-separated breakdowns, read live from the platform. One ad only.
+          schema:
+            type: string
+            minLength: 1
+        - name: attributionWindows
+          in: query
+          description: Meta attribution windows for the breakdowns, comma-separated.
+          schema:
+            type: string
+            minLength: 1
+      responses:
+        '200':
+          description: One row per ad.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdMetricsResponse'
+              examples:
+                total:
+                  summary: One ad
+                  value:
+                    data:
+                      - adId: 6af8bc45530f968524a58c40
+                        name: zz-qa-8466 ad v3
+                        platform: facebook
+                        status: cancelled
+                        currency: EUR
+                        summary:
+                          ctr: 0
+                          cpc: 0
+                          cpm: 0
+                          costPerConversion: 0
+                          roas: 0
+                          spend: 0
+                          impressions: 0
+                          reach: 0
+                          clicks: 0
+                          engagement: 0
+                          conversions: 0
+                          allConversions: 0
+                          actions: {}
+                          actionValues: {}
+                          purchaseValue: 0
+                          costPerAction: {}
+                          outboundClicks: 0
+                          outboundClicksCtr: 0
+                          inlineLinkClicks: 0
+                          inlineLinkClickCtr: 0
+                          uniqueClicks: 0
+                          uniqueCtr: 0
+                          funnel:
+                            landingPageViews: 0
+                            contentViews: 0
+                            searches: 0
+                            wishlistAdds: 0
+                            cartAdds: 0
+                            checkoutsInitiated: 0
+                            paymentInfoAdds: 0
+                            purchases: 0
+                            leads: 0
+                            registrationsCompleted: 0
+                            appInstalls: 0
+                            messagingConversationsStarted: 0
+                            messagingFirstReplies: 0
+                            schedules: 0
+                          engagementBreakdown:
+                            postEngagement: 0
+                            pageEngagement: 0
+                            reactions: 0
+                            comments: 0
+                            shares: 0
+                            saves: 0
+                            pageLikes: 0
+                            videoViews: 0
+                            linkClicks: 0
+                          videoPlayActions: 0
+                          video30SecWatchedActions: 0
+                          videoThruplayWatchedActions: 0
+                          videoP25WatchedActions: 0
+                          videoP50WatchedActions: 0
+                          videoP75WatchedActions: 0
+                          videoP95WatchedActions: 0
+                          videoP100WatchedActions: 0
+                          videoAvgTimeWatchedActions: 0
+                          video2SecWatchedActions: 0
+                          video6SecWatchedActions: 0
+                          video6SecFocusedViews: 0
+                          costPerThruplay: 0
+                          lastSyncedAt: null
+                    meta:
+                      fromDate: '2026-08-21'
+                      toDate: '2026-11-19'
+                      backfillPending: false
+                      missingIds: []
+                      stale: false
+                      staleSince: null
+        '400':
+          $ref: '#/components/responses/MetricsBadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/MetricsAdsForbidden'
+        '429':
+          $ref: '#/components/responses/MetricsRateLimited'
+        '503':
+          $ref: '#/components/responses/TemporarilyUnavailable'
+  /v1/metrics/campaigns:
+    get:
+      x-resource-group: ads
+      operationId: getCampaignMetrics
+      tags:
+        - Metrics
+      summary: Read the uploaded results of each campaign over a window
+      description: |-
+        Sums, per campaign, each result metric you uploaded (one key per metric, as `GET /v1/ads/campaign-results/metrics` lists them), with `cac_percent`, `cost_per_sale`, `cost_per_qualified_lead`, `lead_to_sale` and `qualified_rate` next to them, over `fromDate` to `toDate` (both required, at most 400 days).
+
+        Filter with `campaignId` (platform campaign ids); pages with `cursor`.
+      parameters:
+        - name: limit
+          in: query
+          description: Rows per page, 50 by default, 100 at most.
+          schema:
+            default: 50
+            type: integer
+            exclusiveMinimum: 0
+            maximum: 100
+        - name: cursor
+          in: query
+          description: pagination.nextCursor of the previous page, sent with the same query.
+          schema:
+            type: string
+            minLength: 1
+        - name: fromDate
+          in: query
+          required: true
+          description: First day, inclusive.
+          schema:
+            type: string
+            format: date
+        - name: toDate
+          in: query
+          required: true
+          description: Last day, inclusive. The range is at most 400 days.
+          schema:
+            type: string
+            format: date
+        - name: campaignId
+          in: query
+          description: Comma-separated platform campaign ids.
+          schema:
+            type: string
+            minLength: 1
+      responses:
+        '200':
+          description: One row per campaign with results in the window.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CampaignMetricsResponse'
+              examples:
+                empty:
+                  summary: No uploaded results in the window
+                  value:
+                    data: []
+                    pagination:
+                      nextCursor: null
+                      hasMore: false
+                    meta:
+                      fromDate: '2026-08-01'
+                      toDate: '2026-11-18'
+                      stale: false
+                      staleSince: null
+        '400':
+          $ref: '#/components/responses/MetricsBadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/MetricsAdsForbidden'
+        '429':
+          $ref: '#/components/responses/MetricsRateLimited'
+        '503':
+          $ref: '#/components/responses/TemporarilyUnavailable'
+  /v1/metrics/ad-accounts:
+    get:
+      x-resource-group: ads
+      operationId: getAdAccountMetrics
+      tags:
+        - Metrics
+      summary: Read the uploaded results summed across ad accounts
+      description: Sums each result metric you uploaded across ad accounts (every ad account the key can read, or the platform ids in `adAccountId`) over `fromDate` to `toDate` (both required, at most 400 days), with the same metrics as `GET /v1/metrics/campaigns`.
+      parameters:
+        - name: fromDate
+          in: query
+          required: true
+          description: First day, inclusive.
+          schema:
+            type: string
+            format: date
+        - name: toDate
+          in: query
+          required: true
+          description: Last day, inclusive. The range is at most 400 days.
+          schema:
+            type: string
+            format: date
+        - name: adAccountId
+          in: query
+          description: Comma-separated platform ad account ids. Defaults to every ad account the key sees.
+          schema:
+            type: string
+            minLength: 1
+      responses:
+        '200':
+          description: The results summed over the window.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdAccountMetricsResponse'
+              examples:
+                empty:
+                  summary: No uploaded results in the window
+                  value:
+                    results: {}
+                    meta:
+                      fromDate: '2026-08-01'
+                      toDate: '2026-11-18'
+                      stale: false
+                      staleSince: null
+        '400':
+          $ref: '#/components/responses/MetricsBadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/MetricsAdsForbidden'
+        '429':
+          $ref: '#/components/responses/MetricsRateLimited'
+        '503':
+          $ref: '#/components/responses/TemporarilyUnavailable'
   /v1/analytics:
     get:
       x-resource-group: "analytics"
@@ -32165,6 +35553,8 @@ paths:
       summary: Get post analytics
       description: |
         Returns analytics for posts. With postId, returns a single post. Without it, returns a paginated list with overview stats.
+
+        To keep a local copy in sync, do not poll this endpoint per account or per post. Subscribe to the `analytics.synced` webhook and read only what changed from `GET /v1/analytics/delta`.
 
         - Accepts both Zernio Post IDs and External Post IDs (auto-resolved).
         - fromDate defaults to 90 days ago if omitted, max range 366 days.
@@ -32191,6 +35581,8 @@ paths:
         - comments = story replies
         - shares = story shares
         - clicks: always 0, because Meta exposes no link-click metric for stories
+
+        The newer way to read this is `GET /v1/metrics/posts`: by `postId` or `platformPostId`, or as a list by `accountId` or `profileId`, sorted by date or by a metric.
       parameters:
         - name: postId
           in: query
@@ -32502,6 +35894,8 @@ paths:
         Pairs with the `analytics.synced` webhook, so changes can be read on notification instead of on a timer. That event carries no cursor of its own: keep using the `nextCursor` this endpoint gave you.
 
         Requires the same analytics access as `GET /v1/analytics`, and shares the stricter per-second rate-limit window applied to analytics endpoints.
+
+        The newer way to read this is `GET /v1/metrics/posts` with `changedSince`: the same feed and cursors, with the metric names of the catalog.
       parameters:
         - name: cursor
           in: query
@@ -32726,8 +36120,8 @@ paths:
         Backed by LinkedIn's organizationalEntityShareStatistics,
         organizationalEntityFollowerStatistics, and organizationPageStatistics endpoints.
 
-        Response shape matches /v1/analytics/instagram/account-insights. Max 89 days,
-        defaults to last 30 days.
+        Response shape matches /v1/analytics/instagram/account-insights. Max 365 days,
+        fromDate no older than 365 days ago, defaults to last 30 days.
 
         Scope requirements: r_organization_social, r_organization_followers, and
         r_organization_admin must all be present on the account. Accounts connected before
@@ -32737,12 +36131,9 @@ paths:
           - Page-view metrics accept only metricType=total_value (LinkedIn omits per-day
             segmentation even when the API is called with DAY granularity, so a time-series
             response would be meaningless).
-          - Date range capped at 89 days.
+          - Date range capped at 365 days, starting no more than 365 days ago.
 
-        LinkedIn-side platform limits (not re-enforced here, but worth knowing for larger
-        ranges in a future release):
-          - Follower stats: rolling 12-month window, end must be no later than 2 days ago.
-          - Share stats: rolling 12-month window.
+        LinkedIn keeps about 13 months of follower stats, and they end 2 days before today.
       parameters:
         - name: accountId
           in: query
@@ -34576,6 +37967,8 @@ paths:
         Defaults to the last 180 days.
 
         `totals` sums the whole range for the applied filters (pass `accountId` for one account). With attribution "publish" they are the lifetime metrics of posts published in the range, with "received" the engagement that arrived in the range.
+
+        The newer way to read this is `GET /v1/metrics/accounts` with `granularity=day`, grouped by `account`, `platform` or `none`.
       parameters:
         - name: platform
           in: query
@@ -34855,6 +38248,8 @@ paths:
         Returns the best times to post based on historical engagement data.
         Groups all published posts by day of week and hour (UTC), calculating average engagement per slot.
         Use this to auto-schedule posts at optimal times.
+
+        The newer way to read this is `GET /v1/metrics/posts` with `groupBy=dayOfWeek,hour` and a list scope (`accountId` or `profileId`): one row per UTC weekday and hour, with any of its post metrics.
       parameters:
         - name: platform
           in: query
@@ -34931,6 +38326,8 @@ paths:
         Returns how engagement accumulates over time after a post is published.
         Each bucket shows what percentage of the post's total engagement had been reached by that time window.
         Useful for understanding content lifespan (e.g. "posts reach 78% of total engagement within 24 hours").
+
+        The newer way to read this is `GET /v1/metrics/posts` with `groupBy=postAge` and a list scope (`accountId` or `profileId`): one row per post age with `engagementShareOfFinal`.
       parameters:
         - name: platform
           in: query
@@ -35024,6 +38421,8 @@ paths:
         Returns the correlation between posting frequency (posts per week) and engagement rate, broken down by platform.
         Helps find the optimal posting cadence for each platform. Each row represents a specific (platform, posts_per_week) combination
         with the average engagement rate observed across all weeks matching that frequency.
+
+        The newer way to read this is `GET /v1/metrics/accounts` with `granularity=week`, `groupBy=platform` and `metrics=postCount,engagementRate`.
       parameters:
         - name: platform
           in: query
@@ -35243,8 +38642,9 @@ paths:
                 properties:
                   availableCents: { type: integer, description: 'Your balance. It goes negative after a dispute or refund of funds already spent, or when pay-per-use already in flight lands past zero. The next funds you add cover it. New payout batches are refused while it is negative.' }
                   balanceBilling: { type: boolean, description: 'True when the account pays pay-per-use from this prepaid balance (new signups). Absent otherwise: that pay-per-use is on the monthly invoice.' }
-                  spendableCents: { type: integer, description: 'Balance billing only (absent otherwise). What pay-per-use can still spend: availableCents plus promoCents, minus usage not yet posted. At 0 or below, new pay-per-use answers 402 `insufficient_balance`.' }
+                  spendableCents: { type: integer, description: 'Balance billing only (absent otherwise). What pay-per-use can still spend: availableCents plus promoCents plus bonusCents, minus usage not yet posted. At 0 or below, new pay-per-use answers 402 `insufficient_balance`.' }
                   promoCents: { type: integer, description: 'Balance billing only (absent otherwise). Promotional and support credit Zernio added to your balance. Pay-per-use spends it before availableCents. It is never paid out to payees and is not part of availableCents.' }
+                  bonusCents: { type: integer, description: 'Balance billing only (absent otherwise). Bonus credit in the balance, usually 0. Pay-per-use spends it after availableCents. It is not cash, never paid out or refunded, and not part of availableCents.' }
                   held:
                     type: object
                     description: 'Balance billing only (absent otherwise). First months set aside from availableCents for phone numbers under review (KYC). Billed when the number activates, returned if it is declined. Not part of availableCents or spendableCents.'
@@ -36628,6 +40028,8 @@ paths:
         Returns a daily timeline of analytics metrics for a specific post, showing how impressions, likes,
         and other metrics evolved day-by-day since publishing. Each row represents one day of data per platform.
         For multi-platform Zernio posts, returns separate rows for each platform.
+
+        The newer way to read this is `GET /v1/metrics/posts` with one `postId` and `granularity=day`.
       parameters:
         - name: postId
           in: query
@@ -36994,6 +40396,8 @@ paths:
         Clicks, impressions, CTR and average position from Google Search for a connected Search Console site, through Google's `searchAnalytics.query`.
 
         Group by any of `date`, `hour`, `query`, `page`, `country`, `device`, `searchAppearance` and `brandedClassification`, and filter with Google's own filter groups. With no dimensions you get one row with the site's totals.
+
+        The newer way to read clicks, impressions, ctr and position is `GET /v1/metrics/insights` with a Search Console `accountId`, grouped by any of `query`, `page`, `country` and `device`. This route keeps Google's filters, `type`, `aggregationType`, the `hour` dimension and `dataState`.
 
         ### Branded queries
 
@@ -37446,6 +40850,8 @@ paths:
 
         - `shares` and `saves` are null on platforms that do not return that counter, which is different from a real zero.
         - `watchSeconds` and `completionRate` are null when the platform gives no watch signal.
+
+        The newer way to read this is `GET /v1/metrics/posts` with `include=samples`, for up to 10 posts in one request.
       parameters:
         - name: postId
           in: query
@@ -37547,6 +40953,8 @@ paths:
 
         - `minScore` and `maxScore`: find posts that look inflated.
         - `from` and `to`: bound when the score was computed.
+
+        The newer way to read scores is `GET /v1/metrics/posts` with `metrics=authenticityScore` or `include=authenticity`. This route keeps the score filters (`minScore`, `maxScore`, `from`, `to`).
       parameters:
         - name: accountId
           in: query
@@ -39531,7 +42939,10 @@ paths:
       operationId: listPosts
       tags: [Posts]
       summary: List posts
-      description: 'Returns a paginated list of posts. Published posts include platformPostUrl with the public URL on each platform. A query parameter that is not listed here returns 400 naming it and the accepted parameters, so a misspelled filter never silently returns the unfiltered list.'
+      description: |
+        Returns a paginated list of posts. Published posts include platformPostUrl with the public URL on each platform. A query parameter that is not listed here returns 400 naming it and the accepted parameters, so a misspelled filter never silently returns the unfiltered list.
+
+        To learn when posts publish or fail, subscribe to the `post.published`, `post.failed` and `post.partial` webhooks instead of re-reading this list.
       parameters:
         - $ref: '#/components/parameters/PageParam'
         - name: limit
@@ -40461,7 +43872,7 @@ paths:
             - `ACCOUNT_DISCONNECTED`: a target account's platform connection is no longer active (token expired or revoked, or disconnected). Reconnect it, then refresh account IDs from `GET /v1/accounts` (connection state is in `isActive`). The disconnect is also emitted as the `account.disconnected` webhook event.
             - `ACCOUNT_NOT_ENABLED_FOR_POSTING`: a target account was connected for ads only (`enabled: false`). Connect it as a posting account (it then counts as a connected account), then refresh account IDs from `GET /v1/accounts`.
             - `PROFILE_OVER_LIMIT`: a target account belongs to a profile beyond the plan's profile limit.
-            - No `code`: a target `accountId` does not belong to the authenticated user (or is outside the API key's profile scope).
+            - No `code`: a target `accountId` exists but does not belong to the authenticated user (or is outside the API key's profile scope). A nonexistent `accountId` returns 404 instead.
           content:
             application/json:
               schema:
@@ -40469,15 +43880,27 @@ paths:
                 properties:
                   error: { type: string, example: 'Account 6a0f6d2e520992756d96bb6c (facebook "My Page") is disconnected and cannot be posted to. Facebook tokens expired. Please reconnect your Facebook account. After reconnecting, refresh your account IDs from GET /v1/accounts.' }
                   code: { type: string, enum: [ACCOUNT_DISCONNECTED, ACCOUNT_NOT_ENABLED_FOR_POSTING, PROFILE_OVER_LIMIT], description: Stable machine-readable cause. Absent for ownership failures. }
+        '404':
+          x-summary: "A target accountId no longer exists: refresh account IDs from GET /v1/accounts. Retrying the same ID never succeeds."
+          description: |
+            `code: account_not_found`. A target `accountId` does not exist, usually because the account was deleted or reconnected under a new ID. Retrying with the same ID never succeeds: refresh account IDs from `GET /v1/accounts` and drop the stale one.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string, example: 'One or more accounts do not belong to this user: 6a0f6d2e520992756d96bb6c. No account with this ID exists: it was deleted, or reconnected under a new ID. Refresh your account IDs from GET /v1/accounts.' }
+                  code: { type: string, enum: [account_not_found] }
         '409':
           x-summary: "The same content went to this account within a day, or the key is still processing: change the content or retry later."
           description: |
-            Duplicate content detected. Returned when the requested post matches an existing one on `(platform, accountId, content-hash)` within the last 24 hours, AND the request was NOT an `x-request-id` retry. Distinct from same-`x-request-id` retries (which return HTTP 200 with the original post; see operation description for the idempotency contract).
+            Duplicate content detected (`code: duplicate_content`). Returned when the requested post matches an existing one on `(platform, accountId, content-hash)` within the last 24 hours, AND the request was NOT an `x-request-id` retry. Distinct from same-`x-request-id` retries (which return HTTP 200 with the original post; see operation description for the idempotency contract).
 
             Also returned with `code: idempotency_conflict` and a `Retry-After` header when a request with the same `Idempotency-Key` is still being processed. Retry after the delay to get the original post.
 
             Body fields:
             - `error`: human-readable message
+            - `code`: `duplicate_content`, or `idempotency_conflict` for the `Idempotency-Key` case above
             - `details.accountId`: the account that already has this content
             - `details.platform`: the platform that already has this content
             - `details.existingPostId`: Zernio `_id` of the original post
@@ -40489,6 +43912,7 @@ paths:
                 type: object
                 properties:
                   error: { type: string, example: "This exact content is already scheduled, publishing, or was posted to this account within the last 24 hours." }
+                  code: { type: string, enum: [duplicate_content, idempotency_conflict] }
                   details:
                     type: object
                     properties:
@@ -40664,6 +44088,8 @@ paths:
       summary: Get post
       description: |
         Fetch a single post by ID. For published posts, this returns platformPostUrl for each platform.
+
+        To wait for a post to publish, subscribe to the `post.published`, `post.failed` and `post.partial` webhooks instead of polling this endpoint. Each event carries the post, so no follow-up read is needed.
       parameters:
         - name: postId
           in: path
@@ -40787,7 +44213,7 @@ paths:
       tags: [Posts]
       summary: Update post
       description: |
-        Update an existing post. Draft, scheduled, failed, partial, and cancelled posts can be edited. Published posts can only have their recycling config updated.
+        Update an existing post. Draft, scheduled, failed, partial, and cancelled posts can be edited. Published posts can only have their recycling config updated: to change the text of a live post, use `POST /v1/posts/{postId}/edit`.
 
         To promote a draft to scheduled, send `isDraft: false` together with `scheduledFor` (or `publishNow: true`, or `queuedFromProfile`). If `isDraft` is omitted the post keeps its current draft status, so sending only `scheduledFor` to a draft returns 200 but the post remains a draft.
 
@@ -40915,11 +44341,15 @@ paths:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
-          description: Forbidden
+          description: 'Forbidden. A target `accountId` exists but does not belong to the authenticated user, or is disconnected (`code: ACCOUNT_DISCONNECTED`).'
           content:
             application/json:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
-        '404': { $ref: '#/components/responses/NotFound' }
+        '404':
+          description: 'The post does not exist, or a target `accountId` does not exist (`code: account_not_found`: the account was deleted or reconnected under a new ID, so refresh account IDs from `GET /v1/accounts`).'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
         '429': { $ref: '#/components/responses/RateLimited' }
         '503': { $ref: '#/components/responses/TemporarilyUnavailable' }
         '409':
@@ -40984,7 +44414,7 @@ paths:
               example:
                 message: "Post deleted successfully"
         '400':
-          description: Cannot delete published posts
+          description: 'Cannot delete published posts (`code: invalid_resource_state`). Use `POST /v1/posts/{postId}/unpublish` to delete it from the platforms.'
           content:
             application/json:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
@@ -41137,12 +44567,28 @@ paths:
       operationId: retryPost
       tags: [Posts]
       summary: Retry failed post
-      description: Immediately retries publishing a failed post. Returns the updated post with its new status.
+      description: |
+        Immediately retries publishing a failed or partial post and returns the updated post with a per-platform result.
+
+        - Without a body, every failed or pending platform is retried.
+        - Pass `platforms` to retry only some of them, for example the one platform that failed on a partial post. Platforms not listed are left alone.
+        - Prefer this over creating the post again, which posts a second time to the platforms that already published.
+
+        A retry never collides with its own post in the 24-hour duplicate-content check. It still answers 409 when another post with identical content published, or is about to publish, to the same account.
       parameters:
         - name: postId
           in: path
           required: true
           schema: { type: string }
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PostRetryRequest'
+            example:
+              platforms:
+                - platform: twitter
       responses:
         '200':
           description: Retry successful
@@ -41151,7 +44597,16 @@ paths:
               schema:
                 $ref: '#/components/schemas/PostRetryResponse'
               example:
-                message: "Post published successfully"
+                message: "Post retry successful"
+                platformResults:
+                  - platform: "twitter"
+                    accountId: "64e1f0a9e2b5af0012ab34ce"
+                    retried: true
+                    status: "published"
+                    error: null
+                    errorCategory: null
+                    errorSource: null
+                    platformErrorCode: null
                 post:
                   _id: "65f1c0a9e2b5af0012ab34cd"
                   content: "Check out our new product!"
@@ -41175,22 +44630,19 @@ paths:
 
             **207 is a 2xx status**, so `fetch(...).ok` is `true` and axios resolves. Branch on the status code explicitly.
 
-            This response carries no `platformResults`. Read `post.status` (`partial`, `failed`, or `scheduled` when transient errors will be retried automatically) and `post.platforms[]` for per-platform detail.
+            `platformResults` says, per platform, whether this request retried it and how it ended (`status`, `error`, `errorCategory`). `post.status` is `partial`, `failed`, or `scheduled` when transient errors will be retried automatically.
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                  error:
-                    type: string
-                    description: Summary of why the retry did not fully succeed.
-                  post:
-                    $ref: '#/components/schemas/Post'
+                $ref: '#/components/schemas/PostRetryResponse'
         '202': { $ref: '#/components/responses/XPostWaitingForBalance' }
         '400':
-          description: 'Invalid state. `code: ACCOUNT_NOTIFICATION_ONLY` means the account of a leg is connected for notifications only (`purpose=notifications`) and cannot publish; reconnect it without the purpose, then retry.'
+          description: |
+            Invalid request or state. Distinguish by the `code` field:
+
+            - `ACCOUNT_NOTIFICATION_ONLY`: the account of a platform is connected for notifications only (`purpose=notifications`) and cannot publish. Reconnect it without the purpose, then retry.
+            - `invalid_field_value`: the post has no platform matching an entry of `platforms`.
+            - `invalid_resource_state`: the matching platform is not failed or pending (for example it already published).
           content:
             application/json:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
@@ -41219,7 +44671,7 @@ paths:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
         '404': { $ref: '#/components/responses/NotFound' }
         '409':
-          description: Post is currently publishing
+          description: 'The post is currently publishing, or another post with identical content is already active for the account within 24 hours (`details` carries `platform`, `accountId` and `existingPostId`). The post was not changed.'
           content:
             application/json:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
@@ -42387,6 +45839,8 @@ paths:
         - Without `accountIds`, the response is the first page of 25 accounts even when `limit` and `cursor` are omitted. Pass `pagination.nextCursor` back as `cursor` for the next one.
         - When that default page cuts the list, the response also carries a `warning` and the headers `X-Result-Truncated: true` and `X-Result-Limit: 25`.
         - At most 1 year between `fromDate` and `toDate`. A longer range is cut to the year before `toDate`: `dateRange.from` shows where the data starts and the response carries a `warning`.
+
+        The newer way to read this is `GET /v1/metrics/accounts` with `metrics=followers,followersGrowth` and the granularity you need.
       parameters:
         - name: accountIds
           in: query
@@ -57578,7 +61032,7 @@ paths:
                   minItems: 1
                   items:
                     type: string
-                    enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.permissions_changed, account.ads.initial_sync_completed, account.ads.sync_failed, account.ads.sync_recovered, analytics.synced, post.tracking_completed, post.authenticity_changed, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, call.transcript_segment, call.recording_ready, message.sent, message.edited, message.deleted, message.delivered, message.read, message.played, message.failed, reaction.received, referral.received, comment.received, mention.received, review.new, review.updated, review.deleted, review.restored, lead.received, conversion.received, ad.status_changed, ad.created, ad.updated, campaign.created, campaign.updated, ad_set.created, ad_set.updated, ad.review.approved, ad.review.rejected, ad.delivery_issue, campaign.budget.depleted, ad_account.status_changed, campaign.status_changed, ad.video.processed, ad_rule.triggered, automation.check.completed, automation.action.applied, automation.action.failed, automation.action.unknown, automation.alert.opened, automation.alert.escalated, automation.alert.resolved, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.account.quality_updated, whatsapp.account.status_updated, whatsapp.account.alert_received, whatsapp.contact.identity_changed, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, api.changelog.published, sms.registration.action_required, sms.registration.status_updated, branded_calling.identity.status_updated, branded_calling.identity.action_required, branded_calling.number.status_updated, rcs.agent.status_updated, commerce.product.created, commerce.product.updated, commerce.product.deleted, commerce.order.created, commerce.order.updated, commerce.order.refunded, contact.tag_added, contact.tag_removed, contact.field_changed, sequence.enrolled, sequence.exited, workflow.run.started, workflow.run.completed, workflow.run.failed, support.run.completed, support.run.failed, campaign_submission.received, campaign_submission.flagged, campaign_submission.pending_review, campaign_submission.approved, campaign_submission.rejected, creator_campaign.budget_exhausted, creator_campaign.closed, campaign_payout.payable, campaign_payout.settled, campaign_payout.failed, campaign_participant.joined, campaign_participant.suspended, campaign_participant.removed, balance.low, balance.empty, balance.charged, campaign_participant.pending, campaign_participant.approved, campaign_participant.denied, campaign_draft.submitted, campaign_draft.approved, campaign_draft.revision_requested, campaign_draft.rejected, campaign_sample.requested, campaign_sample.approved, campaign_sample.shipped, campaign_sample.declined, notification.sent]
+                    enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.permissions_changed, account.ads.initial_sync_completed, account.ads.sync_failed, account.ads.sync_recovered, analytics.synced, post.tracking_completed, post.authenticity_changed, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, call.transcript_segment, call.recording_ready, message.sent, message.edited, message.deleted, message.delivered, message.read, message.played, message.failed, reaction.received, referral.received, comment.received, mention.received, review.new, review.updated, review.deleted, review.restored, lead.received, conversion.received, tracking_site.ready, ad.status_changed, ad.created, ad.updated, campaign.created, campaign.updated, ad_set.created, ad_set.updated, ad.review.approved, ad.review.rejected, ad.delivery_issue, campaign.budget.depleted, ad_account.status_changed, campaign.status_changed, ad.video.processed, ad_rule.triggered, automation.check.completed, automation.action.applied, automation.action.failed, automation.action.unknown, automation.alert.opened, automation.alert.escalated, automation.alert.resolved, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.account.quality_updated, whatsapp.account.status_updated, whatsapp.account.alert_received, whatsapp.contact.identity_changed, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, api.changelog.published, sms.registration.action_required, sms.registration.status_updated, branded_calling.identity.status_updated, branded_calling.identity.action_required, branded_calling.number.status_updated, rcs.agent.status_updated, commerce.product.created, commerce.product.updated, commerce.product.deleted, commerce.order.created, commerce.order.updated, commerce.order.refunded, contact.tag_added, contact.tag_removed, contact.field_changed, sequence.enrolled, sequence.exited, workflow.run.started, workflow.run.completed, workflow.run.failed, support.run.completed, support.run.failed, campaign_submission.received, campaign_submission.flagged, campaign_submission.pending_review, campaign_submission.approved, campaign_submission.rejected, creator_campaign.budget_exhausted, creator_campaign.closed, campaign_payout.payable, campaign_payout.settled, campaign_payout.failed, campaign_participant.joined, campaign_participant.suspended, campaign_participant.removed, balance.low, balance.empty, balance.charged, campaign_participant.pending, campaign_participant.approved, campaign_participant.denied, campaign_draft.submitted, campaign_draft.approved, campaign_draft.revision_requested, campaign_draft.rejected, campaign_sample.requested, campaign_sample.approved, campaign_sample.shipped, campaign_sample.declined, notification.sent]
                   description: Events to subscribe to (at least one required)
                 isActive:
                   type: boolean
@@ -57747,7 +61201,7 @@ paths:
                   minItems: 1
                   items:
                     type: string
-                    enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.permissions_changed, account.ads.initial_sync_completed, account.ads.sync_failed, account.ads.sync_recovered, analytics.synced, post.tracking_completed, post.authenticity_changed, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, call.transcript_segment, call.recording_ready, message.sent, message.edited, message.deleted, message.delivered, message.read, message.played, message.failed, reaction.received, referral.received, comment.received, mention.received, review.new, review.updated, review.deleted, review.restored, lead.received, conversion.received, ad.status_changed, ad.created, ad.updated, campaign.created, campaign.updated, ad_set.created, ad_set.updated, ad.review.approved, ad.review.rejected, ad.delivery_issue, campaign.budget.depleted, ad_account.status_changed, campaign.status_changed, ad.video.processed, ad_rule.triggered, automation.check.completed, automation.action.applied, automation.action.failed, automation.action.unknown, automation.alert.opened, automation.alert.escalated, automation.alert.resolved, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.account.quality_updated, whatsapp.account.status_updated, whatsapp.account.alert_received, whatsapp.contact.identity_changed, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, api.changelog.published, sms.registration.action_required, sms.registration.status_updated, branded_calling.identity.status_updated, branded_calling.identity.action_required, branded_calling.number.status_updated, rcs.agent.status_updated, commerce.product.created, commerce.product.updated, commerce.product.deleted, commerce.order.created, commerce.order.updated, commerce.order.refunded, contact.tag_added, contact.tag_removed, contact.field_changed, sequence.enrolled, sequence.exited, workflow.run.started, workflow.run.completed, workflow.run.failed, support.run.completed, support.run.failed, campaign_submission.received, campaign_submission.flagged, campaign_submission.pending_review, campaign_submission.approved, campaign_submission.rejected, creator_campaign.budget_exhausted, creator_campaign.closed, campaign_payout.payable, campaign_payout.settled, campaign_payout.failed, campaign_participant.joined, campaign_participant.suspended, campaign_participant.removed, balance.low, balance.empty, balance.charged, campaign_participant.pending, campaign_participant.approved, campaign_participant.denied, campaign_draft.submitted, campaign_draft.approved, campaign_draft.revision_requested, campaign_draft.rejected, campaign_sample.requested, campaign_sample.approved, campaign_sample.shipped, campaign_sample.declined, notification.sent]
+                    enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.permissions_changed, account.ads.initial_sync_completed, account.ads.sync_failed, account.ads.sync_recovered, analytics.synced, post.tracking_completed, post.authenticity_changed, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, call.transcript_segment, call.recording_ready, message.sent, message.edited, message.deleted, message.delivered, message.read, message.played, message.failed, reaction.received, referral.received, comment.received, mention.received, review.new, review.updated, review.deleted, review.restored, lead.received, conversion.received, tracking_site.ready, ad.status_changed, ad.created, ad.updated, campaign.created, campaign.updated, ad_set.created, ad_set.updated, ad.review.approved, ad.review.rejected, ad.delivery_issue, campaign.budget.depleted, ad_account.status_changed, campaign.status_changed, ad.video.processed, ad_rule.triggered, automation.check.completed, automation.action.applied, automation.action.failed, automation.action.unknown, automation.alert.opened, automation.alert.escalated, automation.alert.resolved, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.account.quality_updated, whatsapp.account.status_updated, whatsapp.account.alert_received, whatsapp.contact.identity_changed, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, api.changelog.published, sms.registration.action_required, sms.registration.status_updated, branded_calling.identity.status_updated, branded_calling.identity.action_required, branded_calling.number.status_updated, rcs.agent.status_updated, commerce.product.created, commerce.product.updated, commerce.product.deleted, commerce.order.created, commerce.order.updated, commerce.order.refunded, contact.tag_added, contact.tag_removed, contact.field_changed, sequence.enrolled, sequence.exited, workflow.run.started, workflow.run.completed, workflow.run.failed, support.run.completed, support.run.failed, campaign_submission.received, campaign_submission.flagged, campaign_submission.pending_review, campaign_submission.approved, campaign_submission.rejected, creator_campaign.budget_exhausted, creator_campaign.closed, campaign_payout.payable, campaign_payout.settled, campaign_payout.failed, campaign_participant.joined, campaign_participant.suspended, campaign_participant.removed, balance.low, balance.empty, balance.charged, campaign_participant.pending, campaign_participant.approved, campaign_participant.denied, campaign_draft.submitted, campaign_draft.approved, campaign_draft.revision_requested, campaign_draft.rejected, campaign_sample.requested, campaign_sample.approved, campaign_sample.shipped, campaign_sample.declined, notification.sent]
                   description: Events to subscribe to. Must contain at least one event if provided.
                 isActive:
                   type: boolean
@@ -58213,6 +61667,7 @@ paths:
                     - automation.alert.resolved
                     - lead.received
                     - conversion.received
+                    - tracking_site.ready
                     - whatsapp.template.status_updated
                     - whatsapp.template.category_updated
                     - whatsapp.account.name_status_updated
@@ -83162,6 +86617,8 @@ paths:
         An event counts here up to 15 minutes after it arrives.
 
         Paginated by campaign: pass `nextCursor` back as `cursor` until it is null.
+
+        The newer way to read this is `GET /v1/metrics/campaigns`.
       security:
         - bearerAuth: []
       parameters:
@@ -83257,6 +86714,8 @@ paths:
         An event counts here up to 15 minutes after it arrives.
 
         Formulas are not computed here, since they also read the platform's numbers: apply one to these totals and the account's spend for the same range, or read it per campaign from `GET /v1/ads/tree?results=true`.
+
+        The newer way to read this is `GET /v1/metrics/ad-accounts`.
       security:
         - bearerAuth: []
       parameters:
@@ -88742,6 +92201,8 @@ paths:
         When the ad belongs to a Meta ad account, a range reaching further back answers `202` with `backfillPending: true` and the covered part, while the older days (up to 730 days back) are imported in the background. Repeat the request until it returns 200.
 
         Other platforms never return `202`.
+
+        The newer way to read this is `GET /v1/metrics/ads`, which reads up to 100 ads in one request, or one ad day by day with `granularity=day`.
       security:
         - bearerAuth: []
       parameters:
@@ -98929,7 +102390,7 @@ paths:
 
             - Meta CDN links are signed and expire: download what you need before each item's `expires_at`.
             - `media` is `null` when Meta would not render the snapshot for that ad, and `[]` for a text-only ad.
-            - Every row costs one extra page render, so responses are slower: use a small `limit`.
+            - Every ad is rendered in a browser, so responses take several seconds longer, and `limit` is capped at 25 (`limit` > 25 is a 400).
             - With a `fields` override, include `ad_snapshot_url` or no row gets `media`.
         - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 25 }, description: "Rows per page. LinkedIn accepts at most 25." }
         - { name: after, in: query, schema: { type: string }, description: "paging.after of the previous page." }
@@ -102360,6 +105821,18 @@ paths:
                             eventName: { type: string, description: 'The earlier event, for a `lead_form` or `event` touch.' }
                             answer: { type: string, description: 'The buyer''s answer, for a `survey` touch.' }
                         credit: { type: object, additionalProperties: { type: number }, description: 'The share of the event (0 to 1) this touch gets per model: first_touch, last_non_direct, linear, position_based, time_decay, w_shaped.', example: { linear: 0.5, first_touch: 1, time_decay: 0.35 } }
+                  after:
+                    type: array
+                    description: 'The same person''s events in the 180 days after this one, oldest first, up to 50, like a Stripe payment after a sign-up. People match on email, phone, external id or visitor id. Copies of this event, and website copies of a sale a server reported, are left out.'
+                    items:
+                      type: object
+                      properties:
+                        eventId: { type: string }
+                        eventName: { type: string }
+                        source: { type: string, description: 'Where it came from: `stripe`, `shopify`, `api`, `web`...' }
+                        eventTime: { type: string, format: date-time }
+                        value: { type: [number, "null"] }
+                        currency: { type: [string, "null"] }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
     patch:

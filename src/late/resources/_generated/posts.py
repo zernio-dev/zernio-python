@@ -283,9 +283,16 @@ class PostsResource:
         )
         return self._client._post("/v1/posts/bulk-upload", params=params)
 
-    def retry_post(self, post_id: str) -> dict[str, Any]:
+    def retry_post(
+        self, post_id: str, *, platforms: list[dict[str, Any]] | None = None
+    ) -> dict[str, Any]:
         """Retry failed post"""
-        return self._client._post(f"/v1/posts/{post_id}/retry")
+        payload = self._build_body(
+            {
+                "platforms": platforms,
+            }
+        )
+        return self._client._post(f"/v1/posts/{post_id}/retry", data=payload)
 
     def review_post(self, post_id: str, decision: str) -> dict[str, Any]:
         """Approve or reject a post"""
@@ -574,9 +581,16 @@ class PostsResource:
         )
         return await self._client._apost("/v1/posts/bulk-upload", params=params)
 
-    async def aretry_post(self, post_id: str) -> dict[str, Any]:
+    async def aretry_post(
+        self, post_id: str, *, platforms: list[dict[str, Any]] | None = None
+    ) -> dict[str, Any]:
         """Retry failed post (async)"""
-        return await self._client._apost(f"/v1/posts/{post_id}/retry")
+        payload = self._build_body(
+            {
+                "platforms": platforms,
+            }
+        )
+        return await self._client._apost(f"/v1/posts/{post_id}/retry", data=payload)
 
     async def areview_post(self, post_id: str, decision: str) -> dict[str, Any]:
         """Approve or reject a post (async)"""

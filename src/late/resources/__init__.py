@@ -54,6 +54,7 @@ from ._generated.logs import LogsResource
 from ._generated.mentions import MentionsResource
 from ._generated.messages import MessagesResource
 from ._generated.messaging_ads import MessagingAdsResource
+from ._generated.metrics import MetricsResource
 from ._generated.phone_numbers import PhoneNumbersResource
 from ._generated.product_catalogs import ProductCatalogsResource
 from ._generated.products import ProductsResource
@@ -144,6 +145,7 @@ __all__ = [
     "MentionsResource",
     "MessagesResource",
     "MessagingAdsResource",
+    "MetricsResource",
     "PhoneNumbersResource",
     "PostsResource",
     "ProductCatalogsResource",

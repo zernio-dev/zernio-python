@@ -1450,6 +1450,18 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `messaging_ads.create_ctwa_ad()` | Create CTWA ad (deprecated) |
 | `messaging_ads.create_messaging_ad()` | Create messaging ad |
 
+### Metrics
+| Method | Description |
+|--------|-------------|
+| `metrics.get_account_metrics()` | Read follower and post totals per account, platform or scope over time |
+| `metrics.get_ad_account_metrics()` | Read the uploaded results summed across ad accounts |
+| `metrics.get_ad_metrics()` | Read ad metrics by id, or one ad day by day with breakdowns |
+| `metrics.get_campaign_metrics()` | Read the uploaded results of each campaign over a window |
+| `metrics.get_inbox_metrics()` | Read message volume and response times |
+| `metrics.get_insight_metrics()` | Read live account or post insights from the platform |
+| `metrics.get_metrics_catalog()` | List the metrics, groupings and limits of each metrics endpoint |
+| `metrics.get_post_metrics()` | Read post metrics by id, day by day, as a list, or grouped |
+
 ### Phone Numbers
 | Method | Description |
 |--------|-------------|

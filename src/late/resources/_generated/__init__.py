@@ -53,6 +53,7 @@ from .media import MediaResource
 from .mentions import MentionsResource
 from .messages import MessagesResource
 from .messaging_ads import MessagingAdsResource
+from .metrics import MetricsResource
 from .phone_numbers import PhoneNumbersResource
 from .posts import PostsResource
 from .product_catalogs import ProductCatalogsResource
@@ -137,6 +138,7 @@ __all__ = [
     "MentionsResource",
     "MessagesResource",
     "MessagingAdsResource",
+    "MetricsResource",
     "PhoneNumbersResource",
     "PostsResource",
     "ProductCatalogsResource",

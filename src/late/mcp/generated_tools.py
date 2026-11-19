@@ -903,6 +903,8 @@ def register_generated_tools(mcp, _get_client):
         - When that default page cuts the list, the response also carries a `warning` and the headers `X-Result-Truncated: true` and `X-Result-Limit: 25`.
         - At most 1 year between `fromDate` and `toDate`. A longer range is cut to the year before `toDate`: `dateRange.from` shows where the data starts and the response carries a `warning`.
 
+        The newer way to read this is `GET /v1/metrics/accounts` with `metrics=followers,followersGrowth` and the granularity you need.
+
         Args:
             account_ids: Comma-separated list of up to 25 account IDs. Optional: without it, the response pages through all your accounts.
             profile_id: Filter by profile ID
@@ -6184,6 +6186,8 @@ def register_generated_tools(mcp, _get_client):
 
         Paginated by campaign: pass `nextCursor` back as `cursor` until it is null.
 
+        The newer way to read this is `GET /v1/metrics/campaigns`.
+
         Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit
 
         Args:
@@ -6266,6 +6270,8 @@ def register_generated_tools(mcp, _get_client):
         An event counts here up to 15 minutes after it arrives.
 
         Formulas are not computed here, since they also read the platform's numbers: apply one to these totals and the account's spend for the same range, or read it per campaign from `GET /v1/ads/tree?results=true`.
+
+        The newer way to read this is `GET /v1/metrics/ad-accounts`.
 
         Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit
 
@@ -13545,6 +13551,8 @@ def register_generated_tools(mcp, _get_client):
 
             Other platforms never return `202`.
 
+            The newer way to read this is `GET ...
+
             Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit, microsoft
 
             Args:
@@ -13723,7 +13731,7 @@ def register_generated_tools(mcp, _get_client):
 
         - Meta CDN links are signed and expire: download what you need before each item's `expires_at`.
         - `media` is `null` when Meta would not render the snapshot for that ad, and `[]` for a text-only ad.
-        - Every row costs one extra page render, so responses are slower: use a small `limit`.
+        - Every ad is rendered in a browser, so responses take several seconds longer, and `limit` is capped at 25 (`limit` > 25 is a 400).
         - With a `fields` override, include `ad_snapshot_url` or no row gets `media`.
                 limit: Rows per page. LinkedIn accepts at most 25.
                 after: paging.after of the previous page."""
@@ -14698,6 +14706,8 @@ def register_generated_tools(mcp, _get_client):
 
         Returns analytics for posts. With postId, returns a single post. Without it, returns a paginated list with overview stats.
 
+        To keep a local copy in sync, do not poll this endpoint per account or per post. Subscribe to the `analytics.synced` webhook and read only what changed from `GET /v1/analytics/delta`.
+
         - Accepts both Zernio Post IDs and External Post IDs (auto-resolved).
         - fromDate defaults to 90 days ago if omitted, max range 366 days.
         - Single post lookups may return 202 (sync pending) or 424 (all platforms failed).
@@ -14706,11 +14716,7 @@ def register_generated_tools(mcp, _get_client):
 
         ### LinkedIn personal accounts
 
-        Analytics are only available for posts published through Zernio. LinkedIn's API only returns metrics for posts authored by the authenticated user. Organization/company page analytics work for all posts.
-
-        ### Facebook Page stories
-
-        Stories on a connected Page, published through Zernio or natively, are collected while they are live and ...
+        Analytics are only available for posts published through Zernio. LinkedIn's API only returns metrics for posts authored by the authenticated user. ...
 
         Args:
             post_id: Returns analytics for a single post. Accepts Zernio Post IDs, External Post IDs and the platform's native post ID. Zernio IDs are auto-resolved to External Post analytics.
@@ -14891,8 +14897,8 @@ def register_generated_tools(mcp, _get_client):
             Backed by LinkedIn's organizationalEntityShareStatistics,
             organizationalEntityFollowerStatistics, and organizationPageStatistics endpoints.
 
-            Response shape matches /v1/analytics/instagram/account-insights. Max 89 days,
-            defaults to last 30 days.
+            Response shape matches /v1/analytics/instagram/account-insights. Max 365 days,
+            fromDate no older than 365 days ago, defaults to last 30 days.
 
             Scope requirements: r_organization_social, r_organization_followers, and
             r_organization_admin must all be present on the account. Accounts connected before
@@ -14902,10 +14908,9 @@ def register_generated_tools(mcp, _get_client):
               - Page-view metrics accept only metricType=total_value (LinkedIn omits per-day
                 segmentation even when the API is called with DAY granularity, so a time-series
                 response would be meaningless).
-              - Date range capped at 89 days.
+              - Date range capped at 365 days, starting no more than 365 days ago.
 
-            LinkedIn-side platform limits (not re-enforced here, but worth knowing for larger
-            ranges ...
+            LinkedIn keeps ...
 
             Args:
                 account_id: The Zernio SocialAccount ID for the LinkedIn organization account. (required)
@@ -15723,6 +15728,8 @@ def register_generated_tools(mcp, _get_client):
 
             `totals` sums the whole range for the applied filters (pass `accountId` for one account). With attribution \"publish\" they are the lifetime metrics of posts published in the range, with \"received\" the engagement that arrived in the range.
 
+            The newer way to read this is `GET /v1/metrics/accounts` with `granularity=day`, grouped by `account`, `platform` or `none`.
+
             Args:
                 platform: Filter by platform (e.g. "instagram", "tiktok"). Omit for all platforms.
                 profile_id: Filter by profile ID. Omit for all profiles.
@@ -15823,6 +15830,8 @@ def register_generated_tools(mcp, _get_client):
         Groups all published posts by day of week and hour (UTC), calculating average engagement per slot.
         Use this to auto-schedule posts at optimal times.
 
+        The newer way to read this is `GET /v1/metrics/posts` with `groupBy=dayOfWeek,hour` and a list scope (`accountId` or `profileId`): one row per UTC weekday and hour, with any of its post metrics.
+
         Args:
             platform: Filter by platform (e.g. "instagram", "tiktok"). Omit for all platforms.
             profile_id: Filter by profile ID. Omit for all profiles.
@@ -15859,6 +15868,8 @@ def register_generated_tools(mcp, _get_client):
         Returns how engagement accumulates over time after a post is published.
         Each bucket shows what percentage of the post's total engagement had been reached by that time window.
         Useful for understanding content lifespan (e.g. \"posts reach 78% of total engagement within 24 hours\").
+
+        The newer way to read this is `GET /v1/metrics/posts` with `groupBy=postAge` and a list scope (`accountId` or `profileId`): one row per post age with `engagementShareOfFinal`.
 
         Args:
             platform: Filter by platform (e.g. "instagram", "tiktok"). Omit for all platforms.
@@ -15897,6 +15908,8 @@ def register_generated_tools(mcp, _get_client):
         Helps find the optimal posting cadence for each platform. Each row represents a specific (platform, posts_per_week) combination
         with the average engagement rate observed across all weeks matching that frequency.
 
+        The newer way to read this is `GET /v1/metrics/accounts` with `granularity=week`, `groupBy=platform` and `metrics=postCount,engagementRate`.
+
         Args:
             platform: Filter by platform (e.g. "instagram", "tiktok"). Omit for all platforms.
             profile_id: Filter by profile ID. Omit for all profiles.
@@ -15930,6 +15943,8 @@ def register_generated_tools(mcp, _get_client):
            Returns a daily timeline of analytics metrics for a specific post, showing how impressions, likes,
            and other metrics evolved day-by-day since publishing. Each row represents one day of data per platform.
            For multi-platform Zernio posts, returns separate rows for each platform.
+
+           The newer way to read this is `GET /v1/metrics/posts` with one `postId` and `granularity=day`.
 
            Args:
                post_id: The post to fetch timeline for. Accepts an ExternalPost ID, a platformPostId, or a Zernio Post ID.
@@ -16125,17 +16140,15 @@ def register_generated_tools(mcp, _get_client):
 
         Group by any of `date`, `hour`, `query`, `page`, `country`, `device`, `searchAppearance` and `brandedClassification`, and filter with Google's own filter groups. With no dimensions you get one row with the site's totals.
 
+        The newer way to read clicks, impressions, ctr and position is `GET /v1/metrics/insights` with a Search Console `accountId`, grouped by any of `query`, `page`, `country` and `device`. This route keeps Google's filters, `type`, `aggregationType`, the `hour` dimension and `dataState`.
+
         ### Branded queries
 
         `brandedClassification` splits searches into `BRANDED` and `NON_BRANDED`. Google has it from February 21, 2026, and only for sites with enough search volume. As a filter it takes `equals` only and cannot be combined with a `query` filter.
 
         ### Dates
 
-        Dates are `YYYY-MM-DD` in Pacific time. `toDate` defaults to yesterday and `fromDate` to 27 days before `toDate`, the window every report takes. Unknown fields answer 400. Google keeps 16 months, and the last two or three days are still filling in unless you pass `dataState: all`.
-
-        ### Caching and quota
-
-        Identical requests on the same site are cached for 10 ...
+        Dates are `YYYY-MM-DD` in Pacific time. `toDate` defaults to yesterday and ...
 
         Platforms: googlesearchconsole
 
@@ -16395,6 +16408,8 @@ def register_generated_tools(mcp, _get_client):
         - `shares` and `saves` are null on platforms that do not return that counter, which is different from a real zero.
         - `watchSeconds` and `completionRate` are null when the platform gives no watch signal.
 
+        The newer way to read this is `GET /v1/metrics/posts` with `include=samples`, for up to 10 posts in one request.
+
         Platforms: instagram, facebook, tiktok, youtube, twitter, threads, pinterest, reddit, bluesky, googlebusiness, linkedin
 
         Args:
@@ -16469,6 +16484,8 @@ def register_generated_tools(mcp, _get_client):
 
         - `minScore` and `maxScore`: find posts that look inflated.
         - `from` and `to`: bound when the score was computed.
+
+        The newer way to read scores is `GET /v1/metrics/posts` with `metrics=authenticityScore` or `include=authenticity`. This route keeps the score filters (`minScore`, `maxScore`, `from`, `to`).
 
         Platforms: instagram, facebook, tiktok, youtube, twitter, threads, pinterest, reddit, bluesky, googlebusiness, linkedin
 
@@ -43740,6 +43757,498 @@ def register_generated_tools(mcp, _get_client):
         except Exception as e:
             raise ToolError(f"Error: {e}") from e
 
+    # METRICS
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List the metrics, groupings and limits of each metrics endpoint",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def metrics_get_metrics_catalog(
+        entity: Literal[
+            "posts", "accounts", "inbox", "insights", "ads", "campaigns", "ad-accounts"
+        ]
+        | None = None,
+        platform: Literal[
+            "tiktok",
+            "instagram",
+            "facebook",
+            "youtube",
+            "linkedin",
+            "twitter",
+            "threads",
+            "pinterest",
+            "reddit",
+            "bluesky",
+            "googlebusiness",
+            "telegram",
+            "snapchat",
+            "whatsapp",
+            "discord",
+            "slack",
+            "google",
+            "microsoft",
+            "openai",
+        ]
+        | None = None,
+    ) -> str:
+        """List the metrics, groupings and limits of each metrics endpoint
+
+        Describes each metrics endpoint (`GET /v1/metrics/posts`, `/accounts`, `/insights`, `/inbox`, `/ads`, `/campaigns` and `/ad-accounts`): the scope it needs, the most ids per scope, the longest and default date window, the granularities, sorts, includes, groupBy values, attributions and every metric with its unit, platforms and freshness.
+
+        Read it once and cache it: it changes only when Zernio adds a metric or a grouping. Filter with `entity` and `platform` to get only what one screen needs. No analytics add-on is needed to read it.
+
+        Args:
+            entity: Only this entity.
+            platform: Only the metrics, sorts, includes and groupBy values this platform has. Every entity is still listed."""
+        client = _get_client()
+        try:
+            response = client.metrics.get_metrics_catalog(
+                entity=entity, platform=platform
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Read post metrics by id, day by day, as a list, or grouped",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def metrics_get_post_metrics(
+        post_id: str | None = None,
+        platform_post_id: str | None = None,
+        account_id: str | None = None,
+        profile_id: str | None = None,
+        metrics: str | None = None,
+        group_by: str | None = None,
+        from_date: str | None = None,
+        to_date: str | None = None,
+        platform: Literal[
+            "tiktok",
+            "instagram",
+            "facebook",
+            "youtube",
+            "linkedin",
+            "twitter",
+            "threads",
+            "pinterest",
+            "reddit",
+            "bluesky",
+            "googlebusiness",
+            "telegram",
+            "snapchat",
+            "whatsapp",
+            "discord",
+            "slack",
+        ]
+        | None = None,
+        granularity: Literal["total", "day"] = "total",
+        origin: Literal["all", "zernio", "external"] | None = None,
+        sort: str | None = None,
+        include: str | None = None,
+        changed_since: str | None = None,
+        limit: int = 50,
+        cursor: str | None = None,
+    ) -> str:
+        """Read post metrics by id, day by day, as a list, or grouped
+
+        Reads the metrics Zernio synced for published posts, Zernio posts and posts published outside Zernio alike. Send exactly one scope: `postId`, `platformPostId`, `accountId` or `profileId`, or read the change feed with `changedSince`.
+
+        - **By id** (`postId` or `platformPostId`, up to 100): one row per publication. Ids that match no post you can read come back in `meta.missingIds`.
+        - **One post day by day**: one id with `granularity=day`.
+        - **A list** (`accountId` up to 25, or one `profileId` with an optional `platform`): posts published in the window, newest first, paged with `cursor`. `sort` orders it by a metric (`likes-desc`, `engagement-desc`...), up to the 1,000 best posts. `include=total` counts the list on the first page (windows up to 92 days).
+
+        Grouped with `groupBy`:
+
+        - `post`: sums the platforms each post id was published to into one row (by id, `granularity=total`).
+        - `dayOfWeek,hour`: one row per UTC weekday and hour the posts were published, summing each post's latest ...
+
+        Args:
+            post_id: Comma-separated post ids (Zernio or external), up to 100.
+            platform_post_id: Comma-separated ids the platform gave the posts (a TikTok video id, a tweet id), up to 100.
+            account_id: Comma-separated account ids, up to 25.
+            profile_id: One profile id.
+            metrics: Comma-separated metric names from the catalog. Defaults to every metric.
+            group_by: Comma-separated groupings from the catalog, at most 2.
+            from_date: First day, inclusive (YYYY-MM-DD, UTC).
+            to_date: Last day, inclusive (YYYY-MM-DD, UTC).
+            platform: Only with profileId.
+            granularity: day reads one post.
+            origin: Lists only. Defaults to all.
+            sort: A sort from the catalog, such as published-desc or likes-desc.
+            include: Comma-separated includes from the catalog.
+            changed_since: now (no rows, the starting cursor) or the previous pagination.nextCursor: one row per post whose metrics changed since, oldest first, across every account the key reads. Narrow with profileId and platform. Changes are kept 7 days; cursors older than 6 days are refused.
+            limit: Rows per page, 50 by default, 100 at most.
+            cursor: pagination.nextCursor of the previous page, sent with the same query."""
+        client = _get_client()
+        try:
+            response = client.metrics.get_post_metrics(
+                post_id=post_id,
+                platform_post_id=platform_post_id,
+                account_id=account_id,
+                profile_id=profile_id,
+                metrics=metrics,
+                group_by=group_by,
+                from_date=from_date,
+                to_date=to_date,
+                platform=platform,
+                granularity=granularity,
+                origin=origin,
+                sort=sort,
+                include=include,
+                changed_since=changed_since,
+                limit=limit,
+                cursor=cursor,
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Read follower and post totals per account, platform or scope over time",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def metrics_get_account_metrics(
+        account_id: str | None = None,
+        profile_id: str | None = None,
+        metrics: str | None = None,
+        group_by: str | None = None,
+        from_date: str | None = None,
+        to_date: str | None = None,
+        platform: Literal[
+            "tiktok",
+            "instagram",
+            "facebook",
+            "youtube",
+            "linkedin",
+            "twitter",
+            "threads",
+            "pinterest",
+            "reddit",
+            "bluesky",
+            "googlebusiness",
+            "telegram",
+            "snapchat",
+            "whatsapp",
+            "discord",
+            "slack",
+        ]
+        | None = None,
+        granularity: Literal["total", "day", "week", "month"] = "total",
+        attribution: Literal["publish", "received"] = "publish",
+        limit: int = 50,
+        cursor: str | None = None,
+    ) -> str:
+        """Read follower and post totals per account, platform or scope over time
+
+        Reads followers, the account counters the platform reports (media count, video count...) and the totals of the posts each account published, per account, per platform or for the whole scope, for the whole window or by day, week or month.
+
+        - Scope: exactly one of `accountId` (up to 25) or `profileId` (one, with an optional `platform`).
+        - `groupBy`: `account` (the default, one row per account and period), `platform` or `none`.
+        - `granularity`: `total` (the default), `day`, `week` (rows start on Monday) or `month`. A row's `date` is the start of its period, never before `fromDate`.
+        - `attribution`: `publish` (the default) counts each post on the day it was published; `received` counts each interaction on the day it arrived, for windows up to 92 days.
+        - `granularity=week&groupBy=platform&metrics=postCount,engagementRate`: how many posts each platform got per week and their pooled engagement rate. The newer way to read `GET /v1/analytics/posting-frequency`.
+
+        Without `fromDate` and ...
+
+        Args:
+            account_id: Comma-separated account ids, up to 25.
+            profile_id: One profile id.
+            metrics: Comma-separated metric names from the catalog. Defaults to every metric.
+            group_by: Comma-separated groupings from the catalog, at most 2.
+            from_date: First day, inclusive (YYYY-MM-DD, UTC).
+            to_date: Last day, inclusive (YYYY-MM-DD, UTC).
+            platform: Only with profileId.
+            granularity
+            attribution
+            limit: Rows per page, 50 by default, 100 at most.
+            cursor: pagination.nextCursor of the previous page, sent with the same query."""
+        client = _get_client()
+        try:
+            response = client.metrics.get_account_metrics(
+                account_id=account_id,
+                profile_id=profile_id,
+                metrics=metrics,
+                group_by=group_by,
+                from_date=from_date,
+                to_date=to_date,
+                platform=platform,
+                granularity=granularity,
+                attribution=attribution,
+                limit=limit,
+                cursor=cursor,
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Read live account or post insights from the platform",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def metrics_get_insight_metrics(
+        account_id: str,
+        metrics: str | None = None,
+        platform_post_id: str | None = None,
+        granularity: Literal["total", "day"] | None = None,
+        group_by: str | None = None,
+        breakdown: str | None = None,
+        timeframe: Literal["this_week", "this_month"] | None = None,
+        cursor: str | None = None,
+        limit: int | None = None,
+        include: str | None = None,
+        from_date: str | None = None,
+        to_date: str | None = None,
+    ) -> str:
+        """Read live account or post insights from the platform
+
+        Reads insights the platform computes and Zernio does not store (page views, profile visits, watch time, audience demographics...), live from the platform, for one account or one of its posts (`platformPostId`).
+
+        Platforms: Facebook, Instagram, LinkedIn, TikTok, YouTube, Pinterest, Google Business and Google Search Console. Another platform answers 400 on `accountId`, a disconnected account 401 `account_disconnected`, and a platform error the platform's own code under `platformError`.
+
+        - `granularity`: `total` (the default) or `day`.
+        - `groupBy=demographic` with one metric and `breakdown` (age, gender, country, city...): one row per audience segment. LinkedIn: organizations only.
+        - `groupBy=hour`: Instagram followers online per day and hour of the last 30 days.
+        - `groupBy=keyword`: Google Business search keywords, one row per keyword, paged with `cursor`.
+
+        Google Search Console answers clicks, impressions, ctr (0 to 1) and position (1 is the top), final days only:
+
+        - Without groupBy: ...
+
+        Args:
+            account_id: One account id. (required)
+            metrics: Comma-separated metric names (up to 25). Defaults to the platform's default metrics. `GET /v1/metrics/catalog?entity=insights&platform=...` lists them.
+            platform_post_id: One post of the account, by its platform id: answers the post's live insights instead of the account's.
+            granularity: Defaults to total; groupBy=hour answers per day.
+            group_by: demographic: audience segments (age, gender, country...). hour: Instagram followers online per day and hour, last 30 days. keyword: Google Business search keywords per month. query, page, country, device: Google Search Console, combined with commas (groupBy=query,country).
+            breakdown: With groupBy=demographic: comma-separated segments. Defaults to the platform's default segments.
+            timeframe: Instagram demographics only. Defaults to this_month.
+            cursor: With groupBy=keyword or a Search Console account: pagination.nextCursor of the previous page, sent with the same query.
+            limit: Search Console accounts only: rows per page. Defaults to 1,000.
+            include: With platformPostId on YouTube: retentionCurve adds the audience retention curve.
+            from_date: First day, inclusive (YYYY-MM-DD, UTC). Defaults to 30 days before toDate. The window is at most 541 days.
+            to_date: Last day, inclusive (YYYY-MM-DD, UTC). Defaults to today."""
+        client = _get_client()
+        try:
+            response = client.metrics.get_insight_metrics(
+                account_id=account_id,
+                metrics=metrics,
+                platform_post_id=platform_post_id,
+                granularity=granularity,
+                group_by=group_by,
+                breakdown=breakdown,
+                timeframe=timeframe,
+                cursor=cursor,
+                limit=limit,
+                include=include,
+                from_date=from_date,
+                to_date=to_date,
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Read message volume and response times",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def metrics_get_inbox_metrics(
+        conversation_id: str | None = None,
+        account_id: str | None = None,
+        profile_id: str | None = None,
+        metrics: str | None = None,
+        group_by: str | None = None,
+        from_date: str | None = None,
+        to_date: str | None = None,
+        platform: str | None = None,
+        source: str | None = None,
+        granularity: Literal["total", "day", "week"] = "total",
+        sort: str | None = None,
+        include: str | None = None,
+        limit: int | None = None,
+        cursor: str | None = None,
+    ) -> str:
+        """Read message volume and response times
+
+        Counts messages received, sent, read and failed, conversations and replies, and response times (median, p90, p99, mean, min, max) across the inbox, from the messages Zernio logged.
+
+        - Scope: `conversationId` (up to 25, one row per conversation), `accountId` (up to 25) or one `profileId`. Without a scope, every account the key can read.
+        - `groupBy` (at most 2): `account`, `platform`, `source`, `hourOfWeek` (one row per UTC weekday and hour), `responseTimeBucket` (with `metrics=replied`) or `conversation` (paged with `cursor`, `include=total` counts up to 100,000).
+        - `granularity`: `total` (the default), `day` or `week`.
+        - `include=account` adds usernames to account rows; `include=conversation` adds the participant and last message to conversation rows.
+
+        Response time metrics are returned only when named in `metrics`. Without `fromDate` and `toDate` it reads the last 30 days; the window is at most 90 days. `GET /v1/metrics/catalog?entity=inbox` lists every metric, sort and groupBy.
+
+        Args:
+            conversation_id: Comma-separated conversation ids (Zernio or platform), up to 25: one row per conversation.
+            account_id: Comma-separated account ids, up to 25.
+            profile_id: One profile id.
+            metrics: Comma-separated metric names from the catalog. Defaults to the counts; response times only when named.
+            group_by: Comma-separated groupings from the catalog, at most 2: account, conversation, platform, source, hourOfWeek, responseTimeBucket.
+            from_date: First day, inclusive (YYYY-MM-DD, UTC). Defaults to 30 days before toDate. The window is at most 90 days.
+            to_date: Last day, inclusive (YYYY-MM-DD, UTC). Defaults to today.
+            platform: A messaging platform, such as instagram or whatsapp.
+            source: Only messages sent from this source, such as api or broadcast. Not with response time metrics.
+            granularity
+            sort: A sort from the catalog, such as messages-desc. With granularity=total.
+            include: Comma-separated includes from the catalog: account, conversation, total.
+            limit: Rows returned with groupBy=account (10 by default, 100 at most) or groupBy=conversation (50 by default, 1,000 at most).
+            cursor: With groupBy=conversation: pagination.nextCursor of the previous page."""
+        client = _get_client()
+        try:
+            response = client.metrics.get_inbox_metrics(
+                conversation_id=conversation_id,
+                account_id=account_id,
+                profile_id=profile_id,
+                metrics=metrics,
+                group_by=group_by,
+                from_date=from_date,
+                to_date=to_date,
+                platform=platform,
+                source=source,
+                granularity=granularity,
+                sort=sort,
+                include=include,
+                limit=limit,
+                cursor=cursor,
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Read ad metrics by id, or one ad day by day with breakdowns",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def metrics_get_ad_metrics(
+        ad_id: str,
+        granularity: Literal["total", "day"] = "total",
+        from_date: str | None = None,
+        to_date: str | None = None,
+        breakdowns: str | None = None,
+        attribution_windows: str | None = None,
+    ) -> str:
+        """Read ad metrics by id, or one ad day by day with breakdowns
+
+        Reads the delivery and conversion metrics Zernio synced from the ad networks for up to 100 Zernio ad ids (`adId`, as `GET /v1/ads` returns them). Ids you cannot read come back in `meta.missingIds`.
+
+        - `granularity=day` with one ad: one point per day.
+        - `breakdowns` with one ad: read live from the network (age, gender, country, placement...), with `attributionWindows` for Meta.
+
+        Without `fromDate` and `toDate` it reads the last 90 days; the window is at most 730 days. `meta.backfillPending` is true while older days are still being fetched. Money is in the ad account currency (`currency`). `GET /v1/metrics/catalog?entity=ads` lists every metric with the networks that report it.
+
+        Args:
+            ad_id: Comma-separated Zernio ad ids, up to 100. (required)
+            granularity: day reads one ad, one point per day.
+            from_date: Without fromDate and toDate, the last 90 days.
+            to_date: Last day, inclusive (YYYY-MM-DD, UTC).
+            breakdowns: Comma-separated breakdowns, read live from the platform. One ad only.
+            attribution_windows: Meta attribution windows for the breakdowns, comma-separated."""
+        client = _get_client()
+        try:
+            response = client.metrics.get_ad_metrics(
+                ad_id=ad_id,
+                granularity=granularity,
+                from_date=from_date,
+                to_date=to_date,
+                breakdowns=breakdowns,
+                attribution_windows=attribution_windows,
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Read the uploaded results of each campaign over a window",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def metrics_get_campaign_metrics(
+        from_date: str,
+        to_date: str,
+        limit: int = 50,
+        cursor: str | None = None,
+        campaign_id: str | None = None,
+    ) -> str:
+        """Read the uploaded results of each campaign over a window
+
+        Sums, per campaign, each result metric you uploaded (one key per metric, as `GET /v1/ads/campaign-results/metrics` lists them), with `cac_percent`, `cost_per_sale`, `cost_per_qualified_lead`, `lead_to_sale` and `qualified_rate` next to them, over `fromDate` to `toDate` (both required, at most 400 days).
+
+        Filter with `campaignId` (platform campaign ids); pages with `cursor`.
+
+        Args:
+            limit: Rows per page, 50 by default, 100 at most.
+            cursor: pagination.nextCursor of the previous page, sent with the same query.
+            from_date: First day, inclusive. (required)
+            to_date: Last day, inclusive. The range is at most 400 days. (required)
+            campaign_id: Comma-separated platform campaign ids."""
+        client = _get_client()
+        try:
+            response = client.metrics.get_campaign_metrics(
+                limit=limit,
+                cursor=cursor,
+                from_date=from_date,
+                to_date=to_date,
+                campaign_id=campaign_id,
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Read the uploaded results summed across ad accounts",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def metrics_get_ad_account_metrics(
+        from_date: str, to_date: str, ad_account_id: str | None = None
+    ) -> str:
+        """Read the uploaded results summed across ad accounts
+
+        Sums each result metric you uploaded across ad accounts (every ad account the key can read, or the platform ids in `adAccountId`) over `fromDate` to `toDate` (both required, at most 400 days), with the same metrics as `GET /v1/metrics/campaigns`.
+
+        Args:
+            from_date: First day, inclusive. (required)
+            to_date: Last day, inclusive. The range is at most 400 days. (required)
+            ad_account_id: Comma-separated platform ad account ids. Defaults to every ad account the key sees."""
+        client = _get_client()
+        try:
+            response = client.metrics.get_ad_account_metrics(
+                from_date=from_date, to_date=to_date, ad_account_id=ad_account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
     # PHONE_NUMBERS
 
     @mcp.tool(
@@ -45020,6 +45529,8 @@ def register_generated_tools(mcp, _get_client):
 
             Returns a paginated list of posts. Published posts include platformPostUrl with the public URL on each platform. A query parameter that is not listed here returns 400 naming it and the accepted parameters, so a misspelled filter never silently returns the unfiltered list.
 
+            To learn when posts publish or fail, subscribe to the `post.published`, `post.failed` and `post.partial` webhooks instead of re-reading this list.
+
             Args:
                 page: Page number (1-based)
                 limit: Page size. Default 10, at most 40 per call; page through for more.
@@ -45234,6 +45745,8 @@ def register_generated_tools(mcp, _get_client):
 
         Fetch a single post by ID. For published posts, this returns platformPostUrl for each platform.
 
+        To wait for a post to publish, subscribe to the `post.published`, `post.failed` and `post.partial` webhooks instead of polling this endpoint. Each event carries the post, so no follow-up read is needed.
+
         Args:
             post_id: (required)"""
         client = _get_client()
@@ -45276,7 +45789,7 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Update post
 
-        Update an existing post. Draft, scheduled, failed, partial, and cancelled posts can be edited. Published posts can only have their recycling config updated.
+        Update an existing post. Draft, scheduled, failed, partial, and cancelled posts can be edited. Published posts can only have their recycling config updated: to change the text of a live post, use `POST /v1/posts/{postId}/edit`.
 
         To promote a draft to scheduled, send `isDraft: false` together with `scheduledFor` (or `publishNow: true`, or `queuedFromProfile`). If `isDraft` is omitted the post keeps its current draft status, so sending only `scheduledFor` to a draft returns 200 but the post remains a draft.
 
@@ -52651,6 +53164,7 @@ def register_generated_tools(mcp, _get_client):
                 "review.restored",
                 "lead.received",
                 "conversion.received",
+                "tracking_site.ready",
                 "ad.status_changed",
                 "ad.created",
                 "ad.updated",
@@ -52891,6 +53405,7 @@ def register_generated_tools(mcp, _get_client):
                 "review.restored",
                 "lead.received",
                 "conversion.received",
+                "tracking_site.ready",
                 "ad.status_changed",
                 "ad.created",
                 "ad.updated",
@@ -53347,6 +53862,7 @@ def register_generated_tools(mcp, _get_client):
             "automation.alert.resolved",
             "lead.received",
             "conversion.received",
+            "tracking_site.ready",
             "whatsapp.template.status_updated",
             "whatsapp.template.category_updated",
             "whatsapp.account.name_status_updated",
