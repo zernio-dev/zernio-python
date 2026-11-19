@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.680.2"
+  version: "1.681.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -15800,6 +15800,49 @@ components:
         useDealsAsResults:
           type: boolean
           description: Whether closed-won deals count as sales on the ad campaign that brought their contact, in campaign results and ad rules.
+        qualifiedLeads:
+          oneOf:
+            - $ref: '#/components/schemas/HubSpotQualifiedLeads'
+            - type: "null"
+          description: Which contacts count as qualified leads, or null when it was never set.
+    HubSpotQualifiedLeads:
+      type: object
+      required: [enabled, property, values]
+      properties:
+        enabled:
+          type: boolean
+          description: Whether contacts holding one of `values` count as qualified leads.
+        property:
+          type: string
+          description: 'Internal name of the HubSpot contact property to watch, for example `lifecyclestage` or a lead rating.'
+        values:
+          type: array
+          items:
+            type: string
+          description: 'The property values that count as qualified, for example `["4", "5"]` or `["salesqualifiedlead"]`.'
+    HubSpotContactProperty:
+      type: object
+      required: [name, label, type, options]
+      properties:
+        name:
+          type: string
+          description: Internal property name.
+        label:
+          type: string
+        type:
+          type: string
+          description: 'HubSpot property type: `string`, `number`, `enumeration`, `bool`, `date` or `datetime`.'
+        options:
+          type: array
+          description: The values of a property with a fixed list. Empty for free-form properties.
+          items:
+            type: object
+            required: [label, value]
+            properties:
+              label:
+                type: string
+              value:
+                type: string
     SalesforceSettings:
       type: object
       required:
@@ -55000,7 +55043,7 @@ paths:
       x-platforms: [hubspot]
       summary: Update HubSpot account settings
       description: >-
-        Turn contact sync, message logging, delivery status or deal reporting on or off for a connected HubSpot portal,
+        Turn contact sync, message logging, delivery status, deal reporting or qualified leads on or off for a connected HubSpot portal,
         or set defaults for the contact properties the portal requires. Send at least one field; omitted fields keep their value. Settings survive reconnecting the same portal.
       parameters:
         - name: accountId
@@ -55045,7 +55088,7 @@ paths:
                   type: boolean
                   description: >-
                     Send each deal that becomes closed won as a Purchase to the profile's event destinations, about
-                    once an hour. Requires the portal to have granted `crm.objects.deals.read`; otherwise 400.
+                    every 15 minutes. Requires the portal to have granted `crm.objects.deals.read`; otherwise 400.
                     Deals closed before it was turned on are not sent.
                 useDealsAsResults:
                   type: boolean
@@ -55053,6 +55096,28 @@ paths:
                     Count each closed-won deal as a sale with its amount on the ad campaign that brought its contact,
                     in `GET /v1/ads/campaign-results` and ad rules. Requires `crm.objects.deals.read`; otherwise 400.
                     Turning it on fills in the deals of the last 90 days, never sent to the ad platforms.
+                qualifiedLeads:
+                  type: object
+                  required: [enabled, property, values]
+                  description: |
+                    Count a contact as a `QualifiedLead` event once `property` holds one of `values`, checked every 15 minutes. It carries the contact's hashed email and phone and its ad campaign, and counts in campaign results and ad rules.
+
+                    It goes to the forwarding rules that name `QualifiedLead`, and is retracted when the contact drops to another value. Contacts that qualified before the rule was turned on are not counted.
+                  properties:
+                    enabled:
+                      type: boolean
+                    property:
+                      type: string
+                      pattern: '^[a-z0-9_]{1,100}$'
+                      description: 'HubSpot internal name of the contact property, for example `lifecyclestage`.'
+                    values:
+                      type: array
+                      maxItems: 50
+                      items:
+                        type: string
+                        minLength: 1
+                        maxLength: 200
+                      description: The values that count as qualified. At least one while `enabled` is true.
       responses:
         '200':
           description: Updated settings
@@ -55065,6 +55130,41 @@ paths:
                     type: string
                   account:
                     $ref: '#/components/schemas/HubSpotSettings'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: Account not found
+  /v1/accounts/{accountId}/hubspot-settings/contact-properties:
+    get:
+      x-resource-group: accounts
+      operationId: listHubSpotContactProperties
+      tags:
+        - Accounts
+      x-platforms: [hubspot]
+      summary: List HubSpot contact properties
+      description: >-
+        The connected portal's visible contact properties, with the values of those that have a fixed list. Use it to
+        pick the property and values of `qualifiedLeads`. Cached for 10 minutes.
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Contact properties, sorted by label
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  properties:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/HubSpotContactProperty'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':

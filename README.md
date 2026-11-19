@@ -202,6 +202,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `accounts.get_all_accounts_health()` | Check accounts health |
 | `accounts.list_accounts()` | List accounts |
 | `accounts.list_business_partners()` | List partner businesses of the Page |
+| `accounts.list_hub_spot_contact_properties()` | List HubSpot contact properties |
 | `accounts.list_tik_tok_commercial_music()` | List trending commercial music |
 | `accounts.get_account_health()` | Check account health |
 | `accounts.get_account_posts()` | List posts published on the platform |

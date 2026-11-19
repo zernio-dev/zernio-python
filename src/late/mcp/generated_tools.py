@@ -2318,10 +2318,11 @@ def register_generated_tools(mcp, _get_client):
         contact_defaults: dict[str, Any] | None = None,
         report_deals: bool | None = None,
         use_deals_as_results: bool | None = None,
+        qualified_leads: dict[str, Any] | None = None,
     ) -> str:
         """Update HubSpot account settings
 
-        Turn contact sync, message logging, delivery status or deal reporting on or off for a connected HubSpot portal, or set defaults for the contact properties the portal requires. Send at least one field; omitted fields keep their value. Settings survive reconnecting the same portal.
+        Turn contact sync, message logging, delivery status, deal reporting or qualified leads on or off for a connected HubSpot portal, or set defaults for the contact properties the portal requires. Send at least one field; omitted fields keep their value. Settings survive reconnecting the same portal.
 
         Platforms: hubspot
 
@@ -2331,8 +2332,9 @@ def register_generated_tools(mcp, _get_client):
             log_messages: Log inbound and outbound inbox messages on the contact's HubSpot timeline.
             log_delivery_status: Add the delivery status of each outgoing WhatsApp, SMS or RCS message to its timeline entry and update it as the message is delivered, read or fails. A failure shows the reason and its code. Only applies while `logMessages` is on.
             contact_defaults: Values for contact properties your portal requires on create, keyed by HubSpot internal name (lowercase letters, digits, underscores), for example `{"lifecyclestage": "lead"}`. Replaces the whole map; send `{}` to clear it. Clears `syncIssue` until the next contact create tells whether the portal accepts them.
-            report_deals: Send each deal that becomes closed won as a Purchase to the profile's event destinations, about once an hour. Requires the portal to have granted `crm.objects.deals.read`; otherwise 400. Deals closed before it was turned on are not sent.
-            use_deals_as_results: Count each closed-won deal as a sale with its amount on the ad campaign that brought its contact, in `GET /v1/ads/campaign-results` and ad rules. Requires `crm.objects.deals.read`; otherwise 400. Turning it on fills in the deals of the last 90 days, never sent to the ad platforms."""
+            report_deals: Send each deal that becomes closed won as a Purchase to the profile's event destinations, about every 15 minutes. Requires the portal to have granted `crm.objects.deals.read`; otherwise 400. Deals closed before it was turned on are not sent.
+            use_deals_as_results: Count each closed-won deal as a sale with its amount on the ad campaign that brought its contact, in `GET /v1/ads/campaign-results` and ad rules. Requires `crm.objects.deals.read`; otherwise 400. Turning it on fills in the deals of the last 90 days, never sent to the ad platforms.
+            qualified_leads: Count a contact as a `QualifiedLead` event once `property` holds one of `values`, checked every 15 minutes. It carries the contact's hashed email and phone and its ad campaign, and counts in campaign results and ad rules. It goes to the forwarding rules that name `QualifiedLead`, and is retracted when the contact drops to another value. Contacts that qualified before the rule was turned on are not counted. Object with keys: enabled (boolean, required); property (string, required) - HubSpot internal name of the contact property, for example `lifecyclestage`.; values (list of string, required) - The values that count as qualified. At least one while `enabled` is true."""
         client = _get_client()
         try:
             response = client.accounts.update_hub_spot_settings(
@@ -2343,6 +2345,33 @@ def register_generated_tools(mcp, _get_client):
                 contact_defaults=contact_defaults,
                 report_deals=report_deals,
                 use_deals_as_results=use_deals_as_results,
+                qualified_leads=qualified_leads,
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List HubSpot contact properties",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def accounts_list_hub_spot_contact_properties(account_id: str) -> str:
+        """List HubSpot contact properties
+
+        The connected portal's visible contact properties, with the values of those that have a fixed list. Use it to pick the property and values of `qualifiedLeads`. Cached for 10 minutes.
+
+        Platforms: hubspot
+
+        Args:
+            account_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.accounts.list_hub_spot_contact_properties(
+                account_id=account_id
             )
             return _format_response(response)
         except Exception as e:

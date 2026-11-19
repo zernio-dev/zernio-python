@@ -740,6 +740,7 @@ class AccountsResource:
         contact_defaults: dict[str, Any] | None = None,
         report_deals: bool | None = None,
         use_deals_as_results: bool | None = None,
+        qualified_leads: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Update HubSpot account settings"""
         payload = self._build_body(
@@ -750,10 +751,17 @@ class AccountsResource:
                 "contactDefaults": contact_defaults,
                 "reportDeals": report_deals,
                 "useDealsAsResults": use_deals_as_results,
+                "qualifiedLeads": qualified_leads,
             }
         )
         return self._client._patch(
             f"/v1/accounts/{account_id}/hubspot-settings", data=payload
+        )
+
+    def list_hub_spot_contact_properties(self, account_id: str) -> dict[str, Any]:
+        """List HubSpot contact properties"""
+        return self._client._get(
+            f"/v1/accounts/{account_id}/hubspot-settings/contact-properties"
         )
 
     def get_salesforce_settings(self, account_id: str) -> dict[str, Any]:
@@ -1489,6 +1497,7 @@ class AccountsResource:
         contact_defaults: dict[str, Any] | None = None,
         report_deals: bool | None = None,
         use_deals_as_results: bool | None = None,
+        qualified_leads: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Update HubSpot account settings (async)"""
         payload = self._build_body(
@@ -1499,10 +1508,19 @@ class AccountsResource:
                 "contactDefaults": contact_defaults,
                 "reportDeals": report_deals,
                 "useDealsAsResults": use_deals_as_results,
+                "qualifiedLeads": qualified_leads,
             }
         )
         return await self._client._apatch(
             f"/v1/accounts/{account_id}/hubspot-settings", data=payload
+        )
+
+    async def alist_hub_spot_contact_properties(
+        self, account_id: str
+    ) -> dict[str, Any]:
+        """List HubSpot contact properties (async)"""
+        return await self._client._aget(
+            f"/v1/accounts/{account_id}/hubspot-settings/contact-properties"
         )
 
     async def aget_salesforce_settings(self, account_id: str) -> dict[str, Any]:
