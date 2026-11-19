@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.691.0"
+  version: "1.692.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -12062,7 +12062,7 @@ components:
           required: [category, type, subject, text, url, refs, actions]
           properties:
             category: { type: string, enum: [postFailures, accountIssues, securityAlerts], description: 'The email notification preference this notification belongs to. securityAlerts has no preference: it is always sent.' }
-            type: { type: string, enum: [post_failed, account_disconnected, api_key_handed_over] }
+            type: { type: string, enum: [post_failed, account_disconnected, conversions_failing, api_key_handed_over, whatsapp_inbound_lost] }
             subject: { type: string, description: 'The email subject.' }
             text: { type: string, description: 'The email body as plain text, without the greeting.' }
             url: { type: string, format: uri, description: 'Dashboard link for the notification.' }
@@ -30372,6 +30372,7 @@ webhooks:
         - `post_failed`: once the failure is final (a permanent error, or a temporary one on its last retry), once per publish attempt that failed, for scheduled posts only (not "post now"). `refs.platforms` lists every platform that failed in that attempt.
         - `account_disconnected`: every time an account is disconnected, never for creator-profile accounts. `reason` says why.
         - `api_key_handed_over`: once per API key, when a departing team member's key used in the last 7 days moves to the workspace owner. It stops working within 24 hours: create a new key and switch to it. `refs.apiKey` carries the key id, preview and expiry.
+        - `whatsapp_inbound_lost`: once each time Meta stops delivering a WhatsApp number's incoming messages to Zernio. The number can still send. Reconnect it from the same profile.
 
         ### Payload notes
 
