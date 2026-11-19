@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.680.0"
+  version: "1.680.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -57371,6 +57371,8 @@ paths:
       description: |
         Create a new webhook configuration. Maximum 50 webhooks per user.
 
+        Only the account owner and admins (and their API keys) can create, update or delete webhooks. Any other team member gets 403 and can still list them.
+
         `name`, `url` and `events` are required. `url` must be a valid URL and `events` must contain at least one event. Whitespace is trimmed from `url` before validation.
 
         ### Auto-disable
@@ -57518,6 +57520,8 @@ paths:
       summary: Update webhook
       description: |
         Update an existing webhook configuration. All fields except `webhookId` are optional; only provided fields will be updated.
+
+        Only the account owner and admins (and their API keys) can create, update or delete webhooks. Any other team member gets 403 and can still list them.
 
         `webhookId` is the same name the other /v1/webhooks operations use (logs, redeliver, test). The deprecated `_id` is still accepted in its place.
 
@@ -57671,7 +57675,10 @@ paths:
       operationId: deleteWebhookSettings
       tags: [Webhooks]
       summary: Delete webhook
-      description: Permanently delete a webhook configuration.
+      description: |
+        Permanently delete a webhook configuration.
+
+        Only the account owner and admins (and their API keys) can create, update or delete webhooks. Any other team member gets 403 and can still list them.
       security:
         - bearerAuth: []
       parameters:

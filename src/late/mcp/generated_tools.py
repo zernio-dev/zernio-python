@@ -52588,6 +52588,8 @@ def register_generated_tools(mcp, _get_client):
 
             Create a new webhook configuration. Maximum 50 webhooks per user.
 
+            Only the account owner and admins (and their API keys) can create, update or delete webhooks. Any other team member gets 403 and can still list them.
+
             `name`, `url` and `events` are required. `url` must be a valid URL and `events` must contain at least one event. Whitespace is trimmed from `url` before validation.
 
             ### Auto-disable
@@ -52603,9 +52605,7 @@ def register_generated_tools(mcp, _get_client):
 
             A restricted (zrk_) API key can only subscribe to events whose resource group the key holds. An event outside the key's groups is rejected with 403, so a restricted key can never create a subscription broader than itself.
 
-            ### Filtering what is delivered
-
-            `disabledResourceGroups` restricts the subscription itself, independently of which key or session later reads it. Events in a disabled group are dropped ...
+            ### Filtering what is delivered ...
 
             Args:
                 name: Webhook name (1-50 characters) (required)
@@ -52827,6 +52827,8 @@ def register_generated_tools(mcp, _get_client):
 
             Update an existing webhook configuration. All fields except `webhookId` are optional; only provided fields will be updated.
 
+            Only the account owner and admins (and their API keys) can create, update or delete webhooks. Any other team member gets 403 and can still list them.
+
             `webhookId` is the same name the other /v1/webhooks operations use (logs, redeliver, test). The deprecated `_id` is still accepted in its place.
 
             ### Validation
@@ -52848,7 +52850,7 @@ def register_generated_tools(mcp, _get_client):
 
             ### Restricted keys
 
-            A restricted (zrk_) API key can only set `events` to events whose resource group the key holds. An event outside the key's groups is rejected with 403. It also cannot widen an ...
+            A restricted (zrk_) API key ...
 
             Args:
                 webhook_id: Webhook ID to update. Required unless the deprecated `_id` is sent instead.
@@ -52911,6 +52913,8 @@ def register_generated_tools(mcp, _get_client):
         """Delete webhook
 
         Permanently delete a webhook configuration.
+
+        Only the account owner and admins (and their API keys) can create, update or delete webhooks. Any other team member gets 403 and can still list them.
 
         Args:
             webhook_id: Webhook ID to delete, the same name the other /v1/webhooks operations use (logs, redeliver, test). Required unless the deprecated `id` is sent instead.
