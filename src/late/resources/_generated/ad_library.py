@@ -117,6 +117,7 @@ class AdLibraryResource:
         until: str | None = None,
         search_type: str | None = "KEYWORD_UNORDERED",
         fields: str | None = None,
+        include_media: bool | None = False,
         limit: int | None = 25,
         after: str | None = None,
     ) -> dict[str, Any]:
@@ -138,6 +139,7 @@ class AdLibraryResource:
                 "until": until,
                 "searchType": search_type,
                 "fields": fields,
+                "includeMedia": include_media,
                 "limit": limit,
                 "after": after,
             }
@@ -162,6 +164,7 @@ class AdLibraryResource:
         until: str | None = None,
         search_type: str | None = "KEYWORD_UNORDERED",
         fields: str | None = None,
+        include_media: bool | None = False,
         limit: int | None = 25,
         after: str | None = None,
     ) -> dict[str, Any]:
@@ -183,6 +186,7 @@ class AdLibraryResource:
                 "until": until,
                 "searchType": search_type,
                 "fields": fields,
+                "includeMedia": include_media,
                 "limit": limit,
                 "after": after,
             }

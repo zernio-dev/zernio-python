@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.690.1"
+  version: "1.691.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -98896,7 +98896,7 @@ paths:
         ### Which params apply
 
         - Both: `q`, `countries`, `limit`, `after`
-        - Meta-only: `pageIds`, `adType`, `status`, `platforms`, `mediaType`, `languages`, `searchType`, `fields`, `since`, `until`
+        - Meta-only: `pageIds`, `adType`, `status`, `platforms`, `mediaType`, `languages`, `searchType`, `fields`, `includeMedia`, `since`, `until`
         - LinkedIn-only: `advertiser`
 
         Passing a param the account's platform does not support is a 400 naming the param.
@@ -98918,6 +98918,16 @@ paths:
         - { name: until, in: query, schema: { type: string, format: date }, description: "Meta only. Latest delivery date (YYYY-MM-DD); a 400 on LinkedIn, see since." }
         - { name: searchType, in: query, schema: { type: string, enum: [KEYWORD_UNORDERED, KEYWORD_EXACT_PHRASE], default: KEYWORD_UNORDERED }, description: "Meta only. Whether q matches words in any order or as an exact phrase (comma-separate phrases to match all of them)." }
         - { name: fields, in: query, schema: { type: string, example: 'id,page_name,ad_delivery_start_time,ad_creative_bodies' }, description: 'Meta only. Comma-separated Graph field override. Supports nested {} projections and Graph field modifiers, so a nested edge can be paged explicitly: without a .limit() modifier the expansion runs at the Meta default page size and the tail is dropped silently.' }
+        - name: includeMedia
+          in: query
+          schema: { type: boolean, default: false }
+          description: |
+            Meta only. When `true`, each row also carries `media`: the ad's rendered creative (images, videos, carousel cards) as direct file URLs, so you don't have to open `ad_snapshot_url` yourself.
+
+            - Meta CDN links are signed and expire: download what you need before each item's `expires_at`.
+            - `media` is `null` when Meta would not render the snapshot for that ad, and `[]` for a text-only ad.
+            - Every row costs one extra page render, so responses are slower: use a small `limit`.
+            - With a `fields` override, include `ad_snapshot_url` or no row gets `media`.
         - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 25 }, description: "Rows per page. LinkedIn accepts at most 25." }
         - { name: after, in: query, schema: { type: string }, description: "paging.after of the previous page." }
       responses:
@@ -98943,6 +98953,7 @@ paths:
                         - id, page_id, page_name, ad_creation_time, ad_delivery_start_time, ad_delivery_stop_time.
                         - ad_creative_bodies[], ad_creative_link_titles[], ad_creative_link_descriptions[], ad_creative_link_captions[].
                         - ad_snapshot_url (access token stripped), ad_library_url (public Ad Library permalink), publisher_platforms[], languages[].
+                        - With `includeMedia=true`: media, a list of `{ type: image | video, url, thumbnail_url?, expires_at? }` (null when the snapshot could not be rendered).
                         - On EU/UK ads also: eu_total_reach, beneficiary_payers, target_ages, target_gender, target_locations, age_country_gender_reach_breakdown, total_reach_by_location.
 
                         **LinkedIn:** { adUrl, isRestricted, details: { type, advertiser: { advertiserName, advertiserUrl, adPayer }, adStatistics: { firstImpressionAt, latestImpressionAt, totalImpressions: { from, to }, impressionsDistributionByCountry[] }, adTargeting: [{ facetName, includedSegments[], excludedSegments[] }] } }
@@ -98968,6 +98979,10 @@ paths:
                         ad_creative_link_titles: ["Zernio for developers"]
                         ad_snapshot_url: "https://www.facebook.com/ads/archive/render_ad/?id=1234567890"
                         ad_library_url: "https://www.facebook.com/ads/library/?id=1234567890"
+                        media:
+                          - type: image
+                            url: "https://scontent.xx.fbcdn.net/v/t39.35426-6/123_n.jpg?oh=00_AbC&oe=6B0808D0"
+                            expires_at: "2026-11-26T10:24:16.000Z"
                         publisher_platforms: ["facebook", "instagram"]
                         languages: ["en"]
                         eu_total_reach: 18400

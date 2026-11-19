@@ -13679,47 +13679,54 @@ def register_generated_tools(mcp, _get_client):
             "KEYWORD_UNORDERED", "KEYWORD_EXACT_PHRASE"
         ] = "KEYWORD_UNORDERED",
         fields: str | None = None,
+        include_media: bool = False,
         limit: int = 25,
         after: str | None = None,
     ) -> str:
         """Search the public Ad Library
 
-        Searches Meta's or LinkedIn's public Ad Library to see what ads other advertisers run, for competitor and market research.
+            Searches Meta's or LinkedIn's public Ad Library to see what ads other advertisers run, for competitor and market research.
 
-        ### Which library is searched
+            ### Which library is searched
 
-        - Meta's Ad Library (`GET /ads_archive`) is searched with Zernio's own developer access, so `platform=meta` needs no connected account at all.
-        - LinkedIn's Ad Library (`GET /rest/adLibrary`) runs on a connected `linkedin` / `linkedinads` account, passed as `accountId`.
-        - Passing a Meta account as `accountId` also selects Meta.
+            - Meta's Ad Library (`GET /ads_archive`) is searched with Zernio's own developer access, so `platform=meta` needs no connected account at all.
+            - LinkedIn's Ad Library (`GET /rest/adLibrary`) runs on a connected `linkedin` / `linkedinads` account, passed as `accountId`.
+            - Passing a Meta account as `accountId` also selects Meta.
 
-        Rows are returned in the platform's raw shape under `data`. `paging.after` is an opaque cursor on both (`null` when exhausted).
+            Rows are returned in the platform's raw shape under `data`. `paging.after` is an opaque cursor on both (`null` when exhausted).
 
-        **Meta coverage.** Political and social-issue ads are searchable worldwide. Every other ad is in the archive only if it was delivered to the EU or UK within the last year, so a US-only commercial advertiser is invisible.
+            **Meta coverage.** Political and social-issue ads are searchable worldwide. Every other ad is in the archive only if it was delivered to the EU or UK within the last year, so a US-only commercial advertiser is invisible.
 
-        Spend, impressions and demographics are political-only fields and are left out of the default projection; request them via `fields`.
+            Spend, impressions and demographics are political-only fields and are left out of the default projection; request them via `fields`.
 
-        **Meta rate limit.** Meta ...
+            **Meta rate limit.** Meta ...
 
-        Platforms: meta, linkedin
+            Platforms: meta, linkedin
 
-        Args:
-            platform: Which archive to search. `meta` needs no accountId. Required unless accountId is given.
-            account_id: Zernio SocialAccount id. Required for LinkedIn (linkedin / linkedinads: its token searches). Optional for Meta, where any facebook / instagram / metaads account only selects the platform.
-            q: Keyword search. Meta does not translate it, so write it in the ads' language. Required unless pageIds (Meta) or advertiser (LinkedIn) is given.
-            page_ids: Meta only. Comma-separated Facebook Page ids (max 10) whose ads to list.
-            advertiser: LinkedIn only. Advertiser (Page) name to search.
-            countries: Comma-separated ISO 3166-1 alpha-2 codes the ads reached. Meta defaults to ALL (an explicit ALL is Meta-only); LinkedIn searches every market when omitted.
-            ad_type: Meta only.
-            status: Meta only. ACTIVE = eligible for delivery right now.
-            platforms: Meta only. Comma-separated publisher platforms: FACEBOOK, INSTAGRAM, AUDIENCE_NETWORK, MESSENGER, WHATSAPP, OCULUS, THREADS, STREAMING_SERVICES.
-            media_type: Meta only.
-            languages: Meta only. Comma-separated ISO 639-1 codes of the ad text.
-            since: Meta only. Earliest delivery date (YYYY-MM-DD). LinkedIn's archive does not filter by date, so it is a 400 there: filter on details.adStatistics.firstImpressionAt / latestImpressionAt instead (EU-delivered ads only).
-            until: Meta only. Latest delivery date (YYYY-MM-DD); a 400 on LinkedIn, see since.
-            search_type: Meta only. Whether q matches words in any order or as an exact phrase (comma-separate phrases to match all of them).
-            fields: Meta only. Comma-separated Graph field override. Supports nested {} projections and Graph field modifiers, so a nested edge can be paged explicitly: without a .limit() modifier the expansion runs at the Meta default page size and the tail is dropped silently.
-            limit: Rows per page. LinkedIn accepts at most 25.
-            after: paging.after of the previous page."""
+            Args:
+                platform: Which archive to search. `meta` needs no accountId. Required unless accountId is given.
+                account_id: Zernio SocialAccount id. Required for LinkedIn (linkedin / linkedinads: its token searches). Optional for Meta, where any facebook / instagram / metaads account only selects the platform.
+                q: Keyword search. Meta does not translate it, so write it in the ads' language. Required unless pageIds (Meta) or advertiser (LinkedIn) is given.
+                page_ids: Meta only. Comma-separated Facebook Page ids (max 10) whose ads to list.
+                advertiser: LinkedIn only. Advertiser (Page) name to search.
+                countries: Comma-separated ISO 3166-1 alpha-2 codes the ads reached. Meta defaults to ALL (an explicit ALL is Meta-only); LinkedIn searches every market when omitted.
+                ad_type: Meta only.
+                status: Meta only. ACTIVE = eligible for delivery right now.
+                platforms: Meta only. Comma-separated publisher platforms: FACEBOOK, INSTAGRAM, AUDIENCE_NETWORK, MESSENGER, WHATSAPP, OCULUS, THREADS, STREAMING_SERVICES.
+                media_type: Meta only.
+                languages: Meta only. Comma-separated ISO 639-1 codes of the ad text.
+                since: Meta only. Earliest delivery date (YYYY-MM-DD). LinkedIn's archive does not filter by date, so it is a 400 there: filter on details.adStatistics.firstImpressionAt / latestImpressionAt instead (EU-delivered ads only).
+                until: Meta only. Latest delivery date (YYYY-MM-DD); a 400 on LinkedIn, see since.
+                search_type: Meta only. Whether q matches words in any order or as an exact phrase (comma-separate phrases to match all of them).
+                fields: Meta only. Comma-separated Graph field override. Supports nested {} projections and Graph field modifiers, so a nested edge can be paged explicitly: without a .limit() modifier the expansion runs at the Meta default page size and the tail is dropped silently.
+                include_media: Meta only. When `true`, each row also carries `media`: the ad's rendered creative (images, videos, carousel cards) as direct file URLs, so you don't have to open `ad_snapshot_url` yourself.
+
+        - Meta CDN links are signed and expire: download what you need before each item's `expires_at`.
+        - `media` is `null` when Meta would not render the snapshot for that ad, and `[]` for a text-only ad.
+        - Every row costs one extra page render, so responses are slower: use a small `limit`.
+        - With a `fields` override, include `ad_snapshot_url` or no row gets `media`.
+                limit: Rows per page. LinkedIn accepts at most 25.
+                after: paging.after of the previous page."""
         client = _get_client()
         try:
             response = client.ad_library.search_ad_library(
@@ -13738,6 +13745,7 @@ def register_generated_tools(mcp, _get_client):
                 until=until,
                 search_type=search_type,
                 fields=fields,
+                include_media=include_media,
                 limit=limit,
                 after=after,
             )
