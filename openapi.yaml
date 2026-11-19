@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.684.0"
+  version: "1.685.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -102078,6 +102078,29 @@ paths:
                               day: { type: string, format: date }
                               conversions: { type: integer }
                               missed: { type: integer }
+                  breakdown:
+                    type: object
+                    description: 'Where the period''s conversions came from.'
+                    properties:
+                      events:
+                        type: array
+                        description: 'Conversions per event name, most first.'
+                        items: { type: object, properties: { eventName: { type: string }, conversions: { type: integer } } }
+                      sources:
+                        type: array
+                        description: 'Conversions per source (`web`, `api`, `stripe`...), most first.'
+                        items: { type: object, properties: { source: { type: string }, conversions: { type: integer } } }
+                      campaigns:
+                        type: array
+                        description: 'The counted conversions (the events that count as campaign results) per matched campaign, most first. Those not tied to one are rows with a `reason`: `not_from_an_ad`, or `campaign_not_found` for an ad Zernio could not match.'
+                        items:
+                          type: object
+                          properties:
+                            platform: { type: [string, "null"] }
+                            campaignId: { type: [string, "null"] }
+                            name: { type: [string, "null"], description: 'The campaign''s name in the ad account, when Zernio holds it.' }
+                            reason: { type: [string, "null"], enum: [not_from_an_ad, campaign_not_found, null] }
+                            conversions: { type: integer }
                   previous:
                     type: object
                     description: 'The same figures for the period of the same length just before it, to show each figure''s change.'
