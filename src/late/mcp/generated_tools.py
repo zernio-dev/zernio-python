@@ -50452,13 +50452,15 @@ def register_generated_tools(mcp, _get_client):
 
         Your balance's auto top-up rule: when your balance drops below `belowCents`, we bring it back to `toCents` from the billing owner's saved card, tax added on top as for any top-up.
 
+        One charge is never more than `toCents` plus tax, unless the balance is below $0 (a purchase, usage past $0) or a monthly renewal is due, which the same charge also covers.
+
         Account credit you held when you moved to the balance pays an auto top-up first, without a card charge or invoice (see `recentCreditRecharges` on `GET /v1/balance`). The card is charged only once that credit is used up, and only while the balance is still below `belowCents`.
 
         The first read gives the default rule, sized from your last 30 days of pay-per-use: below about a week of spend (at least $5), back up by about two more weeks (at least $20).
 
-        - 409 `balance_billing_required`: the account is not on the prepaid balance, nor moved onto it at a date still ahead. An account moved onto it can read and change its rule before that date; nothing is charged until it.
+        Auto top-up turned on in the dashboard while adding funds starts from that payment instead: back to the amount paid (at most $20), below a quarter of it in whole dollars (at least $1).
 
-        A profile-scoped key answers 403."""
+        - ..."""
         client = _get_client()
         try:
             response = client.treasury.get_auto_recharge()
@@ -50485,20 +50487,22 @@ def register_generated_tools(mcp, _get_client):
 
         Changes the auto top-up rule. Omitted fields keep their value.
 
-        A declined auto top-up is retried 1 hour, 1 day and 3 days later, with an email each time. After the last retry fails, auto top-up switches off (`disabledReason: payment_failed`) until the card is updated. Adding funds yourself resets the retries.
+        An auto top-up declined for insufficient funds or card velocity is retried once, 3 days later (`retryCount` 1, `nextRetryAt` set). Any other decline is not retried.
 
-        A bank asking for 3D Secure counts as a decline: the charge happens while you are away, so the email asks you to add funds in Billing.
+        A failure that is not the card's (an outage) is tried again an hour later and never counts toward `retryCount`.
+
+        When the last try fails, auto top-up switches off (`disabledReason: payment_failed`) until the card is updated, and the billing owner gets one email. Adding funds yourself resets the retry.
+
+        A bank asking for 3D Secure counts as a decline that is not retried: the charge happens while you are away, so the email asks you to update the card in Billing.
 
         A pay-per-use request that finds the balance at $0 runs the auto top-up first (with the rule on, a saved card and no retry pending) and goes through when the charge lands, so a new balance at $0 is charged on first use.
 
-        When this month's auto top-ups plus the next one would pass `monthlyLimitCents`, the card is not charged and you get one email that month. At $0, pay-per-use then answers 402 `usage_limit_reached`.
-
-        - 400: a field is out of range, `toCents` is not at least $5 above `belowCents`, or, while auto top-up is on, `monthlyLimitCents` ...
+        When this month's auto top-ups plus the next one would pass `monthlyLimitCents`, ...
 
         Args:
             enabled: Turns auto top-up on or off. A rule switched off by failed charges stays off until the card is updated.
-            below_cents: The below amount, in cents: when the balance drops below this, auto top-up brings it back to toCents. At least $5.
-            to_cents: The back-to amount, in cents. At least $5 above belowCents, so at least $10.
+            below_cents: The below amount, in cents: when the balance drops below this, auto top-up brings it back to toCents. At least $1.
+            to_cents: The back-to amount, in cents. At least $4 above belowCents, so at least $5.
             monthly_limit_cents: Most auto top-up may add per calendar month (UTC), before tax. At least the back-to amount (toCents) while auto top-up is on. Null for no limit.
             alert_below_cents: Email the billing owner once each time the balance drops below this. Null for no email."""
         client = _get_client()
