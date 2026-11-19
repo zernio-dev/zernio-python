@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.689.0"
+  version: "1.690.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -73685,6 +73685,7 @@ paths:
                             field: { type: string, example: administrative_area }
                             label: { type: string, example: State / Province }
                             value: { type: string, example: Dublin }
+                            source: { type: string, enum: [regional_street], description: "Present when the correction is a Spanish regional street-name form (e.g. 'Artazagane Kalea 5' for 'Calle Artazagane 5') that the carrier validates, rather than the carrier's own correction. Show it for the customer to confirm, never apply it automatically." }
         '401': { $ref: '#/components/responses/Unauthorized' }
 
   /v1/phone-numbers/kyc/share:
@@ -74748,6 +74749,7 @@ paths:
                             field: { type: string, example: administrative_area }
                             label: { type: string, example: State / Province }
                             value: { type: string, example: Dublin }
+                            source: { type: string, enum: [regional_street], description: "Present when the correction is a Spanish regional street-name form (e.g. 'Artazagane Kalea 5' for 'Calle Artazagane 5') that the carrier validates, rather than the carrier's own correction. Show it for the customer to confirm, never apply it automatically." }
         '401': { $ref: '#/components/responses/Unauthorized' }
 
   /v1/whatsapp/phone-numbers/kyc/share:
