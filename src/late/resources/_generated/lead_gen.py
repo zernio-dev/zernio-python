@@ -10,6 +10,8 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
+    from datetime import datetime
+
     from ..client.base import BaseClient
 
 
@@ -163,6 +165,41 @@ class LeadGenResource:
             }
         )
         return self._client._patch(f"/v1/ads/leads/{id}", data=payload)
+
+    def create_lead(
+        self,
+        profile_id: str,
+        *,
+        email: str | None = None,
+        phone: str | None = None,
+        fields: dict[str, Any] | None = None,
+        form_id: str | None = None,
+        form_name: str | None = None,
+        lead_id: str | None = None,
+        submitted_at: datetime | str | None = None,
+        source_url: str | None = None,
+        visitor_id: str | None = None,
+        click_ids: dict[str, Any] | None = None,
+        utm: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        """Create a lead from your own form"""
+        payload = self._build_body(
+            {
+                "profileId": profile_id,
+                "email": email,
+                "phone": phone,
+                "fields": fields,
+                "formId": form_id,
+                "formName": form_name,
+                "leadId": lead_id,
+                "submittedAt": submitted_at,
+                "sourceUrl": source_url,
+                "visitorId": visitor_id,
+                "clickIds": click_ids,
+                "utm": utm,
+            }
+        )
+        return self._client._post("/v1/leads", data=payload)
 
     def list_lead_forms(
         self,
@@ -355,6 +392,41 @@ class LeadGenResource:
             }
         )
         return await self._client._apatch(f"/v1/ads/leads/{id}", data=payload)
+
+    async def acreate_lead(
+        self,
+        profile_id: str,
+        *,
+        email: str | None = None,
+        phone: str | None = None,
+        fields: dict[str, Any] | None = None,
+        form_id: str | None = None,
+        form_name: str | None = None,
+        lead_id: str | None = None,
+        submitted_at: datetime | str | None = None,
+        source_url: str | None = None,
+        visitor_id: str | None = None,
+        click_ids: dict[str, Any] | None = None,
+        utm: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        """Create a lead from your own form (async)"""
+        payload = self._build_body(
+            {
+                "profileId": profile_id,
+                "email": email,
+                "phone": phone,
+                "fields": fields,
+                "formId": form_id,
+                "formName": form_name,
+                "leadId": lead_id,
+                "submittedAt": submitted_at,
+                "sourceUrl": source_url,
+                "visitorId": visitor_id,
+                "clickIds": click_ids,
+                "utm": utm,
+            }
+        )
+        return await self._client._apost("/v1/leads", data=payload)
 
     async def alist_lead_forms(
         self,

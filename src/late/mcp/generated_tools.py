@@ -31301,6 +31301,7 @@ def register_generated_tools(mcp, _get_client):
             "web",
             "salesforce",
             "postback",
+            "form_leads",
         ]
         | None = None,
         platform: str | None = None,
@@ -31835,6 +31836,7 @@ def register_generated_tools(mcp, _get_client):
                 "web",
                 "salesforce",
                 "postback",
+                "form_leads",
             ]
         ]
         | None = None,
@@ -40198,7 +40200,7 @@ def register_generated_tools(mcp, _get_client):
         account_ids: str | None = None,
         status: str | None = None,
         campaign_id: str | None = None,
-        platform: Literal["meta", "google", "linkedin"] | None = None,
+        platform: Literal["meta", "google", "linkedin", "web"] | None = None,
         q: str | None = None,
         ad_account_id: str | None = None,
         limit: int = 25,
@@ -40207,41 +40209,47 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """List submitted leads
 
-        Lists the leads submitted through your Meta, Google or LinkedIn lead forms, newest first.
+            Lists the leads submitted through your Meta, Google or LinkedIn lead forms, newest first.
 
-        Returns submitted Lead Gen leads for your team, newest-first, with keyset pagination on `cursor`. Requires the Ads add-on.
+            Returns submitted Lead Gen leads for your team, newest-first, with keyset pagination on `cursor`. Requires the Ads add-on.
 
-        ### Meta (default)
+            ### Meta (default)
 
-        Leads are served from the persisted cache, ingested in real time from the `leadgen` webhook.
+            Leads are served from the persisted cache, ingested in real time from the `leadgen` webhook.
 
-        ### Google
+            ### Google
 
-        Google lead form submissions are stored like Meta leads and listed with them, usually within 15 minutes of the submission.
+            Google lead form submissions are stored like Meta leads and listed with them, usually within 15 minutes of the submission.
 
-        - Each lead says its network in `platform` (`meta`, `google`, `linkedin`), and `platform=google` lists only Google leads.
-        - `leadgenId` is the submission id and `formId` the lead form asset id.
-        - Answers are keyed like Meta's (`email`, `phone_number`, `full_name`), custom questions by their text.
-        - Statuses work as for Meta leads.
+            - Each lead says its network in `platform` (`meta`, `google`, `linkedin`), and `platform=google` lists only Google leads.
+            - `leadgenId` is the submission id and `formId` the lead form asset id.
+            - Answers are keyed like Meta's (`email`, `phone_number`, `full_name`), custom questions by their text.
+            - Statuses work as for Meta leads.
 
-        ### LinkedIn
+            ### LinkedIn
 
-        LinkedIn lead form responses are also stored and listed with the other networks (`platform: linkedin`), usually within 15 minutes, once they reach Zernio. So are TikTok Instant Form ...
+            LinkedIn lead form responses are also stored and listed with the other networks (`platform: linkedin`), usually within 15 minutes, once they reach Zernio. So are TikTok Instant Form ...
 
-        Platforms: meta, google, linkedin
+            Platforms: meta, google, linkedin
 
-        Args:
-            form_id: Filter to a single lead form.
-            account_id: Filter to a single connected account. LinkedIn ads accounts switch to the live fetch.
-            account_ids: Meta only. Comma-separated connected account ids, to list several accounts at once. Without accountId or accountIds every account of the team is listed.
-            status: Meta only. Comma-separated lead statuses: new, contacted, unreachable, qualified, converted, disqualified.
-            campaign_id: Meta only. The platform campaign id the lead came from.
-            platform: Only leads of this network. meta and google list stored leads of that network (no LinkedIn live fetch); linkedin requires accountId to be a LinkedIn ads connection (400 otherwise). Without it, every stored network is listed, and an accountId that is a LinkedIn ads connection switches to the live fetch.
-            q: Meta only. Case-insensitive text search over the lead's answers and the form name.
-            ad_account_id: LinkedIn only: the LinkedIn ad account id whose responses to read (owner-scoped finder).
-            limit
-            since: Unix seconds; only leads created at/after this timestamp. Millisecond timestamps return 400 with instructions to divide by 1000.
-            cursor: Keyset cursor from a previous response's pagination.cursor (Meta: AdLead id; LinkedIn: numeric start offset)."""
+            Args:
+                form_id: Filter to a single lead form.
+                account_id: Filter to a single connected account. LinkedIn ads accounts switch to the live fetch.
+                account_ids: Meta only. Comma-separated connected account ids, to list several accounts at once. Without accountId or accountIds every account of the team is listed.
+                status: Meta only. Comma-separated lead statuses: new, contacted, unreachable, qualified, converted, disqualified.
+                campaign_id: Meta only. The platform campaign id the lead came from.
+                platform: Only leads of this network.
+
+        - `web`: your own website and API forms.
+        - `meta` and `google` list stored leads of that network (no LinkedIn live fetch).
+        - `linkedin` requires accountId to be a LinkedIn ads connection (400 otherwise).
+
+        Without it, every stored network is listed, and an accountId that is a LinkedIn ads connection switches to the live fetch.
+                q: Meta only. Case-insensitive text search over the lead's answers and the form name.
+                ad_account_id: LinkedIn only: the LinkedIn ad account id whose responses to read (owner-scoped finder).
+                limit
+                since: Unix seconds; only leads created at/after this timestamp. Millisecond timestamps return 400 with instructions to divide by 1000.
+                cursor: Keyset cursor from a previous response's pagination.cursor (Meta: AdLead id; LinkedIn: numeric start offset)."""
         client = _get_client()
         try:
             response = client.lead_gen.list_leads(
@@ -40311,11 +40319,17 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Update a lead's status
 
-        Sets the status of a Meta lead (and optionally its value) so you can track it from lead to sale.
+        Sets the status of a lead (and optionally its value) so you can track it from lead to sale.
+
+        Moving a lead to `qualified` stores a `QualifiedLead` event, and to `converted` a `Purchase` with the lead's value. Moving away from a stage retracts its event.
+
+        Each stage event is also sent to the ad platforms, but only through the forwarding rules that list that event name in `eventNames`. A rule taking every event name never gets them, so a won lead is never counted as a second sale next to your store's or Stripe's own.
+
+        Meta leads are matched by their lead id. Website and API form leads (`platform: web`) are matched by the email, phone and ad click ids they arrived with, and are sent under the `form_leads` source.
 
         `{id}` is the Zernio lead id (`id` on `GET /v1/ads/leads`, `leadId` on `GET /v1/ads/lead-forms/{formId}/leads`) or the Meta `leadgenId` together with `accountId` in the body. Requires the Ads add-on.
 
-        Platforms: meta
+        Platforms: meta, google, linkedin, tiktok
 
         Args:
             id: Zernio lead id, or the Meta leadgenId (then accountId is required). (required)
@@ -40331,6 +40345,72 @@ def register_generated_tools(mcp, _get_client):
                 value=value,
                 currency=currency,
                 account_id=account_id,
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Create a lead from your own form",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def lead_gen_create_lead(
+        profile_id: str,
+        email: str | None = None,
+        phone: str | None = None,
+        fields: dict[str, Any] | None = None,
+        form_id: str | None = None,
+        form_name: str | None = None,
+        lead_id: str | None = None,
+        submitted_at: str | None = None,
+        source_url: str | None = None,
+        visitor_id: str | None = None,
+        click_ids: dict[str, Any] | None = None,
+        utm: dict[str, Any] | None = None,
+    ) -> str:
+        """Create a lead from your own form
+
+        Stores a lead from a form on your own site or app, posted by your backend. It joins the leads from ad networks: it is listed on `GET /v1/ads/leads` (`platform: web`), fires `lead.received`, starts lead workflows, and moves through statuses with `PATCH /v1/ads/leads/{id}`.
+
+        - **Lead event.** A `Lead` event is stored and sent through the profile's forwarding rules that take the `form_leads` source, like an event sent to `POST /v1/events`.
+        - **Attribution.** Pass the ad click ids from the landing URL in `clickIds` (a raw `fbclid` becomes Meta's `fbc`) and the Zernio tag's visitor id (`_zid` cookie) in `visitorId`.
+        - **Earlier visits.** Zernio adds the click ids it saw on that visitor's, email's or phone's earlier website visits. Qualifying or converting the lead later sends those ids with the stage event.
+        - **Idempotent by `leadId`.** Posting the same `leadId` again returns the stored lead with `created: false` and sends nothing twice. Without `leadId`, every call creates a lead.
+
+        A ...
+
+        Args:
+            profile_id: The profile the lead belongs to. (required)
+            email: Required unless phone is given.
+            phone: Required unless email is given. E.164 is best.
+            fields: Other answers, field name to value (`full_name`, `company`, ...). Stored on the lead, never sent to an ad platform.
+            form_id: Your id for the form. Defaults to `api`.
+            form_name
+            lead_id: Your id for this lead (a CRM id, a submission id). Makes the call idempotent.
+            submitted_at: When the form was submitted. Defaults to now.
+            source_url: The page the form was submitted on, with its query string.
+            visitor_id: The Zernio tag visitor id, from the `_zid` cookie.
+            click_ids: Ad click and browser ids: `fbclid` or `fbc`, `fbp`, `gclid`, `gbraid`, `wbraid`, `ttclid`, `msclkid`, `li_fat_id`, ...
+            utm: `utm_source`, `utm_campaign`, ..."""
+        client = _get_client()
+        try:
+            response = client.lead_gen.create_lead(
+                profile_id=profile_id,
+                email=email,
+                phone=phone,
+                fields=fields,
+                form_id=form_id,
+                form_name=form_name,
+                lead_id=lead_id,
+                submitted_at=submitted_at,
+                source_url=source_url,
+                visitor_id=visitor_id,
+                click_ids=click_ids,
+                utm=utm,
             )
             return _format_response(response)
         except Exception as e:

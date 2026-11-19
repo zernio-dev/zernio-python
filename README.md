@@ -1396,6 +1396,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `lead_gen.list_form_leads()` | List leads for a single form |
 | `lead_gen.list_lead_forms()` | List lead forms |
 | `lead_gen.list_leads()` | List submitted leads |
+| `lead_gen.create_lead()` | Create a lead from your own form |
 | `lead_gen.create_lead_form()` | Create a lead form |
 | `lead_gen.create_test_lead()` | Create a test lead |
 | `lead_gen.get_lead_form()` | Get a lead form |
