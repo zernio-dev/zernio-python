@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.692.0"
+  version: "1.692.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -102344,9 +102344,21 @@ paths:
                       properties:
                         at: { type: string, format: date-time }
                         kind: { type: string, enum: [ad_click, paid, email, social, campaign, organic_search, ai_assistant, referral, lead_form, event, survey] }
-                        platform: { type: [string, "null"], description: 'The ad platform of the campaign, or the one a survey answer names (Instagram reads as facebook).' }
+                        platform: { type: [string, "null"], description: 'The ad platform of the campaign, the one an ad click''s click id names (gclid reads as googleads), or the one a survey answer names (Instagram reads as facebook).' }
                         adAccountId: { type: [string, "null"] }
                         campaignId: { type: [string, "null"], description: 'The campaign the touch resolved to; null for a touch that named none (search, referral).' }
+                        campaignName: { type: [string, "null"], description: 'The campaign''s name in the ad account, when Zernio holds it.' }
+                        detail:
+                          type: object
+                          description: 'Where the touch came from. Each field is present only when known; empty for an event credited before Zernio kept it.'
+                          properties:
+                            referrer: { type: string, description: 'The referring site, such as `google.com`.' }
+                            page: { type: string, description: 'The landing page''s path.' }
+                            utmSource: { type: string }
+                            utmMedium: { type: string }
+                            utmCampaign: { type: string }
+                            eventName: { type: string, description: 'The earlier event, for a `lead_form` or `event` touch.' }
+                            answer: { type: string, description: 'The buyer''s answer, for a `survey` touch.' }
                         credit: { type: object, additionalProperties: { type: number }, description: 'The share of the event (0 to 1) this touch gets per model: first_touch, last_non_direct, linear, position_based, time_decay, w_shaped.', example: { linear: 0.5, first_touch: 1, time_decay: 0.35 } }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
