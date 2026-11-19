@@ -9121,7 +9121,7 @@ def register_generated_tools(mcp, _get_client):
 
         Returns an ads account's ads ranked by spend, impressions, clicks, results or ROAS over a date range, each with its creative (type, thumbnail, headline, body, link) and campaign.
 
-        Use it to see which creatives perform best. `accountId` is sibling-expanded like `/v1/ads/timeline`.
+        Use it to see which creatives perform best, and from `frequency` which ones the same people keep seeing. `accountId` is sibling-expanded like `/v1/ads/timeline`.
 
         Money is ranked by its raw amount, so pass `adAccountId` when the connection's ad accounts bill in different currencies.
 

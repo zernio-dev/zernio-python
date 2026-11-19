@@ -17644,6 +17644,8 @@ components:
                 properties:
                   spend: { type: number, description: In the ad's currency. }
                   impressions: { type: integer }
+                  reach: { type: integer, description: "People who saw the ad. De-duplicated over the range on Meta and TikTok when the platform returns it; elsewhere the sum of each day's reach, which counts a person once per day." }
+                  frequency: { type: number, description: "Average times each person saw the ad: `impressions / reach`. 0 when the platform reports no reach." }
                   clicks: { type: integer }
                   ctr: { type: number, description: Percent. }
                   conversions: { type: number, description: "Results over the range (see AdMetrics.conversions)." }
@@ -86190,7 +86192,7 @@ paths:
       description: |
         Returns an ads account's ads ranked by spend, impressions, clicks, results or ROAS over a date range, each with its creative (type, thumbnail, headline, body, link) and campaign.
 
-        Use it to see which creatives perform best. `accountId` is sibling-expanded like `/v1/ads/timeline`.
+        Use it to see which creatives perform best, and from `frequency` which ones the same people keep seeing. `accountId` is sibling-expanded like `/v1/ads/timeline`.
 
         Money is ranked by its raw amount, so pass `adAccountId` when the connection's ad accounts bill in different currencies.
 
