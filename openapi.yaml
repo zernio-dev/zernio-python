@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.685.0"
+  version: "1.686.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -153,7 +153,7 @@ x-documentation:
 
     Analytics reads made with an API key have a cap of 300 requests per team on a 30-second sliding window, on top of the limits above and counted separately for each group: campaign analytics (`GET /v1/ads/campaigns/{campaignId}/analytics`), ad analytics (`GET /v1/ads/{adId}/analytics`), ads listings (`GET /v1/ads`, `/v1/ads/tree`, `/v1/ads/timeline`, `/v1/ads/campaigns`, `/v1/ads/performance` and `/v1/ads/alerts`), post and inbox analytics (the `/v1/analytics` routes that read stored metrics) and account insights (the live platform routes such as `/v1/analytics/instagram/*`). On account-level endpoints (the account insights routes, `/v1/analytics/daily-metrics`, `/v1/metrics/accounts`, `/v1/analytics/dashboard`, `/v1/analytics/best-time`, `/v1/analytics/content-decay`, `/v1/analytics/posting-frequency` and `/v1/analytics/format-breakdown`), a request about one account also counts against that account on that endpoint: 120 requests per hour, answered with `details.scope` `account_route`. Past a cap the API answers 429 with `Retry-After`, `details.scope` naming the group and `details.window`. Read many ads or campaigns in one request with `GET /v1/ads/tree` instead of one request each. Requests from the Zernio dashboard do not count.
 
-    Posts themselves are unlimited on every connected account; the rate limit applies only to API request throughput. Zernio also applies per-account daily publish caps as an anti-abuse safeguard (Instagram 100/day, Facebook 100/day, Google Business 100/day, Threads 250/day, X 50/day plus 200 replies for unverified accounts and 2,400 posts a day for verified X accounts, Pinterest 25/day, 50/day for every other platform), plus a 25-posts-per-hour per-account velocity cap.
+    Posts themselves are unlimited on every connected account; the rate limit applies only to API request throughput. Zernio also applies per-account daily publish caps as an anti-abuse safeguard (Instagram 100/day, Facebook 250/day plus Meta's own 30 Reels per Page per rolling 24 hours, Google Business 100/day, Threads 250/day, X 50/day plus 200 replies for unverified accounts and 2,400 posts a day for verified X accounts, Pinterest 25/day, 50/day for every other platform), plus a 25-posts-per-hour per-account velocity cap.
 
     TikTok caps accounts connected through the TikTok for Business app lower than any of those: 15 videos and 15 photo posts per account per day, counted separately. Zernio enforces it as a trailing 24 hour window rather than a calendar day, and a post over the cap is not rejected. It is held and published automatically once the oldest post of the same kind leaves the window, so `scheduledFor` on that platform entry moves to the time it will go out.
 
@@ -12219,7 +12219,7 @@ components:
         thumbnail:
           type: string
           format: uri
-          description: 'Optional custom thumbnail/cover image URL for videos. Supported for Facebook video posts, Facebook Reels, YouTube videos and Shorts, and LinkedIn video posts. Max 10MB, JPG/PNG recommended.'
+          description: 'Optional custom thumbnail/cover image URL for videos. Supported for Facebook video posts, Facebook Reels, YouTube videos and Shorts, and LinkedIn video posts. Max 50 MB on YouTube (JPEG, PNG or GIF) and 10 MB elsewhere, JPG/PNG recommended.'
         instagramThumbnail:
           type: string
           format: uri
