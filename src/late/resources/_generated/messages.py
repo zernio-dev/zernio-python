@@ -10,6 +10,8 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
+    from datetime import datetime
+
     from ..client.base import BaseClient
 
 
@@ -104,6 +106,7 @@ class MessagesResource:
         *,
         profile_id: str | None = None,
         platform: str | None = None,
+        updated_since: datetime | str | None = None,
         status: str | None = None,
         folder: str | None = "inbox",
         sort_order: str | None = "desc",
@@ -117,6 +120,7 @@ class MessagesResource:
             {
                 "profileId": profile_id,
                 "platform": platform,
+                "updatedSince": updated_since,
                 "status": status,
                 "folder": folder,
                 "sortOrder": sort_order,
@@ -239,8 +243,8 @@ class MessagesResource:
     def get_inbox_conversation_messages(
         self,
         conversation_id: str,
-        account_id: str,
         *,
+        account_id: str | None = None,
         limit: int | None = 100,
         cursor: str | None = None,
         sort_order: str | None = "asc",
@@ -556,6 +560,7 @@ class MessagesResource:
         *,
         profile_id: str | None = None,
         platform: str | None = None,
+        updated_since: datetime | str | None = None,
         status: str | None = None,
         folder: str | None = "inbox",
         sort_order: str | None = "desc",
@@ -569,6 +574,7 @@ class MessagesResource:
             {
                 "profileId": profile_id,
                 "platform": platform,
+                "updatedSince": updated_since,
                 "status": status,
                 "folder": folder,
                 "sortOrder": sort_order,
@@ -691,8 +697,8 @@ class MessagesResource:
     async def aget_inbox_conversation_messages(
         self,
         conversation_id: str,
-        account_id: str,
         *,
+        account_id: str | None = None,
         limit: int | None = 100,
         cursor: str | None = None,
         sort_order: str | None = "asc",

@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.707.0"
+  version: "1.708.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -64696,6 +64696,18 @@ paths:
         - Replayed history emits no webhooks and is stored as already read, so it never affects unread counts.
         - Threads that Meta refuses to serve are skipped.
         - An account whose Instagram "connected tools" message access is turned off is not replayed at all.
+
+        ### Incremental sync (recommended over polling the full list)
+
+        Subscribe to the `message.received` webhook for real-time delivery, and use `updatedSince` to reconcile instead of re-reading every conversation:
+
+        1. Call with `updatedSince` set to the last time you synced. Only conversations written at or after it are returned (a new message, a status change, participant details), oldest change first, each with its `updatedAt`.
+        2. While `pagination.hasMore` is true, call again with the same `updatedSince` plus `cursor` set to `pagination.nextCursor`.
+        3. On the last page, store `sync.nextUpdatedSince` and pass it as `updatedSince` next time.
+
+        `sync.nextUpdatedSince` trails the read by one minute, so a conversation can be returned again on the next call. Upsert by `id` and refresh the latest messages of every returned conversation (`GET /v1/inbox/conversations/{conversationId}/messages?sortOrder=desc&limit=N`). Nothing is missed at page or call boundaries, including conversations written at the same instant.
+
+        With `updatedSince`, `sortOrder` is ignored. Conversations are read only from Zernio's store, never live from a platform, and `folder=requests` cannot be combined with it. When `meta.accountsFailed` is above zero, re-run the same window for each failed account with `accountId`.
       tags: [Messages]
       security: [{ bearerAuth: [] }]
       parameters:
@@ -64707,6 +64719,10 @@ paths:
           in: query
           schema: { type: string, enum: [facebook, instagram, twitter, bluesky, reddit, telegram, whatsapp, imessage, sms, line, wechat] }
           description: Filter by platform
+        - name: updatedSince
+          in: query
+          schema: { type: string, format: date-time }
+          description: 'ISO 8601 date-time with a timezone (e.g. `2026-11-19T10:00:00Z`). Turns the list into a change feed: only conversations written at or after this instant, ordered by `updatedAt` ascending. Feed `sync.nextUpdatedSince` from the last page back here. See Incremental sync above.'
         - name: status
           in: query
           schema: { type: string, enum: [active, archived] }
@@ -64781,6 +64797,10 @@ paths:
                           description: 'WhatsApp only. The participant''s WhatsApp username (e.g. `jane.shop`, no leading @). Not a stable identifier, because users can change it: useful for display, not recommended as an identity anchor. Captured from inbound messages, so older threads fill in on their next inbound.'
                         lastMessage: { type: [string, "null"] }
                         updatedTime: { type: string, format: date-time }
+                        updatedAt:
+                          type: string
+                          format: date-time
+                          description: 'When Zernio last wrote this conversation (a new message, a status change, participant details). The key `updatedSince` filters and orders on. Absent on a conversation read live from the platform.'
                         status: { type: string, enum: [active, archived] }
                         unreadCount: { type: [integer, "null"], maximum: 1000, description: 'Number of unread incoming messages, capped at 1000. Read from a replica, so it can trail a conversation you just marked read by a few seconds.' }
                         threadControl:
@@ -64826,6 +64846,14 @@ paths:
                     properties:
                       hasMore: { type: boolean }
                       nextCursor: { type: [string, "null"] }
+                  sync:
+                    type: object
+                    description: Present only when `updatedSince` was passed.
+                    properties:
+                      nextUpdatedSince:
+                        type: [string, "null"]
+                        format: date-time
+                        description: 'Pass as `updatedSince` on your next sync. Null while `pagination.hasMore` is true: page with `cursor` first.'
                   meta:
                     type: object
                     properties:
@@ -65688,6 +65716,10 @@ paths:
         ### Read state
 
         This endpoint is read-only and does NOT mark messages as read or send read receipts. To mark a conversation read (and send WhatsApp blue ticks on eligible accounts), call `POST /v1/inbox/conversations/{conversationId}/read`.
+
+        ### Staying in sync
+
+        Do not poll every conversation on a timer. Subscribe to the `message.received` webhook, and reconcile with `GET /v1/inbox/conversations?updatedSince=...`, which returns only the conversations that changed. Then fetch the newest messages of those conversations here with `sortOrder=desc&limit=N`.
       tags: [Messages]
       security: [{ bearerAuth: [] }]
       parameters:
@@ -65698,9 +65730,9 @@ paths:
           description: 'Opaque conversation identifier, accepted verbatim from the list endpoint or from the conversationId on inbox webhooks. Format not to be assumed.'
         - name: accountId
           in: query
-          required: true
+          required: false
           schema: { type: string }
-          description: Account ID
+          description: 'Account ID. Optional: the account is taken from the conversation. Pass it when the conversation id is an Instagram thread id, or when the call answers 400 `missing_required_field` because the id matches conversations on more than one of your accounts.'
         - name: limit
           in: query
           required: false
@@ -65922,6 +65954,11 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
           description: Inbox addon required
+        '404':
+          description: 'Account not found, or (without `accountId`) no conversation with this id on an account you can access.'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
         '503': { $ref: '#/components/responses/TemporarilyUnavailable' }
         '502': { $ref: '#/components/responses/UpstreamFailure' }
 

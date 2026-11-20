@@ -41183,6 +41183,7 @@ def register_generated_tools(mcp, _get_client):
             "wechat",
         ]
         | None = None,
+        updated_since: str | None = None,
         status: Literal["active", "archived"] | None = None,
         folder: Literal["inbox", "requests"] = "inbox",
         sort_order: Literal["asc", "desc"] = "desc",
@@ -41210,6 +41211,7 @@ def register_generated_tools(mcp, _get_client):
             Args:
                 profile_id: Filter by profile ID
                 platform: Filter by platform
+                updated_since: ISO 8601 date-time with a timezone (e.g. `2026-11-19T10:00:00Z`). Turns the list into a change feed: only conversations written at or after this instant, ordered by `updatedAt` ascending. Feed `sync.nextUpdatedSince` from the last page back here. See Incremental sync above.
                 status: Filter by conversation status
                 folder: `requests` lists Facebook Page Message Requests (threads from people the account has not accepted) live from Meta, each item with `folder: requests`.
 
@@ -41229,6 +41231,7 @@ def register_generated_tools(mcp, _get_client):
             response = client.messages.list_inbox_conversations(
                 profile_id=profile_id,
                 platform=platform,
+                updated_since=updated_since,
                 status=status,
                 folder=folder,
                 sort_order=sort_order,
@@ -41533,7 +41536,7 @@ def register_generated_tools(mcp, _get_client):
     )
     def messages_get_inbox_conversation_messages(
         conversation_id: str,
-        account_id: str,
+        account_id: str | None = None,
         limit: int = 100,
         cursor: str | None = None,
         sort_order: Literal["asc", "desc"] = "asc",
@@ -41561,7 +41564,7 @@ def register_generated_tools(mcp, _get_client):
 
             Args:
                 conversation_id: Opaque conversation identifier, accepted verbatim from the list endpoint or from the conversationId on inbox webhooks. Format not to be assumed. (required)
-                account_id: Account ID (required)
+                account_id: Account ID. Optional: the account is taken from the conversation. Pass it when the conversation id is an Instagram thread id, or when the call answers 400 `missing_required_field` because the id matches conversations on more than one of your accounts.
                 limit: Number of messages to return per page. Default 100, max 100.
                 cursor: Opaque pagination cursor. Pass `pagination.nextCursor` from a prior response verbatim: a cursor we cannot parse returns 400 rather than silently restarting from the first page.
                 sort_order: Order of returned messages. Default `asc` (oldest first, chat style).
