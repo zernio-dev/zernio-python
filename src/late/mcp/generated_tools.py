@@ -13767,10 +13767,12 @@ def register_generated_tools(mcp, _get_client):
                 fields: Meta only. Comma-separated Graph field override. Supports nested {} projections and Graph field modifiers, so a nested edge can be paged explicitly: without a .limit() modifier the expansion runs at the Meta default page size and the tail is dropped silently.
                 include_media: Meta only. When `true`, each row also carries `media`: the ad's rendered creative (images, videos, carousel cards) as direct file URLs, so you don't have to open `ad_snapshot_url` yourself.
 
+        It also carries `destination_urls`: where the ad sends people (landing page, WhatsApp, app store), unwrapped from Facebook's redirect, in the order the ad shows them. Meta's archive does not return these itself.
+
         - Meta CDN links are signed and expire: download what you need before each item's `expires_at`.
-        - `media` is `null` when Meta would not render the snapshot for that ad, and `[]` for a text-only ad.
+        - `media` and `destination_urls` are `null` when Meta would not render the snapshot for that ad. `media` is `[]` for a text-only ad, `destination_urls` is `[]` for an ad with no outbound link (lead forms, messages).
         - Every ad is rendered in a browser, so responses take several seconds longer, and `limit` is capped at 25 (`limit` > 25 is a 400).
-        - With a `fields` override, include `ad_snapshot_url` or no row gets `media`.
+        - With a `fields` override, include `ad_snapshot_url` or no row gets `media` or `destination_urls`.
                 limit: Rows per page. LinkedIn accepts at most 25.
                 after: paging.after of the previous page."""
         client = _get_client()
