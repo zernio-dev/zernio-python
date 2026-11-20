@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.706.0"
+  version: "1.706.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -86412,14 +86412,14 @@ paths:
                 adAccountId: { type: string, maxLength: 64, description: 'Platform ad account ID, from `GET /v1/ads/accounts`.' }
                 level: { $ref: '#/components/schemas/AdRuleLevel' }
                 campaignIds:
-                  type: array
+                  type: [array, "null"]
                   minItems: 1
                   maxItems: 100
                   items: { type: string }
-                  description: Only check these platform campaign IDs (or what sits in them). Leave out to check the whole ad account.
+                  description: Only check these platform campaign IDs (or what sits in them). Leave out or send null to check the whole ad account.
                 filters: { $ref: '#/components/schemas/AdRuleFilters' }
                 groups: { $ref: '#/components/schemas/AdRuleGroups' }
-                lifecycle: { $ref: '#/components/schemas/AdRuleLifecycle' }
+                lifecycle: { oneOf: [{ $ref: '#/components/schemas/AdRuleLifecycle' }, { type: 'null' }], description: Leave out or send null for none. }
                 conditions: { $ref: '#/components/schemas/AdRuleConditions' }
                 actions: { $ref: '#/components/schemas/AdRuleActions' }
                 schedule: { allOf: [{ $ref: '#/components/schemas/AdRuleSchedule' }], description: Leave it out to run every 60 minutes. }
