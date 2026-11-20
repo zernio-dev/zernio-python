@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.708.0"
+  version: "1.709.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -11233,9 +11233,10 @@ components:
             location:
               type: object
               description: |
-                WhatsApp only. The location pin the user shared, forwarded
-                verbatim from Meta. The message `text` is only the emoji preview
-                (`📍 <name>`); the coordinates live here.
+                WhatsApp and iMessage. The location pin the user shared. On WhatsApp it is forwarded
+                verbatim from Meta and the message `text` is only the emoji preview
+                (`📍 <name>`); the coordinates live here. On iMessage it is parsed from a Maps link
+                in `text`, which stays as sent.
               properties:
                 latitude: { type: number, description: Latitude in decimal degrees. }
                 longitude: { type: number, description: Longitude in decimal degrees. }
@@ -11426,6 +11427,24 @@ components:
 
                 - share_post: type share, with the embed url and payload.videoId.
                 - sticker/emoji: type sticker, url signed and expiring.
+            channel:
+              type: string
+              description: 'iMessage only. Delivery channel the message arrived on (imessage, sms, rcs or whatsapp).'
+            messageType:
+              type: string
+              description: 'iMessage only. Provider message type (for example text, audio, sticker).'
+            threadId:
+              type: string
+              description: 'iMessage only. Id of the reply thread the message belongs to.'
+            languageCode:
+              type: string
+              description: 'iMessage only. Language detected by the provider.'
+            transcript:
+              type: string
+              description: 'iMessage only. Provider transcription of a voice message.'
+            markdownText:
+              type: string
+              description: 'iMessage only. Rich-text markup rendered to markdown; `text` stays plain.'
         timestamp:
           type: string
           format: date-time
