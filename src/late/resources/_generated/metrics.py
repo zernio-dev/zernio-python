@@ -318,6 +318,111 @@ class MetricsResource:
         )
         return self._client._get("/v1/metrics/ad-accounts", params=params)
 
+    def query_meta_ads(
+        self,
+        account_id: str,
+        ad_account_id: str,
+        *,
+        level: str | None = None,
+        fields: list[str] | None = None,
+        breakdowns: list[str] | None = None,
+        action_breakdowns: list[str] | None = None,
+        action_attribution_windows: list[str] | None = None,
+        action_report_time: str | None = None,
+        use_unified_attribution_setting: bool | None = None,
+        filtering: list[dict[str, Any]] | None = None,
+        date_preset: str | None = None,
+        from_date: str | None = None,
+        to_date: str | None = None,
+        time_increment: Any | None = None,
+        limit: int | None = 500,
+        cursor: str | None = None,
+    ) -> dict[str, Any]:
+        """Run a Meta Marketing API insights query on one ad account"""
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "level": level,
+                "fields": fields,
+                "breakdowns": breakdowns,
+                "actionBreakdowns": action_breakdowns,
+                "actionAttributionWindows": action_attribution_windows,
+                "actionReportTime": action_report_time,
+                "useUnifiedAttributionSetting": use_unified_attribution_setting,
+                "filtering": filtering,
+                "datePreset": date_preset,
+                "fromDate": from_date,
+                "toDate": to_date,
+                "timeIncrement": time_increment,
+                "limit": limit,
+                "cursor": cursor,
+            }
+        )
+        return self._client._post("/v1/metrics/platform-queries/meta-ads", data=payload)
+
+    def query_google_ads(
+        self,
+        account_id: str,
+        query: str,
+        *,
+        ad_account_id: str | None = None,
+        cursor: str | None = None,
+    ) -> dict[str, Any]:
+        """Run a Google Ads Query Language search on one customer"""
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "query": query,
+                "cursor": cursor,
+            }
+        )
+        return self._client._post(
+            "/v1/metrics/platform-queries/google-ads", data=payload
+        )
+
+    def query_tik_tok_ads(
+        self,
+        account_id: str,
+        ad_account_id: str,
+        data_level: str,
+        dimensions: list[str],
+        metrics: list[str],
+        from_date: str,
+        to_date: str,
+        *,
+        report_type: str | None = "BASIC",
+        filtering: list[dict[str, Any]] | None = None,
+        page_size: int | None = 1000,
+        cursor: str | None = None,
+    ) -> dict[str, Any]:
+        """Run a TikTok Marketing API report on one advertiser"""
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "reportType": report_type,
+                "dataLevel": data_level,
+                "dimensions": dimensions,
+                "metrics": metrics,
+                "filtering": filtering,
+                "fromDate": from_date,
+                "toDate": to_date,
+                "pageSize": page_size,
+                "cursor": cursor,
+            }
+        )
+        return self._client._post(
+            "/v1/metrics/platform-queries/tiktok-ads", data=payload
+        )
+
+    def query_google_analytics(self, body: dict[str, Any]) -> dict[str, Any]:
+        """Run a GA4 standard or realtime report on one property"""
+        return self._client._post(
+            "/v1/metrics/platform-queries/google-analytics", data=body
+        )
+
     async def aget_metrics_catalog(
         self, *, entity: str | None = None, platform: str | None = None
     ) -> dict[str, Any]:
@@ -536,3 +641,110 @@ class MetricsResource:
             }
         )
         return await self._client._aget("/v1/metrics/ad-accounts", params=params)
+
+    async def aquery_meta_ads(
+        self,
+        account_id: str,
+        ad_account_id: str,
+        *,
+        level: str | None = None,
+        fields: list[str] | None = None,
+        breakdowns: list[str] | None = None,
+        action_breakdowns: list[str] | None = None,
+        action_attribution_windows: list[str] | None = None,
+        action_report_time: str | None = None,
+        use_unified_attribution_setting: bool | None = None,
+        filtering: list[dict[str, Any]] | None = None,
+        date_preset: str | None = None,
+        from_date: str | None = None,
+        to_date: str | None = None,
+        time_increment: Any | None = None,
+        limit: int | None = 500,
+        cursor: str | None = None,
+    ) -> dict[str, Any]:
+        """Run a Meta Marketing API insights query on one ad account (async)"""
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "level": level,
+                "fields": fields,
+                "breakdowns": breakdowns,
+                "actionBreakdowns": action_breakdowns,
+                "actionAttributionWindows": action_attribution_windows,
+                "actionReportTime": action_report_time,
+                "useUnifiedAttributionSetting": use_unified_attribution_setting,
+                "filtering": filtering,
+                "datePreset": date_preset,
+                "fromDate": from_date,
+                "toDate": to_date,
+                "timeIncrement": time_increment,
+                "limit": limit,
+                "cursor": cursor,
+            }
+        )
+        return await self._client._apost(
+            "/v1/metrics/platform-queries/meta-ads", data=payload
+        )
+
+    async def aquery_google_ads(
+        self,
+        account_id: str,
+        query: str,
+        *,
+        ad_account_id: str | None = None,
+        cursor: str | None = None,
+    ) -> dict[str, Any]:
+        """Run a Google Ads Query Language search on one customer (async)"""
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "query": query,
+                "cursor": cursor,
+            }
+        )
+        return await self._client._apost(
+            "/v1/metrics/platform-queries/google-ads", data=payload
+        )
+
+    async def aquery_tik_tok_ads(
+        self,
+        account_id: str,
+        ad_account_id: str,
+        data_level: str,
+        dimensions: list[str],
+        metrics: list[str],
+        from_date: str,
+        to_date: str,
+        *,
+        report_type: str | None = "BASIC",
+        filtering: list[dict[str, Any]] | None = None,
+        page_size: int | None = 1000,
+        cursor: str | None = None,
+    ) -> dict[str, Any]:
+        """Run a TikTok Marketing API report on one advertiser (async)"""
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "reportType": report_type,
+                "dataLevel": data_level,
+                "dimensions": dimensions,
+                "metrics": metrics,
+                "filtering": filtering,
+                "fromDate": from_date,
+                "toDate": to_date,
+                "pageSize": page_size,
+                "cursor": cursor,
+            }
+        )
+        return await self._client._apost(
+            "/v1/metrics/platform-queries/tiktok-ads", data=payload
+        )
+
+    async def aquery_google_analytics(self, body: dict[str, Any]) -> dict[str, Any]:
+        """Run a GA4 standard or realtime report on one property (async)"""
+        return await self._client._apost(
+            "/v1/metrics/platform-queries/google-analytics", data=body
+        )

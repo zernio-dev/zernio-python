@@ -1463,6 +1463,10 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `metrics.get_insight_metrics()` | Read live account or post insights from the platform |
 | `metrics.get_metrics_catalog()` | List the metrics, groupings and limits of each metrics endpoint |
 | `metrics.get_post_metrics()` | Read post metrics by id, day by day, as a list, or grouped |
+| `metrics.query_google_ads()` | Run a Google Ads Query Language search on one customer |
+| `metrics.query_google_analytics()` | Run a GA4 standard or realtime report on one property |
+| `metrics.query_meta_ads()` | Run a Meta Marketing API insights query on one ad account |
+| `metrics.query_tik_tok_ads()` | Run a TikTok Marketing API report on one advertiser |
 
 ### Phone Numbers
 | Method | Description |

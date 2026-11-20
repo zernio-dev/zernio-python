@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.709.0"
+  version: "1.710.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -1883,6 +1883,436 @@ components:
                   effective_account_limit: 2000
                   current_account_count: 2000
   schemas:
+    MetaAdsPlatformQueryBody:
+      type: object
+      properties:
+        accountId:
+          type: string
+          description: The Zernio id of the connected Meta ads account.
+        adAccountId:
+          type: string
+          pattern: ^act_\d+$
+          description: The Meta ad account, act_<n>. Read its campaigns, ad sets or ads with level and filtering.
+        level:
+          description: The level of each row. Defaults to the ad account.
+          type: string
+          enum:
+          - ad
+          - adset
+          - campaign
+          - account
+        fields:
+          description: Meta insights fields, such as spend or impressions, up to 100.
+          minItems: 1
+          maxItems: 100
+          type: array
+          items:
+            type: string
+            pattern: ^[a-z0-9_]+$
+        breakdowns:
+          description: Meta breakdowns, up to 5.
+          minItems: 1
+          maxItems: 5
+          type: array
+          items:
+            type: string
+            pattern: ^[a-z0-9_]+$
+        actionBreakdowns:
+          description: An empty array asks Meta for no action breakdown at all.
+          maxItems: 5
+          type: array
+          items:
+            type: string
+            pattern: ^[a-z0-9_]+$
+        actionAttributionWindows:
+          description: Meta attribution windows, such as 7d_click or 1d_view.
+          minItems: 1
+          type: array
+          items:
+            type: string
+            pattern: ^[a-z0-9_]+$
+        actionReportTime:
+          description: impression, conversion or mixed.
+          type: string
+          pattern: ^[a-z]+$
+        useUnifiedAttributionSetting:
+          description: Use each ad set's own attribution setting.
+          type: boolean
+        filtering:
+          description: Meta filters of field, operator and value, up to 25.
+          minItems: 1
+          maxItems: 25
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+                minLength: 1
+              operator:
+                type: string
+                minLength: 1
+              value: {}
+            required:
+            - field
+            - operator
+            - value
+            additionalProperties: false
+        datePreset:
+          description: A Meta date preset, such as last_30d. Not with fromDate and toDate.
+          type: string
+          pattern: ^[a-z0-9_]+$
+        fromDate:
+          description: First day, YYYY-MM-DD, sent with toDate.
+          type: string
+          format: date
+          pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))$
+        toDate:
+          description: Last day, YYYY-MM-DD, sent with fromDate.
+          type: string
+          format: date
+          pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))$
+        timeIncrement:
+          description: Days per row, 1 to 90, or monthly or all_days.
+          anyOf:
+          - type: string
+            enum:
+            - monthly
+            - all_days
+          - type: integer
+            minimum: 1
+            maximum: 90
+        limit:
+          default: 500
+          description: Rows per page, up to 500. Defaults to 500.
+          type: integer
+          exclusiveMinimum: 0
+          maximum: 500
+        cursor:
+          description: The pagination.nextCursor of the previous page, unchanged.
+          type: string
+          minLength: 1
+      required:
+      - accountId
+      - adAccountId
+      additionalProperties: false
+    GoogleAdsPlatformQueryBody:
+      type: object
+      properties:
+        accountId:
+          type: string
+          description: The Zernio id of the connected Google Ads account.
+        adAccountId:
+          description: The Google Ads customer to query. Defaults to the connection's own customer.
+          type: string
+          pattern: ^\d+$
+        query:
+          type: string
+          maxLength: 10000
+          description: A GAQL SELECT statement, up to 10,000 characters. Read only.
+        cursor:
+          description: The pagination.nextCursor of the previous page, unchanged.
+          type: string
+          minLength: 1
+      required:
+      - accountId
+      - query
+      additionalProperties: false
+    TikTokAdsPlatformQueryBody:
+      type: object
+      properties:
+        accountId:
+          type: string
+          description: The Zernio id of the connected TikTok ads account.
+        adAccountId:
+          type: string
+          pattern: ^\d+$
+          description: The numeric TikTok advertiser id.
+        reportType:
+          default: BASIC
+          description: Defaults to BASIC.
+          type: string
+          enum:
+          - BASIC
+          - AUDIENCE
+        dataLevel:
+          type: string
+          enum:
+          - AUCTION_ADVERTISER
+          - AUCTION_CAMPAIGN
+          - AUCTION_ADGROUP
+          - AUCTION_AD
+          description: The level of each row.
+        dimensions:
+          minItems: 1
+          maxItems: 4
+          type: array
+          items:
+            type: string
+            pattern: ^[a-z0-9_]+$
+          description: TikTok dimensions, 1 to 4.
+        metrics:
+          minItems: 1
+          maxItems: 100
+          type: array
+          items:
+            type: string
+            pattern: ^[a-z0-9_]+$
+          description: TikTok metrics, up to 100.
+        filtering:
+          description: TikTok filters of field, operator and value, up to 25. A filter on an entity finer than dataLevel is refused.
+          minItems: 1
+          maxItems: 25
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+                minLength: 1
+              operator:
+                type: string
+                minLength: 1
+              value: {}
+            required:
+            - field
+            - operator
+            - value
+            additionalProperties: false
+        fromDate:
+          type: string
+          format: date
+          pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))$
+          description: First day, YYYY-MM-DD, inclusive.
+        toDate:
+          type: string
+          format: date
+          pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))$
+          description: Last day, YYYY-MM-DD, inclusive.
+        pageSize:
+          default: 1000
+          description: Rows per page, up to 1,000. Defaults to 1,000.
+          type: integer
+          exclusiveMinimum: 0
+          maximum: 1000
+        cursor:
+          description: The pagination.nextCursor of the previous page, unchanged.
+          type: string
+          minLength: 1
+      required:
+      - accountId
+      - adAccountId
+      - dataLevel
+      - dimensions
+      - metrics
+      - fromDate
+      - toDate
+      additionalProperties: false
+    GoogleAnalyticsPlatformQueryBody:
+      oneOf:
+      - type: object
+        properties:
+          reportType:
+            type: string
+            const: standard
+            description: A GA4 report over date ranges, paged with a cursor.
+          accountId:
+            type: string
+            description: The Zernio id of the connected Google Analytics property.
+          dimensions:
+            description: GA4 dimension names, up to 9.
+            maxItems: 9
+            type: array
+            items:
+              type: string
+              minLength: 1
+              maxLength: 100
+          metrics:
+            minItems: 1
+            maxItems: 10
+            type: array
+            items:
+              type: string
+              minLength: 1
+              maxLength: 100
+            description: GA4 metric names, 1 to 10.
+          dimensionFilter:
+            description: A GA4 FilterExpression on dimensions, sent to Google unchanged.
+            type: object
+            propertyNames:
+              type: string
+            additionalProperties: {}
+          metricFilter:
+            description: A GA4 FilterExpression on metrics, sent to Google unchanged.
+            type: object
+            propertyNames:
+              type: string
+            additionalProperties: {}
+          orderBys:
+            description: GA4 OrderBy objects, up to 10.
+            maxItems: 10
+            type: array
+            items:
+              type: object
+              propertyNames:
+                type: string
+              additionalProperties: {}
+          limit:
+            default: 10000
+            description: Rows per page, up to 10,000. Defaults to 10,000.
+            type: integer
+            minimum: 1
+            maximum: 10000
+          dateRanges:
+            description: Up to 4 GA4 date ranges. Defaults to the 28 days ending yesterday.
+            minItems: 1
+            maxItems: 4
+            type: array
+            items:
+              type: object
+              properties:
+                startDate:
+                  type: string
+                  pattern: ^(\d{4}-\d{2}-\d{2}|today|yesterday|\d{1,4}daysAgo)$
+                endDate:
+                  type: string
+                  pattern: ^(\d{4}-\d{2}-\d{2}|today|yesterday|\d{1,4}daysAgo)$
+                name:
+                  type: string
+                  maxLength: 50
+              required:
+              - startDate
+              - endDate
+              additionalProperties: false
+          keepEmptyRows:
+            description: Keep rows whose metrics are all 0.
+            type: boolean
+          currencyCode:
+            description: ISO 4217 code for money metrics.
+            type: string
+            minLength: 3
+            maxLength: 3
+          cursor:
+            description: The pagination.nextCursor of the previous page, unchanged.
+            type: string
+            minLength: 1
+        required:
+        - reportType
+        - accountId
+        - metrics
+        additionalProperties: false
+      - type: object
+        properties:
+          reportType:
+            type: string
+            const: realtime
+            description: A GA4 realtime report on the last 30 minutes, one page.
+          accountId:
+            type: string
+            description: The Zernio id of the connected Google Analytics property.
+          dimensions:
+            description: GA4 dimension names, up to 9.
+            maxItems: 9
+            type: array
+            items:
+              type: string
+              minLength: 1
+              maxLength: 100
+          metrics:
+            minItems: 1
+            maxItems: 10
+            type: array
+            items:
+              type: string
+              minLength: 1
+              maxLength: 100
+            description: GA4 metric names, 1 to 10.
+          dimensionFilter:
+            description: A GA4 FilterExpression on dimensions, sent to Google unchanged.
+            type: object
+            propertyNames:
+              type: string
+            additionalProperties: {}
+          metricFilter:
+            description: A GA4 FilterExpression on metrics, sent to Google unchanged.
+            type: object
+            propertyNames:
+              type: string
+            additionalProperties: {}
+          orderBys:
+            description: GA4 OrderBy objects, up to 10.
+            maxItems: 10
+            type: array
+            items:
+              type: object
+              propertyNames:
+                type: string
+              additionalProperties: {}
+          limit:
+            description: Rows, up to 10,000.
+            type: integer
+            minimum: 1
+            maximum: 10000
+          minuteRanges:
+            description: Up to 2 GA4 minute ranges. Defaults to the last 30 minutes.
+            minItems: 1
+            maxItems: 2
+            type: array
+            items:
+              type: object
+              properties:
+                startMinutesAgo:
+                  type: integer
+                  minimum: 0
+                  maximum: 59
+                endMinutesAgo:
+                  type: integer
+                  minimum: 0
+                  maximum: 59
+                name:
+                  type: string
+                  maxLength: 50
+              additionalProperties: false
+        required:
+        - reportType
+        - accountId
+        - metrics
+        additionalProperties: false
+    PlatformQueryPage:
+      type: object
+      properties:
+        data:
+          type: array
+          items: {}
+          description: The rows as the platform returned them, with its own field names.
+        meta:
+          type: object
+          properties:
+            source:
+              type: string
+            platform:
+              type: string
+          required:
+          - source
+          - platform
+          additionalProperties: {}
+          description: The platform's own headers, counts and quota for the page.
+        pagination:
+          type: object
+          properties:
+            nextCursor:
+              type:
+              - string
+              - 'null'
+            hasMore:
+              type: boolean
+          required:
+          - nextCursor
+          - hasMore
+      required:
+      - data
+      - meta
+      - pagination
     MetricsCatalogResponse:
       type: object
       required:
@@ -35841,6 +36271,330 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/MetricsAdsForbidden'
+        '429':
+          $ref: '#/components/responses/MetricsRateLimited'
+        '503':
+          $ref: '#/components/responses/TemporarilyUnavailable'
+  /v1/metrics/platform-queries/meta-ads:
+    post:
+      x-resource-group: ads
+      operationId: queryMetaAds
+      tags:
+      - Metrics
+      summary: Run a Meta Marketing API insights query on one ad account
+      description: |-
+        Reads Meta's insights for one ad account (`act_<n>`). Read its campaigns, ad sets or ads with `level` and `filtering` on the same ad account.
+
+        Runs a native query on the platform with the account's own token and answers the platform's rows unchanged, with its own field names, plus its headers, counts and quota in `meta`. Use it for what `/v1/metrics/*` does not store; the stored metrics stay cheaper and faster.
+
+        - Up to 120 reads per hour per platform target (the Zernio account plus the ad account or property); past it, 429 with `details.scope` `platform_query_target`.
+
+        - Up to 10 queries in flight per team.
+
+        - A query must answer within 25 seconds.
+
+        - An account of another source answers 400 on `accountId` with the route it belongs to.
+
+        - The next page goes in `cursor`, from `pagination.nextCursor`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MetaAdsPlatformQueryBody'
+            examples:
+              query:
+                summary: A query
+                value:
+                  accountId: 69fc524892b3d8e85f893e73
+                  adAccountId: act_757082720485182
+                  level: campaign
+                  fields:
+                  - spend
+                  - impressions
+                  - clicks
+                  fromDate: '2026-11-01'
+                  toDate: '2026-11-18'
+      responses:
+        '200':
+          description: The platform's rows for the query.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformQueryPage'
+              examples:
+                page:
+                  summary: One page
+                  value:
+                    data:
+                    - spend: '3142.64'
+                      impressions: '583257'
+                      clicks: '14204'
+                      date_start: '2026-11-01'
+                      date_stop: '2026-11-18'
+                    meta:
+                      source: meta-ads
+                      platform: facebook
+                      adAccountId: act_757082720485182
+                    pagination:
+                      nextCursor: null
+                      hasMore: false
+        '400':
+          $ref: '#/components/responses/MetricsBadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403': &id001
+          $ref: '#/components/responses/MetricsAdsForbidden'
+        '429':
+          $ref: '#/components/responses/MetricsRateLimited'
+        '503':
+          $ref: '#/components/responses/TemporarilyUnavailable'
+  /v1/metrics/platform-queries/google-ads:
+    post:
+      x-resource-group: ads
+      operationId: queryGoogleAds
+      tags:
+      - Metrics
+      summary: Run a Google Ads Query Language search on one customer
+      description: |-
+        Runs a GAQL `SELECT` on one Google Ads customer, read only. Without `adAccountId` it reads the connection's own customer.
+
+        Runs a native query on the platform with the account's own token and answers the platform's rows unchanged, with its own field names, plus its headers, counts and quota in `meta`. Use it for what `/v1/metrics/*` does not store; the stored metrics stay cheaper and faster.
+
+        - Up to 120 reads per hour per platform target (the Zernio account plus the ad account or property); past it, 429 with `details.scope` `platform_query_target`.
+
+        - Up to 10 queries in flight per team.
+
+        - A query must answer within 25 seconds.
+
+        - An account of another source answers 400 on `accountId` with the route it belongs to.
+
+        - The next page goes in `cursor`, from `pagination.nextCursor`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GoogleAdsPlatformQueryBody'
+            examples:
+              query:
+                summary: A query
+                value:
+                  accountId: 69ce75d483e990e1c01ccfe4
+                  adAccountId: '9122445560'
+                  query: SELECT campaign.id, metrics.clicks FROM campaign WHERE segments.date DURING LAST_30_DAYS
+      responses:
+        '200':
+          description: The platform's rows for the query.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformQueryPage'
+              examples:
+                page:
+                  summary: One page
+                  value:
+                    data:
+                    - campaign:
+                        resourceName: customers/9122445560/campaigns/21967099603
+                        id: '21967099603'
+                      metrics:
+                        clicks: '0'
+                    - campaign:
+                        resourceName: customers/9122445560/campaigns/22306035548
+                        id: '22306035548'
+                      metrics:
+                        clicks: '0'
+                    meta:
+                      source: google-ads
+                      platform: googleads
+                      adAccountId: '9122445560'
+                      fieldMask: campaign.id,metrics.clicks
+                    pagination:
+                      nextCursor: null
+                      hasMore: false
+        '400':
+          $ref: '#/components/responses/MetricsBadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403': *id001
+        '429':
+          $ref: '#/components/responses/MetricsRateLimited'
+        '503':
+          $ref: '#/components/responses/TemporarilyUnavailable'
+  /v1/metrics/platform-queries/tiktok-ads:
+    post:
+      x-resource-group: ads
+      operationId: queryTikTokAds
+      tags:
+      - Metrics
+      summary: Run a TikTok Marketing API report on one advertiser
+      description: |-
+        Runs a synchronous TikTok report (`BASIC` or `AUDIENCE`) for one advertiser at the data level asked.
+
+        Runs a native query on the platform with the account's own token and answers the platform's rows unchanged, with its own field names, plus its headers, counts and quota in `meta`. Use it for what `/v1/metrics/*` does not store; the stored metrics stay cheaper and faster.
+
+        - Up to 120 reads per hour per platform target (the Zernio account plus the ad account or property); past it, 429 with `details.scope` `platform_query_target`.
+
+        - Up to 10 queries in flight per team.
+
+        - A query must answer within 25 seconds.
+
+        - An account of another source answers 400 on `accountId` with the route it belongs to.
+
+        - The next page goes in `cursor`, from `pagination.nextCursor`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TikTokAdsPlatformQueryBody'
+            examples:
+              query:
+                summary: A query
+                value:
+                  accountId: 6abb67f34dc9098d7c2f1955
+                  adAccountId: '7330955083452284929'
+                  dataLevel: AUCTION_CAMPAIGN
+                  dimensions:
+                  - campaign_id
+                  metrics:
+                  - spend
+                  - impressions
+                  fromDate: '2026-11-01'
+                  toDate: '2026-11-18'
+      responses:
+        '200':
+          description: The platform's rows for the query.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformQueryPage'
+              examples:
+                page:
+                  summary: One page
+                  value:
+                    data:
+                    - metrics:
+                        spend: '0.00'
+                        impressions: '0'
+                      dimensions:
+                        campaign_id: '1880220477158546'
+                    - metrics:
+                        spend: '0.00'
+                        impressions: '0'
+                      dimensions:
+                        campaign_id: '1880120092292305'
+                    meta:
+                      source: tiktok-ads
+                      platform: tiktok
+                      adAccountId: '7330955083452284929'
+                      totalRows: 6
+                    pagination:
+                      nextCursor: null
+                      hasMore: false
+        '400':
+          $ref: '#/components/responses/MetricsBadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403': *id001
+        '429':
+          $ref: '#/components/responses/MetricsRateLimited'
+        '503':
+          $ref: '#/components/responses/TemporarilyUnavailable'
+  /v1/metrics/platform-queries/google-analytics:
+    post:
+      x-resource-group: analytics
+      operationId: queryGoogleAnalytics
+      tags:
+      - Metrics
+      summary: Run a GA4 standard or realtime report on one property
+      description: |-
+        Runs a GA4 `standard` report over up to 4 date ranges, paged, or a `realtime` report on the last 30 minutes. Needs the Analytics add-on.
+
+        Runs a native query on the platform with the account's own token and answers the platform's rows unchanged, with its own field names, plus its headers, counts and quota in `meta`. Use it for what `/v1/metrics/*` does not store; the stored metrics stay cheaper and faster.
+
+        - Up to 120 reads per hour per platform target (the Zernio account plus the ad account or property); past it, 429 with `details.scope` `platform_query_target`.
+
+        - Up to 10 queries in flight per team.
+
+        - A query must answer within 25 seconds.
+
+        - An account of another source answers 400 on `accountId` with the route it belongs to.
+
+        - The next page goes in `cursor`, from `pagination.nextCursor`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GoogleAnalyticsPlatformQueryBody'
+            examples:
+              query:
+                summary: A query
+                value:
+                  reportType: standard
+                  accountId: 6ae38efd7a6050c11aa50bc9
+                  metrics:
+                  - sessions
+                  dimensions:
+                  - date
+                  dateRanges:
+                  - startDate: '2026-11-10'
+                    endDate: '2026-11-16'
+      responses:
+        '200':
+          description: The platform's rows for the query.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformQueryPage'
+              examples:
+                page:
+                  summary: One page
+                  value:
+                    data:
+                    - dimensionValues:
+                      - value: '20261116'
+                      metricValues:
+                      - value: '49995'
+                    - dimensionValues:
+                      - value: '20261110'
+                      metricValues:
+                      - value: '45037'
+                    meta:
+                      source: google-analytics
+                      platform: googleanalytics
+                      propertyId: '516204466'
+                      reportType: standard
+                      dimensionHeaders:
+                      - name: date
+                      metricHeaders:
+                      - name: sessions
+                        type: TYPE_INTEGER
+                      rowCount: 7
+                      metadata:
+                        currencyCode: USD
+                        timeZone: America/Los_Angeles
+                      propertyQuota:
+                        tokensPerDay:
+                          consumed: 1
+                          remaining: 199999
+                        tokensPerHour:
+                          consumed: 1
+                          remaining: 39999
+                      kind: analyticsData#runReport
+                    pagination:
+                      nextCursor: null
+                      hasMore: false
+        '400':
+          $ref: '#/components/responses/MetricsBadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '402':
+          $ref: '#/components/responses/AnalyticsAddonRequired'
+        '403':
+          $ref: '#/components/responses/ResourceGroupForbidden'
         '429':
           $ref: '#/components/responses/MetricsRateLimited'
         '503':

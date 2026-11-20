@@ -44370,6 +44370,240 @@ def register_generated_tools(mcp, _get_client):
         except Exception as e:
             raise ToolError(f"Error: {e}") from e
 
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Run a Meta Marketing API insights query on one ad account",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def metrics_query_meta_ads(
+        account_id: str,
+        ad_account_id: str,
+        level: Literal["ad", "adset", "campaign", "account"] | None = None,
+        fields: list[str] | None = None,
+        breakdowns: list[str] | None = None,
+        action_breakdowns: list[str] | None = None,
+        action_attribution_windows: list[str] | None = None,
+        action_report_time: str | None = None,
+        use_unified_attribution_setting: bool | None = None,
+        filtering: list[dict[str, Any]] | None = None,
+        date_preset: str | None = None,
+        from_date: str | None = None,
+        to_date: str | None = None,
+        time_increment: str | None = None,
+        limit: int = 500,
+        cursor: str | None = None,
+    ) -> str:
+        """Run a Meta Marketing API insights query on one ad account
+
+        Reads Meta's insights for one ad account (`act_<n>`). Read its campaigns, ad sets or ads with `level` and `filtering` on the same ad account.
+
+        Runs a native query on the platform with the account's own token and answers the platform's rows unchanged, with its own field names, plus its headers, counts and quota in `meta`. Use it for what `/v1/metrics/*` does not store; the stored metrics stay cheaper and faster.
+
+        - Up to 120 reads per hour per platform target (the Zernio account plus the ad account or property); past it, 429 with `details.scope` `platform_query_target`.
+
+        - Up to 10 queries in flight per team.
+
+        - A query must answer within 25 seconds.
+
+        - An account of another source answers 400 on `accountId` with the route it belongs to.
+
+        - The next page goes in `cursor`, from `pagination.nextCursor`.
+
+        Args:
+            account_id: The Zernio id of the connected Meta ads account. (required)
+            ad_account_id: The Meta ad account, act_<n>. Read its campaigns, ad sets or ads with level and filtering. (required)
+            level: The level of each row. Defaults to the ad account.
+            fields: Meta insights fields, such as spend or impressions, up to 100.
+            breakdowns: Meta breakdowns, up to 5.
+            action_breakdowns: An empty array asks Meta for no action breakdown at all.
+            action_attribution_windows: Meta attribution windows, such as 7d_click or 1d_view.
+            action_report_time: impression, conversion or mixed.
+            use_unified_attribution_setting: Use each ad set's own attribution setting.
+            filtering: Meta filters of field, operator and value, up to 25. Each item is an object with keys: field (string, required); operator (string, required); value (any, required)
+            date_preset: A Meta date preset, such as last_30d. Not with fromDate and toDate.
+            from_date: First day, YYYY-MM-DD, sent with toDate.
+            to_date: Last day, YYYY-MM-DD, sent with fromDate.
+            time_increment: Days per row, 1 to 90, or monthly or all_days.
+            limit: Rows per page, up to 500. Defaults to 500.
+            cursor: The pagination.nextCursor of the previous page, unchanged."""
+        client = _get_client()
+        try:
+            response = client.metrics.query_meta_ads(
+                account_id=account_id,
+                ad_account_id=ad_account_id,
+                level=level,
+                fields=fields,
+                breakdowns=breakdowns,
+                action_breakdowns=action_breakdowns,
+                action_attribution_windows=action_attribution_windows,
+                action_report_time=action_report_time,
+                use_unified_attribution_setting=use_unified_attribution_setting,
+                filtering=filtering,
+                date_preset=date_preset,
+                from_date=from_date,
+                to_date=to_date,
+                time_increment=time_increment,
+                limit=limit,
+                cursor=cursor,
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Run a Google Ads Query Language search on one customer",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def metrics_query_google_ads(
+        account_id: str,
+        query: str,
+        ad_account_id: str | None = None,
+        cursor: str | None = None,
+    ) -> str:
+        """Run a Google Ads Query Language search on one customer
+
+        Runs a GAQL `SELECT` on one Google Ads customer, read only. Without `adAccountId` it reads the connection's own customer.
+
+        Runs a native query on the platform with the account's own token and answers the platform's rows unchanged, with its own field names, plus its headers, counts and quota in `meta`. Use it for what `/v1/metrics/*` does not store; the stored metrics stay cheaper and faster.
+
+        - Up to 120 reads per hour per platform target (the Zernio account plus the ad account or property); past it, 429 with `details.scope` `platform_query_target`.
+
+        - Up to 10 queries in flight per team.
+
+        - A query must answer within 25 seconds.
+
+        - An account of another source answers 400 on `accountId` with the route it belongs to.
+
+        - The next page goes in `cursor`, from `pagination.nextCursor`.
+
+        Args:
+            account_id: The Zernio id of the connected Google Ads account. (required)
+            ad_account_id: The Google Ads customer to query. Defaults to the connection's own customer.
+            query: A GAQL SELECT statement, up to 10,000 characters. Read only. (required)
+            cursor: The pagination.nextCursor of the previous page, unchanged."""
+        client = _get_client()
+        try:
+            response = client.metrics.query_google_ads(
+                account_id=account_id,
+                ad_account_id=ad_account_id,
+                query=query,
+                cursor=cursor,
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Run a TikTok Marketing API report on one advertiser",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def metrics_query_tik_tok_ads(
+        account_id: str,
+        ad_account_id: str,
+        data_level: Literal[
+            "AUCTION_ADVERTISER", "AUCTION_CAMPAIGN", "AUCTION_ADGROUP", "AUCTION_AD"
+        ],
+        dimensions: list[str] | None,
+        metrics: list[str] | None,
+        from_date: str,
+        to_date: str,
+        report_type: Literal["BASIC", "AUDIENCE"] = "BASIC",
+        filtering: list[dict[str, Any]] | None = None,
+        page_size: int = 1000,
+        cursor: str | None = None,
+    ) -> str:
+        """Run a TikTok Marketing API report on one advertiser
+
+        Runs a synchronous TikTok report (`BASIC` or `AUDIENCE`) for one advertiser at the data level asked.
+
+        Runs a native query on the platform with the account's own token and answers the platform's rows unchanged, with its own field names, plus its headers, counts and quota in `meta`. Use it for what `/v1/metrics/*` does not store; the stored metrics stay cheaper and faster.
+
+        - Up to 120 reads per hour per platform target (the Zernio account plus the ad account or property); past it, 429 with `details.scope` `platform_query_target`.
+
+        - Up to 10 queries in flight per team.
+
+        - A query must answer within 25 seconds.
+
+        - An account of another source answers 400 on `accountId` with the route it belongs to.
+
+        - The next page goes in `cursor`, from `pagination.nextCursor`.
+
+        Args:
+            account_id: The Zernio id of the connected TikTok ads account. (required)
+            ad_account_id: The numeric TikTok advertiser id. (required)
+            report_type: Defaults to BASIC.
+            data_level: The level of each row. (required)
+            dimensions: TikTok dimensions, 1 to 4. (required)
+            metrics: TikTok metrics, up to 100. (required)
+            filtering: TikTok filters of field, operator and value, up to 25. A filter on an entity finer than dataLevel is refused. Each item is an object with keys: field (string, required); operator (string, required); value (any, required)
+            from_date: First day, YYYY-MM-DD, inclusive. (required)
+            to_date: Last day, YYYY-MM-DD, inclusive. (required)
+            page_size: Rows per page, up to 1,000. Defaults to 1,000.
+            cursor: The pagination.nextCursor of the previous page, unchanged."""
+        client = _get_client()
+        try:
+            response = client.metrics.query_tik_tok_ads(
+                account_id=account_id,
+                ad_account_id=ad_account_id,
+                report_type=report_type,
+                data_level=data_level,
+                dimensions=dimensions,
+                metrics=metrics,
+                filtering=filtering,
+                from_date=from_date,
+                to_date=to_date,
+                page_size=page_size,
+                cursor=cursor,
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Run a GA4 standard or realtime report on one property",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def metrics_query_google_analytics(body: dict[str, Any]) -> str:
+        """Run a GA4 standard or realtime report on one property
+
+        Runs a GA4 `standard` report over up to 4 date ranges, paged, or a `realtime` report on the last 30 minutes. Needs the Analytics add-on.
+
+        Runs a native query on the platform with the account's own token and answers the platform's rows unchanged, with its own field names, plus its headers, counts and quota in `meta`. Use it for what `/v1/metrics/*` does not store; the stored metrics stay cheaper and faster.
+
+        - Up to 120 reads per hour per platform target (the Zernio account plus the ad account or property); past it, 429 with `details.scope` `platform_query_target`.
+
+        - Up to 10 queries in flight per team.
+
+        - A query must answer within 25 seconds.
+
+        - An account of another source answers 400 on `accountId` with the route it belongs to.
+
+        - The next page goes in `cursor`, from `pagination.nextCursor`.
+
+        Args:
+            body: Full request body as documented in the API reference. (required)"""
+        client = _get_client()
+        try:
+            response = client.metrics.query_google_analytics(body=body)
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
     # PHONE_NUMBERS
 
     @mcp.tool(
