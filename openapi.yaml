@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.715.0"
+  version: "1.716.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -465,6 +465,16 @@ tags:
   - name: Invites
     description: |
       Generate invite tokens for adding members to a team.
+  - name: Workspaces
+    description: |
+      Create and manage the workspaces you belong to, and mint an API key for each. A workspace holds its own profiles, accounts, posts, keys and billing, so a product can keep one workspace per customer: create it, then create a key that acts in it.
+
+      Every key acts in the workspace it was created for, as its creator's membership there.
+
+      - Listing and reading take any key of yours.
+      - Creating a workspace takes a full-access key. Send `apiKey` to get its first key in the same call.
+      - Renaming, deleting and minting keys take a full-access key of that same workspace and the dashboard's role (owner or admin; delete is owner only). For another workspace, use the dashboard.
+      - A new workspace has no billing: its keys can read, and writes return 402 `workspace_billing_required` until billing is set up at `billing.setupUrl`.
   - name: Connect
     description: |
       OAuth and credential flows for connecting accounts, plus per-platform selection
@@ -18480,6 +18490,38 @@ components:
                 monthlyViews: { type: [number, "null"], description: "Monthly profile views (Pinterest). null when Pinterest reports no window" }
                 listedCount: { type: number, description: Lists the user appears on (X) }
                 boardCount: { type: number, description: Total boards (Pinterest) }
+    Workspace:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: string }
+        personal:
+          type: boolean
+          description: True for the caller's own Personal workspace, which is never shared, renamed or deleted.
+        role:
+          type: string
+          enum: [owner, admin, billing_admin, member, viewer]
+          description: The caller's role in this workspace.
+        createdAt: { type: string, format: date-time }
+        deletionScheduledAt:
+          type: [string, "null"]
+          format: date-time
+          description: When a scheduled deletion runs; null when none is scheduled.
+    WorkspaceWithBilling:
+      description: A workspace, plus `billing` for owners, admins and billing admins.
+      allOf:
+        - $ref: '#/components/schemas/Workspace'
+        - type: object
+          properties:
+            billing:
+              type: object
+              properties:
+                setUp:
+                  type: boolean
+                  description: False until billing is set up. Until then keys of this workspace can read but a write returns 402 workspace_billing_required.
+                setupUrl:
+                  type: [string, "null"]
+                  description: Dashboard page where a person sets billing up for this workspace; null once it is set up.
     ApiKey:
       type: object
       properties:
@@ -48738,6 +48780,383 @@ paths:
                 message: "API key deleted successfully"
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { $ref: '#/components/responses/ResourceGroupForbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /v1/workspaces:
+    get:
+      x-resource-group: "admin-plane"
+      operationId: listWorkspaces
+      tags: [Workspaces]
+      summary: List workspaces
+      description: >-
+        Lists every workspace the key's owner belongs to, with their role in each: teams first by name, their
+        Personal workspace last. Any key of the owner lists them all, whatever workspace that key acts in.
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          schema: { type: integer, minimum: 1, maximum: 200, default: 50 }
+          description: Page size.
+        - name: skip
+          in: query
+          required: false
+          schema: { type: integer, minimum: 0, default: 0 }
+          description: Number of workspaces to skip.
+      responses:
+        '200':
+          description: Workspaces
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  workspaces:
+                    type: array
+                    items: { $ref: '#/components/schemas/Workspace' }
+                  pagination:
+                    type: object
+                    properties:
+                      total: { type: integer }
+                      limit: { type: integer }
+                      skip: { type: integer }
+                      hasMore: { type: boolean }
+              example:
+                workspaces:
+                  - id: "6507a1b2c3d4e5f6a7b8c9d1"
+                    name: "Acme Corp"
+                    personal: false
+                    role: owner
+                    createdAt: "2026-11-20T10:30:00.000Z"
+                    deletionScheduledAt: null
+                  - id: "6507a1b2c3d4e5f6a7b8c9d0"
+                    name: "Personal"
+                    personal: true
+                    role: owner
+                    createdAt: "2026-01-15T10:30:00.000Z"
+                    deletionScheduledAt: null
+                pagination: { total: 2, limit: 50, skip: 0, hasMore: false }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/ResourceGroupForbidden' }
+    post:
+      x-resource-group: "admin-plane"
+      operationId: createWorkspace
+      tags: [Workspaces]
+      summary: Create workspace
+      description: |
+        Creates a new, empty workspace owned by the key's owner, for example one per client of your product.
+
+        - Send `apiKey` to get the new workspace's first key in the same call. A key only manages its own workspace, so no other key can mint one there later.
+        - The workspace has no billing. Its keys can read, but writes return 402 `workspace_billing_required` until billing is set up at `billing.setupUrl`.
+        - Needs a full-access key. Creation is capped at 5 a day and 20 owned workspaces without billing (429).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name:
+                  type: string
+                  minLength: 1
+                  maxLength: 80
+                  description: 'The workspace name. "Personal" is reserved (400 reserved_workspace_name).'
+                apiKey:
+                  type: object
+                  description: Mint a key that acts in the new workspace. The response then carries it in `apiKey`, with its full value shown only once.
+                  required: [name]
+                  properties:
+                    name: { type: string, minLength: 1 }
+                    permission: { type: string, enum: [read-write, read], default: read-write }
+                    expiresIn: { type: integer, minimum: 1, description: Days until expiry. }
+                    disabledResourceGroups:
+                      type: array
+                      items:
+                        type: string
+                        enum: [publishing, engagement, messages, contacts, analytics, ads, telephony, accounts, billing, webhooks, commerce, creator_campaigns, money, calendar, files]
+            example:
+              name: "Acme Corp"
+              apiKey:
+                name: "Acme Corp production"
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  workspace: { $ref: '#/components/schemas/WorkspaceWithBilling' }
+                  apiKey: { $ref: '#/components/schemas/ApiKey' }
+              example:
+                workspace:
+                  id: "6507a1b2c3d4e5f6a7b8c9d1"
+                  name: "Acme Corp"
+                  personal: false
+                  role: owner
+                  createdAt: "2026-11-20T10:30:00.000Z"
+                  deletionScheduledAt: null
+                  billing:
+                    setUp: false
+                    setupUrl: "https://zernio.com/dashboard/billing?workspace=6507a1b2c3d4e5f6a7b8c9d1"
+                apiKey:
+                  id: "6507a1b2c3d4e5f6a7b8c9e0"
+                  name: "Acme Corp production"
+                  keyPreview: "sk_12345...90abcdef"
+                  key: "sk_1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"
+                  expiresAt: null
+                  createdAt: "2026-11-20T10:30:00.000Z"
+                  scope: full
+                  profileIds: []
+                  permission: read-write
+                  disabledResourceGroups: []
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '402':
+          description: 'The calling key acts in a workspace without billing, which cannot make changes through the API. Error code: workspace_billing_required. Set billing up for that workspace in the dashboard.'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '403': { $ref: '#/components/responses/ResourceGroupForbidden' }
+        '429':
+          description: 'Creation cap reached. Error code: workspace_daily_limit_reached (5 a day) or workspace_limit_reached (20 owned without billing).'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+
+  /v1/workspaces/{workspaceId}:
+    parameters:
+      - name: workspaceId
+        in: path
+        required: true
+        schema: { type: string }
+    get:
+      x-resource-group: "admin-plane"
+      operationId: getWorkspace
+      tags: [Workspaces]
+      summary: Get workspace
+      description: >-
+        Returns one workspace the key's owner belongs to, with their role. Owners, admins and billing admins also get
+        `billing` (whether it is set up, and where to set it up); members and viewers do not.
+      responses:
+        '200':
+          description: Workspace
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  workspace: { $ref: '#/components/schemas/WorkspaceWithBilling' }
+              example:
+                workspace:
+                  id: "6507a1b2c3d4e5f6a7b8c9d1"
+                  name: "Acme Corp"
+                  personal: false
+                  role: admin
+                  createdAt: "2026-11-20T10:30:00.000Z"
+                  deletionScheduledAt: null
+                  billing: { setUp: true, setupUrl: null }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/ResourceGroupForbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    patch:
+      x-resource-group: "admin-plane"
+      operationId: updateWorkspace
+      tags: [Workspaces]
+      summary: Rename workspace
+      description: >-
+        Renames a workspace. Owner or admin there, with a full-access key of this workspace (a key of another
+        workspace gets 403: rename it from the dashboard). Only a Personal workspace can be called "Personal".
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name:
+                  type: string
+                  minLength: 1
+                  maxLength: 80
+                  description: 'The new name. "Personal" is reserved.'
+            example:
+              name: "Acme Corporation"
+      responses:
+        '200':
+          description: Renamed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  workspace: { $ref: '#/components/schemas/WorkspaceWithBilling' }
+              example:
+                workspace:
+                  id: "6507a1b2c3d4e5f6a7b8c9d1"
+                  name: "Acme Corporation"
+                  personal: false
+                  role: owner
+                  createdAt: "2026-11-20T10:30:00.000Z"
+                  deletionScheduledAt: null
+                  billing: { setUp: true, setupUrl: null }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '402':
+          description: 'The calling key acts in a workspace without billing, which cannot make changes through the API. Error code: workspace_billing_required. Set billing up for that workspace in the dashboard.'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '403':
+          description: 'The role there cannot rename it (workspace_forbidden), the key is not a full-access key, or the key acts in another workspace (insufficient_permissions: use a key of this workspace or the dashboard).'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    delete:
+      x-resource-group: "admin-plane"
+      operationId: deleteWorkspace
+      tags: [Workspaces]
+      summary: Delete workspace
+      description: |
+        Schedules the workspace for deletion 48 hours ahead, as the dashboard does. Members keep working, publishing is paused, and the owner or an admin can cancel from the dashboard until then. Only this workspace's data is deleted, never its members' accounts.
+
+        - Owner only, with a full-access key of this workspace. A key of another workspace gets 403; delete it from the dashboard.
+        - A Personal workspace is never deleted.
+        - Refused while the workspace owes a payment or holds a phone number or carrier registration (409 `deletion_blocked`).
+        - With a balance above $0, send `moveBalanceTo` (another billed workspace you own) or `forfeitBalance=true`. Balances are never refunded. Without either the call returns 422 `deletion_balance_choice`.
+      parameters:
+        - name: moveBalanceTo
+          in: query
+          required: false
+          schema: { type: string }
+          description: A billed workspace you own that receives the remaining balance.
+        - name: forfeitBalance
+          in: query
+          required: false
+          schema: { type: boolean }
+          description: Leave the remaining balance; it is written off when the workspace is deleted.
+      responses:
+        '200':
+          description: Deletion scheduled
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  workspace: { $ref: '#/components/schemas/WorkspaceWithBilling' }
+              example:
+                workspace:
+                  id: "6507a1b2c3d4e5f6a7b8c9d1"
+                  name: "Acme Corp"
+                  personal: false
+                  role: owner
+                  createdAt: "2026-11-20T10:30:00.000Z"
+                  deletionScheduledAt: "2026-11-22T10:30:00.000Z"
+                  billing: { setUp: true, setupUrl: null }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '402':
+          description: 'The calling key acts in a workspace without billing, which cannot make changes through the API. Error code: workspace_billing_required. Set billing up for that workspace in the dashboard.'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '403':
+          description: 'Only the owner can delete a workspace (workspace_forbidden), with a full-access key of this workspace (insufficient_permissions otherwise).'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409':
+          description: 'Refused: personal_workspace, deletion_already_scheduled, or deletion_blocked (a payment due, a phone number or a carrier registration; the message names it).'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '422':
+          description: 'The workspace has a balance: send moveBalanceTo or forfeitBalance. Error code: deletion_balance_choice.'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+
+  /v1/workspaces/{workspaceId}/api-keys:
+    post:
+      x-resource-group: "admin-plane"
+      operationId: createWorkspaceApiKey
+      tags: [Workspaces]
+      summary: Create workspace key
+      description: |
+        Creates another API key that acts in this workspace as its creator. It covers every profile, and its full value is returned only once.
+
+        - The caller must be owner or admin there.
+        - The calling credential must be a full-access key of this same workspace. Profile-scoped, restricted and handed-over keys, OAuth tokens and keys of other workspaces get 403.
+        - For another workspace, use the dashboard. For a new one, send `apiKey` on `POST /v1/workspaces`.
+      parameters:
+        - name: workspaceId
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name: { type: string, minLength: 1 }
+                permission:
+                  type: string
+                  enum: [read-write, read]
+                  default: read-write
+                  description: "'read' restricts the key to GET requests."
+                expiresIn:
+                  type: integer
+                  minimum: 1
+                  description: Days until expiry. Omit for a key that never expires.
+                disabledResourceGroups:
+                  type: array
+                  items:
+                    type: string
+                    enum: [publishing, engagement, messages, contacts, analytics, ads, telephony, accounts, billing, webhooks, commerce, creator_campaigns, money, calendar, files]
+                  description: Resource groups the key cannot use, as on `POST /v1/api-keys`.
+            example:
+              name: "Acme Corp production"
+              permission: read-write
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  apiKey: { $ref: '#/components/schemas/ApiKey' }
+              example:
+                apiKey:
+                  id: "6507a1b2c3d4e5f6a7b8c9e0"
+                  name: "Acme Corp production"
+                  keyPreview: "sk_12345...90abcdef"
+                  key: "sk_1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"
+                  expiresAt: null
+                  createdAt: "2026-11-20T10:31:00.000Z"
+                  scope: full
+                  profileIds: []
+                  permission: read-write
+                  disabledResourceGroups: []
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '402':
+          description: 'The calling key acts in a workspace without billing, which cannot make changes through the API. Error code: workspace_billing_required. Set billing up for that workspace in the dashboard.'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '403':
+          description: 'The caller is not owner or admin there (workspace_forbidden), or the calling credential is not a full-access key of this workspace (insufficient_permissions).'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
         '404': { $ref: '#/components/responses/NotFound' }
 
   /v1/content-retention:

@@ -1877,6 +1877,16 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `workflows.trigger_api_call_workflow()` | Start an API-triggered workflow |
 | `workflows.trigger_workflow()` | Manually start a workflow run |
 
+### Workspaces
+| Method | Description |
+|--------|-------------|
+| `workspaces.list_workspaces()` | List workspaces |
+| `workspaces.create_workspace()` | Create workspace |
+| `workspaces.create_workspace_api_key()` | Create workspace key |
+| `workspaces.get_workspace()` | Get workspace |
+| `workspaces.update_workspace()` | Rename workspace |
+| `workspaces.delete_workspace()` | Delete workspace |
+
 ### Invites
 | Method | Description |
 |--------|-------------|
