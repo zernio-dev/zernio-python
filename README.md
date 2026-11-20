@@ -345,7 +345,9 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | Method | Description |
 |--------|-------------|
 | `users.list_users()` | List users |
+| `users.get_current_user()` | Get the current user |
 | `users.get_user()` | Get user |
+| `users.remove_user()` | Remove member |
 
 ### Usage
 | Method | Description |
@@ -777,6 +779,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `automations.preview_automation()` | Preview a saved automation |
 | `automations.preview_automation_draft()` | Preview an unsaved automation |
 | `automations.reject_automation_approval()` | Reject an approval request |
+| `automations.take_over_automation()` | Take over an automation |
 
 ### Blogs
 | Method | Description |
@@ -1870,6 +1873,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `workflows.duplicate_workflow()` | Duplicate a workflow |
 | `workflows.pause_workflow()` | Pause workflow |
 | `workflows.restore_workflow_version()` | Restore a workflow version |
+| `workflows.take_over_workflow()` | Take over a workflow |
 | `workflows.trigger_api_call_workflow()` | Start an API-triggered workflow |
 | `workflows.trigger_workflow()` | Manually start a workflow run |
 

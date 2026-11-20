@@ -185,6 +185,10 @@ class WorkflowsResource:
         """Pause workflow"""
         return self._client._post(f"/v1/workflows/{workflow_id}/pause")
 
+    def take_over_workflow(self, workflow_id: str) -> dict[str, Any]:
+        """Take over a workflow"""
+        return self._client._post(f"/v1/workflows/{workflow_id}/take-over")
+
     def list_workflow_executions(
         self,
         workflow_id: str,
@@ -358,6 +362,10 @@ class WorkflowsResource:
     async def apause_workflow(self, workflow_id: str) -> dict[str, Any]:
         """Pause workflow (async)"""
         return await self._client._apost(f"/v1/workflows/{workflow_id}/pause")
+
+    async def atake_over_workflow(self, workflow_id: str) -> dict[str, Any]:
+        """Take over a workflow (async)"""
+        return await self._client._apost(f"/v1/workflows/{workflow_id}/take-over")
 
     async def alist_workflow_executions(
         self,

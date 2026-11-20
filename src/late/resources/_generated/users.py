@@ -103,14 +103,30 @@ class UsersResource:
         """List users"""
         return self._client._get("/v1/users")
 
+    def get_current_user(self) -> dict[str, Any]:
+        """Get the current user"""
+        return self._client._get("/v1/users/me")
+
     def get_user(self, user_id: str) -> dict[str, Any]:
         """Get user"""
         return self._client._get(f"/v1/users/{user_id}")
+
+    def remove_user(self, user_id: str) -> dict[str, Any]:
+        """Remove member"""
+        return self._client._delete(f"/v1/users/{user_id}")
 
     async def alist_users(self) -> dict[str, Any]:
         """List users (async)"""
         return await self._client._aget("/v1/users")
 
+    async def aget_current_user(self) -> dict[str, Any]:
+        """Get the current user (async)"""
+        return await self._client._aget("/v1/users/me")
+
     async def aget_user(self, user_id: str) -> dict[str, Any]:
         """Get user (async)"""
         return await self._client._aget(f"/v1/users/{user_id}")
+
+    async def aremove_user(self, user_id: str) -> dict[str, Any]:
+        """Remove member (async)"""
+        return await self._client._adelete(f"/v1/users/{user_id}")

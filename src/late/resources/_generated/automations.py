@@ -230,6 +230,10 @@ class AutomationsResource:
         """Turn an automation off"""
         return self._client._post(f"/v1/automations/{automation_id}/pause")
 
+    def take_over_automation(self, automation_id: str) -> dict[str, Any]:
+        """Take over an automation"""
+        return self._client._post(f"/v1/automations/{automation_id}/take-over")
+
     def preview_automation(
         self, automation_id: str, *, limit: int | None = 100
     ) -> dict[str, Any]:
@@ -635,6 +639,10 @@ class AutomationsResource:
     async def apause_automation(self, automation_id: str) -> dict[str, Any]:
         """Turn an automation off (async)"""
         return await self._client._apost(f"/v1/automations/{automation_id}/pause")
+
+    async def atake_over_automation(self, automation_id: str) -> dict[str, Any]:
+        """Take over an automation (async)"""
+        return await self._client._apost(f"/v1/automations/{automation_id}/take-over")
 
     async def apreview_automation(
         self, automation_id: str, *, limit: int | None = 100

@@ -17383,6 +17383,32 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="Take over an automation",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def automations_take_over_automation(automation_id: str) -> str:
+        """Take over an automation
+
+        Makes the caller the automation's owner, so its AI steps use the caller's own AI key. Only the owner or an admin of the active workspace can take over, from the dashboard.
+
+        When the member who made an automation leaves the workspace, its AI steps pause until it is taken over; every other step keeps running.
+
+        Args:
+            automation_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.automations.take_over_automation(
+                automation_id=automation_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="Preview a saved automation",
             readOnlyHint=False,
             destructiveHint=True,
@@ -40174,6 +40200,9 @@ def register_generated_tools(mcp, _get_client):
             Returns 403 when a requested profile is not found or not owned, or when
             called with a restricted (zrk_) API key: invite management is admin-plane.
 
+            Returns 409 for a key of a Personal workspace: the first teammate is invited from the
+            dashboard, which turns that workspace into a team workspace (same ID, accounts and keys).
+
             Args:
                 scope: 'all' grants access to all profiles, 'profiles' restricts to specific profiles (required)
                 profile_ids: Required if scope is 'profiles'. Array of profile IDs to grant access to.
@@ -52541,6 +52570,25 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="Get the current user",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def users_get_current_user() -> str:
+        """Get the current user
+
+        Returns the user the credential belongs to, in the same shape as one element of `users` in GET /v1/users, plus the workspace the credential acts in. Use it to check who an API key belongs to without listing every user."""
+        client = _get_client()
+        try:
+            response = client.users.get_current_user()
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="Get user",
             readOnlyHint=True,
             destructiveHint=False,
@@ -52557,6 +52605,34 @@ def register_generated_tools(mcp, _get_client):
         client = _get_client()
         try:
             response = client.users.get_user(user_id=user_id)
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Remove member",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def users_remove_user(user_id: str) -> str:
+        """Remove member
+
+        Removes a member from your team. The member keeps their own login and what they had before joining.
+        What they added as a member passes to the team owner.
+
+        API keys the member used in the last 7 days pass to the owner and expire within 24 hours, and their
+        other keys in the team are revoked.
+
+        Requires the owner or an admin, and a key that is not restricted. You cannot remove yourself.
+
+        Args:
+            user_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.users.remove_user(user_id=user_id)
             return _format_response(response)
         except Exception as e:
             raise ToolError(f"Error: {e}") from e
@@ -58348,6 +58424,30 @@ def register_generated_tools(mcp, _get_client):
         client = _get_client()
         try:
             response = client.workflows.pause_workflow(workflow_id=workflow_id)
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Take over a workflow",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def workflows_take_over_workflow(workflow_id: str) -> str:
+        """Take over a workflow
+
+        Makes the caller the workflow's owner, so its AI steps use the caller's own AI key. Only the owner or an admin of the active workspace can take over, from the dashboard.
+
+        When the member who made a workflow leaves the workspace, its AI steps pause (they take the error edge with \"{Name} left this workspace. Add a workspace AI key or take over this automation.\") and every other step keeps running; taking it over starts the AI steps again.
+
+        Args:
+            workflow_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.workflows.take_over_workflow(workflow_id=workflow_id)
             return _format_response(response)
         except Exception as e:
             raise ToolError(f"Error: {e}") from e
