@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.714.0"
+  version: "1.715.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -18505,6 +18505,9 @@ components:
               name: { type: string }
               color: { type: string }
           description: Profiles this key can access (populated with name and color). Only present when scope is 'profiles'.
+        deletedProfileCount:
+          type: integer
+          description: "Listed keys only. How many of the profiles this key is limited to were deleted: they are left out of profileIds but still limit the key, so a key with scope 'profiles' and an empty profileIds reaches no profile."
         permission:
           type: string
           enum: [read-write, read]
