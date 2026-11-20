@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.716.1"
+  version: "1.717.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -48888,7 +48888,17 @@ paths:
                 type: object
                 properties:
                   workspace: { $ref: '#/components/schemas/WorkspaceWithBilling' }
-                  apiKey: { $ref: '#/components/schemas/ApiKey' }
+                  apiKey:
+                    description: The key requested with `apiKey`. Null when the workspace was created but the key was not; `apiKeyError` then says so.
+                    oneOf:
+                      - $ref: '#/components/schemas/ApiKey'
+                      - type: "null"
+                  apiKeyError:
+                    type: object
+                    description: Present only when `apiKey` is null. The workspace exists; create its key from the dashboard instead of retrying the call, which would create a second workspace.
+                    properties:
+                      code: { type: string, enum: [api_key_not_created] }
+                      message: { type: string }
               example:
                 workspace:
                   id: "6507a1b2c3d4e5f6a7b8c9d1"
