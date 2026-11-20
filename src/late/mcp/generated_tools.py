@@ -44728,6 +44728,7 @@ def register_generated_tools(mcp, _get_client):
     def phone_numbers_get_phone_number_kyc_form(
         country: str,
         number_type: Literal["local", "mobile", "national", "toll_free"] | None = None,
+        profile_id: str | None = None,
     ) -> str:
         """Get KYC form spec
 
@@ -44737,11 +44738,12 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             country: (required)
-            number_type: Requirements and reuse eligibility are per (country, type). Omitted = the country's default type. Pass the same value on the POST."""
+            number_type: Requirements and reuse eligibility are per (country, type). Omitted = the country's default type. Pass the same value on the POST.
+            profile_id: Profile the order is for. When given, `reusable.options` only lists verifications held by numbers on this profile. A key or team member limited to some profiles must pass it to get any options."""
         client = _get_client()
         try:
             response = client.phone_numbers.get_phone_number_kyc_form(
-                country=country, number_type=number_type
+                country=country, number_type=number_type, profile_id=profile_id
             )
             return _format_response(response)
         except Exception as e:
@@ -44799,9 +44801,9 @@ def register_generated_tools(mcp, _get_client):
         - Once the number has been ordered, a retry with the same token returns that number instead of ordering another.
         - A submission that fails before the number is ordered releases the token, so you can correct your details and re-submit with it.
                 quantity: Provision several same-country numbers from one submission (1-5). The single verification covers all of them; each number is billed only when it activates. Numbers that fail to order are skipped (best-effort). With `areaCode`, a quantity above that area's live stock is rejected with a 400.
-                reuse: Reuse a prior approved verification for this country (skips document/field collection; places the order immediately).
-                reuse_option_id: Which reusable verification to use (GET reusable.options[].id). The unambiguous selection key. Omitted = the approved default. No match = 409.
-                reuse_from: Legacy fallback for `reuseOptionId`: the source phone number (GET reusable.options[].fromPhoneNumber). Ambiguous when a number labels two verifications, so prefer `reuseOptionId`. Omitted = the approved default. No match = 409.
+                reuse: Reuse a prior approved verification held by a number on `profileId` for this country (skips document/field collection; places the order immediately).
+                reuse_option_id: Which reusable verification to use (GET reusable.options[].id). The unambiguous selection key. Must come from a number on `profileId`. Omitted = the approved default. No match on this profile = 409.
+                reuse_from: Legacy fallback for `reuseOptionId`: the source phone number (GET reusable.options[].fromPhoneNumber). Ambiguous when a number labels two verifications, so prefer `reuseOptionId`. Must be a number on `profileId`. Omitted = the approved default. No match on this profile = 409.
                 area_code: Area code (NDC) the number must be in. Omit for any area.
 
         Hard constraint: an empty area pool fails with 409 code AREA_CODE_UNAVAILABLE instead of ordering from another area.
@@ -57278,7 +57280,7 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def whatsapp_phone_numbers_get_whats_app_number_kyc_form(
-        country: str, profile_id: str
+        country: str, profile_id: str | None = None
     ) -> str:
         """Get KYC form spec
 
@@ -57291,7 +57293,7 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             country: (required)
-            profile_id: (required)"""
+            profile_id: Profile the order is for. When given, `reusable.options` only lists verifications held by numbers on this profile. A key or team member limited to some profiles must pass it to get any options."""
         client = _get_client()
         try:
             response = client.whatsapp_phone_numbers.get_whats_app_number_kyc_form(
@@ -57356,9 +57358,9 @@ def register_generated_tools(mcp, _get_client):
         - Once the number has been ordered, a retry with the same token returns that same number instead of ordering another.
         - A submission that fails before the number is ordered releases the token, so you can correct your details and re-submit with it.
                 quantity: Provision several same-country numbers from one submission (1-5). The single verification covers all of them; each number is billed only when it activates. Numbers that fail to order are skipped (best-effort). With `areaCode`, a quantity above that area's live stock is rejected with a 400.
-                reuse: Reuse a prior approved verification for this country (skips document/field collection; places the order immediately).
-                reuse_option_id: Which reusable verification to use (GET reusable.options[].id). The unambiguous selection key. Omitted = the approved default. No match = 409.
-                reuse_from: Legacy fallback for `reuseOptionId`: the source phone number (GET reusable.options[].fromPhoneNumber). Ambiguous when a number labels two verifications, so prefer `reuseOptionId`. Omitted = the approved default. No match = 409.
+                reuse: Reuse a prior approved verification held by a number on `profileId` for this country (skips document/field collection; places the order immediately).
+                reuse_option_id: Which reusable verification to use (GET reusable.options[].id). The unambiguous selection key. Must come from a number on `profileId`. Omitted = the approved default. No match on this profile = 409.
+                reuse_from: Legacy fallback for `reuseOptionId`: the source phone number (GET reusable.options[].fromPhoneNumber). Ambiguous when a number labels two verifications, so prefer `reuseOptionId`. Must be a number on `profileId`. Omitted = the approved default. No match on this profile = 409.
                 area_code: Area code (NDC) the number must be in. Omit for any area.
 
         Hard constraint: an empty area pool fails with 409 code AREA_CODE_UNAVAILABLE instead of ordering from another area.

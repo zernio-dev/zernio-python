@@ -219,7 +219,7 @@ class WhatsappPhoneNumbersResource:
         )
 
     def get_whats_app_number_kyc_form(
-        self, country: str, profile_id: str
+        self, country: str, *, profile_id: str | None = None
     ) -> dict[str, Any]:
         """Get KYC form spec"""
         params = self._build_query(
@@ -501,7 +501,7 @@ class WhatsappPhoneNumbersResource:
         )
 
     async def aget_whats_app_number_kyc_form(
-        self, country: str, profile_id: str
+        self, country: str, *, profile_id: str | None = None
     ) -> dict[str, Any]:
         """Get KYC form spec (async)"""
         params = self._build_query(

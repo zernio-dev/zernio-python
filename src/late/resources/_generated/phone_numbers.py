@@ -207,13 +207,18 @@ class PhoneNumbersResource:
         return self._client._get("/v1/phone-numbers/availability", params=params)
 
     def get_phone_number_kyc_form(
-        self, country: str, *, number_type: str | None = None
+        self,
+        country: str,
+        *,
+        number_type: str | None = None,
+        profile_id: str | None = None,
     ) -> dict[str, Any]:
         """Get KYC form spec"""
         params = self._build_query(
             {
                 "country": country,
                 "numberType": number_type,
+                "profileId": profile_id,
             }
         )
         return self._client._get("/v1/phone-numbers/kyc", params=params)
@@ -626,13 +631,18 @@ class PhoneNumbersResource:
         return await self._client._aget("/v1/phone-numbers/availability", params=params)
 
     async def aget_phone_number_kyc_form(
-        self, country: str, *, number_type: str | None = None
+        self,
+        country: str,
+        *,
+        number_type: str | None = None,
+        profile_id: str | None = None,
     ) -> dict[str, Any]:
         """Get KYC form spec (async)"""
         params = self._build_query(
             {
                 "country": country,
                 "numberType": number_type,
+                "profileId": profile_id,
             }
         )
         return await self._client._aget("/v1/phone-numbers/kyc", params=params)

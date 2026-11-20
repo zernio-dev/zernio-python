@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.706.1"
+  version: "1.707.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -77303,6 +77303,7 @@ paths:
       parameters:
         - { name: country, in: query, required: true, schema: { type: string } }
         - { name: numberType, in: query, required: false, schema: { type: string, enum: [local, mobile, national, toll_free] }, description: "Requirements and reuse eligibility are per (country, type). Omitted = the country's default type. Pass the same value on the POST." }
+        - { name: profileId, in: query, required: false, schema: { type: string }, description: "Profile the order is for. When given, `reusable.options` only lists verifications held by numbers on this profile. A key or team member limited to some profiles must pass it to get any options." }
       responses:
         '200':
           description: The KYC form spec.
@@ -77327,10 +77328,10 @@ paths:
                   reusable:
                     type: [object, "null"]
                     description: |
-                      Present when this account already has a reusable verification for the country (skip the form).
+                      Present when a number on the requested profile already holds a reusable verification for the country (skip the form). Without `profileId` it covers the whole account, except for keys and team members limited to some profiles, who get none.
 
                       - `fromPhoneNumber`/`details` mirror the first option.
-                      - `options` lists ALL reusable verifications (agencies hold one per end client), approved-first. Pass the chosen option's `id` as `reuseOptionId` on POST.
+                      - `options` lists the reusable verifications held by numbers on `profileId` (all of the account's when omitted), approved-first. Pass the chosen option's `id` as `reuseOptionId` on POST.
                       - Each option's `instant` says whether it activates in minutes (group-approved) or still queues for carrier review (1-3 days).
                     properties:
                       available: { type: boolean }
@@ -77361,8 +77362,10 @@ paths:
                                   value: { type: string }
                                   documentId: { type: string, description: 'Present on document rows: the Telnyx document id. GET /v1/whatsapp/phone-numbers/kyc/document/{documentId} streams it (auth-scoped, inline PDF).' }
                   pendingReview: { type: boolean, description: "true when this account already has a number for this country in regulatory review (status pending_regulatory).\n\n- Scope is the whole account across all profiles, and the country only (any number type), so it is not a per-end-client signal on a multi-tenant setup.\n- Informational only: it never blocks a submission, and several same-country numbers may sit in review at once.\n\nFor a per-end-client view, call GET /v1/phone-numbers with `profileId` and `status=pending_regulatory`; that view also lists numbers declined in the last 30 days." }
-        '400': { description: Country not available }
+        '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: API key does not have access to this profile. }
+        '404': { description: Profile not found or access denied. }
     post:
       x-resource-group: "telephony"
       operationId: submitPhoneNumberKyc
@@ -77398,9 +77401,9 @@ paths:
                 country: { type: string }
                 submissionId: { type: string, description: "Idempotency token for this submission attempt. Omit it and every call provisions a new number.\n\n- Once the number has been ordered, a retry with the same token returns that number instead of ordering another.\n- A submission that fails before the number is ordered releases the token, so you can correct your details and re-submit with it." }
                 quantity: { type: integer, minimum: 1, maximum: 5, default: 1, description: 'Provision several same-country numbers from one submission (1-5). The single verification covers all of them; each number is billed only when it activates. Numbers that fail to order are skipped (best-effort). With `areaCode`, a quantity above that area''s live stock is rejected with a 400.' }
-                reuse: { type: boolean, description: Reuse a prior approved verification for this country (skips document/field collection; places the order immediately). }
-                reuseOptionId: { type: string, description: 'Which reusable verification to use (GET reusable.options[].id). The unambiguous selection key. Omitted = the approved default. No match = 409.' }
-                reuseFrom: { type: string, description: 'Legacy fallback for `reuseOptionId`: the source phone number (GET reusable.options[].fromPhoneNumber). Ambiguous when a number labels two verifications, so prefer `reuseOptionId`. Omitted = the approved default. No match = 409.' }
+                reuse: { type: boolean, description: Reuse a prior approved verification held by a number on `profileId` for this country (skips document/field collection; places the order immediately). }
+                reuseOptionId: { type: string, description: 'Which reusable verification to use (GET reusable.options[].id). The unambiguous selection key. Must come from a number on `profileId`. Omitted = the approved default. No match on this profile = 409.' }
+                reuseFrom: { type: string, description: 'Legacy fallback for `reuseOptionId`: the source phone number (GET reusable.options[].fromPhoneNumber). Ambiguous when a number labels two verifications, so prefer `reuseOptionId`. Must be a number on `profileId`. Omitted = the approved default. No match on this profile = 409.' }
                 areaCode: { type: string, pattern: '^\d{1,4}$', description: "Area code (NDC) the number must be in. Omit for any area.\n\nHard constraint: an empty area pool fails with 409 code AREA_CODE_UNAVAILABLE instead of ordering from another area.\n\nOptions come from GET /v1/phone-numbers/availability (areaOptions). The purchase 202 kycUrl echoes the areaCode picked at purchase time so it can be passed here." }
                 purchaseIntentId: { type: string, maxLength: 100, description: 'Correlation label copied onto every number this submission creates (a batch shares it) and onto their webhooks. Not an idempotency key: use submissionId for safe retries. Max 100 characters; longer values are truncated.' }
                 phoneNumber: { type: string, pattern: '^\+[1-9]\d{6,14}$', description: 'Exact number to order, in E.164, taken from GET /v1/phone-numbers/available. It is ordered as is or the request fails with 409 code phone_number_unavailable; another number is never substituted and a pre-order is never placed. Requires quantity 1 (or omitted). Omit to let the carrier pick a number in the area.' }
@@ -78384,7 +78387,7 @@ paths:
         - bearerAuth: []
       parameters:
         - { name: country, in: query, required: true, schema: { type: string } }
-        - { name: profileId, in: query, required: true, schema: { type: string } }
+        - { name: profileId, in: query, required: false, schema: { type: string }, description: "Profile the order is for. When given, `reusable.options` only lists verifications held by numbers on this profile. A key or team member limited to some profiles must pass it to get any options." }
       responses:
         '200':
           description: The KYC form spec.
@@ -78410,10 +78413,10 @@ paths:
                   reusable:
                     type: [object, "null"]
                     description: |
-                      Present when this account already has a reusable verification for the country (skip the form).
+                      Present when a number on the requested profile already holds a reusable verification for the country (skip the form). Without `profileId` it covers the whole account, except for keys and team members limited to some profiles, who get none.
 
                       - `fromPhoneNumber`/`details` mirror the first option.
-                      - `options` lists ALL reusable verifications (agencies hold one per end client), approved-first. Pass the chosen option's `id` as `reuseOptionId` on POST.
+                      - `options` lists the reusable verifications held by numbers on `profileId` (all of the account's when omitted), approved-first. Pass the chosen option's `id` as `reuseOptionId` on POST.
                       - Each option's `instant` says whether it activates in minutes (group-approved) or still queues for carrier review (1-3 days).
                     properties:
                       available: { type: boolean }
@@ -78444,8 +78447,10 @@ paths:
                                   value: { type: string }
                                   documentId: { type: string, description: 'Present on document rows: the Telnyx document id. GET /v1/whatsapp/phone-numbers/kyc/document/{documentId} streams it (auth-scoped, inline PDF).' }
                   pendingReview: { type: boolean, description: "true when this account already has a number for this country in regulatory review (status pending_regulatory).\n\nScope is the whole account across all profiles, and the country only (any number type), so it is not a per-end-client signal on a multi-tenant setup. Informational only: it never blocks a submission, and several same-country numbers may sit in review at once.\n\nFor a per-end-client view, call GET /v1/phone-numbers with `profileId` and `status=pending_regulatory`; it also lists numbers declined in the last 30 days." }
-        '400': { description: Country not available }
+        '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: API key does not have access to this profile. }
+        '404': { description: Profile not found or access denied. }
     post:
       x-resource-group: "telephony"
       operationId: submitWhatsAppNumberKyc
@@ -78485,9 +78490,9 @@ paths:
                 country: { type: string }
                 submissionId: { type: string, description: "Idempotency token for this submission attempt. Omit it and every call provisions a new number.\n\n- Once the number has been ordered, a retry with the same token returns that same number instead of ordering another.\n- A submission that fails before the number is ordered releases the token, so you can correct your details and re-submit with it." }
                 quantity: { type: integer, minimum: 1, maximum: 5, default: 1, description: 'Provision several same-country numbers from one submission (1-5). The single verification covers all of them; each number is billed only when it activates. Numbers that fail to order are skipped (best-effort). With `areaCode`, a quantity above that area''s live stock is rejected with a 400.' }
-                reuse: { type: boolean, description: Reuse a prior approved verification for this country (skips document/field collection; places the order immediately). }
-                reuseOptionId: { type: string, description: 'Which reusable verification to use (GET reusable.options[].id). The unambiguous selection key. Omitted = the approved default. No match = 409.' }
-                reuseFrom: { type: string, description: 'Legacy fallback for `reuseOptionId`: the source phone number (GET reusable.options[].fromPhoneNumber). Ambiguous when a number labels two verifications, so prefer `reuseOptionId`. Omitted = the approved default. No match = 409.' }
+                reuse: { type: boolean, description: Reuse a prior approved verification held by a number on `profileId` for this country (skips document/field collection; places the order immediately). }
+                reuseOptionId: { type: string, description: 'Which reusable verification to use (GET reusable.options[].id). The unambiguous selection key. Must come from a number on `profileId`. Omitted = the approved default. No match on this profile = 409.' }
+                reuseFrom: { type: string, description: 'Legacy fallback for `reuseOptionId`: the source phone number (GET reusable.options[].fromPhoneNumber). Ambiguous when a number labels two verifications, so prefer `reuseOptionId`. Must be a number on `profileId`. Omitted = the approved default. No match on this profile = 409.' }
                 areaCode: { type: string, pattern: '^\d{1,4}$', description: "Area code (NDC) the number must be in. Omit for any area.\n\nHard constraint: an empty area pool fails with 409 code AREA_CODE_UNAVAILABLE instead of ordering from another area.\n\nOptions come from GET /v1/phone-numbers/availability (areaOptions). The purchase 202 kycUrl echoes the areaCode picked at purchase time so it can be passed here." }
                 purchaseIntentId: { type: string, maxLength: 100, description: 'Correlation label copied onto every number this submission creates (a batch shares it) and onto their webhooks. Not an idempotency key: use submissionId for safe retries. Max 100 characters; longer values are truncated.' }
                 phoneNumber: { type: string, pattern: '^\+[1-9]\d{6,14}$', description: 'Exact number to order, in E.164, taken from GET /v1/whatsapp/phone-numbers/available. It is ordered as is or the request fails with 409 code phone_number_unavailable; another number is never substituted and a pre-order is never placed. Requires quantity 1 (or omitted). Omit to let the carrier pick a number in the area.' }
