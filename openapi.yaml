@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.716.0"
+  version: "1.716.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -100127,6 +100127,7 @@ paths:
 
         - `spendCap: null` removes the cap.
         - `resetAmountSpent: true` restarts the amount counted against it from zero.
+        - Meta allows 10 spend cap changes per ad account per day (`spendCap`, `resetAmountSpent` and `spendCap: null` all count). Past that the call answers 429 `spend_cap_change_limit_reached` at once, and retrying fails until Meta's window resets.
 
         When `name`, `spendCap` or `resetAmountSpent` is passed, the response carries `settings`: the account's finances re-read after the write (same shape as `GET /v1/ads/accounts/finance`). The effective cap can be confirmed in one call.
 

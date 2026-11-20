@@ -5604,14 +5604,13 @@ def register_generated_tools(mcp, _get_client):
 
         - `spendCap: null` removes the cap.
         - `resetAmountSpent: true` restarts the amount counted against it from zero.
+        - Meta allows 10 spend cap changes per ad account per day (`spendCap`, `resetAmountSpent` and `spendCap: null` all count). Past that the call answers 429 `spend_cap_change_limit_reached` at once, and retrying fails until Meta's window resets.
 
         When `name`, `spendCap` or `resetAmountSpent` is passed, the response carries `settings`: the account's finances re-read after the write (same shape as `GET /v1/ads/accounts/finance`). The effective cap can be confirmed in one call.
 
         ### DSA defaults
 
-        Sets the default DSA beneficiary and payor on the ad account (EU DSA, Article 26). Set them once and every EU-targeted call to `/v1/ads/create`, `/v1/ads/boost` and `/v1/ads/ctwa` on that ad account can omit `dsaBeneficiary`/`dsaPayor`: Meta applies the defaults automatically.
-
-        The ...
+        Sets the default DSA beneficiary and ...
 
         Platforms: meta, google
 
