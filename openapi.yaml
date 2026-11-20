@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.712.0"
+  version: "1.713.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -12515,6 +12515,8 @@ components:
             from: { type: string, description: "Consumer wa_id / E.164" }
             to: { type: string, description: "Business number (E.164)" }
             forwardTo: { type: string, description: "Destination snapshot at routing time" }
+            telnyxCallControlId: { type: string, description: "Carrier call_control_id of this call leg. Equals start.call_control_id of the media stream a wss:// forwardTo receives." }
+            telnyxCallSessionId: { type: string, description: "Carrier call_session_id of this call. Equals start.call_session_id of the media stream a wss:// forwardTo receives." }
             contactId: { type: string }
             conversationId: { type: string }
             startedAt: { type: string, format: date-time }
@@ -28522,6 +28524,8 @@ webhooks:
                 to: '+15555550100'
                 contactId: 507f1f77bcf86cd799439016
                 conversationId: 507f1f77bcf86cd799439014
+                telnyxCallControlId: v3:SAMPLE-call-control-id
+                telnyxCallSessionId: SAMPLE-call-session-id
                 startedAt: '2026-01-15T10:00:00.000Z'
               account:
                 id: 507f1f77bcf86cd799439011
@@ -82794,6 +82798,7 @@ paths:
                   recipientCount: { type: integer, description: Total recipient count }
         '400': { description: Invalid status or no recipients }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '402': { $ref: '#/components/responses/BalanceRequired' }
         '404': { $ref: '#/components/responses/NotFound' }
 
   /v1/broadcasts/{broadcastId}/schedule:
