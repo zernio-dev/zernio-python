@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.705.0"
+  version: "1.706.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -311,8 +311,8 @@ x-documentation:
     - `balance.low` - Balance billing: the balance dropped below the low-balance alert set on auto top-up (`alertBelowCents`), once per drop, unless an auto top-up is already covering it
     - `balance.empty` - Balance billing: the balance reached $0 and no auto top-up covered it, so pay-per-use calls answer 402 until it is funded. Carries that 402 `code` and `fundingUrl`
     - `balance.charged` - Balance billing: funds were added to the balance by card, by you or by auto top-up (`topup.trigger`), with the amount, the VAT and the card charge
-    - `billing.publishing_blocked` - A failed payment paused the billing owner's account: the API answers 402 and scheduled posts fail until it is paid. Fires once per pause
-    - `billing.publishing_unblocked` - The paused account was paid and publishing resumed
+    - `billing.publishing_blocked` - A failed payment paused the billing owner's account: the API answers 402 and posts that come due are held (pending) until it is paid. Fires once per pause
+    - `billing.publishing_unblocked` - The paused account was paid and publishing resumed: held posts publish, except those more than 24 hours past their scheduled time, which fail
     - `notification.sent` - Built for agents: one event for every notification we would email (a scheduled post failed to publish, or a connected account was disconnected), with the email's `subject` and `text`, references to the post or account, and the `actions` that resolve it. Fires regardless of the user's email toggles, and whether or not an email can be sent. The user's notification channel (Slack or Telegram) follows the toggles instead. To keep post and account state in sync, use `post.platform.failed`, `post.failed` and `account.disconnected`
     - `webhook.test` - Test event sent when verifying a webhook endpoint
 
@@ -14167,6 +14167,11 @@ components:
             The limits are the hourly posting velocity limit and, on a TikTok account connected through the TikTok for Business app, the daily cap of 15 videos and 15 photo posts.
 
             A held post keeps status pending and its scheduledFor moves to that timestamp. It is not failed.
+
+            A failed payment that paused publishing also holds the post (pending, not failed), with a notice that it publishes once the payment method is updated:
+
+            - It publishes within minutes of the payment clearing.
+            - It fails with "Publishing blocked: payment failed" when still unpaid 24 hours after its scheduled time, or when paid later than that.
         errorCategory:
           type: string
           enum: [auth_expired, user_content, user_abuse, account_issue, platform_rejected, platform_error, platform_rate_limit, quota_exhausted, system_error, unknown]
@@ -32358,7 +32363,15 @@ webhooks:
       operationId: onBillingPublishingBlocked
       summary: Publishing paused for a failed payment
       description: |
-        A failed payment paused the billing owner's account. Until it is paid, every API call answers 402 `PAYMENT_REQUIRED` and posts that come due fail with "Publishing blocked: payment failed".
+        A failed payment paused the billing owner's account. Until it is paid, every API call answers 402 `PAYMENT_REQUIRED`.
+
+        ### Scheduled posts during the pause
+
+        Posts that come due are held, not failed: `platforms[].status` stays `pending` and `errorMessage` says the post waits for the payment. No platform is called.
+
+        - Paid within 24 hours of a post's scheduled time: the post publishes within minutes of `billing.publishing_unblocked`.
+        - Not paid by then: the post fails with "Publishing blocked: payment failed" and `post.failed` (or `post.partial`) fires as usual. Retry it once paid.
+        - A Terms of Service hold is not a billing pause: its posts fail at once, as before.
 
         ### When it fires
 
@@ -32390,7 +32403,9 @@ webhooks:
       operationId: onBillingPublishingUnblocked
       summary: Publishing resumed after payment
       description: |
-        The account paused by `billing.publishing_blocked` was paid: the API accepts calls again and scheduled posts publish. Posts that failed during the pause stay failed; retry them with `POST /v1/posts/{postId}/retry`.
+        The account paused by `billing.publishing_blocked` was paid: the API accepts calls again and scheduled posts publish.
+
+        Posts held during the pause publish within minutes, unless their scheduled time is more than 24 hours past: those fail with "Publishing blocked: payment failed" instead of going out late. Posts that failed stay failed; retry them with `POST /v1/posts/{postId}/retry`.
       tags: [Webhook Events]
       requestBody:
         required: true
