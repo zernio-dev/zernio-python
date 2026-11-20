@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.710.0"
+  version: "1.711.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -113345,6 +113345,12 @@ paths:
 
         Cursor-paginated: pass `limit` (1-50, default 20) and the `cursor` from a previous response's `nextCursor`. `nextCursor` is null when there are no more pages. Treat cursors as opaque and pass them unchanged.
 
+        ### Find an article by handle
+
+        Pass `handle` to get that one article in any status (published, draft or scheduled), or an empty list. WordPress and Webflow only.
+
+        Use it after a `502` on create to see whether the article exists.
+
         ### Platform differences
 
         - WordPress and Wix results include `status`, and include `publishDate` only for scheduled (`future`) posts.
@@ -113357,6 +113363,7 @@ paths:
         - { name: blogId, in: path, required: true, schema: { type: string, pattern: '^[A-Za-z0-9_-]{1,64}$' }, description: 'Platform-native blog/site id returned by the list operation.' }
         - { name: limit, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 50, default: 20 }, description: 'Page size (1-50).' }
         - { name: cursor, in: query, required: false, schema: { type: string }, description: 'Opaque cursor from a previous response. Omit for the first page.' }
+        - { name: handle, in: query, required: false, schema: { type: string, minLength: 1, maxLength: 255 }, description: 'Only the article with this handle, in any status. WordPress and Webflow only.' }
       responses:
         '200':
           description: Articles listed

@@ -159,12 +159,14 @@ class BlogsResource:
         *,
         limit: int | None = 20,
         cursor: str | None = None,
+        handle: str | None = None,
     ) -> dict[str, Any]:
         """List blog articles"""
         params = self._build_query(
             {
                 "limit": limit,
                 "cursor": cursor,
+                "handle": handle,
             }
         )
         return self._client._get(
@@ -331,12 +333,14 @@ class BlogsResource:
         *,
         limit: int | None = 20,
         cursor: str | None = None,
+        handle: str | None = None,
     ) -> dict[str, Any]:
         """List blog articles (async)"""
         params = self._build_query(
             {
                 "limit": limit,
                 "cursor": cursor,
+                "handle": handle,
             }
         )
         return await self._client._aget(

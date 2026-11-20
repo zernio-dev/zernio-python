@@ -18157,7 +18157,11 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def blogs_list_blog_articles(
-        account_id: str, blog_id: str, limit: int = 20, cursor: str | None = None
+        account_id: str,
+        blog_id: str,
+        limit: int = 20,
+        cursor: str | None = None,
+        handle: str | None = None,
     ) -> str:
         """List blog articles
 
@@ -18166,6 +18170,12 @@ def register_generated_tools(mcp, _get_client):
         ### Pagination
 
         Cursor-paginated: pass `limit` (1-50, default 20) and the `cursor` from a previous response's `nextCursor`. `nextCursor` is null when there are no more pages. Treat cursors as opaque and pass them unchanged.
+
+        ### Find an article by handle
+
+        Pass `handle` to get that one article in any status (published, draft or scheduled), or an empty list. WordPress and Webflow only.
+
+        Use it after a `502` on create to see whether the article exists.
 
         ### Platform differences
 
@@ -18179,11 +18189,16 @@ def register_generated_tools(mcp, _get_client):
             account_id: Connected Shopify, WordPress, Wix or Webflow account id. (required)
             blog_id: Platform-native blog/site id returned by the list operation. (required)
             limit: Page size (1-50).
-            cursor: Opaque cursor from a previous response. Omit for the first page."""
+            cursor: Opaque cursor from a previous response. Omit for the first page.
+            handle: Only the article with this handle, in any status. WordPress and Webflow only."""
         client = _get_client()
         try:
             response = client.blogs.list_blog_articles(
-                account_id=account_id, blog_id=blog_id, limit=limit, cursor=cursor
+                account_id=account_id,
+                blog_id=blog_id,
+                limit=limit,
+                cursor=cursor,
+                handle=handle,
             )
             return _format_response(response)
         except Exception as e:
