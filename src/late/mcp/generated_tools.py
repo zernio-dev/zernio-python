@@ -35572,20 +35572,21 @@ def register_generated_tools(mcp, _get_client):
 
         Find people in the connected CRM by free text, email or phone. Send exactly one of `q`, `email` or `phone`.
 
-        HubSpot searches contacts. Salesforce searches Contacts and Leads that are not converted (`objectType` tells which), newest change first.
+        HubSpot searches contacts. Salesforce searches Contacts and Leads that are not converted (`objectType` tells which), newest change first. GoHighLevel searches the location's contacts.
 
         - `email` is an exact match.
         - `phone` takes an international number and matches it however the CRM stored it (\"+44 7911 123456\", \"07911 123456\").
         - `q` searches names, emails, phones and company. On Salesforce, `q` and `phone` use the search index, so a record saved in the last few minutes may not show yet; `email` never lags.
+        - On GoHighLevel, `email` and `phone` use the location's duplicate check: at most one contact, with no next page.
 
-        Platforms: hubspot, salesforce
+        Platforms: hubspot, salesforce, gohighlevel
 
         Args:
-            account_id: The connected HubSpot or Salesforce account (`GET /v1/accounts?platform=hubspot` or `salesforce`). (required)
+            account_id: The connected HubSpot, Salesforce or GoHighLevel account (`GET /v1/accounts?platform=hubspot`, `salesforce` or `gohighlevel`). (required)
             q: Free text, at least 2 characters.
             email
             phone: International number with its country code, for example `+14155550100`.
-            properties: Comma-separated native field names to return in `properties` (at most 50), for example `lifecyclestage,hs_lead_status` or `LeadSource,Industry__c`.
+            properties: Comma-separated native field names to return in `properties` (at most 50), for example `lifecyclestage,hs_lead_status` or `LeadSource,Industry__c`. On GoHighLevel, a field of the record (`source`, `status`), or a custom field by id or key.
             include_raw: Also return the CRM's own record as `raw`.
             limit
             cursor: The `nextCursor` of the previous page, unchanged."""
@@ -35630,12 +35631,14 @@ def register_generated_tools(mcp, _get_client):
 
         Salesforce requires `lastName` on both, and `company` on a Lead (`[not provided]` when you send none). A Contact takes its company from its Account: set `properties.AccountId` instead.
 
+        GoHighLevel creates a contact in the connected location. A location that does not allow duplicates answers 409 with the existing contact.
+
         Anything the CRM refuses (a required field, a validation rule, a duplicate rule) comes back as 422 or 409 with the CRM's own errors in `details.errors`.
 
-        Platforms: hubspot, salesforce
+        Platforms: hubspot, salesforce, gohighlevel
 
         Args:
-            account_id: The connected HubSpot or Salesforce account (`GET /v1/accounts?platform=hubspot` or `salesforce`). (required)
+            account_id: The connected HubSpot, Salesforce or GoHighLevel account (`GET /v1/accounts?platform=hubspot`, `salesforce` or `gohighlevel`). (required)
             first_name
             last_name
             email
@@ -35643,7 +35646,7 @@ def register_generated_tools(mcp, _get_client):
             company
             owner_id: An id from `GET /v1/crm/{accountId}/owners`.
             properties
-            create_as: Salesforce only. Defaults to the connection's `createAs` setting. Ignored on HubSpot."""
+            create_as: Salesforce only. Defaults to the connection's `createAs` setting. Ignored on HubSpot and GoHighLevel."""
         client = _get_client()
         try:
             response = client.crm.create_crm_contact(
@@ -35679,12 +35682,12 @@ def register_generated_tools(mcp, _get_client):
 
         Read one person from the connected CRM. On Salesforce the id can be a Contact (`003...`) or a Lead (`00Q...`).
 
-        Platforms: hubspot, salesforce
+        Platforms: hubspot, salesforce, gohighlevel
 
         Args:
-            account_id: The connected HubSpot or Salesforce account (`GET /v1/accounts?platform=hubspot` or `salesforce`). (required)
-            contact_id: The CRM's own id. HubSpot contact id, or Salesforce Contact (`003...`) or Lead (`00Q...`) id. (required)
-            properties: Comma-separated native field names to return in `properties` (at most 50), for example `lifecyclestage,hs_lead_status` or `LeadSource,Industry__c`.
+            account_id: The connected HubSpot, Salesforce or GoHighLevel account (`GET /v1/accounts?platform=hubspot`, `salesforce` or `gohighlevel`). (required)
+            contact_id: The CRM's own id. HubSpot contact id, Salesforce Contact (`003...`) or Lead (`00Q...`) id, or GoHighLevel contact id. (required)
+            properties: Comma-separated native field names to return in `properties` (at most 50), for example `lifecyclestage,hs_lead_status` or `LeadSource,Industry__c`. On GoHighLevel, a field of the record (`source`, `status`), or a custom field by id or key.
             include_raw: Also return the CRM's own record as `raw`."""
         client = _get_client()
         try:
@@ -35723,11 +35726,11 @@ def register_generated_tools(mcp, _get_client):
 
         On Salesforce, `company` applies to Leads only (400 on a Contact).
 
-        Platforms: hubspot, salesforce
+        Platforms: hubspot, salesforce, gohighlevel
 
         Args:
-            account_id: The connected HubSpot or Salesforce account (`GET /v1/accounts?platform=hubspot` or `salesforce`). (required)
-            contact_id: The CRM's own id. HubSpot contact id, or Salesforce Contact (`003...`) or Lead (`00Q...`) id. (required)
+            account_id: The connected HubSpot, Salesforce or GoHighLevel account (`GET /v1/accounts?platform=hubspot`, `salesforce` or `gohighlevel`). (required)
+            contact_id: The CRM's own id. HubSpot contact id, Salesforce Contact (`003...`) or Lead (`00Q...`) id, or GoHighLevel contact id. (required)
             first_name
             last_name
             email
@@ -35785,16 +35788,17 @@ def register_generated_tools(mcp, _get_client):
 
         - HubSpot: a Communication on the contact's timeline for `channel` `whatsapp` or `sms`, otherwise a Note. The subject and direction lead the text.
         - Salesforce: a completed Task on the Contact or Lead (`WhoId`), dated `occurredAt`, with `body` as its comments. `channel: call` logs a call.
+        - GoHighLevel: a plain-text note on the contact. GoHighLevel dates a note when it is logged, so the subject (or channel), direction and `occurredAt` lead its text.
 
         To log inbox conversations automatically instead, turn on `logMessages` in the CRM settings.
 
-        Platforms: hubspot, salesforce
+        Platforms: hubspot, salesforce, gohighlevel
 
         Args:
-            account_id: The connected HubSpot or Salesforce account (`GET /v1/accounts?platform=hubspot` or `salesforce`). (required)
-            contact_id: The CRM's own id. HubSpot contact id, or Salesforce Contact (`003...`) or Lead (`00Q...`) id. (required)
+            account_id: The connected HubSpot, Salesforce or GoHighLevel account (`GET /v1/accounts?platform=hubspot`, `salesforce` or `gohighlevel`). (required)
+            contact_id: The CRM's own id. HubSpot contact id, Salesforce Contact (`003...`) or Lead (`00Q...`) id, or GoHighLevel contact id. (required)
             body: The text to log. (required)
-            subject: Salesforce Task subject (default `<Channel> activity (<direction>)`); on HubSpot, the bold first line.
+            subject: Salesforce Task subject (default `<Channel> activity (<direction>)`); on HubSpot, the bold first line; on GoHighLevel, the note's first line.
             channel
             direction
             occurred_at: When it happened. Defaults to now."""
@@ -35832,17 +35836,17 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """List CRM deals
 
-        List deals (HubSpot) or Opportunities (Salesforce), most recently changed first.
+        List deals (HubSpot) or Opportunities (Salesforce), most recently changed first, or a GoHighLevel location's opportunities in GoHighLevel's own order.
 
-        HubSpot needs the portal to have granted `crm.objects.deals.read`; otherwise 403 `crm_scope_missing`.
+        HubSpot needs the portal to have granted `crm.objects.deals.read`; otherwise 403 `crm_scope_missing`. GoHighLevel cannot filter by update time: `updatedSince` answers 400 there.
 
-        Platforms: hubspot, salesforce
+        Platforms: hubspot, salesforce, gohighlevel
 
         Args:
-            account_id: The connected HubSpot or Salesforce account (`GET /v1/accounts?platform=hubspot` or `salesforce`). (required)
-            stage: Only deals in this stage. HubSpot takes the stage's internal id (`closedwon`, `appointmentscheduled`); Salesforce the `StageName` (`Closed Won`).
-            updated_since: Only deals changed at or after this time.
-            properties: Comma-separated native field names to return in `properties` (at most 50), for example `lifecyclestage,hs_lead_status` or `LeadSource,Industry__c`.
+            account_id: The connected HubSpot, Salesforce or GoHighLevel account (`GET /v1/accounts?platform=hubspot`, `salesforce` or `gohighlevel`). (required)
+            stage: Only deals in this stage. HubSpot takes the stage's internal id (`closedwon`, `appointmentscheduled`); Salesforce the `StageName` (`Closed Won`); GoHighLevel the pipeline stage id.
+            updated_since: Only deals changed at or after this time. HubSpot and Salesforce only.
+            properties: Comma-separated native field names to return in `properties` (at most 50), for example `lifecyclestage,hs_lead_status` or `LeadSource,Industry__c`. On GoHighLevel, a field of the record (`source`, `status`), or a custom field by id or key.
             include_raw: Also return the CRM's own record as `raw`.
             limit
             cursor: The `nextCursor` of the previous page, unchanged."""
@@ -35877,14 +35881,14 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Get a CRM deal
 
-        Read one deal (HubSpot) or Opportunity (Salesforce) with its contacts.
+        Read one deal (HubSpot), Opportunity (Salesforce) or opportunity (GoHighLevel) with its contacts.
 
-        Platforms: hubspot, salesforce
+        Platforms: hubspot, salesforce, gohighlevel
 
         Args:
-            account_id: The connected HubSpot or Salesforce account (`GET /v1/accounts?platform=hubspot` or `salesforce`). (required)
-            deal_id: HubSpot deal id or Salesforce Opportunity id (`006...`). (required)
-            properties: Comma-separated native field names to return in `properties` (at most 50), for example `lifecyclestage,hs_lead_status` or `LeadSource,Industry__c`.
+            account_id: The connected HubSpot, Salesforce or GoHighLevel account (`GET /v1/accounts?platform=hubspot`, `salesforce` or `gohighlevel`). (required)
+            deal_id: HubSpot deal id, Salesforce Opportunity id (`006...`) or GoHighLevel opportunity id. (required)
+            properties: Comma-separated native field names to return in `properties` (at most 50), for example `lifecyclestage,hs_lead_status` or `LeadSource,Industry__c`. On GoHighLevel, a field of the record (`source`, `status`), or a custom field by id or key.
             include_raw: Also return the CRM's own record as `raw`."""
         client = _get_client()
         try:
@@ -35923,15 +35927,19 @@ def register_generated_tools(mcp, _get_client):
 
         HubSpot needs `crm.objects.deals.write`, an optional scope portals approve when they connect; without it, 403 `crm_scope_missing` asks to reconnect HubSpot. `currency` only works on multi-currency HubSpot portals and Salesforce orgs.
 
-        Platforms: hubspot, salesforce
+        GoHighLevel: `stage` is the pipeline stage id, `amount` the opportunity value, and `properties.status` (`open`, `won`, `lost`, `abandoned`) marks it won or lost. Its opportunities have no close date or currency of their own: `closeDate` and `currency` answer 400.
+
+        Updating needs `opportunities.write`, which the Zernio GoHighLevel app does not request yet, so this call answers 403 `crm_scope_missing` on GoHighLevel for now.
+
+        Platforms: hubspot, salesforce, gohighlevel
 
         Args:
-            account_id: The connected HubSpot or Salesforce account (`GET /v1/accounts?platform=hubspot` or `salesforce`). (required)
-            deal_id: HubSpot deal id or Salesforce Opportunity id (`006...`). (required)
+            account_id: The connected HubSpot, Salesforce or GoHighLevel account (`GET /v1/accounts?platform=hubspot`, `salesforce` or `gohighlevel`). (required)
+            deal_id: HubSpot deal id, Salesforce Opportunity id (`006...`) or GoHighLevel opportunity id. (required)
             name
-            stage: HubSpot stage id or Salesforce `StageName`.
+            stage: HubSpot stage id, Salesforce `StageName` or GoHighLevel pipeline stage id.
             amount
-            currency: ISO 4217 code. Multi-currency portals and orgs only.
+            currency: ISO 4217 code. Multi-currency HubSpot portals and Salesforce orgs only.
             close_date
             owner_id: An id from `GET /v1/crm/{accountId}/owners`.
             properties"""
@@ -35968,14 +35976,14 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """List CRM owners
 
-        List the users records can be assigned to: HubSpot owners, or active standard Salesforce users. Use an `id` as `ownerId` on contacts and deals.
+        List the users records can be assigned to: HubSpot owners, active standard Salesforce users, or the GoHighLevel location's users. Use an `id` as `ownerId` on contacts and deals.
 
-        HubSpot needs `crm.objects.owners.read`, an optional scope portals approve when they connect; without it, 403 `crm_scope_missing` asks to reconnect HubSpot.
+        HubSpot needs `crm.objects.owners.read`, an optional scope portals approve when they connect; without it, 403 `crm_scope_missing` asks to reconnect HubSpot. GoHighLevel needs `users.readonly`: a location installed before Zernio asked for it answers 403 `crm_scope_missing` until it reconnects.
 
-        Platforms: hubspot, salesforce
+        Platforms: hubspot, salesforce, gohighlevel
 
         Args:
-            account_id: The connected HubSpot or Salesforce account (`GET /v1/accounts?platform=hubspot` or `salesforce`). (required)
+            account_id: The connected HubSpot, Salesforce or GoHighLevel account (`GET /v1/accounts?platform=hubspot`, `salesforce` or `gohighlevel`). (required)
             include_raw: Also return the CRM's own record as `raw`.
             limit
             cursor: The `nextCursor` of the previous page, unchanged."""
