@@ -2419,6 +2419,67 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="Get GoHighLevel account settings",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def accounts_get_gohighlevel_settings(account_id: str) -> str:
+        """Get GoHighLevel account settings
+
+        Read a connected GoHighLevel sub-account and what Zernio relays from it and writes back to it.
+
+        Platforms: gohighlevel
+
+        Args:
+            account_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.accounts.get_gohighlevel_settings(account_id=account_id)
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Update GoHighLevel account settings",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def accounts_update_gohighlevel_settings(
+        account_id: str,
+        relay_conversions: bool | None = None,
+        write_back_attribution: bool | None = None,
+        report_to_ads: bool | None = None,
+    ) -> str:
+        """Update GoHighLevel account settings
+
+        Turn the conversion relay, the write-back to GoHighLevel contacts or forwarding to the profile's ad platforms on or off for a connected GoHighLevel sub-account. Send at least one field; omitted fields keep their value. Settings survive reconnecting the same sub-account.
+
+        Platforms: gohighlevel
+
+        Args:
+            account_id: (required)
+            relay_conversions: Relay GoHighLevel CRM events (new contacts, won opportunities, appointments, paid invoices and orders) as conversions with `source` `gohighlevel`.
+            write_back_attribution: Write each relayed conversion onto the `Zernio Conversions` custom field of the GoHighLevel contact.
+            report_to_ads: Also forward relayed conversions to the profile's ad platform destinations. Off stores them only."""
+        client = _get_client()
+        try:
+            response = client.accounts.update_gohighlevel_settings(
+                account_id=account_id,
+                relay_conversions=relay_conversions,
+                write_back_attribution=write_back_attribution,
+                report_to_ads=report_to_ads,
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="Get Salesforce account settings",
             readOnlyHint=True,
             destructiveHint=False,
@@ -27045,6 +27106,45 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="Get GoHighLevel OAuth connect URL",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def connect_get_gohighlevel_connect_url(
+        profile_id: str, redirect_url: str | None = None
+    ) -> str:
+        """Get GoHighLevel OAuth connect URL
+
+        Initiates OAuth (authorization code, no PKCE) for the Zernio GoHighLevel Marketplace app. Each GoHighLevel sub-account (location) becomes one connected account with `platform: gohighlevel`. An agency that installs the app across its sub-accounts gets one connected account per installed sub-account.
+
+        ### Flow
+
+        1. Redirect the user to `authUrl` (GoHighLevel's install screen).
+        2. After the install, GoHighLevel returns the browser to Zernio's callback.
+        3. Zernio redirects to `redirect_url` (or the dashboard when omitted).
+
+        On success the redirect carries `connected=gohighlevel`, `profileId` and `accountId`. On failure it carries `error` (`gohighlevel_access_denied`, `gohighlevel_invalid_state` or `gohighlevel_connection_failed`), `platform=gohighlevel` and `error_message`.
+
+        Reconnecting the same sub-account on the same profile updates the stored connection in place and keeps its settings.
+
+        Platforms: gohighlevel
+
+        Args:
+            profile_id: Your Zernio profile ID (get from /v1/profiles). (required)
+            redirect_url: Custom redirect after connection. Must be an absolute http(s) URL or custom app scheme such as `myapp://callback`; relative and unsafe URLs return 400."""
+        client = _get_client()
+        try:
+            response = client.connect.get_gohighlevel_connect_url(
+                profile_id=profile_id, redirect_url=redirect_url
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="Get Salesforce OAuth connect URL",
             readOnlyHint=True,
             destructiveHint=False,
@@ -31352,6 +31452,7 @@ def register_generated_tools(mcp, _get_client):
             "stripe",
             "web",
             "salesforce",
+            "gohighlevel",
             "postback",
             "form_leads",
         ]
@@ -31372,7 +31473,7 @@ def register_generated_tools(mcp, _get_client):
 
         Paginate with `cursor`: pass the `nextCursor` of the previous page until it comes back `null`.
 
-        Platforms: meta, google, tiktok, linkedin, microsoft, x, pinterest, reddit, openai, applovinads, snapchatads, googleanalytics, stripe, hubspot, salesforce
+        Platforms: meta, google, tiktok, linkedin, microsoft, x, pinterest, reddit, openai, applovinads, snapchatads, googleanalytics, stripe, hubspot, salesforce, gohighlevel
 
         Args:
             profile_id: The profile to list. Omit to cover every profile you can access.
@@ -31438,7 +31539,7 @@ def register_generated_tools(mcp, _get_client):
         - Email, phone and `externalId` are stored only as SHA-256 hashes.
         - `sourceUrl` keeps only its origin, path and attribution parameters (`utm_*`, `zrn`, `zcid`, `gclid`, `gbraid`, `wbraid`, `fbclid`, `ttclid`, `twclid`, `msclkid`, `li_fat_id`, `epik`, `rdt_cid`, `oppref`, `aleid`, ...
 
-        Platforms: meta, google, tiktok, linkedin, microsoft, x, pinterest, reddit, openai, applovinads, snapchatads, googleanalytics
+        Platforms: meta, google, tiktok, linkedin, microsoft, x, pinterest, reddit, openai, applovinads, snapchatads, googleanalytics, gohighlevel
 
         Args:
             profile_id: Profile the events belong to. Its saved destinations receive the events. (required)
@@ -31900,7 +32001,7 @@ def register_generated_tools(mcp, _get_client):
 
         Pick `destinationId` from `GET /v1/ads/conversions/destinations`. Set `eventNames` to forward only those events, such as only `Purchase`; leave it out to forward every event.
 
-        Platforms: meta, google, tiktok, linkedin, microsoft, x, pinterest, reddit, openai, applovinads, snapchatads, googleanalytics, hubspot, salesforce
+        Platforms: meta, google, tiktok, linkedin, microsoft, x, pinterest, reddit, openai, applovinads, snapchatads, googleanalytics, hubspot, salesforce, gohighlevel
 
         Args:
             profile_id: (required)
@@ -58346,7 +58447,7 @@ def register_generated_tools(mcp, _get_client):
 
             Account swaps re-validate the graph against the new platform. For example, moving from WhatsApp to Facebook surfaces a `start_call` node as an error instead of silently saving an unrunnable graph.
 
-            Platforms: hubspot, salesforce
+            Platforms: hubspot, salesforce, gohighlevel
 
             Args:
                 workflow_id: (required)

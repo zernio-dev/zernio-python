@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.721.0"
+  version: "1.723.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -18034,6 +18034,44 @@ components:
         forwardSales:
           type: boolean
           description: Whether new customers' first payments go to the profile's forwarding rules.
+    GohighlevelSettings:
+      type: object
+      required:
+        - _id
+        - platform
+        - locationId
+        - companyId
+        - locationName
+        - installedBy
+        - relayConversions
+        - writeBackAttribution
+        - reportToAds
+      properties:
+        _id:
+          type: string
+        platform:
+          type: string
+          enum: [gohighlevel]
+        locationId:
+          type: string
+          description: The GoHighLevel sub-account (location) id.
+        companyId:
+          type: [string, "null"]
+          description: The agency that owns the sub-account, null for a sub-account under no agency.
+        locationName:
+          type: [string, "null"]
+        installedBy:
+          type: [string, "null"]
+          description: The GoHighLevel user who installed the app.
+        relayConversions:
+          type: boolean
+          description: CRM events are relayed as conversions. Default true.
+        writeBackAttribution:
+          type: boolean
+          description: Relayed conversions are written back onto the GoHighLevel contact. Default true.
+        reportToAds:
+          type: boolean
+          description: Relayed conversions are forwarded to the profile's ad platforms. Default false.
     HubSpotSettings:
       type: object
       required:
@@ -51026,6 +51064,71 @@ paths:
           description: Profile not found or access denied.
         '503':
           description: HubSpot OAuth is not configured.
+  /v1/connect/gohighlevel:
+    get:
+      x-resource-group: accounts
+      operationId: getGohighlevelConnectUrl
+      tags:
+        - Connect
+      x-platforms: [gohighlevel]
+      summary: Get GoHighLevel OAuth connect URL
+      description: |
+        Initiates OAuth (authorization code, no PKCE) for the Zernio GoHighLevel Marketplace app. Each GoHighLevel sub-account (location) becomes one connected account with `platform: gohighlevel`. An agency that installs the app across its sub-accounts gets one connected account per installed sub-account.
+
+        ### Flow
+
+        1. Redirect the user to `authUrl` (GoHighLevel's install screen).
+        2. After the install, GoHighLevel returns the browser to Zernio's callback.
+        3. Zernio redirects to `redirect_url` (or the dashboard when omitted).
+
+        On success the redirect carries `connected=gohighlevel`, `profileId` and `accountId`. On failure it carries `error` (`gohighlevel_access_denied`, `gohighlevel_invalid_state` or `gohighlevel_connection_failed`), `platform=gohighlevel` and `error_message`.
+
+        Reconnecting the same sub-account on the same profile updates the stored connection in place and keeps its settings.
+      security:
+        - bearerAuth: []
+        - connectToken: []
+      parameters:
+        - name: profileId
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Your Zernio profile ID (get from /v1/profiles).
+        - name: redirect_url
+          in: query
+          schema:
+            type: string
+          description: >-
+            Custom redirect after connection. Must be an absolute http(s) URL or custom app scheme such as
+            `myapp://callback`; relative and unsafe URLs return 400.
+      responses:
+        '200':
+          description: OAuth authorization URL and authenticated state
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - authUrl
+                  - state
+                properties:
+                  authUrl:
+                    type: string
+                    format: uri
+                    description: GoHighLevel URL to open in the user agent.
+                  state:
+                    type: string
+                    description: Authenticated, expiring OAuth state handled by the callback.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: API key does not have access to this profile, or the key is read-only.
+        '404':
+          description: Profile not found or access denied.
+        '503':
+          description: GoHighLevel OAuth is not configured.
   /v1/connect/salesforce:
     get:
       x-resource-group: accounts
@@ -60467,6 +60570,88 @@ paths:
                     type: array
                     items:
                       $ref: '#/components/schemas/HubSpotContactProperty'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: Account not found
+  /v1/accounts/{accountId}/gohighlevel-settings:
+    get:
+      x-resource-group: accounts
+      operationId: getGohighlevelSettings
+      tags:
+        - Accounts
+      x-platforms: [gohighlevel]
+      summary: Get GoHighLevel account settings
+      description: Read a connected GoHighLevel sub-account and what Zernio relays from it and writes back to it.
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: GoHighLevel settings
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  account:
+                    $ref: '#/components/schemas/GohighlevelSettings'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: Account not found
+    patch:
+      x-resource-group: accounts
+      operationId: updateGohighlevelSettings
+      tags:
+        - Accounts
+      x-platforms: [gohighlevel]
+      summary: Update GoHighLevel account settings
+      description: >-
+        Turn the conversion relay, the write-back to GoHighLevel contacts or forwarding to the profile's ad
+        platforms on or off for a connected GoHighLevel sub-account. Send at least one field; omitted fields keep
+        their value. Settings survive reconnecting the same sub-account.
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                relayConversions:
+                  type: boolean
+                  description: Relay GoHighLevel CRM events (new contacts, won opportunities, appointments, paid invoices and orders) as conversions with `source` `gohighlevel`.
+                writeBackAttribution:
+                  type: boolean
+                  description: Write each relayed conversion onto the `Zernio Conversions` custom field of the GoHighLevel contact.
+                reportToAds:
+                  type: boolean
+                  description: Also forward relayed conversions to the profile's ad platform destinations. Off stores them only.
+      responses:
+        '200':
+          description: Updated settings
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  account:
+                    $ref: '#/components/schemas/GohighlevelSettings'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -83748,7 +83933,7 @@ paths:
     post:
       x-resource-group: "accounts"
       operationId: createWorkflow
-      x-platforms: [hubspot, salesforce]
+      x-platforms: [hubspot, salesforce, gohighlevel]
       summary: Create workflow
       description: >
         Create a branching conversation workflow (draft) from a node/edge graph. Created in `draft`
@@ -83835,7 +84020,7 @@ paths:
     patch:
       x-resource-group: "accounts"
       operationId: updateWorkflow
-      x-platforms: [hubspot, salesforce]
+      x-platforms: [hubspot, salesforce, gohighlevel]
       summary: Update workflow
       description: |
         Update name, description, the graph, or reassign to a different account.
@@ -107028,7 +107213,7 @@ paths:
   /v1/events:
     get:
       x-resource-group: "ads"
-      x-platforms: [meta, google, tiktok, linkedin, microsoft, x, pinterest, reddit, openai, applovinads, snapchatads, googleanalytics, stripe, hubspot, salesforce]
+      x-platforms: [meta, google, tiktok, linkedin, microsoft, x, pinterest, reddit, openai, applovinads, snapchatads, googleanalytics, stripe, hubspot, salesforce, gohighlevel]
       operationId: listEvents
       tags: [Conversions]
       summary: List stored events
@@ -107071,7 +107256,7 @@ paths:
           in: query
           required: false
           description: 'Only events from this source, such as `stripe` for the payments of a connected Stripe account.'
-          schema: { type: string, enum: [api, relay, hubspot, meta_leads, google_leads, linkedin_leads, tiktok_leads, shopify, woocommerce, stripe, web, salesforce, postback, form_leads] }
+          schema: { type: string, enum: [api, relay, hubspot, meta_leads, google_leads, linkedin_leads, tiktok_leads, shopify, woocommerce, stripe, web, salesforce, gohighlevel, postback, form_leads] }
         - name: platform
           in: query
           required: false
@@ -107130,7 +107315,7 @@ paths:
       x-resource-group: "ads"
       operationId: sendEvents
       tags: [Conversions]
-      x-platforms: [meta, google, tiktok, linkedin, microsoft, x, pinterest, reddit, openai, applovinads, snapchatads, googleanalytics]
+      x-platforms: [meta, google, tiktok, linkedin, microsoft, x, pinterest, reddit, openai, applovinads, snapchatads, googleanalytics, gohighlevel]
       summary: Send events to every destination
       description: |
         The recommended way to send conversions. Sends conversion events once and forwards them to every ad platform destination saved for the profile (see `POST /v1/events/destinations`), or to the `destinations` given in the request. Requires the Ads add-on.
@@ -108066,7 +108251,7 @@ paths:
     post:
       x-resource-group: "ads"
       operationId: createForwardingRule
-      x-platforms: [meta, google, tiktok, linkedin, microsoft, x, pinterest, reddit, openai, applovinads, snapchatads, googleanalytics, hubspot, salesforce]
+      x-platforms: [meta, google, tiktok, linkedin, microsoft, x, pinterest, reddit, openai, applovinads, snapchatads, googleanalytics, hubspot, salesforce, gohighlevel]
       tags: [Conversions]
       summary: Add a forwarding rule
       description: |

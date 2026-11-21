@@ -776,6 +776,30 @@ class AccountsResource:
             f"/v1/accounts/{account_id}/hubspot-settings/contact-properties"
         )
 
+    def get_gohighlevel_settings(self, account_id: str) -> dict[str, Any]:
+        """Get GoHighLevel account settings"""
+        return self._client._get(f"/v1/accounts/{account_id}/gohighlevel-settings")
+
+    def update_gohighlevel_settings(
+        self,
+        account_id: str,
+        *,
+        relay_conversions: bool | None = None,
+        write_back_attribution: bool | None = None,
+        report_to_ads: bool | None = None,
+    ) -> dict[str, Any]:
+        """Update GoHighLevel account settings"""
+        payload = self._build_body(
+            {
+                "relayConversions": relay_conversions,
+                "writeBackAttribution": write_back_attribution,
+                "reportToAds": report_to_ads,
+            }
+        )
+        return self._client._patch(
+            f"/v1/accounts/{account_id}/gohighlevel-settings", data=payload
+        )
+
     def get_salesforce_settings(self, account_id: str) -> dict[str, Any]:
         """Get Salesforce account settings"""
         return self._client._get(f"/v1/accounts/{account_id}/salesforce-settings")
@@ -1547,6 +1571,32 @@ class AccountsResource:
         """List HubSpot contact properties (async)"""
         return await self._client._aget(
             f"/v1/accounts/{account_id}/hubspot-settings/contact-properties"
+        )
+
+    async def aget_gohighlevel_settings(self, account_id: str) -> dict[str, Any]:
+        """Get GoHighLevel account settings (async)"""
+        return await self._client._aget(
+            f"/v1/accounts/{account_id}/gohighlevel-settings"
+        )
+
+    async def aupdate_gohighlevel_settings(
+        self,
+        account_id: str,
+        *,
+        relay_conversions: bool | None = None,
+        write_back_attribution: bool | None = None,
+        report_to_ads: bool | None = None,
+    ) -> dict[str, Any]:
+        """Update GoHighLevel account settings (async)"""
+        payload = self._build_body(
+            {
+                "relayConversions": relay_conversions,
+                "writeBackAttribution": write_back_attribution,
+                "reportToAds": report_to_ads,
+            }
+        )
+        return await self._client._apatch(
+            f"/v1/accounts/{account_id}/gohighlevel-settings", data=payload
         )
 
     async def aget_salesforce_settings(self, account_id: str) -> dict[str, Any]:

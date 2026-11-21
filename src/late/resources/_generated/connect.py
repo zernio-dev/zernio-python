@@ -392,6 +392,18 @@ class ConnectResource:
         )
         return self._client._get("/v1/connect/hubspot", params=params)
 
+    def get_gohighlevel_connect_url(
+        self, profile_id: str, *, redirect_url: str | None = None
+    ) -> dict[str, Any]:
+        """Get GoHighLevel OAuth connect URL"""
+        params = self._build_query(
+            {
+                "profileId": profile_id,
+                "redirect_url": redirect_url,
+            }
+        )
+        return self._client._get("/v1/connect/gohighlevel", params=params)
+
     def get_salesforce_connect_url(
         self,
         profile_id: str,
@@ -2079,6 +2091,18 @@ class ConnectResource:
             }
         )
         return await self._client._aget("/v1/connect/hubspot", params=params)
+
+    async def aget_gohighlevel_connect_url(
+        self, profile_id: str, *, redirect_url: str | None = None
+    ) -> dict[str, Any]:
+        """Get GoHighLevel OAuth connect URL (async)"""
+        params = self._build_query(
+            {
+                "profileId": profile_id,
+                "redirect_url": redirect_url,
+            }
+        )
+        return await self._client._aget("/v1/connect/gohighlevel", params=params)
 
     async def aget_salesforce_connect_url(
         self,
