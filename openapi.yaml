@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.732.0"
+  version: "1.732.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -18318,7 +18318,7 @@ components:
           description: Relayed conversions are written back onto the HighLevel contact. Default true.
         reportToAds:
           type: boolean
-          description: Relayed conversions are forwarded to the profile's ad platforms. Default false.
+          description: "Relayed conversions are forwarded to the profile's ad platforms. A new connection starts with this on when its profile already sends events to an ad account, else off; reconnecting keeps the value."
         syncContacts:
           type: boolean
           description: Inbox contacts are matched to HighLevel contacts by phone, then email, and created there when none matches. Default true.
