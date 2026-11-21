@@ -4366,6 +4366,71 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="Add or remove negative list keywords",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def ad_accounts_edit_ad_negative_keyword_list_keywords(
+        list_id: str,
+        account_id: str,
+        ad_account_id: str | None = None,
+        customer_id: str | None = None,
+        platform: Literal[
+            "facebook",
+            "instagram",
+            "tiktok",
+            "linkedin",
+            "pinterest",
+            "google",
+            "twitter",
+            "openai",
+            "reddit",
+        ]
+        | None = None,
+        add: list[Any] | None = None,
+        remove: list[Any] | None = None,
+    ) -> str:
+        """Add or remove negative list keywords
+
+        Adds and removes single keywords in a shared Google Ads negative keyword list without resending the full set, affecting every campaign that uses the list.
+
+        - `remove` matches by normalized text and match type, and wins over `add` for the same keyword.
+        - Keywords already in the list are not added twice; keywords not in it are skipped on remove.
+        - Creates and removals are applied atomically in one mutation.
+
+        ### Quota
+
+        Each create or removal consumes one daily operation; the entire batch must fit the remaining quota.
+
+        Platforms: google
+
+        Args:
+            list_id: (required)
+            account_id: Zernio SocialAccount id. (required)
+            ad_account_id: Platform ad account ID (Google customer ID, digits only). Required when the connection has multiple customers.
+            customer_id: Alias of adAccountId, kept for existing callers
+            platform: Optional courtesy field. The resolved account or campaign determines support; other platforms return 501.
+            add: Keywords to add. Send at least one entry in add or remove.
+            remove: Keywords to remove. Bare strings mean broad match."""
+        client = _get_client()
+        try:
+            response = client.ad_accounts.edit_ad_negative_keyword_list_keywords(
+                list_id=list_id,
+                account_id=account_id,
+                ad_account_id=ad_account_id,
+                customer_id=customer_id,
+                platform=platform,
+                add=add,
+                remove=remove,
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="List account callouts",
             readOnlyHint=True,
             destructiveHint=False,
@@ -8127,6 +8192,58 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="Add or remove campaign-level negative keywords",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def ad_campaigns_edit_campaign_negative_keywords(
+        campaign_id: str,
+        platform: Literal[
+            "facebook",
+            "instagram",
+            "tiktok",
+            "linkedin",
+            "pinterest",
+            "google",
+            "twitter",
+            "openai",
+            "reddit",
+        ]
+        | None = None,
+        add: list[Any] | None = None,
+        remove: list[Any] | None = None,
+    ) -> str:
+        """Add or remove campaign-level negative keywords
+
+        Adds and removes single campaign-level negative keywords on a Google campaign without resending the full set.
+
+        - `remove` matches by text (any case) and match type, and wins over `add` for the same keyword.
+        - Keywords already on the campaign are not added twice; keywords not on it are skipped on remove.
+        - Changes go to Google in `create`/`remove` mutates of up to 5,000 operations, like the full replace.
+
+        The platform is always discovered from the campaign itself; a non-Google
+        campaign returns 501 rather than 404, whether or not `platform` was sent.
+
+        Platforms: google
+
+        Args:
+            campaign_id: Platform campaign ID (required)
+            platform: Optional and NOT authoritative: the resolved campaign's own platform decides 200 vs 501, never this hint.
+            add: Negative keywords to add. Send at least one entry in add or remove.
+            remove: Negative keywords to remove. Bare strings mean broad match."""
+        client = _get_client()
+        try:
+            response = client.ad_campaigns.edit_campaign_negative_keywords(
+                campaign_id=campaign_id, platform=platform, add=add, remove=remove
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="Pause or resume many campaigns",
             readOnlyHint=False,
             destructiveHint=True,
@@ -9354,7 +9471,7 @@ def register_generated_tools(mcp, _get_client):
 
             ### Google Search ads
 
-            Google Search ads include current creative.headlines, creative.descriptions and creative.finalUrls, preserving pinnedField. Top-level cachedAt and stale report cache freshness. Google mutations invalidate this read.
+            Google Search ads include current creative.headlines, creative.descriptions, creative.finalUrls and, when set, creative.path1 and creative.path2, preserving pinnedField. Top-level cachedAt and stale report cache freshness. Google mutations invalidate this read.
 
             RSA enrichment requires a stored advertisingChannelType of SEARCH. Ads with an unknown or other channel return their stored details without a Google read. If RSA enrichment fails, the stored ad is returned with HTTP 200 and without cache metadata.
 
@@ -9365,8 +9482,7 @@ def register_generated_tools(mcp, _get_client):
             - the Zernio internal `_id` (24-char hex)
             - Meta's numeric `platformAdId` (the value shipped in `comment.received` webhooks as `comment.ad.id`)
             - the creative's `effective_object_story_id` (`{pageId}_{postId}` shape, Facebook side)
-            - the creative's `effective_instagram_media_id` (Instagram side)
-            - an Instagram media id an ad ...
+            - the creative's `effective_instagram_media_id` ...
 
             Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit, microsoft
 
@@ -9419,6 +9535,8 @@ def register_generated_tools(mcp, _get_client):
         headlines: list[dict[str, Any]] | None = None,
         descriptions: list[dict[str, Any]] | None = None,
         final_urls: list[str] | None = None,
+        path1: str | None = None,
+        path2: str | None = None,
         asset_group: dict[str, Any] | None = None,
         demand_gen: dict[str, Any] | None = None,
         status: Literal["active", "paused"] | None = None,
@@ -9455,6 +9573,8 @@ def register_generated_tools(mcp, _get_client):
             headlines: Google Search and Display only. Replaces the complete headline list. Search takes 3-15, Display 1-5 and rejects pinnedField; the count is checked once the ad's channel is known. No padding or truncation on update. Each item is an object with keys: text (string, required); pinnedField (one of: HEADLINE_1, HEADLINE_2, HEADLINE_3) - Optional fixed headline position. Omit to leave the asset unpinned.
             descriptions: Google Search and Display only. Replaces the complete description list. Search takes 2-4, Display 1-5 and rejects pinnedField. No padding or truncation on update. Each item is an object with keys: text (string, required); pinnedField (one of: DESCRIPTION_1, DESCRIPTION_2) - Optional fixed description position. Omit to leave the asset unpinned.
             final_urls: Google Search and Display only. Replaces final URLs. Omitted lists stay unchanged. For Performance Max use assetGroup.finalUrl.
+            path1: Google Search only. First display path shown after the domain in the ad URL. Send an empty string to clear it.
+            path2: Google Search only. Second display path, shown after path1. Google requires path1 when path2 is set. Send an empty string to clear it.
             asset_group: Google Performance Max only. Replaces whole asset roles on the ad's asset group. Returns 422 on any other platform or channel. Object with keys: finalUrl (string) - Replaces the asset group's final URL.; headlines (list of string) - Replaces every HEADLINE asset on the group.; longHeadline (string) - Replaces the LONG_HEADLINE asset.; descriptions (list of string) - Replaces every DESCRIPTION asset. At least one must be 60 characters or fewer.; businessName (string) - Replaces the BUSINESS_NAME asset.; images (object with keys landscape, square, logo) - Public HTTP(S) image URLs. Each role you send replaces that role's images; roles you omit stay. GIF, JPEG or PNG, at most 5120 KB per image.; youtubeVideoIds (list of string) - Replaces YOUTUBE_VIDEO assets with existing YouTube video ids. Video uploads and arbitrary video URLs are not supported.
             demand_gen: Google Demand Gen only. Returns 422 on any other platform or channel. Object with keys: finalUrl (string); businessName (string); headlines (list of string); longHeadlines (list of string) - Video ads only.; descriptions (list of string); callToAction (string) - Image and carousel ads only.; images (object with keys landscape, square, portrait, logo); youtubeVideoIds (list of string) - Video ads only.; channels (list of string) - Replaces the ad group's channel controls. Only the listed channels serve; Google Maps, which this list cannot select, is turned off. Omit to leave the ad ...; audience (object with keys userLists, userInterests, customAudiences, ageRanges, genders); audienceId (string) - Attach an existing Google Audience by numeric id instead of audience.
             status
@@ -9469,6 +9589,8 @@ def register_generated_tools(mcp, _get_client):
                 headlines=headlines,
                 descriptions=descriptions,
                 final_urls=final_urls,
+                path1=path1,
+                path2=path2,
                 asset_group=asset_group,
                 demand_gen=demand_gen,
                 status=status,
@@ -10225,6 +10347,55 @@ def register_generated_tools(mcp, _get_client):
         try:
             response = client.ad_campaigns.replace_campaign_negative_keyword_lists(
                 campaign_id=campaign_id, platform=platform, list_ids=list_ids
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Attach or detach campaign negative lists",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def ad_campaigns_edit_campaign_negative_keyword_lists(
+        campaign_id: str,
+        platform: Literal[
+            "facebook",
+            "instagram",
+            "tiktok",
+            "linkedin",
+            "pinterest",
+            "google",
+            "twitter",
+            "openai",
+            "reddit",
+        ]
+        | None = None,
+        add: list[str] | None = None,
+        remove: list[str] | None = None,
+    ) -> str:
+        """Attach or detach campaign negative lists
+
+        Attaches and detaches single shared negative keyword lists on a Google campaign without resending the full set. The lists and their keywords are not changed.
+
+        - `remove` wins over `add` for the same list.
+        - A list already attached is not attached twice; a list not attached is skipped on remove.
+        - Every list in `add` must belong to the campaign customer and have type NEGATIVE_KEYWORDS.
+
+        Platforms: google
+
+        Args:
+            campaign_id: (required)
+            platform: Optional courtesy field. The resolved account or campaign determines support; other platforms return 501.
+            add: Shared negative keyword list ids to attach. Send at least one entry in add or remove.
+            remove: Shared negative keyword list ids to detach."""
+        client = _get_client()
+        try:
+            response = client.ad_campaigns.edit_campaign_negative_keyword_lists(
+                campaign_id=campaign_id, platform=platform, add=add, remove=remove
             )
             return _format_response(response)
         except Exception as e:

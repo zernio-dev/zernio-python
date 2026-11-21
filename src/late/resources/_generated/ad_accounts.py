@@ -785,6 +785,33 @@ class AdAccountsResource:
             f"/v1/ads/accounts/negative-keyword-lists/{list_id}/keywords", data=payload
         )
 
+    def edit_ad_negative_keyword_list_keywords(
+        self,
+        list_id: str,
+        account_id: str,
+        *,
+        idempotency_key: str | None = None,
+        ad_account_id: str | None = None,
+        customer_id: str | None = None,
+        platform: str | None = None,
+        add: list[Any] | None = None,
+        remove: list[Any] | None = None,
+    ) -> dict[str, Any]:
+        """Add or remove negative list keywords"""
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "customerId": customer_id,
+                "platform": platform,
+                "add": add,
+                "remove": remove,
+            }
+        )
+        return self._client._patch(
+            f"/v1/ads/accounts/negative-keyword-lists/{list_id}/keywords", data=payload
+        )
+
     def list_account_callouts(
         self,
         account_id: str,
@@ -2090,6 +2117,33 @@ class AdAccountsResource:
             }
         )
         return await self._client._aput(
+            f"/v1/ads/accounts/negative-keyword-lists/{list_id}/keywords", data=payload
+        )
+
+    async def aedit_ad_negative_keyword_list_keywords(
+        self,
+        list_id: str,
+        account_id: str,
+        *,
+        idempotency_key: str | None = None,
+        ad_account_id: str | None = None,
+        customer_id: str | None = None,
+        platform: str | None = None,
+        add: list[Any] | None = None,
+        remove: list[Any] | None = None,
+    ) -> dict[str, Any]:
+        """Add or remove negative list keywords (async)"""
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "customerId": customer_id,
+                "platform": platform,
+                "add": add,
+                "remove": remove,
+            }
+        )
+        return await self._client._apatch(
             f"/v1/ads/accounts/negative-keyword-lists/{list_id}/keywords", data=payload
         )
 

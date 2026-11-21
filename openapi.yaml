@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.725.0"
+  version: "1.726.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -90140,6 +90140,70 @@ paths:
         '404': { description: Campaign not found }
         '429': { description: Google Ads operations budget exhausted; retry later }
         '501': { description: Only available on Google Ads campaigns }
+    patch:
+      x-resource-group: "ads"
+      operationId: editCampaignNegativeKeywords
+      tags: ["Ad Campaigns"]
+      x-platforms: ["google"]
+      summary: Add or remove campaign-level negative keywords
+      description: |
+        Adds and removes single campaign-level negative keywords on a Google campaign without resending the full set.
+
+        - `remove` matches by text (any case) and match type, and wins over `add` for the same keyword.
+        - Keywords already on the campaign are not added twice; keywords not on it are skipped on remove.
+        - Changes go to Google in `create`/`remove` mutates of up to 5,000 operations, like the full replace.
+
+        The platform is always discovered from the campaign itself; a non-Google
+        campaign returns 501 rather than 404, whether or not `platform` was sent.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
+        - { name: campaignId, in: path, required: true, schema: { type: string }, description: Platform campaign ID }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                platform: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit], description: 'Optional and NOT authoritative: the resolved campaign''s own platform decides 200 vs 501, never this hint.' }
+                add:
+                  type: array
+                  maxItems: 10000
+                  items: { $ref: '#/components/schemas/KeywordEntry' }
+                  description: Negative keywords to add. Send at least one entry in add or remove.
+                remove:
+                  type: array
+                  maxItems: 10000
+                  items: { $ref: '#/components/schemas/KeywordEntry' }
+                  description: Negative keywords to remove. Bare strings mean broad match.
+      responses:
+        '200':
+          description: Campaign-level negative keywords changed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  created: { type: integer, description: Negative criteria newly created on Google }
+                  removed: { type: integer, description: Negative criteria removed from Google }
+                  keywords:
+                    type: array
+                    description: The full negative-keyword set after the change
+                    items:
+                      type: object
+                      properties:
+                        criterionId: { type: string }
+                        text: { type: string }
+                        matchType: { type: string, enum: [exact, phrase, broad] }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/AdAccountNotSelected' }
+        '404': { description: Campaign not found }
+        '409': { $ref: '#/components/responses/IdempotencyKeyInFlight' }
+        '429': { description: Google Ads operations budget exhausted; retry later }
+        '501': { description: Only available on Google Ads campaigns }
 
   /v1/ads/campaigns/bulk-status:
     post:
@@ -91933,7 +91997,7 @@ paths:
 
         ### Google Search ads
 
-        Google Search ads include current creative.headlines, creative.descriptions and creative.finalUrls, preserving pinnedField. Top-level cachedAt and stale report cache freshness. Google mutations invalidate this read.
+        Google Search ads include current creative.headlines, creative.descriptions, creative.finalUrls and, when set, creative.path1 and creative.path2, preserving pinnedField. Top-level cachedAt and stale report cache freshness. Google mutations invalidate this read.
 
         RSA enrichment requires a stored advertisingChannelType of SEARCH. Ads with an unknown or other channel return their stored details without a Google read. If RSA enrichment fails, the stored ad is returned with HTTP 200 and without cache metadata.
 
@@ -92079,7 +92143,7 @@ paths:
 
         Creative edits are dispatched on the ad's `advertisingChannelType`. Every supported field replaces a whole set; a field you omit is preserved.
 
-        - **Search**: top-level `headlines`, `descriptions` and `finalUrls`. Use 3-15 headlines (1-30 characters) and 2-4 descriptions (1-90 characters). Omit an asset to remove it; omit pinnedField on an included asset to unpin it. Updates do not pad or truncate text. The legacy creative fields remain unsupported.
+        - **Search**: top-level `headlines`, `descriptions`, `finalUrls`, `path1` and `path2`. Use 3-15 headlines (1-30 characters) and 2-4 descriptions (1-90 characters). Omit an asset to remove it; omit pinnedField on an included asset to unpin it. Updates do not pad or truncate text. The legacy creative fields remain unsupported.
         - **Display**: top-level `headlines` (1-5, no pinnedField, display ads have no pinned positions), `descriptions` (1-5) and `finalUrls`, plus `creative.longHeadline`, `creative.businessName`, `creative.imageUrl` (the landscape marketing image) and `creative.squareImageUrl`.
         - **Performance Max**: top-level `assetGroup`, which swaps asset roles on the ad's asset group. The other creative fields return 422 for this channel, and `assetGroup` returns 422 on any other channel.
         - **Demand Gen**: top-level `demandGen` (see GoogleDemandGenUpdate): creative, channel and audience changes in one atomic Google request. The other creative fields return 422 for this channel.
@@ -92226,6 +92290,14 @@ paths:
                     type: string
                     format: uri
                   description: "Google Search and Display only. Replaces final URLs. Omitted lists stay unchanged. For Performance Max use assetGroup.finalUrl."
+                path1:
+                  type: string
+                  maxLength: 15
+                  description: "Google Search only. First display path shown after the domain in the ad URL. Send an empty string to clear it."
+                path2:
+                  type: string
+                  maxLength: 15
+                  description: "Google Search only. Second display path, shown after path1. Google requires path1 when path2 is set. Send an empty string to clear it."
                 assetGroup:
                   allOf: [{ $ref: '#/components/schemas/GooglePmaxAssetGroupUpdate' }]
                   description: "Google Performance Max only. Replaces whole asset roles on the ad's asset group. Returns 422 on any other platform or channel."
@@ -92434,7 +92506,7 @@ paths:
             - Invalid status transition, or budget below minimum.
             - A LinkedIn creative update without imageUrl or videoUrl, or a LinkedIn targeting update without countries or regions.
             - A Google targeting update that is unsupported, empty, mixes locations with the top-level geo fields, or names an unknown country or language code.
-            - Code `missing_required_field`: the body has none of the updatable fields (status, budget, targeting, name, creative, headlines, descriptions, finalUrls, assetGroup, demandGen), e.g. `{}` or only misspelled keys. Unknown keys are ignored, so such a body would otherwise change nothing.
+            - Code `missing_required_field`: the body has none of the updatable fields (status, budget, targeting, name, creative, headlines, descriptions, finalUrls, path1, path2, assetGroup, demandGen), e.g. `{}` or only misspelled keys. Unknown keys are ignored, so such a body would otherwise change nothing.
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
           x-summary: "The free live ads limit is reached without a card, or the account is not selected: add a card or select it."
@@ -97799,6 +97871,136 @@ paths:
           description: "Google Ads operations budget or platform quota exhausted."
         "501":
           description: "Available only on Google Ads."
+    patch:
+      x-resource-group: "ads"
+      operationId: "editAdNegativeKeywordListKeywords"
+      tags:
+        - "Ad Accounts"
+      x-platforms:
+        - "google"
+      summary: "Add or remove negative list keywords"
+      description: |
+        Adds and removes single keywords in a shared Google Ads negative keyword list without resending the full set, affecting every campaign that uses the list.
+
+        - `remove` matches by normalized text and match type, and wins over `add` for the same keyword.
+        - Keywords already in the list are not added twice; keywords not in it are skipped on remove.
+        - Creates and removals are applied atomically in one mutation.
+
+        ### Quota
+
+        Each create or removal consumes one daily operation; the entire batch must fit the remaining quota.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
+        - name: "listId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+            pattern: "^\\d+$"
+            description: "Google shared set id."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: "object"
+              additionalProperties: false
+              required:
+                - "accountId"
+              properties:
+                accountId:
+                  type: "string"
+                  pattern: "^[a-fA-F0-9]{24}$"
+                  description: "Zernio SocialAccount id."
+                adAccountId:
+                  type: "string"
+                  pattern: "^\\d+$"
+                  description: "Platform ad account ID (Google customer ID, digits only). Required when the connection has multiple customers."
+                customerId:
+                  type: "string"
+                  deprecated: true
+                  pattern: "^\\d+$"
+                  description: "Alias of adAccountId, kept for existing callers"
+                platform:
+                  type: "string"
+                  enum:
+                    - "facebook"
+                    - "instagram"
+                    - "tiktok"
+                    - "linkedin"
+                    - "pinterest"
+                    - "google"
+                    - "twitter"
+                    - "openai"
+                    - "reddit"
+                  description: "Optional courtesy field. The resolved account or campaign determines support; other platforms return 501."
+                add:
+                  type: "array"
+                  maxItems: 5000
+                  items:
+                    $ref: "#/components/schemas/KeywordEntry"
+                  description: "Keywords to add. Send at least one entry in add or remove."
+                remove:
+                  type: "array"
+                  maxItems: 5000
+                  items:
+                    $ref: "#/components/schemas/KeywordEntry"
+                  description: "Keywords to remove. Bare strings mean broad match."
+            example:
+              accountId: "69ce75d483e990e1c01ccfe4"
+              adAccountId: "9122445560"
+              add:
+                - "free"
+              remove:
+                - text: "jobs"
+                  matchType: "phrase"
+      responses:
+        "200":
+          description: "Successful response."
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  created:
+                    type: "integer"
+                    description: "New criteria or campaign links created."
+                  removed:
+                    type: "integer"
+                    description: "Existing criteria or campaign links removed."
+                  customerId:
+                    type: "string"
+                    pattern: "^\\d+$"
+                    description: "Resolved Google Ads customer id."
+              example:
+                created: 1
+                removed: 1
+                customerId: "9122445560"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          x-summary: "Ads access or account permission is missing, or the ad account is not selected: select it or use another connection."
+          description: |
+            Ads access and permission to the selected account are required.
+
+            Also returned with code `ad_account_not_selected` when the connection has selected ad accounts and the targeted ad account is not among them. `details` carries `accountId`, `adAccountId` and `selectedAdAccountIds`.
+
+            To fix it, add the ad account to the selection (GET /v1/connect/{platform}/ads with adAccountIds, which replaces the selection) or use a connection that has it selected.
+        '404': { $ref: '#/components/responses/AccountUnavailable' }
+
+        "409":
+          x-summary: "The campaign or account selection is ambiguous, or the account needs reconnecting: use a profile-scoped key or reconnect it."
+          description: 'Ambiguous campaign or account selection. Use a profile-scoped key. A list still attached to a campaign may also be rejected by Google. The account may also be inactive or need reconnection (code ads_connection_required). Reconnect it and read GET /v1/accounts for its current ID before retrying.'
+        "422":
+          description: "Google Ads connection is missing or unavailable."
+        "429":
+          description: "Google Ads operations budget or platform quota exhausted."
+        "501":
+          description: "Available only on Google Ads."
   /v1/ads/campaigns/{campaignId}/negative-keyword-lists:
     get:
       x-resource-group: "ads"
@@ -97951,6 +98153,115 @@ paths:
             example:
               platform: "google"
               listIds:
+                - "1234567890"
+      responses:
+        "200":
+          description: "Successful response."
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  created:
+                    type: "integer"
+                    description: "New criteria or campaign links created."
+                  removed:
+                    type: "integer"
+                    description: "Existing criteria or campaign links removed."
+                  customerId:
+                    type: "string"
+                    pattern: "^\\d+$"
+                    description: "Resolved Google Ads customer id."
+              example:
+                created: 1
+                removed: 0
+                customerId: "9122445560"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          x-summary: "Ads access or account permission is missing, or the ad account is not selected: select it or use another connection."
+          description: |
+            Ads access and permission to the selected account are required.
+
+            Also returned with code `ad_account_not_selected` when the connection has selected ad accounts and the targeted ad account is not among them. `details` carries `accountId`, `adAccountId` and `selectedAdAccountIds`.
+
+            Fix: add the ad account to the selection (GET /v1/connect/{platform}/ads with adAccountIds, which replaces the selection), or use a connection that has it selected.
+        '404': { $ref: '#/components/responses/AccountUnavailable' }
+
+        "409":
+          x-summary: "The campaign or account selection is ambiguous, or the account needs reconnecting: use a profile-scoped key or reconnect it."
+          description: 'Ambiguous campaign or account selection. Use a profile-scoped key. A list still attached to a campaign may also be rejected by Google. The account may also be inactive or need reconnection (code ads_connection_required). Reconnect it and read GET /v1/accounts for its current ID before retrying.'
+        "422":
+          description: "Google Ads connection is missing or unavailable."
+        "429":
+          description: "Google Ads operations budget or platform quota exhausted."
+        "501":
+          description: "Available only on Google Ads."
+    patch:
+      x-resource-group: "ads"
+      operationId: "editCampaignNegativeKeywordLists"
+      tags:
+        - "Ad Campaigns"
+      x-platforms:
+        - "google"
+      summary: "Attach or detach campaign negative lists"
+      description: |
+        Attaches and detaches single shared negative keyword lists on a Google campaign without resending the full set. The lists and their keywords are not changed.
+
+        - `remove` wins over `add` for the same list.
+        - A list already attached is not attached twice; a list not attached is skipped on remove.
+        - Every list in `add` must belong to the campaign customer and have type NEGATIVE_KEYWORDS.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
+        - name: "campaignId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+            pattern: "^\\d+$"
+            description: "Google campaign id."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: "object"
+              additionalProperties: false
+              properties:
+                platform:
+                  type: "string"
+                  enum:
+                    - "facebook"
+                    - "instagram"
+                    - "tiktok"
+                    - "linkedin"
+                    - "pinterest"
+                    - "google"
+                    - "twitter"
+                    - "openai"
+                    - "reddit"
+                  description: "Optional courtesy field. The resolved account or campaign determines support; other platforms return 501."
+                add:
+                  type: "array"
+                  maxItems: 20
+                  items:
+                    type: "string"
+                    pattern: "^\\d+$"
+                  description: "Shared negative keyword list ids to attach. Send at least one entry in add or remove."
+                remove:
+                  type: "array"
+                  maxItems: 20
+                  items:
+                    type: "string"
+                    pattern: "^\\d+$"
+                  description: "Shared negative keyword list ids to detach."
+            example:
+              platform: "google"
+              add:
                 - "1234567890"
       responses:
         "200":

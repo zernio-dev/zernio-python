@@ -562,6 +562,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `ad_accounts.assign_page_user()` | Assign a user to a Page |
 | `ad_accounts.attach_ad_label()` | Attach a Google Ads label |
 | `ad_accounts.detach_ad_label()` | Detach a Google Ads label |
+| `ad_accounts.edit_ad_negative_keyword_list_keywords()` | Add or remove negative list keywords |
 | `ad_accounts.hide_ad_comment()` | Hide or unhide an ad comment |
 | `ad_accounts.invite_ad_account_to_manager()` | Invite a client account to a manager |
 | `ad_accounts.invite_ad_account_user()` | Invite a user to an ad account by email |
@@ -670,6 +671,8 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `ad_campaigns.duplicate_ad()` | Duplicate an ad |
 | `ad_campaigns.duplicate_ad_campaign()` | Duplicate a campaign |
 | `ad_campaigns.duplicate_ad_set()` | Duplicate an ad set |
+| `ad_campaigns.edit_campaign_negative_keyword_lists()` | Attach or detach campaign negative lists |
+| `ad_campaigns.edit_campaign_negative_keywords()` | Add or remove campaign-level negative keywords |
 | `ad_campaigns.edit_google_asset_group_assets()` | Link or unlink asset group assets |
 | `ad_campaigns.remove_ad_group_assets()` | Remove ad-group assets |
 | `ad_campaigns.remove_ad_keyword()` | Remove a Search keyword |
