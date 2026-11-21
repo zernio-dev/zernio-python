@@ -2456,10 +2456,13 @@ def register_generated_tools(mcp, _get_client):
         relay_conversions: bool | None = None,
         write_back_attribution: bool | None = None,
         report_to_ads: bool | None = None,
+        sync_contacts: bool | None = None,
+        log_messages: bool | None = None,
+        log_delivery_status: bool | None = None,
     ) -> str:
         """Update GoHighLevel account settings
 
-        Turn the conversion relay, the write-back to GoHighLevel contacts or forwarding to the profile's ad platforms on or off for a connected GoHighLevel sub-account. Send at least one field; omitted fields keep their value. Settings survive reconnecting the same sub-account.
+        Turn the conversion relay, the write-back to HighLevel contacts, forwarding to the profile's ad platforms, contact sync, conversation logging or delivery marks on or off for a connected HighLevel sub-account. Send at least one field; omitted fields keep their value. Settings survive reconnecting the same sub-account.
 
         Platforms: gohighlevel
 
@@ -2467,7 +2470,10 @@ def register_generated_tools(mcp, _get_client):
             account_id: (required)
             relay_conversions: Relay GoHighLevel CRM events (new contacts, won opportunities, appointments, paid invoices and orders) as conversions with `source` `gohighlevel`.
             write_back_attribution: Write each relayed conversion onto the `Zernio Conversions` custom field of the GoHighLevel contact.
-            report_to_ads: Also forward relayed conversions to the profile's ad platform destinations. Off stores them only."""
+            report_to_ads: Also forward relayed conversions to the profile's ad platform destinations. Off stores them only.
+            sync_contacts: Match inbox contacts to HighLevel contacts (phone, then email) and create the ones that do not exist.
+            log_messages: Log inbox messages from every channel on the matched HighLevel contact, one note per channel and UTC day.
+            log_delivery_status: Mark sent, delivered, read and failed on logged outgoing messages."""
         client = _get_client()
         try:
             response = client.accounts.update_gohighlevel_settings(
@@ -2475,6 +2481,9 @@ def register_generated_tools(mcp, _get_client):
                 relay_conversions=relay_conversions,
                 write_back_attribution=write_back_attribution,
                 report_to_ads=report_to_ads,
+                sync_contacts=sync_contacts,
+                log_messages=log_messages,
+                log_delivery_status=log_delivery_status,
             )
             return _format_response(response)
         except Exception as e:
@@ -58543,7 +58552,7 @@ def register_generated_tools(mcp, _get_client):
             platform
             name: (required)
             description
-            nodes: Each item is an object with keys: id (string, required) - Stable node id referenced by edges; type (one of: trigger, send_message, wait_for_reply, condition, set_variable, delay, webhook, hubspot_upsert_contact, salesforce_upsert_contact, ai, handoff, start_call, a_b_split, set_field, enroll_sequence, add_tag, remove_tag, end; required) - Node kind. The 18 supported types break into four groups: messaging (send_message), control flow (trigger, condition, delay, wait_for_reply, a_b_split, end), ...; config (object) - Type-specific settings. Every string field supports `{{variable}}` interpolation against the run's variable bag, resolved at execution time. **trigger**: `{ ...; position (object with keys x, y) - Canvas coordinates (ignored by the executor; used by the visual builder).; label (string) - Optional display name shown on the builder canvas and inspector, falling back to the node type when absent. The nodes array is replaced wholesale on update, ...
+            nodes: Each item is an object with keys: id (string, required) - Stable node id referenced by edges; type (one of: trigger, send_message, wait_for_reply, condition, set_variable, delay, webhook, hubspot_upsert_contact, salesforce_upsert_contact, gohighlevel_upsert_contact, ai, handoff, start_call, a_b_split, set_field, enroll_sequence, add_tag, remove_tag, end; required) - Node kind. The 19 supported types break into four groups: messaging (send_message), control flow (trigger, condition, delay, wait_for_reply, a_b_split, end), ...; config (object) - Type-specific settings. Every string field supports `{{variable}}` interpolation against the run's variable bag, resolved at execution time. **trigger**: `{ ...; position (object with keys x, y) - Canvas coordinates (ignored by the executor; used by the visual builder).; label (string) - Optional display name shown on the builder canvas and inspector, falling back to the node type when absent. The nodes array is replaced wholesale on update, ...
             edges: Each item is an object with keys: id (string, required); source (string, required) - Source node id; target (string, required) - Target node id; sourceHandle (string) - Selects a branch output of a multi-output node. Null (or omitted) = the node's single/default output. Known handles per node type: - **condition**: a rule's ...
             entry_node_id: The trigger node id; derived from the single trigger node if omitted"""
         client = _get_client()
@@ -58626,7 +58635,7 @@ def register_generated_tools(mcp, _get_client):
                 workflow_id: (required)
                 name
                 description
-                nodes: Each item is an object with keys: id (string, required) - Stable node id referenced by edges; type (one of: trigger, send_message, wait_for_reply, condition, set_variable, delay, webhook, hubspot_upsert_contact, salesforce_upsert_contact, ai, handoff, start_call, a_b_split, set_field, enroll_sequence, add_tag, remove_tag, end; required) - Node kind. The 18 supported types break into four groups: messaging (send_message), control flow (trigger, condition, delay, wait_for_reply, a_b_split, end), ...; config (object) - Type-specific settings. Every string field supports `{{variable}}` interpolation against the run's variable bag, resolved at execution time. **trigger**: `{ ...; position (object with keys x, y) - Canvas coordinates (ignored by the executor; used by the visual builder).; label (string) - Optional display name shown on the builder canvas and inspector, falling back to the node type when absent. The nodes array is replaced wholesale on update, ...
+                nodes: Each item is an object with keys: id (string, required) - Stable node id referenced by edges; type (one of: trigger, send_message, wait_for_reply, condition, set_variable, delay, webhook, hubspot_upsert_contact, salesforce_upsert_contact, gohighlevel_upsert_contact, ai, handoff, start_call, a_b_split, set_field, enroll_sequence, add_tag, remove_tag, end; required) - Node kind. The 19 supported types break into four groups: messaging (send_message), control flow (trigger, condition, delay, wait_for_reply, a_b_split, end), ...; config (object) - Type-specific settings. Every string field supports `{{variable}}` interpolation against the run's variable bag, resolved at execution time. **trigger**: `{ ...; position (object with keys x, y) - Canvas coordinates (ignored by the executor; used by the visual builder).; label (string) - Optional display name shown on the builder canvas and inspector, falling back to the node type when absent. The nodes array is replaced wholesale on update, ...
                 edges: Each item is an object with keys: id (string, required); source (string, required) - Source node id; target (string, required) - Target node id; sourceHandle (string) - Selects a branch output of a multi-output node. Null (or omitted) = the node's single/default output. Known handles per node type: - **condition**: a rule's ...
                 entry_node_id
                 account_id: Reassign the workflow to a different `SocialAccount`. Changing this triggers a graph revalidation against the new platform.

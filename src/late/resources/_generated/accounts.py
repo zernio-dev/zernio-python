@@ -787,6 +787,9 @@ class AccountsResource:
         relay_conversions: bool | None = None,
         write_back_attribution: bool | None = None,
         report_to_ads: bool | None = None,
+        sync_contacts: bool | None = None,
+        log_messages: bool | None = None,
+        log_delivery_status: bool | None = None,
     ) -> dict[str, Any]:
         """Update GoHighLevel account settings"""
         payload = self._build_body(
@@ -794,6 +797,9 @@ class AccountsResource:
                 "relayConversions": relay_conversions,
                 "writeBackAttribution": write_back_attribution,
                 "reportToAds": report_to_ads,
+                "syncContacts": sync_contacts,
+                "logMessages": log_messages,
+                "logDeliveryStatus": log_delivery_status,
             }
         )
         return self._client._patch(
@@ -1586,6 +1592,9 @@ class AccountsResource:
         relay_conversions: bool | None = None,
         write_back_attribution: bool | None = None,
         report_to_ads: bool | None = None,
+        sync_contacts: bool | None = None,
+        log_messages: bool | None = None,
+        log_delivery_status: bool | None = None,
     ) -> dict[str, Any]:
         """Update GoHighLevel account settings (async)"""
         payload = self._build_body(
@@ -1593,6 +1602,9 @@ class AccountsResource:
                 "relayConversions": relay_conversions,
                 "writeBackAttribution": write_back_attribution,
                 "reportToAds": report_to_ads,
+                "syncContacts": sync_contacts,
+                "logMessages": log_messages,
+                "logDeliveryStatus": log_delivery_status,
             }
         )
         return await self._client._apatch(
