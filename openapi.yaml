@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.720.0"
+  version: "1.720.2"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -30465,7 +30465,7 @@ webhooks:
 
         ### When it does not fire
 
-        Ads seen for the first time by a sync never fire it, including history loaded at connect. On Meta, Google, TikTok and Reddit an ad that leaves review while paused sends no `approved`.
+        Ads seen for the first time by a sync never fire it, including history loaded at connect. On Google, TikTok and Reddit an ad that leaves review while paused sends no `approved`. On Meta it does when the ad was paused before review ended.
 
         ### Platform notes
 
@@ -89870,10 +89870,14 @@ paths:
       description: |
         Replaces a Google campaign's full list of campaign-level negative keywords, or clears it.
 
-        Replaces the FULL set of campaign-level negative keywords (C.270): the desired
+        Replaces the FULL set of campaign-level negative keywords (C.270). The desired
         list is diffed against what Google already has, and the difference is applied
-        as one `create`/`remove` mutate. Send an empty array to clear every campaign
-        negative.
+        in `create`/`remove` mutates of up to 5,000 operations.
+
+        - Creates run first, so a failed batch leaves extra negatives rather than missing ones.
+        - When the old and new sets together would pass Google's 10,000 cap, removes run first.
+        - Send the same request again to finish a failed replace.
+        - Send an empty array to clear every campaign negative.
 
         The platform is always discovered from the campaign itself; a non-Google
         campaign returns 501 rather than 404, whether or not `platform` was sent.
@@ -89892,7 +89896,7 @@ paths:
                 platform: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit], description: 'Optional and NOT authoritative: the resolved campaign''s own platform decides 200 vs 501, never this hint.' }
                 keywords:
                   type: array
-                  maxItems: 1000
+                  maxItems: 10000
                   items: { $ref: '#/components/schemas/KeywordEntry' }
       responses:
         '200':
@@ -92116,6 +92120,8 @@ paths:
                     **Meta**: patch-style.
 
                     - Pass any subset: omitted fields are preserved from the live creative, including media (`image_hash`/`video_id` reused, no re-upload) and `url_tags`. Sending the full set (`headline`, `body`, `callToAction`, `linkUrl`, `imageUrl`) rebuilds the creative from scratch.
+
+                    - On lead ads, the instant form is kept through every edit, and `linkUrl` is ignored: Meta requires a lead ad's links to stay on its instant-form link. An edit that changes only `linkUrl` leaves the ad's creative as it is.
                     - Partial patching reads the live `object_story_spec`, which Meta strips on SHARE / page-post / dark post creatives; those return 422 asking for the full set. A `videoUrl`/`videoId` on an image creative is a type change and also needs the full set.
                     - Creatives with an `asset_feed_spec` (several text options, placement or language rules) take text, link, tracking and enhancement edits in place. The new creative is built from the live asset feed with the edited text, and every video, image, label and rule is kept.
                     - On those, `body`, `headline` and `description` replace the one option of that kind. When the feed has several, send `bodies`, `headlines` or `descriptions` with one text per option, in order. `linkUrl` replaces the feed's only destination link.
