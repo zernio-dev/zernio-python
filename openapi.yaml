@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.720.2"
+  version: "1.721.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -26367,7 +26367,7 @@ components:
         sidebarId: { type: [string, "null"], description: 'WordPress only: widget area holding the widget.' }
     TrackingTagInstallBlockedReason:
       type: string
-      enum: [insufficient_permissions, scripts_stripped, wordpress_com_plan, no_widget_areas, widgets_api_unavailable]
+      enum: [insufficient_permissions, scripts_stripped, wordpress_com_plan, no_widget_areas, widgets_api_unavailable, jetpack_site]
       description: Why a pixel cannot be installed on a WordPress site.
     TrackingTag:
       type: object
@@ -112922,6 +112922,7 @@ paths:
         - `wordpress_com_plan`: a WordPress.com plan that strips scripts (plans without plugins).
         - `no_widget_areas`: the theme has no widget areas (block themes such as Twenty Twenty-Five).
         - `widgets_api_unavailable`: no widgets REST API (WordPress older than 5.8, or disabled).
+        - `jetpack_site`: a self-hosted site connected through Jetpack with a WordPress.com login. WordPress.com does not pass widget calls to Jetpack sites; connect the site as self-hosted with an Application Password instead.
 
         The `error` message names the manual alternative (Meta's official WordPress plugin).
 
