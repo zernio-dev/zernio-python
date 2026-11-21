@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.732.1"
+  version: "1.733.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -1971,11 +1971,18 @@ components:
                 description: Whether a browser pixel for this platform was found.
               serverSide:
                 type: boolean
-                description: True only when the page shows a server-side path for this platform.
+                description: 'True only when a server-side path is proven: visible from the page, or verified through the Zernio account behind the site tag.'
+              relayedBy:
+                type: string
+                enum: [zernio-tag]
+                description: 'The only server path seen is the Zernio site tag relay; `serverSideVerified` says whether its delivery to this platform is proven.'
+              serverSideVerified:
+                type: boolean
+                description: 'The Zernio site tag on the page belongs to an account whose destination for this platform accepted the site''s events in the last 7 days.'
               status:
                 type: string
-                enum: [good, warn, missing]
-                description: '`good` = server-side, `warn` = browser-only (the leak), `missing` = not tracked.'
+                enum: [good, warn, missing, not-firing]
+                description: '`good` = server-side, `warn` = browser-only (the leak), `missing` = not tracked, `not-firing` = the tag is installed but sent nothing during a full visit.'
               estimatedLossBrowserOnly:
                 type: number
                 description: 'Share of conversions typically lost when this platform runs browser-only, 0-1.'
