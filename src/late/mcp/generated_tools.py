@@ -1141,6 +1141,8 @@ def register_generated_tools(mcp, _get_client):
 
         Returns health status of all connected accounts including token validity, permissions, and issues needing attention. A failing or stalled analytics sync (see `analyticsSync`) raises a healthy account to at least warning.
 
+        An account the platform has restricted or banned (for example a WhatsApp number Meta reports as BANNED) is `error`, with the platform's reason in `issues`. `needsReconnect` stays false, since reconnecting does not lift it.
+
         Args:
             profile_id: Filter by profile ID
             platform: Filter by platform
@@ -1169,6 +1171,8 @@ def register_generated_tools(mcp, _get_client):
 
         A failing or stalled analytics sync (see `analyticsSync`) raises a healthy account to at least `warning`.
 
+        An account the platform has restricted or banned is `error`, with the platform's reason in `issues` and a recommendation that says reconnecting does not lift it.
+
         ### Facebook, Instagram and Threads
 
         The token is also probed live. A probe Meta refuses with a dead-token error sets `tokenStatus.valid` to `false` and names Meta's code, subcode and fbtrace in `issues`.
@@ -1179,9 +1183,7 @@ def register_generated_tools(mcp, _get_client):
 
         ### WhatsApp
 
-        The response also includes `platformConnection`, a live probe of the Meta link behind the channel (the same read as `GET /v1/whatsapp/number-info`).
-
-        The OAuth token can be perfectly valid while Meta refuses to ...
+        The response also includes `platformConnection`, a ...
 
         Args:
             account_id: The account ID to check (required)"""
