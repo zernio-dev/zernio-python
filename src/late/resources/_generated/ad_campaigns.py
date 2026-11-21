@@ -830,6 +830,7 @@ class AdCampaignsResource:
         rename_prefix: str | None = None,
         rename_suffix: str | None = None,
         sync_after: bool | None = True,
+        website_only: bool | None = None,
     ) -> dict[str, Any]:
         """Duplicate an ad set"""
         payload = self._build_body(
@@ -844,6 +845,7 @@ class AdCampaignsResource:
                 "renamePrefix": rename_prefix,
                 "renameSuffix": rename_suffix,
                 "syncAfter": sync_after,
+                "websiteOnly": website_only,
             }
         )
         headers: dict[str, str] = {}
@@ -2703,6 +2705,7 @@ class AdCampaignsResource:
         rename_prefix: str | None = None,
         rename_suffix: str | None = None,
         sync_after: bool | None = True,
+        website_only: bool | None = None,
     ) -> dict[str, Any]:
         """Duplicate an ad set (async)"""
         payload = self._build_body(
@@ -2717,6 +2720,7 @@ class AdCampaignsResource:
                 "renamePrefix": rename_prefix,
                 "renameSuffix": rename_suffix,
                 "syncAfter": sync_after,
+                "websiteOnly": website_only,
             }
         )
         headers: dict[str, str] = {}

@@ -8488,6 +8488,7 @@ def register_generated_tools(mcp, _get_client):
         rename_prefix: str | None = None,
         rename_suffix: str | None = None,
         sync_after: bool = True,
+        website_only: bool | None = None,
     ) -> str:
         """Duplicate an ad set
 
@@ -8502,7 +8503,8 @@ def register_generated_tools(mcp, _get_client):
             - So an ad set with any number of ads copies: Meta refuses a single deep copy of 3 or more objects.
             - `statusOption` applies to the ad set and every ad.
             - If an ad copy fails, the partial ad set copy is deleted and the request fails with Meta's error.
-            - A sync discovery starts automatically and runs after the response (`syncAfter: false` to skip). The copy is readable through Zernio once it finishes, usually within a few minutes. Until then, calls that take a copied id return 404, so retry them. ...
+            - A sync discovery starts automatically and runs after the response (`syncAfter: false` to skip). The copy is readable through Zernio once it finishes, usually within a few minutes. Until then, calls that take a copied id return 404, so retry them.
+            - ...
 
             Platforms (the platform parameter takes): facebook, instagram, tiktok
 
@@ -8523,7 +8525,12 @@ def register_generated_tools(mcp, _get_client):
         With no rename option at all, Meta appends its own ` - Copy` suffix. Ignored on TikTok, where `renamePrefix` / `renameSuffix` still apply.
                 rename_prefix: Text prepended to each renamed object's name.
                 rename_suffix: Text appended to each renamed object's name.
-                sync_after"""
+                sync_after
+                website_only: Meta only. Rebuilds each copied ad (new creative and ad) instead of using Meta's native copy, so the creative carries applink_treatment web_only and Ads Manager shows Website as the only destination.
+
+        - Omitted or false: keeps the native copy.
+        - 400 with `deepCopy: false`, and when an ad runs an existing post (its creative cannot be rebuilt).
+        - Meta rejects it when the campaign uses Website and App conversion locations."""
         client = _get_client()
         try:
             response = client.ad_campaigns.duplicate_ad_set(
@@ -8538,6 +8545,7 @@ def register_generated_tools(mcp, _get_client):
                 rename_prefix=rename_prefix,
                 rename_suffix=rename_suffix,
                 sync_after=sync_after,
+                website_only=website_only,
             )
             return _format_response(response)
         except Exception as e:
