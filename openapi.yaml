@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.731.0"
+  version: "1.731.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -2032,7 +2032,7 @@ components:
             properties:
               id:
                 type: string
-                enum: [pixels, server-side, first-party, consent, match-quality]
+                description: 'Stable check id, such as `pixels`, `server-side`, `first-party`, `consent`, `consent-timing` or `match-quality`. New checks can appear.'
               title: { type: string }
               status:
                 type: string
@@ -71022,17 +71022,18 @@ paths:
   /v1/inbox/comments/{postId}/{commentId}/like:
     post:
       x-resource-group: "engagement"
-      x-platforms: [facebook, twitter, bluesky, reddit, linkedin, instagram]
+      x-platforms: [facebook, twitter, bluesky, reddit, linkedin, instagram, tiktok]
       operationId: likeInboxComment
       summary: Like comment
       description: |
-        Like or upvote a comment on a post. Supported platforms: Facebook, X, Bluesky, Reddit, LinkedIn, and Instagram in limited release (see below).
+        Like or upvote a comment on a post. Supported platforms: Facebook, X, Bluesky, Reddit, LinkedIn, TikTok, and Instagram in limited release (see below).
 
         ### Platform notes
 
         - Bluesky: the cid (content identifier) is required in the request body.
         - LinkedIn: pass the composite comment URN returned by the comments endpoints as commentId. An optional reactionType picks the reaction (defaults to LIKE).
         - LinkedIn: accounts connected before the social-feed scopes were requested get a 403 with code `linkedin_reconnect_required`.
+        - TikTok: works only on accounts connected through the TikTok Business (Accounts API) connection. An account on the older developer-app connection gets a 400 with code `PLATFORM_LIMITATION`.
 
         ### Instagram (limited release)
 
@@ -71097,14 +71098,16 @@ paths:
           description: 'LinkedIn only: the account already holds a reaction on this target, either of a different type or one LinkedIn does not let this account read (code invalid_resource_state); remove it before creating another.'
     delete:
       x-resource-group: "engagement"
-      x-platforms: [facebook, twitter, bluesky, reddit, linkedin, instagram]
+      x-platforms: [facebook, twitter, bluesky, reddit, linkedin, instagram, tiktok]
       operationId: unlikeInboxComment
       summary: Unlike comment
       description: |
         Remove a like from a comment. Supported platforms: Facebook, X, Bluesky,
-        Reddit, LinkedIn, and Instagram in limited release. For Bluesky, the likeUri query
-        parameter is required. Instagram has the same limited release, Facebook Login,
-        `instagram_manage_engagement` and burst-limit constraints as liking.
+        Reddit, LinkedIn, TikTok, and Instagram in limited release.
+
+        - Bluesky: the likeUri query parameter is required.
+        - TikTok: works only on accounts connected through the TikTok Business (Accounts API) connection. An account on the older developer-app connection gets a 400 with code `PLATFORM_LIMITATION`.
+        - Instagram: the same limited release, Facebook Login, `instagram_manage_engagement` and burst-limit constraints as liking.
       tags: [Comments]
       security: [{ bearerAuth: [] }]
       parameters:

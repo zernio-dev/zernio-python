@@ -22922,23 +22922,22 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Like comment
 
-        Like or upvote a comment on a post. Supported platforms: Facebook, X, Bluesky, Reddit, LinkedIn, and Instagram in limited release (see below).
+        Like or upvote a comment on a post. Supported platforms: Facebook, X, Bluesky, Reddit, LinkedIn, TikTok, and Instagram in limited release (see below).
 
         ### Platform notes
 
         - Bluesky: the cid (content identifier) is required in the request body.
         - LinkedIn: pass the composite comment URN returned by the comments endpoints as commentId. An optional reactionType picks the reaction (defaults to LIKE).
         - LinkedIn: accounts connected before the social-feed scopes were requested get a 403 with code `linkedin_reconnect_required`.
+        - TikTok: works only on accounts connected through the TikTok Business (Accounts API) connection. An account on the older developer-app connection gets a 400 with code `PLATFORM_LIMITATION`.
 
         ### Instagram (limited release)
 
         Instagram is in LIMITED RELEASE and not generally available. The call needs `instagram_manage_engagement`, which Meta has so far granted this app only under Standard Access.
 
-        It works for app admins, developers and testers of our Meta app, and returns a 403 with code `PLATFORM_BETA_RESTRICTED` for every other account. That restriction lifts when Meta App Review grants Advanced Access; the constraints below apply once it does.
+        It works for app admins, developers and testers of our Meta app, and ...
 
-        Instagram ...
-
-        Platforms: facebook, twitter, bluesky, reddit, linkedin, instagram
+        Platforms: facebook, twitter, bluesky, reddit, linkedin, instagram, tiktok
 
         Args:
             post_id: (required)
@@ -22973,11 +22972,13 @@ def register_generated_tools(mcp, _get_client):
         """Unlike comment
 
         Remove a like from a comment. Supported platforms: Facebook, X, Bluesky,
-        Reddit, LinkedIn, and Instagram in limited release. For Bluesky, the likeUri query
-        parameter is required. Instagram has the same limited release, Facebook Login,
-        `instagram_manage_engagement` and burst-limit constraints as liking.
+        Reddit, LinkedIn, TikTok, and Instagram in limited release.
 
-        Platforms: facebook, twitter, bluesky, reddit, linkedin, instagram
+        - Bluesky: the likeUri query parameter is required.
+        - TikTok: works only on accounts connected through the TikTok Business (Accounts API) connection. An account on the older developer-app connection gets a 400 with code `PLATFORM_LIMITATION`.
+        - Instagram: the same limited release, Facebook Login, `instagram_manage_engagement` and burst-limit constraints as liking.
+
+        Platforms: facebook, twitter, bluesky, reddit, linkedin, instagram, tiktok
 
         Args:
             post_id: (required)
