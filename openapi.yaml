@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.719.0"
+  version: "1.720.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -10843,6 +10843,10 @@ components:
         mediaAudioType:
           type: string
           description: 'Instagram only: audio type of the media (MUSIC or ORIGINAL_SOUND). Absent when the platform did not report it.'
+        upcomingStartAt:
+          type: string
+          format: date-time
+          description: 'YouTube only. Start time of an upcoming Premiere or scheduled live stream, absent once it airs. Sent on post.external.created and on any event fired for another change; the airing itself does not fire an event.'
         source:
           type: string
           enum: [external]
