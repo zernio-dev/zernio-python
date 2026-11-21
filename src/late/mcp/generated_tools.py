@@ -2459,10 +2459,11 @@ def register_generated_tools(mcp, _get_client):
         sync_contacts: bool | None = None,
         log_messages: bool | None = None,
         log_delivery_status: bool | None = None,
+        sync_ad_leads: bool | None = None,
     ) -> str:
         """Update GoHighLevel account settings
 
-        Turn the conversion relay, the write-back to HighLevel contacts, forwarding to the profile's ad platforms, contact sync, conversation logging or delivery marks on or off for a connected HighLevel sub-account. Send at least one field; omitted fields keep their value. Settings survive reconnecting the same sub-account.
+        Turn the conversion relay, the write-back to HighLevel contacts, forwarding to the profile's ad platforms, contact sync, conversation logging, delivery marks or the ad lead sync on or off for a connected HighLevel sub-account. Send at least one field; omitted fields keep their value. Settings survive reconnecting the same sub-account.
 
         Platforms: gohighlevel
 
@@ -2473,7 +2474,8 @@ def register_generated_tools(mcp, _get_client):
             report_to_ads: Also forward relayed conversions to the profile's ad platform destinations. Off stores them only.
             sync_contacts: Match inbox contacts to HighLevel contacts (phone, then email) and create the ones that do not exist.
             log_messages: Log inbox messages from every channel on the matched HighLevel contact, one note per channel and UTC day.
-            log_delivery_status: Mark sent, delivered, read and failed on logged outgoing messages."""
+            log_delivery_status: Mark sent, delivered, read and failed on logged outgoing messages.
+            sync_ad_leads: Create or update a HighLevel contact for every lead from the profile's ad network lead forms (Meta, TikTok, LinkedIn, Google), tagged with the network, campaign and form."""
         client = _get_client()
         try:
             response = client.accounts.update_gohighlevel_settings(
@@ -2484,6 +2486,7 @@ def register_generated_tools(mcp, _get_client):
                 sync_contacts=sync_contacts,
                 log_messages=log_messages,
                 log_delivery_status=log_delivery_status,
+                sync_ad_leads=sync_ad_leads,
             )
             return _format_response(response)
         except Exception as e:

@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.728.0"
+  version: "1.729.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -18060,6 +18060,7 @@ components:
         - syncContacts
         - logMessages
         - logDeliveryStatus
+        - syncAdLeads
       properties:
         _id:
           type: string
@@ -18095,6 +18096,9 @@ components:
         logDeliveryStatus:
           type: boolean
           description: Logged outgoing messages show their delivery status (sent, delivered, read, failed) on their note line. Default true.
+        syncAdLeads:
+          type: boolean
+          description: Leads from the profile's ad network lead forms become HighLevel contacts, deduplicated by email, then phone. Default true.
     HubSpotSettings:
       type: object
       required:
@@ -60667,7 +60671,7 @@ paths:
       summary: Update GoHighLevel account settings
       description: >-
         Turn the conversion relay, the write-back to HighLevel contacts, forwarding to the profile's ad platforms,
-        contact sync, conversation logging or delivery marks on or off for a connected HighLevel sub-account. Send at least one field; omitted fields keep
+        contact sync, conversation logging, delivery marks or the ad lead sync on or off for a connected HighLevel sub-account. Send at least one field; omitted fields keep
         their value. Settings survive reconnecting the same sub-account.
       parameters:
         - name: accountId
@@ -60700,6 +60704,9 @@ paths:
                 logDeliveryStatus:
                   type: boolean
                   description: Mark sent, delivered, read and failed on logged outgoing messages.
+                syncAdLeads:
+                  type: boolean
+                  description: Create or update a HighLevel contact for every lead from the profile's ad network lead forms (Meta, TikTok, LinkedIn, Google), tagged with the network, campaign and form.
       responses:
         '200':
           description: Updated settings
