@@ -777,7 +777,7 @@ class AccountsResource:
         )
 
     def get_gohighlevel_settings(self, account_id: str) -> dict[str, Any]:
-        """Get GoHighLevel account settings"""
+        """Get HighLevel account settings"""
         return self._client._get(f"/v1/accounts/{account_id}/gohighlevel-settings")
 
     def update_gohighlevel_settings(
@@ -793,7 +793,7 @@ class AccountsResource:
         sync_ad_leads: bool | None = None,
         mirror_conversations: bool | None = None,
     ) -> dict[str, Any]:
-        """Update GoHighLevel account settings"""
+        """Update HighLevel account settings"""
         payload = self._build_body(
             {
                 "relayConversions": relay_conversions,
@@ -1584,7 +1584,7 @@ class AccountsResource:
         )
 
     async def aget_gohighlevel_settings(self, account_id: str) -> dict[str, Any]:
-        """Get GoHighLevel account settings (async)"""
+        """Get HighLevel account settings (async)"""
         return await self._client._aget(
             f"/v1/accounts/{account_id}/gohighlevel-settings"
         )
@@ -1602,7 +1602,7 @@ class AccountsResource:
         sync_ad_leads: bool | None = None,
         mirror_conversations: bool | None = None,
     ) -> dict[str, Any]:
-        """Update GoHighLevel account settings (async)"""
+        """Update HighLevel account settings (async)"""
         payload = self._build_body(
             {
                 "relayConversions": relay_conversions,

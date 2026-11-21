@@ -395,7 +395,7 @@ class ConnectResource:
     def get_gohighlevel_connect_url(
         self, profile_id: str, *, redirect_url: str | None = None
     ) -> dict[str, Any]:
-        """Get GoHighLevel OAuth connect URL"""
+        """Get HighLevel OAuth connect URL"""
         params = self._build_query(
             {
                 "profileId": profile_id,
@@ -2095,7 +2095,7 @@ class ConnectResource:
     async def aget_gohighlevel_connect_url(
         self, profile_id: str, *, redirect_url: str | None = None
     ) -> dict[str, Any]:
-        """Get GoHighLevel OAuth connect URL (async)"""
+        """Get HighLevel OAuth connect URL (async)"""
         params = self._build_query(
             {
                 "profileId": profile_id,

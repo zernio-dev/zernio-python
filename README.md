@@ -209,7 +209,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `accounts.get_account_posts()` | List posts published on the platform |
 | `accounts.get_bluesky_settings()` | Get Bluesky account settings |
 | `accounts.get_follower_stats()` | Get follower stats |
-| `accounts.get_gohighlevel_settings()` | Get GoHighLevel account settings |
+| `accounts.get_gohighlevel_settings()` | Get HighLevel account settings |
 | `accounts.get_google_business_review()` | Get a review |
 | `accounts.get_google_business_reviews()` | Get reviews |
 | `accounts.get_hub_spot_settings()` | Get HubSpot account settings |
@@ -221,7 +221,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `accounts.get_tik_tok_creator_info()` | Get TikTok creator info |
 | `accounts.update_account()` | Update account |
 | `accounts.update_bluesky_settings()` | Update Bluesky account settings |
-| `accounts.update_gohighlevel_settings()` | Update GoHighLevel account settings |
+| `accounts.update_gohighlevel_settings()` | Update HighLevel account settings |
 | `accounts.update_hub_spot_settings()` | Update HubSpot account settings |
 | `accounts.update_salesforce_settings()` | Update Salesforce account settings |
 | `accounts.update_slack_settings()` | Update Slack account settings |
@@ -396,7 +396,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `connect.get_email_connect_url()` | Get a hosted link to connect any mailbox |
 | `connect.get_facebook_pages()` | List Facebook pages |
 | `connect.get_gmb_locations()` | List Google Business Profile locations |
-| `connect.get_gohighlevel_connect_url()` | Get GoHighLevel OAuth connect URL |
+| `connect.get_gohighlevel_connect_url()` | Get HighLevel OAuth connect URL |
 | `connect.get_google_analytics_connect_url()` | Get Google Analytics OAuth connect URL |
 | `connect.get_google_search_console_connect_url()` | Get Google Search Console OAuth connect URL |
 | `connect.get_hub_spot_connect_url()` | Get HubSpot OAuth connect URL |
