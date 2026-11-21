@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.717.0"
+  version: "1.718.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -2713,6 +2713,10 @@ components:
           type: boolean
         mediaAudioType:
           type: string
+        upcomingStartAt:
+          type: string
+          format: date-time
+          description: 'YouTube only. Start time of an upcoming Premiere or scheduled live stream. Absent once it airs. While it is present, publishedAt is the upload time; after it airs, publishedAt is the time it actually started.'
       required:
         - content
         - thumbnailUrl
@@ -6599,7 +6603,7 @@ components:
         publishedAt:
           type: string
           format: date-time
-          description: When the post was published on the platform
+          description: When the post was published on the platform. For a YouTube Premiere or live stream it follows the actual start time once it airs.
         mediaType:
           type: string
           description: Media type (e.g. image, video, carousel)
@@ -6623,6 +6627,10 @@ components:
         mediaAudioType:
           type: string
           description: 'Instagram only: audio type of the media (MUSIC or ORIGINAL_SOUND). Absent when the platform did not report it.'
+        upcomingStartAt:
+          type: string
+          format: date-time
+          description: 'YouTube only. Start time of an upcoming Premiere or scheduled live stream. Absent once it airs. While it is present, publishedAt is the upload time; after it airs, publishedAt is the time it actually started.'
         isOwner:
           type: [boolean, "null"]
           description: 'Pinterest: true when the account created the Pin, false when it saved it from another user; keep true to import only its own Pins. Facebook: false for a collab post by another Page. Null when unknown and for other platforms.'
@@ -19210,6 +19218,10 @@ components:
         mediaAudioType:
           type: string
           description: 'Instagram only: audio type of the media (MUSIC or ORIGINAL_SOUND). Absent when the platform did not report it.'
+        upcomingStartAt:
+          type: string
+          format: date-time
+          description: 'YouTube only. Start time of an upcoming Premiere or scheduled live stream. Absent once it airs. While it is present, publishedAt is the upload time; after it airs, publishedAt is the time it actually started.'
     AnalyticsListResponse:
       type: object
       properties:
@@ -19275,6 +19287,10 @@ components:
               mediaAudioType:
                 type: string
                 description: 'Instagram only: audio type of the media (MUSIC or ORIGINAL_SOUND). Absent when the platform did not report it.'
+              upcomingStartAt:
+                type: string
+                format: date-time
+                description: 'YouTube only. Start time of an upcoming Premiere or scheduled live stream. Absent once it airs. While it is present, publishedAt is the upload time; after it airs, publishedAt is the time it actually started.'
         pagination:
           $ref: '#/components/schemas/Pagination'
         accounts:
