@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.730.0"
+  version: "1.731.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -840,6 +840,11 @@ tags:
   - name: Changelog
     description: |
       The API changelog (https://docs.zernio.com/changelog) as data: the entries the `api.changelog.published` webhook announces, newest first, for agents that automate against API changes and need to back-fill what they missed.
+  - name: Conversion Audit
+    description: |
+      The free Conversion Leak Report as data: scan any public URL for ad-platform conversion tracking and score how much conversion signal it leaks to iOS/ATT, ad-blockers and short cookie windows before the ad platforms see it.
+
+      Over REST the API key is optional; the MCP tools use your key.
   - name: Logs
     description: |
       Publishing logs for transparency and debugging. Each log includes the platform API endpoint, HTTP status code, request/response bodies, duration, and retry attempts. Logs are automatically deleted after 7 days.
@@ -1893,6 +1898,229 @@ components:
                   effective_account_limit: 2000
                   current_account_count: 2000
   schemas:
+    ConversionAuditAnswer:
+      type: object
+      required: [report, fixPrompt, publicReport]
+      properties:
+        report:
+          $ref: '#/components/schemas/ConversionAuditReport'
+        fixPrompt:
+          type: string
+          description: A prompt to paste into a coding agent. It lists the report's findings, then connecting Zernio, sending conversions server-side and verifying them.
+        publicReport:
+          description: The host's public report page on is-bleeding.com, or null when the host has no stored report.
+          oneOf:
+            - type: object
+              required: [url, scannedAt]
+              properties:
+                url:
+                  type: string
+                  format: uri
+                  description: 'The public page, https://is-bleeding.com/<host>.'
+                scannedAt:
+                  type: string
+                  format: date-time
+                  description: When the snapshot the page shows was taken.
+            - type: 'null'
+    ConversionAuditReport:
+      type: object
+      description: The scored conversion-tracking audit of one page.
+      required: [url, domain, score, grade, estimatedSignalLossPct, platforms, browserOnly, consentManager, activePlatformCount, visibility, siteSignals, summary]
+      properties:
+        url:
+          type: string
+          description: The normalized URL that was scanned.
+        domain:
+          type: string
+          description: The scanned host without `www.`.
+        score:
+          type: number
+          minimum: 0
+          maximum: 100
+          description: 'Conversion tracking score, 0-100. Higher means a more complete setup and less signal at risk.'
+        grade:
+          type: string
+          enum: [A, B, C, D, F]
+          description: Letter grade for the score.
+        scoreRange:
+          type: object
+          required: [low, high]
+          properties:
+            low: { type: number, description: 'The score with every check the scan could not verify at zero.' }
+            high: { type: number, description: 'The score with every check the scan could not verify at full credit.' }
+        estimatedSignalLossPct:
+          type: number
+          minimum: 0
+          maximum: 100
+          description: 'Average share of conversions at risk on the networks with no visible server-side path, 0-100.'
+        platforms:
+          type: array
+          description: One finding per ad platform the scan looked for.
+          items:
+            type: object
+            required: [key, name, browserPixel, serverSide, status, estimatedLossBrowserOnly, note]
+            properties:
+              key:
+                type: string
+                description: 'Stable platform key (meta, google, tiktok, ...).'
+              name:
+                type: string
+                description: Human-readable platform name.
+              browserPixel:
+                type: boolean
+                description: Whether a browser pixel for this platform was found.
+              serverSide:
+                type: boolean
+                description: True only when the page shows a server-side path for this platform.
+              status:
+                type: string
+                enum: [good, warn, missing]
+                description: '`good` = server-side, `warn` = browser-only (the leak), `missing` = not tracked.'
+              estimatedLossBrowserOnly:
+                type: number
+                description: 'Share of conversions typically lost when this platform runs browser-only, 0-1.'
+              note:
+                type: string
+                description: Short explanation of the finding.
+              ids:
+                type: array
+                items: { type: string }
+                description: Pixel or tag ids found for this platform.
+              events:
+                type: array
+                items: { type: string }
+                description: Standard events called in the page or its tag-manager containers.
+              fixSteps:
+                type: array
+                items: { type: string }
+                description: Steps to fix this platform's tracking.
+              fired:
+                type: string
+                enum: [before-consent, after-consent]
+                description: 'Rendered scans: `after-consent` when the pixel fired only once the scan accepted the cookie banner.'
+        browserOnly:
+          type: boolean
+          description: True when every active platform is tracked browser-only.
+        consentManager:
+          type: [string, "null"]
+          description: Consent manager found on the page, or null.
+        activePlatformCount:
+          type: integer
+          description: How many ad platforms the scan found any tracking for.
+        visibility:
+          type: string
+          enum: [full, limited, none]
+          description: '`full` = pixels were visible, `limited` = tags load dynamically so not all are visible, `none` = nothing found.'
+        siteSignals:
+          type: array
+          items: { type: string }
+          description: 'Site tech recognized (Shopify, WooCommerce, ...).'
+        scanMode:
+          type: string
+          enum: [static, rendered]
+          description: '`rendered` when a headless browser ran the page and its requests were checked, `static` for the page source only.'
+        limitations:
+          type: array
+          items: { type: string }
+          description: What this scan could not see.
+        checks:
+          type: array
+          description: The scored checks behind `score`.
+          items:
+            type: object
+            required: [id, title, status, weight, detail]
+            properties:
+              id:
+                type: string
+                enum: [pixels, server-side, first-party, consent, match-quality]
+              title: { type: string }
+              status:
+                type: string
+                enum: [pass, partial, fail, unknown, not-applicable]
+                description: '`unknown` = the scan cannot see it from outside; `not-applicable` checks are left out of the score.'
+              tier:
+                type: string
+                enum: [essential, recommended, bonus]
+                description: A `bonus` check can only add points, never cost them.
+              weight: { type: number }
+              detail: { type: string }
+              pointsToGain:
+                type: number
+                description: Points the score gains when this check alone is fixed.
+              verify:
+                type: object
+                required: [how, copy]
+                description: A way to confirm the finding yourself.
+                properties:
+                  how: { type: string }
+                  copy:
+                    type: string
+                    description: A copy-ready curl, DevTools filter or console line.
+        serverSide:
+          type: object
+          required: [status, signals, note]
+          properties:
+            status:
+              type: string
+              enum: [detected, likely, not-visible]
+            signals:
+              type: array
+              items:
+                type: object
+                required: [label, strength, evidence]
+                properties:
+                  label: { type: string }
+                  strength: { type: string, enum: [detected, likely] }
+                  evidence: { type: string }
+            note: { type: string }
+        consent:
+          type: object
+          required: [cmp, googleConsentMode, defaultsToDenied, evidence]
+          properties:
+            cmp:
+              type: [string, "null"]
+              description: Consent banner vendor, when recognized.
+            googleConsentMode:
+              type: string
+              enum: [v2, v1, not-seen]
+            defaultsToDenied:
+              type: [boolean, "null"]
+              description: True when the page denies ad storage until the visitor agrees.
+            evidence:
+              type: array
+              items: { type: string }
+        consentScan:
+          type: object
+          description: 'Rendered scans only: which pixels fire before and after the scan accepts the cookie banner.'
+          required: [accepted, firedBeforeConsent, firedAfterConsent]
+          properties:
+            accepted:
+              type: [string, "null"]
+              description: The banner the scan accepted, or null when no accept button was found.
+            firedBeforeConsent:
+              type: array
+              items: { type: string }
+            firedAfterConsent:
+              type: array
+              items: { type: string }
+        tagManagers:
+          type: array
+          items: { type: string }
+        otherNetworks:
+          type: array
+          description: Ad networks found that the score does not cover. `relaySupported` is true when Zernio can send them conversions.
+          items:
+            type: object
+            required: [name, relaySupported]
+            properties:
+              name: { type: string }
+              relaySupported: { type: boolean }
+        faviconUrl:
+          type: string
+          description: The site's icon. Absent when the site was unreachable.
+        summary:
+          type: string
+          description: One-paragraph summary of the audit.
     MetaAdsPlatformQueryBody:
       type: object
       properties:
@@ -18064,6 +18292,7 @@ components:
         - logMessages
         - logDeliveryStatus
         - syncAdLeads
+        - mirrorConversations
       properties:
         _id:
           type: string
@@ -18102,6 +18331,9 @@ components:
         syncAdLeads:
           type: boolean
           description: Leads from the profile's ad network lead forms become HighLevel contacts, deduplicated by email, then phone. Default true.
+        mirrorConversations:
+          type: boolean
+          description: Telegram, LINE, WeChat, iMessage and RCS messages go into the contact's Conversations thread under the Zernio channel (answerable from HighLevel) instead of a note. Default true.
     HubSpotSettings:
       type: object
       required:
@@ -60710,6 +60942,9 @@ paths:
                 syncAdLeads:
                   type: boolean
                   description: Create or update a HighLevel contact for every lead from the profile's ad network lead forms (Meta, TikTok, LinkedIn, Google), tagged with the network, campaign and form.
+                mirrorConversations:
+                  type: boolean
+                  description: Put Telegram, LINE, WeChat, iMessage and RCS messages into the contact's Conversations thread under the Zernio channel, so a HighLevel user reads and answers them there. Off logs them as notes.
       responses:
         '200':
           description: Updated settings
@@ -119100,6 +119335,108 @@ paths:
         "413": { description: 'The video is over the 200MB this endpoint prepares.' }
         "422": { description: 'The media could not be processed (for example a corrupt file).' }
         "429": { $ref: "#/components/responses/RateLimited" }
+
+  # ============================================
+  # Conversion Audit
+  # ============================================
+  /v1/conversion-audit:
+    get:
+      x-resource-group: "public"
+      operationId: auditConversionTracking
+      tags: [Conversion Audit]
+      summary: Audit a site's ad conversion tracking
+      security:
+        - {}
+        - bearerAuth: []
+      description: |
+        Scan any public URL for ad-platform conversion tracking, score how much conversion signal it leaks before the ad platforms see it, and get a fix prompt to hand to a coding agent.
+
+        The API key is optional. Without one, a caller's IP address gets 20 scans a minute. The Zernio MCP server always needs a key, because its sign-in covers the whole connection.
+
+        The scan fetches the page (SSRF-guarded) and its Google Tag Manager containers, and can render it in a headless browser. It finds every ad platform's browser pixel, checks for visible server-side (Conversions API) tracking, and estimates the signal lost to iOS/ATT, ad-blockers and short cookie windows.
+
+        The scan reads the page only and changes nothing on the site. Like the free page, it publishes the result as the host's public report.
+
+        Reading the result:
+
+        - `report.visibility: "limited"` means some pixels load through a tag manager or a store platform, so only part of the setup is visible from outside. It does not mean the tracking failed or is missing.
+        - `status: "warn"` (browser-only) is the leak: the platform is tracked in the browser but not server-side.
+        - `status: "good"` (server-side) means conversions reach the platform server-side, which recovers most of that signal.
+        - `fixPrompt` is the same fix prompt the Conversion Leak Report page shows: this scan's findings, then the steps to send conversions server-side with `POST /v1/events` and to verify them.
+        - `publicReport` links the host's public page on is-bleeding.com. A homepage scan that could read the site's pixels becomes that page's snapshot, the same as a scan on is-bleeding.com. Any other scan links the stored snapshot, taken at `scannedAt`, or returns null when the host has none.
+
+        Without a key, each IP address also shares one hourly ceiling with every other keyless caller. With a key, a user gets 60 scans a minute.
+      parameters:
+        - name: url
+          in: query
+          required: true
+          schema:
+            type: string
+            minLength: 3
+            maxLength: 2048
+          description: The website address to audit. A bare domain is accepted and normalized to https.
+          example: example.com
+      responses:
+        '200':
+          description: The scored audit and its fix prompt
+          content:
+            application/json:
+              schema:
+                type: object
+                $ref: '#/components/schemas/ConversionAuditAnswer'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+
+  /v1/conversion-audit/latest:
+    get:
+      x-resource-group: "public"
+      operationId: getLatestConversionAudit
+      tags: [Conversion Audit]
+      summary: Get a host's latest stored conversion audit
+      security:
+        - {}
+        - bearerAuth: []
+      description: |
+        Read the latest stored Conversion Leak Report for a host without running a new scan. Each homepage scan on is-bleeding.com that could read the site's pixels replaces that host's stored report. Scans made with `auditConversionTracking` are stored the same way.
+
+        The API key is optional. Without one, a caller's IP address gets 60 requests a minute. The Zernio MCP server always needs a key.
+
+        Returns `404` when the host has no stored report. Run `auditConversionTracking` to scan it now.
+      parameters:
+        - name: host
+          in: query
+          required: true
+          schema:
+            type: string
+            maxLength: 2048
+          description: The host to look up. A full URL is reduced to its host; `www.` and letter case are ignored.
+          example: example.com
+      responses:
+        '200':
+          description: The stored report, its fix prompt and its public page
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ConversionAuditAnswer'
+                  - type: object
+                    required: [host]
+                    properties:
+                      host:
+                        type: string
+                        description: The normalized host the report is stored under.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimited'
 
   # ============================================
   # Changelog

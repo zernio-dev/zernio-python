@@ -31,6 +31,7 @@ from .connect import ConnectResource
 from .connected_apps import ConnectedAppsResource
 from .contacts import ContactsResource
 from .content_retention import ContentRetentionResource
+from .conversion_audit import ConversionAuditResource
 from .conversions import ConversionsResource
 from .creator_campaigns import CreatorCampaignsResource
 from .creator_portal import CreatorPortalResource
@@ -117,6 +118,7 @@ __all__ = [
     "ConnectedAppsResource",
     "ContactsResource",
     "ContentRetentionResource",
+    "ConversionAuditResource",
     "ConversionsResource",
     "CreatorCampaignsResource",
     "CreatorPortalResource",

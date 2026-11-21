@@ -791,6 +791,7 @@ class AccountsResource:
         log_messages: bool | None = None,
         log_delivery_status: bool | None = None,
         sync_ad_leads: bool | None = None,
+        mirror_conversations: bool | None = None,
     ) -> dict[str, Any]:
         """Update GoHighLevel account settings"""
         payload = self._build_body(
@@ -802,6 +803,7 @@ class AccountsResource:
                 "logMessages": log_messages,
                 "logDeliveryStatus": log_delivery_status,
                 "syncAdLeads": sync_ad_leads,
+                "mirrorConversations": mirror_conversations,
             }
         )
         return self._client._patch(
@@ -1598,6 +1600,7 @@ class AccountsResource:
         log_messages: bool | None = None,
         log_delivery_status: bool | None = None,
         sync_ad_leads: bool | None = None,
+        mirror_conversations: bool | None = None,
     ) -> dict[str, Any]:
         """Update GoHighLevel account settings (async)"""
         payload = self._build_body(
@@ -1609,6 +1612,7 @@ class AccountsResource:
                 "logMessages": log_messages,
                 "logDeliveryStatus": log_delivery_status,
                 "syncAdLeads": sync_ad_leads,
+                "mirrorConversations": mirror_conversations,
             }
         )
         return await self._client._apatch(

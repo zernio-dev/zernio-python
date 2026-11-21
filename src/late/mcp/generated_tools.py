@@ -2460,6 +2460,7 @@ def register_generated_tools(mcp, _get_client):
         log_messages: bool | None = None,
         log_delivery_status: bool | None = None,
         sync_ad_leads: bool | None = None,
+        mirror_conversations: bool | None = None,
     ) -> str:
         """Update GoHighLevel account settings
 
@@ -2475,7 +2476,8 @@ def register_generated_tools(mcp, _get_client):
             sync_contacts: Match inbox contacts to HighLevel contacts (phone, then email) and create the ones that do not exist.
             log_messages: Log inbox messages from every channel on the matched HighLevel contact, one note per channel and UTC day.
             log_delivery_status: Mark sent, delivered, read and failed on logged outgoing messages.
-            sync_ad_leads: Create or update a HighLevel contact for every lead from the profile's ad network lead forms (Meta, TikTok, LinkedIn, Google), tagged with the network, campaign and form."""
+            sync_ad_leads: Create or update a HighLevel contact for every lead from the profile's ad network lead forms (Meta, TikTok, LinkedIn, Google), tagged with the network, campaign and form.
+            mirror_conversations: Put Telegram, LINE, WeChat, iMessage and RCS messages into the contact's Conversations thread under the Zernio channel, so a HighLevel user reads and answers them there. Off logs them as notes."""
         client = _get_client()
         try:
             response = client.accounts.update_gohighlevel_settings(
@@ -2487,6 +2489,7 @@ def register_generated_tools(mcp, _get_client):
                 log_messages=log_messages,
                 log_delivery_status=log_delivery_status,
                 sync_ad_leads=sync_ad_leads,
+                mirror_conversations=mirror_conversations,
             )
             return _format_response(response)
         except Exception as e:
@@ -30962,6 +30965,66 @@ def register_generated_tools(mcp, _get_client):
         client = _get_client()
         try:
             response = client.content_retention.update_content_retention(mode=mode)
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    # CONVERSION_AUDIT
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Audit a site's ad conversion tracking",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def conversion_audit_audit_conversion_tracking(url: str) -> str:
+        """Audit a site's ad conversion tracking
+
+        Scan any public URL for ad-platform conversion tracking, score how much conversion signal it leaks before the ad platforms see it, and get a fix prompt to hand to a coding agent.
+
+        The API key is optional. Without one, a caller's IP address gets 20 scans a minute. The Zernio MCP server always needs a key, because its sign-in covers the whole connection.
+
+        The scan fetches the page (SSRF-guarded) and its Google Tag Manager containers, and can render it in a headless browser. It finds every ad platform's browser pixel, checks for visible server-side (Conversions API) tracking, and estimates the signal lost to iOS/ATT, ad-blockers and short cookie windows.
+
+        The scan reads the page only and changes nothing on the site. Like the free page, it publishes the result as the host's public report.
+
+        Reading the result:
+
+        - `report.visibility: \"limited\"` means some pixels load through a tag manager or a store platform, so only part of the setup is visible from outside. It does not mean the tracking ...
+
+        Args:
+            url: The website address to audit. A bare domain is accepted and normalized to https. (required)"""
+        client = _get_client()
+        try:
+            response = client.conversion_audit.audit_conversion_tracking(url=url)
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get a host's latest stored conversion audit",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def conversion_audit_get_latest_conversion_audit(host: str) -> str:
+        """Get a host's latest stored conversion audit
+
+        Read the latest stored Conversion Leak Report for a host without running a new scan. Each homepage scan on is-bleeding.com that could read the site's pixels replaces that host's stored report. Scans made with `auditConversionTracking` are stored the same way.
+
+        The API key is optional. Without one, a caller's IP address gets 60 requests a minute. The Zernio MCP server always needs a key.
+
+        Returns `404` when the host has no stored report. Run `auditConversionTracking` to scan it now.
+
+        Args:
+            host: The host to look up. A full URL is reduced to its host; `www.` and letter case are ignored. (required)"""
+        client = _get_client()
+        try:
+            response = client.conversion_audit.get_latest_conversion_audit(host=host)
             return _format_response(response)
         except Exception as e:
             raise ToolError(f"Error: {e}") from e

@@ -1064,6 +1064,12 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `content_retention.get_content_retention()` | Get content retention mode |
 | `content_retention.update_content_retention()` | Turn zero content retention on or off |
 
+### Conversion Audit
+| Method | Description |
+|--------|-------------|
+| `conversion_audit.get_latest_conversion_audit()` | Get a host's latest stored conversion audit |
+| `conversion_audit.audit_conversion_tracking()` | Audit a site's ad conversion tracking |
+
 ### Conversions
 | Method | Description |
 |--------|-------------|
