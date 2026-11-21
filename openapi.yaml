@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.724.0"
+  version: "1.725.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -86273,6 +86273,8 @@ paths:
         instead of positive keywords.
       security:
         - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
       requestBody:
         required: true
         content:
@@ -86334,6 +86336,7 @@ paths:
       security:
         - bearerAuth: []
       parameters:
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
         - { name: keywordId, in: path, required: true, schema: { type: string }, description: 'Zernio keyword ID (`id`), or Google''s native `{adSetId}~{platformCriterionId}` (the tail of `resourceName`, e.g. 1234567890~987654321). A bare criterion id is rejected because it is only unique within its ad group.' }
       requestBody:
         required: true
@@ -86374,6 +86377,7 @@ paths:
       security:
         - bearerAuth: []
       parameters:
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
         - { name: keywordId, in: path, required: true, schema: { type: string }, description: 'Zernio keyword ID (`id`), or Google''s native `{adSetId}~{platformCriterionId}` (the tail of `resourceName`, e.g. 1234567890~987654321). A bare criterion id is rejected because it is only unique within its ad group.' }
       responses:
         '403': { $ref: '#/components/responses/AdAccountNotSelected' }
@@ -89406,6 +89410,7 @@ paths:
       security:
         - bearerAuth: []
       parameters:
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
         - { name: campaignId, in: path, required: true, schema: { type: string }, description: Platform campaign ID }
       requestBody:
         required: true
@@ -89418,6 +89423,7 @@ paths:
                 status: { type: string, enum: [active, paused] }
                 platform: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit, microsoft] }
       responses:
+        '409': { $ref: '#/components/responses/IdempotencyKeyInFlight' }
         '200':
           description: Campaign status updated
           content:
@@ -89808,6 +89814,7 @@ paths:
       security:
         - bearerAuth: []
       parameters:
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
         - { name: campaignId, in: path, required: true, schema: { type: string }, description: Platform campaign ID }
       requestBody:
         required: true
@@ -90092,6 +90099,7 @@ paths:
       security:
         - bearerAuth: []
       parameters:
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
         - { name: campaignId, in: path, required: true, schema: { type: string }, description: Platform campaign ID }
       requestBody:
         required: true
@@ -90107,6 +90115,7 @@ paths:
                   maxItems: 10000
                   items: { $ref: '#/components/schemas/KeywordEntry' }
       responses:
+        '409': { $ref: '#/components/responses/IdempotencyKeyInFlight' }
         '200':
           description: Campaign-level negative keywords replaced
           content:
@@ -90149,6 +90158,8 @@ paths:
         `updated` / `skipped` count campaigns.
       security:
         - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
       requestBody:
         required: true
         content:
@@ -90173,6 +90184,7 @@ paths:
                 - { platformCampaignId: '23456789012', platform: google }
                 - { platformCampaignId: '120210000000000000', platform: facebook }
       responses:
+        '409': { $ref: '#/components/responses/IdempotencyKeyInFlight' }
         '200':
           description: Per-campaign results
           content:
@@ -91255,6 +91267,7 @@ paths:
       security:
         - bearerAuth: []
       parameters:
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
         - { name: adSetId, in: path, required: true, schema: { type: string }, description: Platform ad set ID }
       requestBody:
         required: true
@@ -91657,6 +91670,7 @@ paths:
       security:
         - bearerAuth: []
       parameters:
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
         - { name: adSetId, in: path, required: true, schema: { type: string }, description: Platform ad set ID }
       requestBody:
         required: true
@@ -92128,6 +92142,7 @@ paths:
       security:
         - bearerAuth: []
       parameters:
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
         - { name: adId, in: path, required: true, schema: { type: string } }
       requestBody:
         required: true
@@ -92401,6 +92416,7 @@ paths:
                     caption: { type: string, minLength: 1, description: "Meta only. The display link shown on link (image) ads, Meta link_data.caption. Returns 422 on video creatives and on asset feeds without a link." }
                 name: { type: string, maxLength: 255, description: "Rename the ad. Now propagated to Meta (POST /{ad-id}); non-Meta platforms return 501." }
       responses:
+        '409': { $ref: '#/components/responses/IdempotencyKeyInFlight' }
         '200':
           description: Ad updated
           content:
@@ -92561,6 +92577,7 @@ paths:
       security:
         - bearerAuth: []
       parameters:
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
         - { name: adId, in: path, required: true, schema: { type: string }, description: "Zernio `_id` (hex), Meta `platformAdId` (numeric), or one of the creative's effective story/media IDs." }
       requestBody:
         required: true
@@ -92572,6 +92589,7 @@ paths:
               properties:
                 status: { type: string, enum: [active, paused] }
       responses:
+        '409': { $ref: '#/components/responses/IdempotencyKeyInFlight' }
         '200':
           description: Ad status updated (or skipped when no change was needed)
           content:
@@ -97205,6 +97223,8 @@ paths:
         Creates one Google Ads shared negative keyword list with optional initial keywords in a single atomic mutation. Daily quota is reserved for every mutate item, so large batches may return 429 before any change. This operation is not idempotent. The list is not attached to any campaign.
       security:
         - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
       requestBody:
         required: true
         content:
@@ -97457,6 +97477,7 @@ paths:
       security:
         - bearerAuth: []
       parameters:
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
         - name: "listId"
           in: "path"
           required: true
@@ -97565,6 +97586,7 @@ paths:
       security:
         - bearerAuth: []
       parameters:
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
         - name: "listId"
           in: "path"
           required: true
@@ -97674,6 +97696,7 @@ paths:
       security:
         - bearerAuth: []
       parameters:
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
         - name: "listId"
           in: "path"
           required: true
@@ -97887,6 +97910,7 @@ paths:
       security:
         - bearerAuth: []
       parameters:
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
         - name: "campaignId"
           in: "path"
           required: true

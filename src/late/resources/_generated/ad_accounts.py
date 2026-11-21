@@ -666,6 +666,7 @@ class AdAccountsResource:
         account_id: str,
         name: str,
         *,
+        idempotency_key: str | None = None,
         ad_account_id: str | None = None,
         customer_id: str | None = None,
         platform: str | None = None,
@@ -682,8 +683,11 @@ class AdAccountsResource:
                 "keywords": keywords,
             }
         )
+        headers: dict[str, str] = {}
+        if idempotency_key is not None:
+            headers["Idempotency-Key"] = idempotency_key
         return self._client._post(
-            "/v1/ads/accounts/negative-keyword-lists", data=payload
+            "/v1/ads/accounts/negative-keyword-lists", data=payload, headers=headers
         )
 
     def get_ad_negative_keyword_list(
@@ -714,6 +718,7 @@ class AdAccountsResource:
         account_id: str,
         name: str,
         *,
+        idempotency_key: str | None = None,
         ad_account_id: str | None = None,
         customer_id: str | None = None,
         platform: str | None = None,
@@ -737,6 +742,7 @@ class AdAccountsResource:
         list_id: str,
         account_id: str,
         *,
+        idempotency_key: str | None = None,
         ad_account_id: str | None = None,
         customer_id: str | None = None,
         platform: str | None = None,
@@ -760,6 +766,7 @@ class AdAccountsResource:
         account_id: str,
         keywords: list[Any],
         *,
+        idempotency_key: str | None = None,
         ad_account_id: str | None = None,
         customer_id: str | None = None,
         platform: str | None = None,
@@ -1967,6 +1974,7 @@ class AdAccountsResource:
         account_id: str,
         name: str,
         *,
+        idempotency_key: str | None = None,
         ad_account_id: str | None = None,
         customer_id: str | None = None,
         platform: str | None = None,
@@ -1983,8 +1991,11 @@ class AdAccountsResource:
                 "keywords": keywords,
             }
         )
+        headers: dict[str, str] = {}
+        if idempotency_key is not None:
+            headers["Idempotency-Key"] = idempotency_key
         return await self._client._apost(
-            "/v1/ads/accounts/negative-keyword-lists", data=payload
+            "/v1/ads/accounts/negative-keyword-lists", data=payload, headers=headers
         )
 
     async def aget_ad_negative_keyword_list(
@@ -2015,6 +2026,7 @@ class AdAccountsResource:
         account_id: str,
         name: str,
         *,
+        idempotency_key: str | None = None,
         ad_account_id: str | None = None,
         customer_id: str | None = None,
         platform: str | None = None,
@@ -2038,6 +2050,7 @@ class AdAccountsResource:
         list_id: str,
         account_id: str,
         *,
+        idempotency_key: str | None = None,
         ad_account_id: str | None = None,
         customer_id: str | None = None,
         platform: str | None = None,
@@ -2061,6 +2074,7 @@ class AdAccountsResource:
         account_id: str,
         keywords: list[Any],
         *,
+        idempotency_key: str | None = None,
         ad_account_id: str | None = None,
         customer_id: str | None = None,
         platform: str | None = None,
