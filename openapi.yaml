@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.739.1"
+  version: "1.740.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -21420,11 +21420,11 @@ components:
         - `goal: lead_generation` (LEAD_GENERATION): `pageId` is auto-filled from the connected Page when omitted.
         - Other Meta goals (engagement, traffic, awareness, video_views) ignore this field. The remaining `promotedObject.*` fields are Meta-only.
 
-        **TikTok**: used by `goal: conversions` and the Smart+ goals (`smartPlus: true`).
+        **TikTok**: used by `goal: conversions`, `goal: app_promotion` and the Smart+ goals (`smartPlus: true`).
 
         - `pixelId` maps to the ad group's `pixel_id`. Required: a website-conversion ad group without a pixel is rejected with `40002: Please select a pixel`.
         - `customEventType` maps to the ad group's `optimization_event`. Optional on regular conversions, required on Smart+. See the `customEventType` field for valid codes.
-        - `applicationId` (Smart+ `goal: app_promotion` only) maps to `app_id`: an app registered on the TikTok Ads account (Assets → Events → App Events). Install optimization needs the app's MMP tracking configured.
+        - `applicationId` is required by `goal: app_promotion` (regular and Smart+) and maps to the ad group's `app_id`: an app registered on the TikTok Ads account (Assets → Events → App Events). The ad group optimizes for installs, which needs the app's MMP tracking configured. `linkUrl` is optional for this goal and `objectStoreUrl` is Meta-only.
 
         **OpenAI (ChatGPT) Ads**: `goal: conversions` only, on POST /v1/ads/create and POST /v1/ads/campaigns. `customEventType` picks the conversion event (sent as the campaign's `conversion_event_setting_ids`); any other `promotedObject` field returns 400.
 
