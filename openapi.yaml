@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.744.0"
+  version: "1.745.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -25669,7 +25669,7 @@ components:
                 alart: { type: string, description: "Axon (AppLovin) attribution token (the `alart` URL param, `_axart` cookie). Sent to Axon as `user_data.alart`, not hashed." }
                 axwrt: { type: string, description: "Axon Pixel browser id (the `_axwrt` cookie). Sent to Axon as `user_data.axwrt`, not hashed." }
                 twclid: { type: string, description: "X click ID (the `twclid` URL param X adds to ad clicks). Sent to X as a `twclid` identifier, not hashed." }
-                msclkid: { type: string, description: "Microsoft Advertising click ID (the `msclkid` URL param Microsoft adds to ad clicks). Sent to Microsoft as `MicrosoftClickId`, not hashed." }
+                msclkid: { type: string, description: "Microsoft Advertising click ID (the `msclkid` URL param Microsoft adds to ad clicks). Sent to Microsoft as `MicrosoftClickId` (offline goals) or `userData.msclkid` (UET tags), not hashed." }
                 sccid: { type: string, description: "Snapchat click ID (the `ScCid` URL param Snap adds to ad clicks). Sent to Snapchat as `sc_click_id`, not hashed." }
                 scid: { type: string, description: "Snap Pixel browser id (the `_scid` cookie). Sent to Snapchat as `sc_cookie1`, not hashed." }
         items:
@@ -107812,7 +107812,7 @@ paths:
         - OpenAI Ads (`openaiads`) via its Conversions API (a separate host, `bzr.openai.com`)
         - Pinterest (`pinterestads`) via `POST /v5/ad_accounts/{id}/events`
         - Reddit (`redditads`) via the Reddit Conversions API (`POST /api/v3/pixels/{pixelId}/conversion_events`)
-        - Microsoft Advertising (`microsoftads`) via offline conversion uploads (`ApplyOfflineConversions`)
+        - Microsoft Advertising (`microsoftads`) via offline conversion uploads (`ApplyOfflineConversions`) or the UET Conversions API (`POST https://capi.uet.microsoft.com/v1/{tagId}/events`)
         - X Ads (`xads`) via the X Conversion API (`POST /12/measurement/conversions/{pixelId}`)
         - Snapchat (`snapchatads`) via the Snapchat Conversions API (`POST https://tr.snapchat.com/v3/{pixelId}/events`)
 
@@ -107825,7 +107825,9 @@ paths:
         - OpenAI Ads: pixel wire id (numeric `pixel_id`, distinct from the internal pixel id), as returned by `GET /v1/ads/conversions/destinations`
         - Pinterest: numeric ad account id, e.g. `549755885175` (Pinterest attributes to the ad account, not to a tag)
         - Reddit: pixel id, e.g. `a2_abc123`, as returned by `GET /v1/ads/conversions/destinations` (any other shape returns 400)
-        - Microsoft Advertising: offline conversion goal, e.g. `accounts/123456789/conversionGoals/987654`. Each event needs `clickIds.msclkid`, an `email` or a `phone`; the goal decides the event type.
+        - Microsoft Advertising offline conversion goal, e.g. `accounts/123456789/conversionGoals/987654`. Each event needs `clickIds.msclkid`, an `email` or a `phone`; the goal decides the event type.
+        - Microsoft Advertising UET tag, e.g. `accounts/123456789/uetTags/26012345`. Each event needs `clickIds.msclkid`, an `email` or a `phone`. `eventName` is the event action its goals match (a `PageView` with `sourceUrl` is a page load) and `eventId` dedups with the browser tag.
+        - Microsoft has no test mode: with `testCode`, UET events are sent with ad storage denied, which Microsoft excludes from conversion attribution and retargeting.
         - X Ads: X Pixel event id, e.g. `tw-rbhhj-rcfms`. Each event needs `clickIds.twclid`, an `email`, a `phone`, or `ipAddress` plus `userAgent`; the event decides the type and `eventId` is sent as `conversion_id`.
         - Snapchat: the connection's Snap Pixel ID, e.g. `1a2b3c4d-5e6f-4a8b-9c0d-1e2f3a4b5c6d`. Each event needs an `email`, a `phone`, or `ipAddress` plus `userAgent`; website events also need `sourceUrl`. With `testCode`, events go to Snap's validate endpoint and are not recorded.
 
@@ -110508,7 +110510,8 @@ paths:
                             conversion action resource name. LinkedIn:
                             numeric conversion rule ID. OpenAI Ads: pixel wire
                             id. Reddit: pixel id (`a2_...`). Microsoft
-                            Advertising: `accounts/{id}/conversionGoals/{id}`.
+                            Advertising: `accounts/{id}/conversionGoals/{id}`
+                            or `accounts/{id}/uetTags/{id}`.
                             X Ads: pixel event id (`tw-...`). Snapchat:
                             Snap Pixel ID (a UUID).
                         name: { type: string }
@@ -111249,7 +111252,8 @@ paths:
                             conversion action resource name. LinkedIn:
                             numeric conversion rule ID. OpenAI Ads: pixel wire
                             id. Reddit: pixel id (`a2_...`). Microsoft
-                            Advertising: `accounts/{id}/conversionGoals/{id}`.
+                            Advertising: `accounts/{id}/conversionGoals/{id}`
+                            or `accounts/{id}/uetTags/{id}`.
                             X Ads: pixel event id (`tw-...`). Snapchat:
                             Snap Pixel ID (a UUID).
                         name: { type: string }
