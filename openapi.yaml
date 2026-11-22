@@ -20930,6 +20930,7 @@ components:
             - Google: the account's tracked conversions.
             - X and LinkedIn: their reported website/lead conversions (added 2026-07).
             - Reddit: key conversions (`key_conversion_total_count`, added 2026-10-23; older days read 0).
+            - OpenAI: goal conversions (`conversions`, 30-day click and 1-day view attribution, added 2026-11-22; older days read 0 until re-synced).
 
             Meta uses the optimization goal's result: LEAD_GENERATION and QUALITY_LEAD = leads, CONVERSATIONS = messaging conversations started, APP_INSTALLS = installs, LANDING_PAGE_VIEWS = landing page views, LINK_CLICKS = link clicks, THRUPLAY = ThruPlays. REACH, IMPRESSIONS, POST_ENGAGEMENT and PAGE_LIKES report 0.
 
@@ -20990,6 +20991,7 @@ components:
             - Pinterest: checkout value.
             - LinkedIn: `conversionValueInLocalCurrency`, the advertiser-defined value of every conversion (days synced before 2026-10-23 report 0).
             - Reddit: `conversion_purchase_total_value` (same history note).
+            - OpenAI: `order_created_attributed_sales`, the value of attributed `order_created` events (days synced before 2026-11-22 report 0).
             - Other platforms report 0.
         roas:
           type: number
