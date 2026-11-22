@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.761.0"
+  version: "1.762.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -2152,8 +2152,8 @@ components:
                 description: 'A third-party server-side tool installed on the site that may already send this platform''s events (Elevar, Littledata, Stape), when its status is `likely`. Which platforms the tool feeds is not visible from the page.'
               status:
                 type: string
-                enum: [good, warn, missing, not-firing]
-                description: '`good` = server-side, `warn` = browser-only (the leak), `missing` = not tracked, `not-firing` = the tag is installed but sent nothing during a full visit.'
+                enum: [good, warn, missing, not-firing, configured]
+                description: '`good`: server-side. `warn`: browser-only (the leak). `missing`: not tracked. `not-firing`: installed but sent nothing during a full visit. `configured`: only in a Google Tag Manager container and not seen firing on a visit where silence proves nothing, so not counted as tracked.'
               estimatedLossBrowserOnly:
                 type: number
                 description: 'Share of conversions typically lost when this platform runs browser-only, 0-1.'
@@ -2287,6 +2287,15 @@ components:
         otherNetworks:
           type: array
           description: Ad networks found that the score does not cover. `relaySupported` is true when Zernio can send them conversions.
+          items:
+            type: object
+            required: [name, relaySupported]
+            properties:
+              name: { type: string }
+              relaySupported: { type: boolean }
+        otherNetworksConfigured:
+          type: array
+          description: 'Rendered scans: unscored ad networks found only in a Google Tag Manager container that the visit never saw load or send. Not counted in `otherNetworks`.'
           items:
             type: object
             required: [name, relaySupported]
