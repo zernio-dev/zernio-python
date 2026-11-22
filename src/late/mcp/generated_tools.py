@@ -17489,6 +17489,7 @@ def register_generated_tools(mcp, _get_client):
     def automations_list_automations(
         account_id: str | None = None,
         ad_account_id: str | None = None,
+        q: str | None = None,
         kind: str | None = None,
         limit: int = 50,
         cursor: str | None = None,
@@ -17506,9 +17507,10 @@ def register_generated_tools(mcp, _get_client):
             Args:
                 account_id: Only automations on this account: the ads connection of an ad rule, one of the `accountIds` of an event or scheduled automation, or the account a sequence, comment to DM or flow runs on.
                 ad_account_id: Only ad rules checking this platform ad account.
+                q: Only automations whose name contains this text, ignoring case. `%` and `_` match themselves.
                 kind: Only these kinds, comma separated: `ad_rule`, `event`, `scheduled`, `sequence`, `comment`, `workflow`.
                 limit
-                cursor: `nextCursor` from the previous page, sent back unchanged with the same `kind`, `accountId` and `adAccountId`.
+                cursor: `nextCursor` from the previous page, sent back unchanged with the same `q`, `kind`, `accountId` and `adAccountId`.
 
         Opaque: it holds the creation time and id of the page's last automation, and the next page is every kind's automations strictly older than it, so an automation created meanwhile never shifts or repeats a page."""
         client = _get_client()
@@ -17516,6 +17518,7 @@ def register_generated_tools(mcp, _get_client):
             response = client.automations.list_automations(
                 account_id=account_id,
                 ad_account_id=ad_account_id,
+                q=q,
                 kind=kind,
                 limit=limit,
                 cursor=cursor,

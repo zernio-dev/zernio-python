@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.758.0"
+  version: "1.760.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -88140,6 +88140,10 @@ paths:
           in: query
           schema: { type: string }
           description: Only ad rules checking this platform ad account.
+        - name: q
+          in: query
+          schema: { type: string, minLength: 2, maxLength: 100, example: welcome }
+          description: 'Only automations whose name contains this text, ignoring case. `%` and `_` match themselves.'
         - name: kind
           in: query
           schema: { type: string, example: 'ad_rule,event' }
@@ -88151,7 +88155,7 @@ paths:
           in: query
           schema: { type: string }
           description: |
-            `nextCursor` from the previous page, sent back unchanged with the same `kind`, `accountId` and `adAccountId`.
+            `nextCursor` from the previous page, sent back unchanged with the same `q`, `kind`, `accountId` and `adAccountId`.
 
             Opaque: it holds the creation time and id of the page's last automation, and the next page is every kind's automations strictly older than it, so an automation created meanwhile never shifts or repeats a page.
       responses:
