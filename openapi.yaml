@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.764.0"
+  version: "1.765.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -108695,7 +108695,7 @@ paths:
 
         ### TikTok notes
 
-        This path sends OFFLINE conversions (in-store / CRM / call-center), not web-pixel events. Each event must carry an email or phone (TikTok requires at least one).
+        Two kinds of destination. A TikTok pixel (`destinationId` `pixel:<pixelCode>`, as listed by the destinations endpoint) takes website events through the Events API and honours `testCode`. An offline event set (its numeric id) takes in-store, CRM and call-center conversions; each of those events must carry an email or phone.
 
         The connected TikTok ads account must have granted the Offline Events permission; older grants must reconnect.
 
@@ -108720,6 +108720,8 @@ paths:
         - LinkedIn: 5000, all-or-nothing per chunk.
         - OpenAI Ads: 1000 per request. Larger submissions are split into 1000-event chunks, each all-or-nothing (a malformed event fails every event in that chunk, not the whole request).
         - Reddit: works the same way as OpenAI Ads, in chunks of 1000.
+        - TikTok: 1000. Microsoft: its offline conversion cap per request. X: 500. Other destinations are sent in their platform's own batch size or one event at a time.
+        - An event a platform would refuse (too old, no usable identifier) is listed in `failures` and the rest of its chunk is still sent, except on Google Ads and OpenAI Ads.
 
         ### Dedup
 
@@ -108811,7 +108813,7 @@ paths:
               schema:
                 type: object
                 properties:
-                  platform: { type: string, enum: [metaads, googleads, linkedinads, tiktokads, openaiads, pinterestads, redditads] }
+                  platform: { type: string, enum: [metaads, googleads, linkedinads, tiktokads, openaiads, pinterestads, redditads, applovinads, microsoftads, xads, snapchatads, taboolaads, googleanalytics, klaviyo, attentive, impact, awin, campaignmanager360, tradedeskads, amazonads] }
                   eventsReceived: { type: integer, description: Events accepted by the platform. }
                   eventsFailed: { type: integer, description: Events rejected (see failures). }
                   eventsDropped: { type: integer, description: 'Events not sent because the visitor did not consent (see `consent`).' }
@@ -109707,7 +109709,7 @@ paths:
                       properties:
                         accountId: { type: string }
                         destinationId: { type: string }
-                        platform: { type: string, enum: [metaads, googleads, linkedinads, tiktokads, openaiads, pinterestads, redditads] }
+                        platform: { type: string, enum: [metaads, googleads, linkedinads, tiktokads, openaiads, pinterestads, redditads, applovinads, microsoftads, xads, snapchatads, taboolaads, googleanalytics, klaviyo, attentive, impact, awin, campaignmanager360, tradedeskads, amazonads] }
                         eventsSent: { type: integer, description: Events the platform accepted. }
                         eventsFailed: { type: integer }
                         eventsDropped: { type: integer, description: 'Events this destination did not get because the visitor did not consent (see Consent above).' }
@@ -110309,7 +110311,7 @@ paths:
                       properties:
                         accountId: { type: string }
                         destinationId: { type: string }
-                        platform: { type: [string, "null"], enum: [metaads, googleads, linkedinads, tiktokads, openaiads, pinterestads, redditads, null] }
+                        platform: { type: [string, "null"], enum: [metaads, googleads, linkedinads, tiktokads, openaiads, pinterestads, redditads, applovinads, microsoftads, xads, snapchatads, taboolaads, googleanalytics, klaviyo, attentive, impact, awin, campaignmanager360, tradedeskads, amazonads, null] }
                         status: { type: string, enum: [sent, retrying, failed, dropped], description: '`dropped`: not sent because the visitor did not consent; `errorCode` says why (`consent_denied` or `consent_missing`).' }
                         attempt: { type: integer, description: 'Send attempt (1 = the first).' }
                         error: { type: [string, "null"] }
@@ -111370,7 +111372,7 @@ paths:
               schema:
                 type: object
                 properties:
-                  platform: { type: string, enum: [metaads, googleads, linkedinads, tiktokads, openaiads, pinterestads, redditads] }
+                  platform: { type: string, enum: [metaads, googleads, linkedinads, tiktokads, openaiads, pinterestads, redditads, applovinads, microsoftads, xads, snapchatads, taboolaads, googleanalytics, klaviyo, attentive, impact, awin, campaignmanager360, tradedeskads, amazonads] }
                   destinations:
                     type: array
                     items:
@@ -112113,7 +112115,7 @@ paths:
               schema:
                 type: object
                 properties:
-                  platform: { type: string, enum: [metaads, googleads, linkedinads, tiktokads, openaiads, pinterestads, redditads] }
+                  platform: { type: string, enum: [metaads, googleads, linkedinads, tiktokads, openaiads, pinterestads, redditads, applovinads, microsoftads, xads, snapchatads, taboolaads, googleanalytics, klaviyo, attentive, impact, awin, campaignmanager360, tradedeskads, amazonads] }
                   destinations:
                     type: array
                     items:
