@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.738.0"
+  version: "1.738.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -109674,7 +109674,8 @@ paths:
       summary: Turn on server-side tracking for a website
       description: >
         Creates a tracking site. With `storeAccountId`, Zernio installs its tag on the connected Shopify, WordPress
-        (WooCommerce), Wix or Webflow store. With only `url`, paste the returned `install.snippet` into the site.
+        (WooCommerce), Wix or Webflow store. With only `url`, paste the returned `install.snippet` into the site. Adding a
+        `url` the profile already tracks returns that site and its snippet instead of creating a second one.
 
 
         The ad accounts you picked for each connection get a forwarding rule, so website conversions reach them at
