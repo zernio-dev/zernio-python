@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.733.0"
+  version: "1.734.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -21347,6 +21347,22 @@ components:
           items:
             type: string
             enum: [africa, asia, europe, north_america, south_america, oceania, central_america, caribbean, eea, euro_area, nafta, mercosur, afta, apec, gcc, cisfta, emerging_markets, itunes_app_store, android_free_store, android_paid_store]
+        places:
+          type: array
+          description: "Meta only. Named points of interest to target. `key` from /v1/ads/targeting/search."
+          items:
+            type: object
+            required: [key]
+            properties:
+              key: { type: string }
+        neighborhoods:
+          type: array
+          description: "Meta only. Named neighbourhood areas to target. `key` from /v1/ads/targeting/search."
+          items:
+            type: object
+            required: [key]
+            properties:
+              key: { type: string }
         customLocations:
           type: array
           description: "Point-radius (lat/lng) targeting (Meta custom_locations / Google proximity). Honoured on Meta and Google; ignored on platforms without radius support."
@@ -91590,6 +91606,8 @@ paths:
         `placements` and `targeting` take the same shapes as POST /v1/ads/create. Meta replaces an ad set's targeting wholesale, so Zernio reads the live targeting first, changes only what the request names and writes the merged spec back.
 
         Custom audiences, geo, age, interest groups and `targeting_automation` you do not send are kept.
+
+        Locations are replaced as a set: sending any location field (countries, countryGroups, regions, cities, zips, metros, customLocations, places, neighborhoods) replaces every included location on the ad set, because Meta ORs them together. Resend the ones to keep. Meta's `location_types` and other geo settings Zernio does not model are always kept.
 
         - `placements` replaces the whole placement set.
         - `placements: null` returns the ad set to automatic placements.
