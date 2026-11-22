@@ -2068,10 +2068,56 @@ components:
         created: { type: boolean, description: "False when the domain was already watched." }
     ConversionAuditAnswer:
       type: object
-      required: [report, fixPrompt, publicReport]
+      required: [report, networks, topFixes, fixPrompt, publicReport]
       properties:
         report:
           $ref: '#/components/schemas/ConversionAuditReport'
+        networks:
+          type: array
+          description: 'Each ad network with its final setup and leak, computed exactly as the public report page shows them, best setup first.'
+          items:
+            type: object
+            required: [key, name, setup, leakPct, loadedBy]
+            properties:
+              key:
+                type: string
+                description: 'Stable platform key (meta, google, tiktok, ...), as in `report.platforms`.'
+              name:
+                type: string
+                description: 'Short network name (Meta, Google, TikTok, ...).'
+              setup:
+                type: string
+                enum: [verified, likely, possible, not-visible, not-firing, configured, missing]
+                description: 'How the network gets its conversions: `verified`, `likely` or `possible` server path, `not-visible` (browser pixel, no server path visible), `not-firing` (installed, sent nothing), `configured` (tag manager only, never seen firing, not at risk) or `missing`.'
+              leakPct:
+                type: [integer, 'null']
+                minimum: 0
+                maximum: 100
+                description: 'Share of this network''s conversions at risk, 0-100 (0 once a server path is verified). Null when the network has no working browser pixel to measure.'
+              loadedBy:
+                type: [string, 'null']
+                enum: [zernio-tag, null]
+                description: '`zernio-tag` when the pixel comes from the Zernio site tag''s settings (it loads the pixel after consent) rather than from the page itself, on a scan that read the page source only.'
+        topFixes:
+          type: array
+          maxItems: 3
+          description: 'The few fixes that matter most, in the order the public report page lists them.'
+          items:
+            type: object
+            required: [title, why, points, compliance]
+            properties:
+              title:
+                type: string
+                description: The action to take.
+              why:
+                type: string
+                description: Why it matters on this site.
+              points:
+                type: [integer, 'null']
+                description: 'Points the score gains when this fix alone lands, or null when the scan can''t tell.'
+              compliance:
+                type: boolean
+                description: True when what's at stake is data sent without consent rather than lost signal.
         fixPrompt:
           type: string
           description: A prompt to paste into a coding agent. It lists the report's findings, then connecting Zernio, sending conversions server-side and verifying them.
@@ -2144,6 +2190,10 @@ components:
                 type: string
                 enum: [zernio-tag]
                 description: 'The only server path seen is the Zernio site tag relay; `serverSideVerified` says whether its delivery to this platform is proven.'
+              loadedBy:
+                type: string
+                enum: [zernio-tag]
+                description: 'On a scan that read the page source only: the pixel comes from the Zernio site tag''s settings, which load it after consent, not from the page. Its ids are not reported.'
               serverSideVerified:
                 type: boolean
                 description: 'The Zernio site tag on the page belongs to an account whose destination for this platform accepted the site''s events in the last 7 days.'
@@ -2251,6 +2301,9 @@ components:
                   strength: { type: string, enum: [detected, likely] }
                   evidence: { type: string }
             note: { type: string }
+            firstPartyCollection:
+              type: string
+              description: The server-side path that collects on the site's own domain, when the scan saw one.
         consent:
           type: object
           required: [cmp, googleConsentMode, defaultsToDenied, evidence]
@@ -120983,6 +121036,9 @@ paths:
         - `report.visibility: "limited"` means some pixels load through a tag manager or a store platform, so only part of the setup is visible from outside. It does not mean the tracking failed or is missing.
         - `status: "warn"` (browser-only) is the leak: the platform is tracked in the browser but not server-side.
         - `status: "good"` (server-side) means conversions reach the platform server-side, which recovers most of that signal.
+        - `networks` and `topFixes` are the per-network setup, leak and ordered fixes exactly as the public report page
+        computes them; read them instead of deriving your own from `report`.
+
         - `fixPrompt` is the same fix prompt the Conversion Leak Report page shows: this scan's findings, then the steps to send conversions server-side with `POST /v1/events` and to verify them.
         - To fix the leak with Zernio, follow https://docs.zernio.com/products/server-side-tracking/fix-with-agent: a tracking site, its tag, a forwarding rule per network to the pixel the page runs, then a rescan. A network turns `good` once the site's events reached that pixel in the last 7 days.
         - `publicReport` links the host's public page on is-bleeding.com. A homepage scan that could read the site's pixels becomes that page's snapshot, the same as a scan on is-bleeding.com. Any other scan links the stored snapshot, taken at `scannedAt`, or returns null when the host has none.
