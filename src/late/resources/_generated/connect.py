@@ -380,6 +380,65 @@ class ConnectResource:
             "/v1/connect/googlesearchconsole/select-site", data=payload
         )
 
+    def get_campaign_manager_connect_url(
+        self,
+        profile_id: str,
+        *,
+        redirect_url: str | None = None,
+        reconnect_account_id: str | None = None,
+    ) -> dict[str, Any]:
+        """Get Campaign Manager 360 OAuth connect URL"""
+        params = self._build_query(
+            {
+                "profileId": profile_id,
+                "redirect_url": redirect_url,
+                "reconnectAccountId": reconnect_account_id,
+            }
+        )
+        return self._client._get("/v1/connect/campaignmanager360", params=params)
+
+    def list_campaign_manager_profiles(self, pending_data_token: str) -> dict[str, Any]:
+        """List Campaign Manager 360 profiles for a pending connect"""
+        params = self._build_query(
+            {
+                "pendingDataToken": pending_data_token,
+            }
+        )
+        return self._client._get(
+            "/v1/connect/campaignmanager360/profiles", params=params
+        )
+
+    def select_campaign_manager_profile(
+        self, pending_data_token: str, cm_profile_id: str
+    ) -> dict[str, Any]:
+        """Connect the chosen Campaign Manager 360 profile"""
+        payload = self._build_body(
+            {
+                "pendingDataToken": pending_data_token,
+                "cmProfileId": cm_profile_id,
+            }
+        )
+        return self._client._post(
+            "/v1/connect/campaignmanager360/select-profile", data=payload
+        )
+
+    def get_amazon_ads_connect_url(
+        self,
+        profile_id: str,
+        *,
+        redirect_url: str | None = None,
+        reconnect_account_id: str | None = None,
+    ) -> dict[str, Any]:
+        """Get Amazon Ads OAuth connect URL"""
+        params = self._build_query(
+            {
+                "profileId": profile_id,
+                "redirect_url": redirect_url,
+                "reconnectAccountId": reconnect_account_id,
+            }
+        )
+        return self._client._get("/v1/connect/amazonads", params=params)
+
     def get_hub_spot_connect_url(
         self, profile_id: str, *, redirect_url: str | None = None
     ) -> dict[str, Any]:
@@ -1120,6 +1179,29 @@ class ConnectResource:
             }
         )
         return self._client._post("/v1/connect/awin/credentials", data=payload)
+
+    def connect_trade_desk_ads_credentials(
+        self,
+        advertiser_id: str,
+        tracker_id: str,
+        profile_id: str,
+        *,
+        name: str | None = None,
+        state: str | None = None,
+        redirect_url: str | None = None,
+    ) -> dict[str, Any]:
+        """Connect a Trade Desk tracking tag"""
+        payload = self._build_body(
+            {
+                "advertiserId": advertiser_id,
+                "trackerId": tracker_id,
+                "name": name,
+                "profileId": profile_id,
+                "state": state,
+                "redirect_url": redirect_url,
+            }
+        )
+        return self._client._post("/v1/connect/tradedesk-ads/credentials", data=payload)
 
     def connect_whop_ads_credentials(
         self,
@@ -2172,6 +2254,67 @@ class ConnectResource:
             "/v1/connect/googlesearchconsole/select-site", data=payload
         )
 
+    async def aget_campaign_manager_connect_url(
+        self,
+        profile_id: str,
+        *,
+        redirect_url: str | None = None,
+        reconnect_account_id: str | None = None,
+    ) -> dict[str, Any]:
+        """Get Campaign Manager 360 OAuth connect URL (async)"""
+        params = self._build_query(
+            {
+                "profileId": profile_id,
+                "redirect_url": redirect_url,
+                "reconnectAccountId": reconnect_account_id,
+            }
+        )
+        return await self._client._aget("/v1/connect/campaignmanager360", params=params)
+
+    async def alist_campaign_manager_profiles(
+        self, pending_data_token: str
+    ) -> dict[str, Any]:
+        """List Campaign Manager 360 profiles for a pending connect (async)"""
+        params = self._build_query(
+            {
+                "pendingDataToken": pending_data_token,
+            }
+        )
+        return await self._client._aget(
+            "/v1/connect/campaignmanager360/profiles", params=params
+        )
+
+    async def aselect_campaign_manager_profile(
+        self, pending_data_token: str, cm_profile_id: str
+    ) -> dict[str, Any]:
+        """Connect the chosen Campaign Manager 360 profile (async)"""
+        payload = self._build_body(
+            {
+                "pendingDataToken": pending_data_token,
+                "cmProfileId": cm_profile_id,
+            }
+        )
+        return await self._client._apost(
+            "/v1/connect/campaignmanager360/select-profile", data=payload
+        )
+
+    async def aget_amazon_ads_connect_url(
+        self,
+        profile_id: str,
+        *,
+        redirect_url: str | None = None,
+        reconnect_account_id: str | None = None,
+    ) -> dict[str, Any]:
+        """Get Amazon Ads OAuth connect URL (async)"""
+        params = self._build_query(
+            {
+                "profileId": profile_id,
+                "redirect_url": redirect_url,
+                "reconnectAccountId": reconnect_account_id,
+            }
+        )
+        return await self._client._aget("/v1/connect/amazonads", params=params)
+
     async def aget_hub_spot_connect_url(
         self, profile_id: str, *, redirect_url: str | None = None
     ) -> dict[str, Any]:
@@ -2934,6 +3077,31 @@ class ConnectResource:
             }
         )
         return await self._client._apost("/v1/connect/awin/credentials", data=payload)
+
+    async def aconnect_trade_desk_ads_credentials(
+        self,
+        advertiser_id: str,
+        tracker_id: str,
+        profile_id: str,
+        *,
+        name: str | None = None,
+        state: str | None = None,
+        redirect_url: str | None = None,
+    ) -> dict[str, Any]:
+        """Connect a Trade Desk tracking tag (async)"""
+        payload = self._build_body(
+            {
+                "advertiserId": advertiser_id,
+                "trackerId": tracker_id,
+                "name": name,
+                "profileId": profile_id,
+                "state": state,
+                "redirect_url": redirect_url,
+            }
+        )
+        return await self._client._apost(
+            "/v1/connect/tradedesk-ads/credentials", data=payload
+        )
 
     async def aconnect_whop_ads_credentials(
         self,

@@ -1137,6 +1137,9 @@ def register_generated_tools(mcp, _get_client):
             "wechat",
             "googletagmanager",
             "googlesearchconsole",
+            "campaignmanager360",
+            "tradedeskads",
+            "amazonads",
         ]
         | None = None,
         status: Literal["healthy", "warning", "error"] | None = None,
@@ -27433,6 +27436,154 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="Get Campaign Manager 360 OAuth connect URL",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def connect_get_campaign_manager_connect_url(
+        profile_id: str,
+        redirect_url: str | None = None,
+        reconnect_account_id: str | None = None,
+    ) -> str:
+        """Get Campaign Manager 360 OAuth connect URL
+
+        Starts Google OAuth for Campaign Manager 360 (Floodlight). Each connected CM360 user profile becomes an account with platform `campaignmanager360`; it receives the conversions you forward to its Floodlight activities and does not post.
+
+        Requested scopes: `https://www.googleapis.com/auth/datamanager` (conversions go through Google's Data Manager API) and `https://www.googleapis.com/auth/dfatrafficking` (only to list advertisers and Floodlight activities; Campaign Manager has no read-only trafficking scope).
+
+        ### Flow
+
+        Redirect the user to `authUrl`.
+
+        - **One CM360 user profile:** Zernio connects it and redirects to `redirect_url` (or the dashboard) with `connected=campaignmanager360`, `profileId`, `accountId` and `username`.
+        - **Several:** the user first picks one on a Zernio-hosted page, which then redirects the same way.
+
+        Then list the Floodlight activities with `GET /v1/ads/conversions/destinations?accountId=...`.
+
+        ### Your own picker
+
+        Add `headless=true` to `redirect_url`. Zernio ...
+
+        Platforms: campaignmanager360
+
+        Args:
+            profile_id: Your Zernio profile ID (get from /v1/profiles). (required)
+            redirect_url: Custom redirect after connection. Must be an absolute http(s) URL or custom app scheme such as `myapp://callback`; relative and unsafe URLs return 400.
+            reconnect_account_id: Zernio account ID of the Campaign Manager 360 account being reconnected. Picking a different CM360 profile then fails instead of adding a second account."""
+        client = _get_client()
+        try:
+            response = client.connect.get_campaign_manager_connect_url(
+                profile_id=profile_id,
+                redirect_url=redirect_url,
+                reconnect_account_id=reconnect_account_id,
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List Campaign Manager 360 profiles for a pending connect",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def connect_list_campaign_manager_profiles(pending_data_token: str) -> str:
+        """List Campaign Manager 360 profiles for a pending connect
+
+        For headless flows: lists the Campaign Manager 360 user profiles (one per CM360 account) of a pending connect, so you can show your own picker.
+
+        - Listing does not consume the token.
+        - A headless token is honored only together with your API key (or connect token) for the same profile.
+        - It expires after one hour.
+
+        Platforms: campaignmanager360
+
+        Args:
+            pending_data_token: Token from the headless redirect. (required)"""
+        client = _get_client()
+        try:
+            response = client.connect.list_campaign_manager_profiles(
+                pending_data_token=pending_data_token
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Connect the chosen Campaign Manager 360 profile",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def connect_select_campaign_manager_profile(
+        pending_data_token: str, cm_profile_id: str
+    ) -> str:
+        """Connect the chosen Campaign Manager 360 profile
+
+        For headless flows. Connects the CM360 user profile the user picked as a `campaignmanager360` account and returns where to send the user next.
+
+        Consumes the `pendingDataToken`; a refused or failed attempt leaves it usable for a retry. Send your API key (or connect token) for the same profile with a headless token.
+
+        Platforms: campaignmanager360
+
+        Args:
+            pending_data_token: Token from the headless redirect. (required)
+            cm_profile_id: A profileId from the profiles list. (required)"""
+        client = _get_client()
+        try:
+            response = client.connect.select_campaign_manager_profile(
+                pending_data_token=pending_data_token, cm_profile_id=cm_profile_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get Amazon Ads OAuth connect URL",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def connect_get_amazon_ads_connect_url(
+        profile_id: str,
+        redirect_url: str | None = None,
+        reconnect_account_id: str | None = None,
+    ) -> str:
+        """Get Amazon Ads OAuth connect URL
+
+        Starts Login with Amazon for Amazon Ads (scope `advertising::campaign_management`). The Amazon login becomes an account with platform `amazonads`; every advertiser profile it reaches, in the NA, EU and FE regions, is a conversions destination (`GET /v1/ads/conversions/destinations`).
+
+        **Not open yet:** this answers 503 `FEATURE_NOT_AVAILABLE` until Amazon approves Zernio for the Amazon Ads API. Ask support for early access.
+
+        Errors on the redirect: `amazonads_no_profiles` (the login reaches no advertiser), `amazonads_no_refresh_token`.
+
+        Platforms: amazonads
+
+        Args:
+            profile_id: Your Zernio profile ID (get from /v1/profiles). (required)
+            redirect_url: Custom redirect after connection. Must be an absolute http(s) URL or custom app scheme.
+            reconnect_account_id: Zernio account ID of the Amazon Ads account being reconnected."""
+        client = _get_client()
+        try:
+            response = client.connect.get_amazon_ads_connect_url(
+                profile_id=profile_id,
+                redirect_url=redirect_url,
+                reconnect_account_id=reconnect_account_id,
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="Get HubSpot OAuth connect URL",
             readOnlyHint=True,
             destructiveHint=False,
@@ -29091,6 +29242,53 @@ def register_generated_tools(mcp, _get_client):
             response = client.connect.connect_awin_credentials(
                 api_key=api_key,
                 advertiser_id=advertiser_id,
+                name=name,
+                profile_id=profile_id,
+                state=state,
+                redirect_url=redirect_url,
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Connect a Trade Desk tracking tag",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def connect_trade_desk_ads_credentials(
+        advertiser_id: str,
+        tracker_id: str,
+        profile_id: str,
+        name: str | None = None,
+        state: str | None = None,
+        redirect_url: str | None = None,
+    ) -> str:
+        """Connect a Trade Desk tracking tag
+
+        Connect a Trade Desk advertiser and the tracking tag your conversions count against, for the Real-Time Conversions API. The API takes no secret, so nothing secret is stored: get the Advertiser ID from Advertiser Preferences and ask your Trade Desk representative for a Real-Time Conversion tracking tag.
+
+        The Trade Desk does not check either id when it receives events, so a wrong id loses conversions silently: check the tag's conversions in The Trade Desk after the first sends. Connecting the same tag again replaces its advertiser.
+
+        Requires the Ads add-on.
+
+        Platforms: tradedeskads
+
+        Args:
+            advertiser_id: Trade Desk Advertiser ID, a short code such as `abc1234`. (required)
+            tracker_id: Tracking tag id of a Real-Time Conversion tag, a short code such as `xyz7890`. (required)
+            name: Optional display name for the account.
+            profile_id: Your Zernio profile ID (required)
+            state: Optional state passthrough for the connect flow.
+            redirect_url: Optional URL to redirect to after a successful connection, echoed back as redirectUrl."""
+        client = _get_client()
+        try:
+            response = client.connect.connect_trade_desk_ads_credentials(
+                advertiser_id=advertiser_id,
+                tracker_id=tracker_id,
                 name=name,
                 profile_id=profile_id,
                 state=state,
@@ -32204,7 +32402,7 @@ def register_generated_tools(mcp, _get_client):
 
         Paginate with `cursor`: pass the `nextCursor` of the previous page until it comes back `null`.
 
-        Platforms: meta, google, tiktok, linkedin, microsoft, x, pinterest, reddit, openai, applovinads, snapchatads, klaviyo, attentive, impact, awin, googleanalytics, stripe, hubspot, salesforce, gohighlevel
+        Platforms: meta, google, tiktok, linkedin, microsoft, x, pinterest, reddit, openai, applovinads, snapchatads, klaviyo, attentive, impact, awin, campaignmanager360, tradedeskads, amazonads, googleanalytics, stripe, hubspot, salesforce, gohighlevel
 
         Args:
             profile_id: The profile to list. Omit to cover every profile you can access.
@@ -32269,7 +32467,7 @@ def register_generated_tools(mcp, _get_client):
 
         - A signal left out counts as `DENIED`. Zernio has no ...
 
-        Platforms: meta, google, tiktok, linkedin, microsoft, x, pinterest, reddit, openai, applovinads, snapchatads, klaviyo, attentive, impact, awin, googleanalytics, gohighlevel
+        Platforms: meta, google, tiktok, linkedin, microsoft, x, pinterest, reddit, openai, applovinads, snapchatads, klaviyo, attentive, impact, awin, campaignmanager360, tradedeskads, amazonads, googleanalytics, gohighlevel
 
         Args:
             profile_id: Profile the events belong to. Its saved destinations receive the events. (required)
@@ -32731,7 +32929,7 @@ def register_generated_tools(mcp, _get_client):
 
         Pick `destinationId` from `GET /v1/ads/conversions/destinations`. Set `eventNames` to forward only those events, such as only `Purchase`; leave it out to forward every event.
 
-        Platforms: meta, google, tiktok, linkedin, microsoft, x, pinterest, reddit, openai, applovinads, snapchatads, klaviyo, attentive, impact, awin, googleanalytics, hubspot, salesforce, gohighlevel
+        Platforms: meta, google, tiktok, linkedin, microsoft, x, pinterest, reddit, openai, applovinads, snapchatads, klaviyo, attentive, impact, awin, campaignmanager360, tradedeskads, amazonads, googleanalytics, hubspot, salesforce, gohighlevel
 
         Args:
             profile_id: (required)

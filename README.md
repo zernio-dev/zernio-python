@@ -375,6 +375,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 ### Connect (OAuth)
 | Method | Description |
 |--------|-------------|
+| `connect.list_campaign_manager_profiles()` | List Campaign Manager 360 profiles for a pending connect |
 | `connect.list_facebook_pages()` | List Facebook pages |
 | `connect.list_google_analytics_properties()` | List Google Analytics properties for a pending connect |
 | `connect.list_google_business_categories()` | List Google Business Profile categories |
@@ -396,6 +397,8 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `connect.create_pinterest_board()` | Create Pinterest board |
 | `connect.create_platform_invite()` | Create a connect link |
 | `connect.create_youtube_playlist()` | Create YouTube playlist |
+| `connect.get_amazon_ads_connect_url()` | Get Amazon Ads OAuth connect URL |
+| `connect.get_campaign_manager_connect_url()` | Get Campaign Manager 360 OAuth connect URL |
 | `connect.get_connect_handoff()` | Get a phone handoff |
 | `connect.get_connect_url()` | Get OAuth connect URL |
 | `connect.get_connect_welcome_screen()` | Get the saved welcome screen |
@@ -456,6 +459,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `connect.connect_shopify_with_token()` | Connect a Shopify store with a custom-app Admin token |
 | `connect.connect_slack_channel()` | Connect a Slack channel |
 | `connect.connect_snapchat_ads_credentials()` | Connect a Snapchat Ads pixel |
+| `connect.connect_trade_desk_ads_credentials()` | Connect a Trade Desk tracking tag |
 | `connect.connect_webflow_with_site_token()` | Connect Webflow with a site API token |
 | `connect.connect_wechat_credentials()` | Connect WeChat Official Account |
 | `connect.connect_whats_app_credentials()` | Connect WhatsApp via credentials |
@@ -466,6 +470,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `connect.initiate_telegram_connect()` | Connect Telegram directly |
 | `connect.resync_page_webhook_subscription()` | Re-subscribe an account to Zernio's webhooks |
 | `connect.search_google_business_locations()` | Search existing Google listings |
+| `connect.select_campaign_manager_profile()` | Connect the chosen Campaign Manager 360 profile |
 | `connect.select_facebook_page()` | Select Facebook page |
 | `connect.select_google_analytics_property()` | Connect the chosen Google Analytics property |
 | `connect.select_google_business_location()` | Select Google Business Profile location |
