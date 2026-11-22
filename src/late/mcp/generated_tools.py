@@ -32977,6 +32977,7 @@ def register_generated_tools(mcp, _get_client):
                 "stripe",
                 "web",
                 "salesforce",
+                "gohighlevel",
                 "postback",
                 "form_leads",
             ]
