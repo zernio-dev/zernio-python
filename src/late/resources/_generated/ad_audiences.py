@@ -149,7 +149,7 @@ class AdAudiencesResource:
         return self._client._delete(f"/v1/ads/audiences/{audience_id}")
 
     def add_users_to_ad_audience(
-        self, audience_id: str, users: list[dict[str, Any]]
+        self, audience_id: str, users: list[Any]
     ) -> dict[str, Any]:
         """Add users to audience"""
         payload = self._build_body(
@@ -162,7 +162,7 @@ class AdAudiencesResource:
         )
 
     def remove_users_from_ad_audience(
-        self, audience_id: str, users: list[dict[str, Any]]
+        self, audience_id: str, users: list[Any]
     ) -> dict[str, Any]:
         """Remove users from audience"""
         payload = self._build_body(
@@ -239,7 +239,7 @@ class AdAudiencesResource:
         return await self._client._adelete(f"/v1/ads/audiences/{audience_id}")
 
     async def aadd_users_to_ad_audience(
-        self, audience_id: str, users: list[dict[str, Any]]
+        self, audience_id: str, users: list[Any]
     ) -> dict[str, Any]:
         """Add users to audience (async)"""
         payload = self._build_body(
@@ -252,7 +252,7 @@ class AdAudiencesResource:
         )
 
     async def aremove_users_from_ad_audience(
-        self, audience_id: str, users: list[dict[str, Any]]
+        self, audience_id: str, users: list[Any]
     ) -> dict[str, Any]:
         """Remove users from audience (async)"""
         payload = self._build_body(

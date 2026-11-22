@@ -6370,32 +6370,26 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Add users to audience
 
-        Uploads customer emails (and phone numbers on Meta) to a customer list audience, hashed before they are sent.
+        Uploads people to a customer list audience. Send each match key in plaintext or already SHA-256 hashed (64 hex characters): plaintext is normalized and hashed server-side, a hash is sent as is. Max 10,000 users per request.
 
-        Data is SHA256-hashed server-side before sending to the platform. Max 10,000 users per request.
+        ### Hashing it yourself
 
-        ### Per-platform behavior
+        Hash the normalized value, or it will not match: email trimmed and lowercased; first and last name lowercased without punctuation; `birthYear` as `YYYY`, `birthMonth` and `birthDay` as two digits; `gender` as `m` or `f`; `country` as a lowercase ISO 3166-1 alpha-2 code.
 
-        - **All platforms**: email is used everywhere. Phone is used on Meta only (other platforms ignore it).
-        - **TikTok and Pinterest**: the first upload also provisions the audience (deferred create).
-        - **LinkedIn**: uploads are full-replace.
-        - **Reddit**: see below.
+        Phone is the one key the platforms disagree on: Meta hashes the digits with the country code and no `+` (`14155551234`), Google wants E.164 with the `+` (`+14155551234`). Send phones in plaintext to match on both; a hashed phone is sent unchanged to each platform.
 
-        ### Reddit
+        ### Which keys each platform uses
 
-        - Emails are lowercased and trimmed before hashing, duplicates are sent once, and the upload goes out in batches of 2,500.
-        - Reddit matches by email only: rows without a valid email count in `numInvalid`, and a request where no row has one is a 400.
-        - Reddit audiences need the `redditads` connection, not the Reddit posting account (422).
-
-        ### Audience types
-
-        customer_list only. A LinkedIn `company_list` audience takes company rows, not people: send those to `POST ...
+        | Platform | Keys used |
+        |---|---|
+        | Meta | every key |
+        | Google | `email`, `phone`, and the address (`firstName`, `lastName`, `country`, `zip`) when all four are present with ...
 
         Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit
 
         Args:
             audience_id: The Zernio audience id (the id field of GET /v1/ads/audiences), not the platform segment id. (required)
-            users: Each item is an object with keys: email (string); phone (string) (required)"""
+            users: Each item is an object with keys: email (string) - Email, or SHA-256 of it trimmed and lowercased.; phone (string) - Phone with country code. Plaintext matches on Meta and Google; see the endpoint description before sending it hashed.; firstName (string); lastName (string); birthYear (string) - YYYY. Meta only.; birthMonth (string) - MM (01-12). Meta only.; birthDay (string) - DD (01-31). Meta only.; gender (string) - m or f. Meta only.; city (string) - Meta only.; state (string) - Meta only.; zip (string); country (string) - ISO 3166-1 alpha-2 code.; externalId (string) - Your own id for the person. Meta only.; region (string) - Where the person is (ISO country, or US-CA). With no granted consent, EEA, UK and CH people are dropped before upload.; consent (object with keys adUserData, adPersonalization) (required)"""
         client = _get_client()
         try:
             response = client.ad_audiences.add_users_to_ad_audience(
@@ -6418,9 +6412,9 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Remove users from audience
 
-        Removes customer emails (and phone numbers on Meta) from a Meta or Reddit customer list audience. Same body as
-        `POST /v1/ads/audiences/{audienceId}/users`: send plaintext rows, they are normalized and
-        SHA256-hashed server-side exactly like an upload, so a row removes the person it added.
+        Removes people from a Meta or Reddit customer list audience. Same body as
+        `POST /v1/ads/audiences/{audienceId}/users`: plaintext keys are normalized and SHA-256 hashed
+        exactly like an upload and hashed keys are sent as is, so a row removes the person it added.
 
         Meta and Reddit only, customer_list only. Every other platform returns 422 with code `feature_not_available`,
         and every other audience type returns 422. Max 10,000 users per request. The platform applies the removal
@@ -6430,7 +6424,7 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             audience_id: The Zernio audience id (the id field of GET /v1/ads/audiences), not the platform segment id. (required)
-            users: Each item is an object with keys: email (string); phone (string) (required)"""
+            users: Each item is an object with keys: email (string) - Email, or SHA-256 of it trimmed and lowercased.; phone (string) - Phone with country code. Plaintext matches on Meta and Google; see the endpoint description before sending it hashed.; firstName (string); lastName (string); birthYear (string) - YYYY. Meta only.; birthMonth (string) - MM (01-12). Meta only.; birthDay (string) - DD (01-31). Meta only.; gender (string) - m or f. Meta only.; city (string) - Meta only.; state (string) - Meta only.; zip (string); country (string) - ISO 3166-1 alpha-2 code.; externalId (string) - Your own id for the person. Meta only.; region (string) - Where the person is (ISO country, or US-CA). With no granted consent, EEA, UK and CH people are dropped before upload.; consent (object with keys adUserData, adPersonalization) (required)"""
         client = _get_client()
         try:
             response = client.ad_audiences.remove_users_from_ad_audience(
