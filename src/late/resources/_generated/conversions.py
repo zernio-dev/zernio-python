@@ -120,7 +120,7 @@ class ConversionsResource:
         events: list[Any],
         *,
         test_code: str | None = None,
-        consent: dict[str, Any] | None = None,
+        consent: Any | None = None,
     ) -> dict[str, Any]:
         """Send conversion events to one destination (legacy)"""
         payload = self._build_body(
@@ -401,7 +401,7 @@ class ConversionsResource:
         *,
         idempotency_key: str | None = None,
         destinations: list[dict[str, Any]] | None = None,
-        consent: dict[str, Any] | None = None,
+        consent: Any | None = None,
         test_code: str | None = None,
         mode: str | None = "sync",
     ) -> dict[str, Any]:
@@ -1115,7 +1115,7 @@ class ConversionsResource:
         events: list[Any],
         *,
         test_code: str | None = None,
-        consent: dict[str, Any] | None = None,
+        consent: Any | None = None,
     ) -> dict[str, Any]:
         """Send conversion events to one destination (legacy) (async)"""
         payload = self._build_body(
@@ -1402,7 +1402,7 @@ class ConversionsResource:
         *,
         idempotency_key: str | None = None,
         destinations: list[dict[str, Any]] | None = None,
-        consent: dict[str, Any] | None = None,
+        consent: Any | None = None,
         test_code: str | None = None,
         mode: str | None = "sync",
     ) -> dict[str, Any]:
