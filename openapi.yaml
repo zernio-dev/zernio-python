@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.734.1"
+  version: "1.735.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -18341,6 +18341,112 @@ components:
         mirrorConversations:
           type: boolean
           description: Telegram, LINE, WeChat, iMessage and RCS messages go into the contact's Conversations thread under the Zernio channel (answerable from HighLevel) instead of a note. Default true.
+    GohighlevelAudienceSync:
+      type: object
+      required: [id, tag, status, memberCount, lastError, audiences]
+      properties:
+        id:
+          type: string
+        tag:
+          type: string
+          description: The HighLevel tag, lowercased.
+        status:
+          type: string
+          enum: [syncing, ready, error]
+        memberCount:
+          type: integer
+          description: Contacts with the tag uploaded to the audiences so far.
+        lastError:
+          type: [string, "null"]
+        audiences:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+              platform:
+                type: string
+              adAccountId:
+                type: [string, "null"]
+              error:
+                type: [string, "null"]
+                description: Why the last upload to this audience failed, null when it went through.
+    GohighlevelAudienceSyncOverview:
+      type: object
+      required: [tags, targetChoices, syncs]
+      properties:
+        tags:
+          type: [array, "null"]
+          description: The sub-account's tags, null when HighLevel does not let Zernio read them. Any tag still syncs.
+          items:
+            type: string
+        targetChoices:
+          type: array
+          description: The Meta and Reddit ad accounts of the profile a tag can sync to.
+          items:
+            type: object
+            required: [accountId, platform, label, adAccountId]
+            properties:
+              accountId:
+                type: string
+                description: The Zernio ads connection id.
+              platform:
+                type: string
+              label:
+                type: string
+              adAccountId:
+                type: string
+        syncs:
+          type: array
+          items:
+            $ref: '#/components/schemas/GohighlevelAudienceSync'
+    GohighlevelFunnelTracking:
+      type: object
+      required: [siteId, snippet, live, domains, funnels, verified]
+      properties:
+        siteId:
+          type: string
+          description: The Zernio tracking site behind the tag (`getTrackingSite`).
+        snippet:
+          type: string
+          description: The line to paste into each funnel's and website's tracking code (Header).
+        live:
+          type: boolean
+          description: The tag has sent its first visit.
+        domains:
+          type: array
+          description: The domains whose visits are tied to contacts. A page checked with `verifyGohighlevelFunnelTracking` adds its domain.
+          items:
+            type: string
+        funnels:
+          type: array
+          items:
+            type: object
+            required: [id, name, kind, installed, previewUrl]
+            properties:
+              id:
+                type: string
+              name:
+                type: string
+              kind:
+                type: string
+                enum: [funnel, website]
+              installed:
+                type: boolean
+                description: The funnel's tracking code holds the tag.
+              previewUrl:
+                type: [string, "null"]
+        verified:
+          type: [object, "null"]
+          description: The page check, null unless a page was checked.
+          properties:
+            url:
+              type: string
+            result:
+              type: string
+              enum: [tag, tag-manager, missing, unreachable]
+              description: "`tag`: the page carries the tag. `tag-manager`: Google Tag Manager loads on the page, so the tag may come through it. `missing`: not on the page. `unreachable`: the page did not load."
     HubSpotSettings:
       type: object
       required:
@@ -60986,6 +61092,296 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           description: Account not found
+  /v1/accounts/{accountId}/gohighlevel-audiences:
+    get:
+      x-resource-group: ads
+      operationId: listGohighlevelAudienceSyncs
+      tags:
+        - Accounts
+      x-platforms: [gohighlevel]
+      summary: List HighLevel tag audience syncs
+      description: >-
+        List the tags of a connected HighLevel sub-account that Zernio keeps as customer list audiences on Meta and Reddit ad accounts,
+        the ad accounts a tag can sync to (`targetChoices`), and the sub-account's tags. Pass a `targetChoices` entry to
+        `startGohighlevelAudienceSync` to start a sync.
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          description: The HighLevel account id from `listAccounts`.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Tag audience syncs
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GohighlevelAudienceSyncOverview'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: Account not found
+    post:
+      x-resource-group: ads
+      operationId: startGohighlevelAudienceSync
+      tags:
+        - Accounts
+      x-platforms: [gohighlevel]
+      summary: Sync a HighLevel tag to ad audiences
+      description: |-
+        Keep every HighLevel contact with a tag as a customer list audience on one or more Meta or Reddit ad accounts of the profile. Take `targets` from `targetChoices` of `listGohighlevelAudienceSyncs`.
+
+        Zernio creates one audience per ad account and fills it within a few minutes. A contact joins or leaves as soon as the tag is added to or removed from it, and every 6 hours Zernio re-reads the tag. Emails and phones are hashed before upload.
+
+        A tag syncs once per sub-account; stop it to change its ad accounts. Needs a read-write key.
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          description: The HighLevel account id from `listAccounts`.
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [tag, targets]
+              properties:
+                tag:
+                  type: string
+                  maxLength: 100
+                  description: The HighLevel tag, matched case-insensitively.
+                targets:
+                  type: array
+                  minItems: 1
+                  maxItems: 20
+                  description: The ad accounts to keep the audience on, each one of `targetChoices`.
+                  items:
+                    type: object
+                    required: [accountId, adAccountId]
+                    properties:
+                      accountId:
+                        type: string
+                        description: The Zernio ads connection id (`targetChoices[].accountId`).
+                      adAccountId:
+                        type: string
+                        description: The ad account on that connection, such as `act_123456789` for Meta.
+                audienceName:
+                  type: string
+                  maxLength: 200
+                  description: 'The audience name on the ad accounts. Default `CRM tag: <tag>`.'
+            example:
+              tag: hot lead
+              targets:
+                - accountId: 6650a1b2c3d4e5f6a7b8c9d0
+                  adAccountId: act_123456789
+      responses:
+        '201':
+          description: Sync started
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  sync:
+                    $ref: '#/components/schemas/GohighlevelAudienceSync'
+                  failedTargets:
+                    type: array
+                    description: The ad accounts that refused an audience, as `<connection label> · <adAccountId>`. The sync runs on the others.
+                    items:
+                      type: string
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: The API key is read-only
+        '404':
+          description: Account not found
+        '409':
+          description: The tag is being set up or synced right now, or is already synced. Retry later, or stop the existing sync first.
+  /v1/accounts/{accountId}/gohighlevel-audiences/{syncId}:
+    delete:
+      x-resource-group: ads
+      operationId: stopGohighlevelAudienceSync
+      tags:
+        - Accounts
+      x-platforms: [gohighlevel]
+      summary: Stop a HighLevel tag audience sync
+      description: >-
+        Stop keeping a tag in sync. Its audiences stay on the ad accounts with their current members, so running ads keep
+        their targeting; delete an audience with `deleteAdAudience`. Needs a read-write key.
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          description: The HighLevel account id from `listAccounts`.
+          schema:
+            type: string
+        - name: syncId
+          in: path
+          required: true
+          description: The sync id from `listGohighlevelAudienceSyncs`.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Sync stopped
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: The API key is read-only
+        '404':
+          description: Account or sync not found
+        '409':
+          description: The tag is being set up or synced right now, or is already synced. Retry later, or stop the existing sync first.
+  /v1/accounts/{accountId}/gohighlevel-funnel-tracking:
+    get:
+      x-resource-group: ads
+      operationId: getGohighlevelFunnelTracking
+      tags:
+        - Accounts
+      x-platforms: [gohighlevel]
+      summary: Get HighLevel funnel tracking
+      description: |-
+        Get the Zernio tag for a connected HighLevel sub-account's funnels and websites, created on the first call, and the line to paste into each funnel's tracking code (the funnel's Settings, then Head tracking code).
+
+        Each funnel and website says whether it already carries the tag, and `live` whether the tag has sent its first visit. Visits on tagged pages tie ad clicks to the leads and sales HighLevel records.
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          description: The HighLevel account id from `listAccounts`.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Funnel tracking
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GohighlevelFunnelTracking'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: Account not found
+  /v1/accounts/{accountId}/gohighlevel-funnel-tracking/verify:
+    post:
+      x-resource-group: ads
+      operationId: verifyGohighlevelFunnelTracking
+      tags:
+        - Accounts
+      x-platforms: [gohighlevel]
+      summary: Check the Zernio tag on a HighLevel funnel page
+      description: |-
+        Load a live funnel or website page and report whether it carries the sub-account's Zernio tag. A page that does adds its domain to the tag's domains, so visits there are tied to the contacts who fill its forms.
+
+        Returns the same funnel tracking state as `getGohighlevelFunnelTracking`, with `verified` set. Needs a read-write key.
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          description: The HighLevel account id from `listAccounts`.
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [url]
+              properties:
+                url:
+                  type: string
+                  format: uri
+                  maxLength: 2048
+                  description: The full address of a live funnel or website page (http or https).
+            example:
+              url: https://offer.yourdomain.com/optin
+      responses:
+        '200':
+          description: Funnel tracking, with the page check
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GohighlevelFunnelTracking'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: The API key is read-only
+        '404':
+          description: Account not found
+  /v1/accounts/{accountId}/gohighlevel-won-deals-backfill:
+    post:
+      x-resource-group: ads
+      operationId: sendGohighlevelPastWonDeals
+      tags:
+        - Accounts
+      x-platforms: [gohighlevel]
+      summary: Send past HighLevel won deals as conversions
+      description: |-
+        Send the opportunities a connected HighLevel sub-account won in the last 90 days through the conversion relay. Each is stored as a Purchase conversion and forwarded to the profile's ad platforms when `reportToAds` is on.
+
+        Each call sends up to 50 and skips deals Zernio already holds, so calling again goes on with the rest. `remaining` says how many are left. A deal that fails is picked again on the next call, so stop when a call sends none.
+
+        Returns `relay_off` when the conversion relay is off (`updateGohighlevelSettings`). Needs a read-write key.
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          description: The HighLevel account id from `listAccounts`.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Backfill result
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [outcome]
+                properties:
+                  outcome:
+                    type: string
+                    enum: [sent, relay_off]
+                  sent:
+                    type: integer
+                    description: Deals sent in this call.
+                  failed:
+                    type: integer
+                    description: Deals that could not be sent in this call.
+                  remaining:
+                    type: integer
+                    description: Unsent deals left for the next call.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: The API key is read-only
+        '404':
+          description: Account not found
+        '409':
+          description: Another call is sending this sub-account's past won deals. Retry when it ends.
   /v1/accounts/{accountId}/salesforce-settings:
     get:
       x-resource-group: accounts

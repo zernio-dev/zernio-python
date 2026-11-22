@@ -202,6 +202,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `accounts.get_all_accounts_health()` | Check accounts health |
 | `accounts.list_accounts()` | List accounts |
 | `accounts.list_business_partners()` | List partner businesses of the Page |
+| `accounts.list_gohighlevel_audience_syncs()` | List HighLevel tag audience syncs |
 | `accounts.list_hub_spot_contact_properties()` | List HubSpot contact properties |
 | `accounts.list_tik_tok_commercial_music()` | List trending commercial music |
 | `accounts.get_account()` | Get account |
@@ -209,6 +210,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `accounts.get_account_posts()` | List posts published on the platform |
 | `accounts.get_bluesky_settings()` | Get Bluesky account settings |
 | `accounts.get_follower_stats()` | Get follower stats |
+| `accounts.get_gohighlevel_funnel_tracking()` | Get HighLevel funnel tracking |
 | `accounts.get_gohighlevel_settings()` | Get HighLevel account settings |
 | `accounts.get_google_business_review()` | Get a review |
 | `accounts.get_google_business_reviews()` | Get reviews |
@@ -234,6 +236,10 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `accounts.reply_to_google_business_review()` | Reply to a review |
 | `accounts.revoke_business_partner()` | Revoke a partner business from the Page |
 | `accounts.search_tik_tok_locations()` | Search TikTok location tags |
+| `accounts.send_gohighlevel_past_won_deals()` | Send past HighLevel won deals as conversions |
+| `accounts.start_gohighlevel_audience_sync()` | Sync a HighLevel tag to ad audiences |
+| `accounts.stop_gohighlevel_audience_sync()` | Stop a HighLevel tag audience sync |
+| `accounts.verify_gohighlevel_funnel_tracking()` | Check the Zernio tag on a HighLevel funnel page |
 
 ### Profiles
 | Method | Description |

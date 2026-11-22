@@ -2497,6 +2497,187 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="List HighLevel tag audience syncs",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def accounts_list_gohighlevel_audience_syncs(account_id: str) -> str:
+        """List HighLevel tag audience syncs
+
+        List the tags of a connected HighLevel sub-account that Zernio keeps as customer list audiences on Meta and Reddit ad accounts, the ad accounts a tag can sync to (`targetChoices`), and the sub-account's tags. Pass a `targetChoices` entry to `startGohighlevelAudienceSync` to start a sync.
+
+        Platforms: gohighlevel
+
+        Args:
+            account_id: The HighLevel account id from `listAccounts`. (required)"""
+        client = _get_client()
+        try:
+            response = client.accounts.list_gohighlevel_audience_syncs(
+                account_id=account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Sync a HighLevel tag to ad audiences",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def accounts_start_gohighlevel_audience_sync(
+        account_id: str,
+        tag: str,
+        targets: list[dict[str, Any]] | None,
+        audience_name: str | None = None,
+    ) -> str:
+        """Sync a HighLevel tag to ad audiences
+
+        Keep every HighLevel contact with a tag as a customer list audience on one or more Meta or Reddit ad accounts of the profile. Take `targets` from `targetChoices` of `listGohighlevelAudienceSyncs`.
+
+        Zernio creates one audience per ad account and fills it within a few minutes. A contact joins or leaves as soon as the tag is added to or removed from it, and every 6 hours Zernio re-reads the tag. Emails and phones are hashed before upload.
+
+        A tag syncs once per sub-account; stop it to change its ad accounts. Needs a read-write key.
+
+        Platforms: gohighlevel
+
+        Args:
+            account_id: The HighLevel account id from `listAccounts`. (required)
+            tag: The HighLevel tag, matched case-insensitively. (required)
+            targets: The ad accounts to keep the audience on, each one of `targetChoices`. Each item is an object with keys: accountId (string, required) - The Zernio ads connection id (`targetChoices[].accountId`).; adAccountId (string, required) - The ad account on that connection, such as `act_123456789` for Meta. (required)
+            audience_name: The audience name on the ad accounts. Default `CRM tag: <tag>`."""
+        client = _get_client()
+        try:
+            response = client.accounts.start_gohighlevel_audience_sync(
+                account_id=account_id,
+                tag=tag,
+                targets=targets,
+                audience_name=audience_name,
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Stop a HighLevel tag audience sync",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def accounts_stop_gohighlevel_audience_sync(account_id: str, sync_id: str) -> str:
+        """Stop a HighLevel tag audience sync
+
+        Stop keeping a tag in sync. Its audiences stay on the ad accounts with their current members, so running ads keep their targeting; delete an audience with `deleteAdAudience`. Needs a read-write key.
+
+        Platforms: gohighlevel
+
+        Args:
+            account_id: The HighLevel account id from `listAccounts`. (required)
+            sync_id: The sync id from `listGohighlevelAudienceSyncs`. (required)"""
+        client = _get_client()
+        try:
+            response = client.accounts.stop_gohighlevel_audience_sync(
+                account_id=account_id, sync_id=sync_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get HighLevel funnel tracking",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def accounts_get_gohighlevel_funnel_tracking(account_id: str) -> str:
+        """Get HighLevel funnel tracking
+
+        Get the Zernio tag for a connected HighLevel sub-account's funnels and websites, created on the first call, and the line to paste into each funnel's tracking code (the funnel's Settings, then Head tracking code).
+
+        Each funnel and website says whether it already carries the tag, and `live` whether the tag has sent its first visit. Visits on tagged pages tie ad clicks to the leads and sales HighLevel records.
+
+        Platforms: gohighlevel
+
+        Args:
+            account_id: The HighLevel account id from `listAccounts`. (required)"""
+        client = _get_client()
+        try:
+            response = client.accounts.get_gohighlevel_funnel_tracking(
+                account_id=account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Check the Zernio tag on a HighLevel funnel page",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def accounts_verify_gohighlevel_funnel_tracking(account_id: str, url: str) -> str:
+        """Check the Zernio tag on a HighLevel funnel page
+
+        Load a live funnel or website page and report whether it carries the sub-account's Zernio tag. A page that does adds its domain to the tag's domains, so visits there are tied to the contacts who fill its forms.
+
+        Returns the same funnel tracking state as `getGohighlevelFunnelTracking`, with `verified` set. Needs a read-write key.
+
+        Platforms: gohighlevel
+
+        Args:
+            account_id: The HighLevel account id from `listAccounts`. (required)
+            url: The full address of a live funnel or website page (http or https). (required)"""
+        client = _get_client()
+        try:
+            response = client.accounts.verify_gohighlevel_funnel_tracking(
+                account_id=account_id, url=url
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Send past HighLevel won deals as conversions",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def accounts_send_gohighlevel_past_won_deals(account_id: str) -> str:
+        """Send past HighLevel won deals as conversions
+
+        Send the opportunities a connected HighLevel sub-account won in the last 90 days through the conversion relay. Each is stored as a Purchase conversion and forwarded to the profile's ad platforms when `reportToAds` is on.
+
+        Each call sends up to 50 and skips deals Zernio already holds, so calling again goes on with the rest. `remaining` says how many are left. A deal that fails is picked again on the next call, so stop when a call sends none.
+
+        Returns `relay_off` when the conversion relay is off (`updateGohighlevelSettings`). Needs a read-write key.
+
+        Platforms: gohighlevel
+
+        Args:
+            account_id: The HighLevel account id from `listAccounts`. (required)"""
+        client = _get_client()
+        try:
+            response = client.accounts.send_gohighlevel_past_won_deals(
+                account_id=account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="Get Salesforce account settings",
             readOnlyHint=True,
             destructiveHint=False,
