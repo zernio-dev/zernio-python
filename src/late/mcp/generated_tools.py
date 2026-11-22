@@ -27468,6 +27468,8 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Get Campaign Manager 360 OAuth connect URL
 
+        **Coming soon.** Google is still verifying the `dfatrafficking` permission Zernio requests. Until it approves, connecting may not work for your Google account.
+
         Starts Google OAuth for Campaign Manager 360 (Floodlight). Each connected CM360 user profile becomes an account with platform `campaignmanager360`; it receives the conversions you forward to its Floodlight activities and does not post.
 
         Requested scopes: `https://www.googleapis.com/auth/datamanager` (conversions go through Google's Data Manager API) and `https://www.googleapis.com/auth/dfatrafficking` (only to list advertisers and Floodlight activities; Campaign Manager has no read-only trafficking scope).
@@ -27477,13 +27479,7 @@ def register_generated_tools(mcp, _get_client):
         Redirect the user to `authUrl`.
 
         - **One CM360 user profile:** Zernio connects it and redirects to `redirect_url` (or the dashboard) with `connected=campaignmanager360`, `profileId`, `accountId` and `username`.
-        - **Several:** the user first picks one on a Zernio-hosted page, which then redirects the same way.
-
-        Then list the Floodlight activities with `GET /v1/ads/conversions/destinations?accountId=...`.
-
-        ### Your own picker
-
-        Add `headless=true` to `redirect_url`. Zernio ...
+        - **Several:** the user first picks one on a Zernio-hosted page, which then redirects the same way. ...
 
         Platforms: campaignmanager360
 
