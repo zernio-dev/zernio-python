@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.743.0"
+  version: "1.744.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -25413,6 +25413,11 @@ components:
             secret:
               type: [string, "null"]
               description: "Signs the visitor's IP and country your proxy forwards. Only on reading or updating one site."
+            status:
+              type: string
+              enum: [verified, unsigned, unreachable, unchecked]
+              description: "The last check of the path. `verified`: it serves the tag, signed, so cookies keep their full life in Safari. `unsigned`: it reaches Zernio without a valid signature, so no cookies are set. `unreachable`: it does not serve the tag. `unchecked`: the path or key changed since."
+            checkedAt: { type: [string, "null"], format: date-time }
             googleTags:
               type: array
               description: "The loader of each of `googleTagIds` on the site's own domain. Use `src` in place of the tag's googletagmanager.com address."
@@ -110076,6 +110081,32 @@ paths:
       responses:
         '200':
           description: The site with its new key and snippet.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  site: { $ref: '#/components/schemas/TrackingSite' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /v1/tracking-sites/{siteId}/proxy-check:
+    post:
+      x-resource-group: ads
+      operationId: checkTrackingSiteProxy
+      tags: [Conversions]
+      summary: Check a tracking site's own-domain path
+      description: "Loads `https://<first domain><proxyPath>/z.js` from Zernio's servers and records whether your proxy serves the tag, signed, in `proxy.status`. Once `verified`, cookies come from your own domain and Safari keeps them; a connected Tag Manager container moves to the path. Also runs after `proxyPath` changes."
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: siteId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: The site with `proxy.status` updated. `proxy` is null when the site has no `proxyPath`.
           content:
             application/json:
               schema:

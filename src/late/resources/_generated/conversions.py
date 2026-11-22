@@ -699,6 +699,10 @@ class ConversionsResource:
             f"/v1/tracking-sites/{site_id}/rotate-key", headers=headers
         )
 
+    def check_tracking_site_proxy(self, site_id: str) -> dict[str, Any]:
+        """Check a tracking site's own-domain path"""
+        return self._client._post(f"/v1/tracking-sites/{site_id}/proxy-check")
+
     def list_ad_conversion_destinations(self, account_id: str) -> dict[str, Any]:
         """List conversion destinations"""
         params = self._build_query(
@@ -1709,6 +1713,10 @@ class ConversionsResource:
         return await self._client._apost(
             f"/v1/tracking-sites/{site_id}/rotate-key", headers=headers
         )
+
+    async def acheck_tracking_site_proxy(self, site_id: str) -> dict[str, Any]:
+        """Check a tracking site's own-domain path (async)"""
+        return await self._client._apost(f"/v1/tracking-sites/{site_id}/proxy-check")
 
     async def alist_ad_conversion_destinations(self, account_id: str) -> dict[str, Any]:
         """List conversion destinations (async)"""

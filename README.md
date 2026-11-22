@@ -1132,6 +1132,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `conversions.add_ad_conversion_associations()` | Associate campaigns |
 | `conversions.add_conversion_associations()` | Associate campaigns |
 | `conversions.adjust_conversions()` | Adjust uploaded conversions |
+| `conversions.check_tracking_site_proxy()` | Check a tracking site's own-domain path |
 | `conversions.remove_ad_conversion_associations()` | Remove associated campaigns |
 | `conversions.remove_conversion_associations()` | Remove associated campaigns |
 | `conversions.remove_custom_conversion_goal()` | Remove a custom conversion goal |

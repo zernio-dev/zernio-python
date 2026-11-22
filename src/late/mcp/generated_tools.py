@@ -32795,6 +32795,28 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="Check a tracking site's own-domain path",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def conversions_check_tracking_site_proxy(site_id: str) -> str:
+        """Check a tracking site's own-domain path
+
+        Loads `https://<first domain><proxyPath>/z.js` from Zernio's servers and records whether your proxy serves the tag, signed, in `proxy.status`. Once `verified`, cookies come from your own domain and Safari keeps them; a connected Tag Manager container moves to the path. Also runs after `proxyPath` changes.
+
+        Args:
+            site_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.conversions.check_tracking_site_proxy(site_id=site_id)
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="List conversion destinations",
             readOnlyHint=True,
             destructiveHint=False,
