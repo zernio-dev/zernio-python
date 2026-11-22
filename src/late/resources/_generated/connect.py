@@ -1203,6 +1203,27 @@ class ConnectResource:
         )
         return self._client._post("/v1/connect/tradedesk-ads/credentials", data=payload)
 
+    def connect_taboola_ads_credentials(
+        self,
+        taboola_account_id: str,
+        profile_id: str,
+        *,
+        name: str | None = None,
+        state: str | None = None,
+        redirect_url: str | None = None,
+    ) -> dict[str, Any]:
+        """Connect a Taboola account"""
+        payload = self._build_body(
+            {
+                "taboolaAccountId": taboola_account_id,
+                "name": name,
+                "profileId": profile_id,
+                "state": state,
+                "redirect_url": redirect_url,
+            }
+        )
+        return self._client._post("/v1/connect/taboola-ads/credentials", data=payload)
+
     def connect_whop_ads_credentials(
         self,
         api_key: str,
@@ -3101,6 +3122,29 @@ class ConnectResource:
         )
         return await self._client._apost(
             "/v1/connect/tradedesk-ads/credentials", data=payload
+        )
+
+    async def aconnect_taboola_ads_credentials(
+        self,
+        taboola_account_id: str,
+        profile_id: str,
+        *,
+        name: str | None = None,
+        state: str | None = None,
+        redirect_url: str | None = None,
+    ) -> dict[str, Any]:
+        """Connect a Taboola account (async)"""
+        payload = self._build_body(
+            {
+                "taboolaAccountId": taboola_account_id,
+                "name": name,
+                "profileId": profile_id,
+                "state": state,
+                "redirect_url": redirect_url,
+            }
+        )
+        return await self._client._apost(
+            "/v1/connect/taboola-ads/credentials", data=payload
         )
 
     async def aconnect_whop_ads_credentials(
