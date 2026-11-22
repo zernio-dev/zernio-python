@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.741.0"
+  version: "1.742.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -24269,25 +24269,114 @@ components:
             language: { type: string }
             components: { type: array, items: {} }
             variableMapping: { type: object, additionalProperties: true, description: 'Which contact field fills each template variable, by its number.' }
+    CommentAutomationDefinition:
+      type: object
+      required: [name, trigger, graph, limits]
+      description: |
+        Comment to DM: a comment matching keywords (or a live comment, a story reply or a story mention on Instagram) runs a graph of steps with fixed ids. The same automation `/v1/comment-automations` serves.
+
+        Only the graphs that automation can hold are stored: read one to see the shapes it takes, and edit from there. Any other graph is refused at `graph`, naming the nodes and edges it would not keep. Unknown fields are refused.
+      properties:
+        name: { type: string, minLength: 1, maxLength: 200 }
+        status: { type: string, enum: [active, paused], default: active }
+        trigger:
+          type: object
+          required: [type, profileId, accountId, filter, entry]
+          additionalProperties: false
+          properties:
+            type: { type: string, enum: [comment.keyword, comment.live, story.reply, story.mention], description: '`comment.keyword` for a comment on a post or reel. The `comment.received` event starts an event automation, not comment to DM.' }
+            profileId: { type: string }
+            accountId: { type: string, description: 'The account it answers on, on the profile. It cannot change once saved.' }
+            platformPostId: { type: [string, 'null'], description: 'The platform post or story it answers. Null answers every one. One active automation per post.' }
+            postId: { type: [string, 'null'], description: A Zernio post. A scheduled one is answered once it publishes. }
+            postTitle: { type: [string, 'null'] }
+            filter: { $ref: '#/components/schemas/CommentAutomationFilter' }
+            entry: { type: array, items: { type: string }, description: The nodes a run starts at. }
+        orTriggers:
+          type: array
+          maxItems: 1
+          description: 'A DM with the same keywords also starts it (`dm.keyword`), at the decision and with no comment to act on. Comment triggers with keywords only.'
+          items:
+            type: object
+            required: [type, filter, entry]
+            additionalProperties: false
+            properties:
+              type: { type: string, const: dm.keyword }
+              filter: { $ref: '#/components/schemas/CommentAutomationFilter' }
+              entry: { type: array, items: { type: string } }
+        graph:
+          type: object
+          required: [nodes, edges]
+          additionalProperties: false
+          properties:
+            nodes:
+              type: array
+              description: 'Steps with fixed ids: `like`, `hide`, `reply` (the public reply), `delay`, `dm`, `audience` (follower rules), `gate`, `decline`, `gate_wait`, `gate_check`, `nudge`, `nudge_end`. On TikTok, Threads, LinkedIn and YouTube only `delay` and `reply` exist.'
+              items:
+                type: object
+                required: [id, type, config]
+                properties:
+                  id: { type: string }
+                  type: { type: string, example: messages.send }
+                  config: { type: object, additionalProperties: true }
+            edges:
+              type: array
+              items:
+                type: object
+                required: [source, target]
+                properties:
+                  id: { type: string, description: Derived from the other fields. }
+                  source: { type: string }
+                  target: { type: string }
+                  sourceHandle: { type: [string, 'null'], description: 'The outcome it follows, such as `sent`, `tapped` or a follower rule. Null follows any outcome.' }
+        limits:
+          type: object
+          required: [repeat]
+          additionalProperties: false
+          properties:
+            repeat:
+              type: object
+              required: [mode]
+              properties:
+                mode: { type: string, enum: [once, every_comment], description: 'Once per person, or on every comment.' }
+                cooldownHours: { type: integer, minimum: 1, description: 'every_comment only.' }
+            sameTextDedupeHours: { type: [integer, 'null'], minimum: 1, description: 'Skips a DM with the same text to the same person within these hours, across automations.' }
+    CommentAutomationFilter:
+      type: object
+      required: [left, op, right]
+      additionalProperties: false
+      properties:
+        left: { type: object, properties: { var: { type: string, example: comment.text } } }
+        op: { type: string, const: matches_text }
+        right:
+          type: object
+          required: [keywords, mode]
+          properties:
+            keywords: { type: array, items: { type: string }, description: Empty matches every comment. }
+            mode: { type: string, enum: [contains, word, exact] }
+            exclude: { type: [array, 'null'], items: { type: string } }
+            typoTolerance: { type: [boolean, 'null'] }
     AutomationDefinition:
       description: |
-        An automation of one of four kinds, told apart by its shape:
+        An automation of one of five kinds, told apart by its shape:
 
         - **Ad rule**: a `schedule` trigger over campaigns, ad sets, ads, Google keywords or Google search terms, with metric `conditions` and ad `steps`.
         - **Event**: a Zernio event in `trigger.type`, narrowed by `trigger.filter`, with notify steps, or none to only record each matching event as a check.
         - **Scheduled**: a `schedule` trigger over `subjects.each: post`, narrowed by `filter`, with notify and boost steps.
         - **Sequence**: an `enrollment` trigger on one account, with message steps sent over time.
+        - **Comment to DM**: a comment door in `trigger.type` (`comment.keyword`, `comment.live`, `story.reply`, `story.mention`) with a `graph`.
       oneOf:
         - $ref: '#/components/schemas/AdRuleAutomationDefinition'
         - $ref: '#/components/schemas/EventAutomationDefinition'
         - $ref: '#/components/schemas/ScheduledAutomationDefinition'
         - $ref: '#/components/schemas/SequenceAutomationDefinition'
+        - $ref: '#/components/schemas/CommentAutomationDefinition'
     AutomationRecord:
       type: object
       required: [id, kind, status, version, lastCheckAt, nextCheckAt, createdAt, updatedAt]
       properties:
         id: { type: string }
-        kind: { type: string, enum: [ad_rule, event, scheduled, sequence] }
+        kind: { type: string, enum: [ad_rule, event, scheduled, sequence, comment] }
         status: { type: string, enum: [draft, active, paused], description: Only a sequence can be a draft. }
         version: { type: string, description: 'Send it back as `If-Match` when editing, so an edit made after someone else saved is refused.' }
         lastCheckAt: { type: [string, 'null'], format: date-time, description: 'Null until an ad rule first checks. Always null for event and scheduled automations; their checks list when they ran.' }
@@ -24342,6 +24431,14 @@ components:
                     total: { type: integer }
                     completed: { type: integer }
                     exited: { type: integer }
+        - allOf:
+            - $ref: '#/components/schemas/CommentAutomationDefinition'
+            - $ref: '#/components/schemas/AutomationRecord'
+            - type: object
+              required: [platform, orTriggers]
+              properties:
+                kind: { type: string, const: comment }
+                platform: { type: string, description: "The account's platform. On TikTok, Threads, LinkedIn and YouTube it only posts the public reply." }
     AutomationProblems:
       type: object
       description: 'Every problem with the automation, each at a JSON path such as `steps[0].by`. The first one also fills `error` and `param`.'
@@ -87359,7 +87456,9 @@ paths:
       tags: [Automations]
       summary: List automations
       description: |
-        Lists the automations on the profiles your key can reach, newest first, across every kind: ad rules, event automations, scheduled automations and sequences. Sequences need what `/v1/sequences` needs: the inbox add-on, and a key with the `messages` group; without them they are left out.
+        Lists the automations on the profiles your key can reach, newest first, across every kind: ad rules, event automations, scheduled automations, sequences and comment to DM.
+
+        Sequences and comment to DM need what `/v1/sequences` and `/v1/comment-automations` need: the inbox add-on, and a key with the `messages` group; without them they are left out.
       security:
         - bearerAuth: []
       parameters:
@@ -87374,7 +87473,7 @@ paths:
         - name: kind
           in: query
           schema: { type: string, example: 'ad_rule,event' }
-          description: 'Only these kinds, comma separated: `ad_rule`, `event`, `scheduled`, `sequence`.'
+          description: 'Only these kinds, comma separated: `ad_rule`, `event`, `scheduled`, `sequence`, `comment`.'
         - name: limit
           in: query
           schema: { type: integer, minimum: 1, maximum: 100, default: 50 }
@@ -87407,6 +87506,7 @@ paths:
         - **Event**: a Zernio event in `trigger.type`, such as `post.failed`, with notify steps. It is on unless `status` is `paused`.
         - **Scheduled**: a `schedule` over a profile's posts, with notify steps and an optional boost. It is on unless `status` is `paused`.
         - **Sequence**: an `enrollment` trigger on one messaging account, with message steps sent over time. It is on unless `status` is `draft`. It needs what `/v1/sequences` needs: the inbox add-on and a key with the `messages` group.
+        - **Comment to DM**: a comment door in `trigger.type`, such as `comment.keyword`, with a `graph` of the shapes `/v1/comment-automations` holds. It is on unless `status` is `paused`, and needs what `/v1/comment-automations` needs. A post that already has an active automation is a 409.
 
         Everything an automation cannot hold is refused at once: the 400 lists every problem with its JSON path in `details.problems`.
       security:
@@ -87500,8 +87600,8 @@ paths:
                       type: object
                       required: [kind, type]
                       properties:
-                        kind: { type: string, enum: [ad_rule, event, scheduled, sequence] }
-                        type: { type: string, description: '`schedule`, `enrollment`, or the Zernio event name.', example: post.failed }
+                        kind: { type: string, enum: [ad_rule, event, scheduled, sequence, comment] }
+                        type: { type: string, description: '`schedule`, `enrollment`, a comment door such as `comment.keyword` (comment to DM), or the Zernio event name.', example: post.failed }
                         label: { type: string, description: Event triggers only. }
                         subject: { type: string, description: 'What an event is about, such as `post` or `account`.' }
                         scope: { type: object, description: 'Which of `profileId` and `accountIds` an event trigger needs.' }

@@ -17494,12 +17494,14 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """List automations
 
-        Lists the automations on the profiles your key can reach, newest first, across every kind: ad rules, event automations, scheduled automations and sequences. Sequences need what `/v1/sequences` needs: the inbox add-on, and a key with the `messages` group; without them they are left out.
+        Lists the automations on the profiles your key can reach, newest first, across every kind: ad rules, event automations, scheduled automations, sequences and comment to DM.
+
+        Sequences and comment to DM need what `/v1/sequences` and `/v1/comment-automations` need: the inbox add-on, and a key with the `messages` group; without them they are left out.
 
         Args:
             account_id: Only automations on this account: the ads connection of an ad rule, or one of the `accountIds` of an event or scheduled automation.
             ad_account_id: Only ad rules checking this platform ad account.
-            kind: Only these kinds, comma separated: `ad_rule`, `event`, `scheduled`, `sequence`.
+            kind: Only these kinds, comma separated: `ad_rule`, `event`, `scheduled`, `sequence`, `comment`.
             limit
             cursor: `nextCursor` from the previous page."""
         client = _get_client()
@@ -17532,8 +17534,7 @@ def register_generated_tools(mcp, _get_client):
         - **Event**: a Zernio event in `trigger.type`, such as `post.failed`, with notify steps. It is on unless `status` is `paused`.
         - **Scheduled**: a `schedule` over a profile's posts, with notify steps and an optional boost. It is on unless `status` is `paused`.
         - **Sequence**: an `enrollment` trigger on one messaging account, with message steps sent over time. It is on unless `status` is `draft`. It needs what `/v1/sequences` needs: the inbox add-on and a key with the `messages` group.
-
-        Everything an automation cannot hold is refused at once: the 400 lists every problem with its JSON path in `details.problems`.
+        - **Comment to DM**: a comment door in `trigger.type`, such as `comment.keyword`, with a `graph` of the shapes `/v1/comment-automations` holds. It is on unless `status` is `paused`, and needs what ...
 
         Args:
             body: Full request body as documented in the API reference. (required)"""
