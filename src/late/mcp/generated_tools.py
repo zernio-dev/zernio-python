@@ -9622,12 +9622,9 @@ def register_generated_tools(mcp, _get_client):
         ### Parameters
 
         - `accountId` is required. The lookup is sibling-expanded, so passing the `metaads` ID also includes ads under the linked `facebook` / `instagram` posting account (and vice-versa), the same convention as `/v1/ads/tree` and `/v1/ads`.
+        - Without `adAccountId` the timeline sums only the ad accounts the connection reaches: its `scopedAdAccountIds` when it selects some, every reachable one otherwise.
         - Date range defaults to the last 90 days. Capped at 730 days.
-        - With adAccountId set to a Google customer id this is the customer-level performance report (clicks, cost, impressions, conversions, all conversions per day).
-
-        ### History
-
-        When an ad account connects, Zernio ...
+        - With adAccountId set to a Google customer id ...
 
         Platforms (the platform parameter takes): facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit, microsoft
 
