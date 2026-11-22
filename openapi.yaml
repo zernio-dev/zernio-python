@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.735.0"
+  version: "1.736.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -1898,6 +1898,123 @@ components:
                   effective_account_limit: 2000
                   current_account_count: 2000
   schemas:
+    MetaDatasetAudit:
+      type: object
+      required: [accountId, adAccountId, dataset, datasets, window, events, findings, unavailable, checkedAt]
+      properties:
+        accountId: { type: string }
+        adAccountId: { type: string, example: act_757082720485182 }
+        dataset:
+          description: The audited pixel, null when the ad account has none.
+          oneOf:
+            - type: "null"
+            - type: object
+              required: [id, name, lastFiredAt, automaticMatching, automaticMatchingKeys, firstPartyCookies]
+              properties:
+                id: { type: string }
+                name: { type: string }
+                lastFiredAt: { type: [string, "null"], format: date-time }
+                automaticMatching: { type: boolean, description: Automatic advanced matching on the browser pixel. }
+                automaticMatchingKeys: { type: array, items: { type: string }, description: 'The keys automatic matching collects, as Meta names them (em, ph, fn).' }
+                firstPartyCookies: { type: [boolean, "null"] }
+        datasets:
+          type: array
+          description: Every pixel assigned to the ad account.
+          items:
+            type: object
+            required: [id, name, lastFiredAt]
+            properties:
+              id: { type: string }
+              name: { type: string }
+              lastFiredAt: { type: [string, "null"], format: date-time }
+        window:
+          type: object
+          required: [from, to]
+          properties:
+            from: { type: string, format: date-time }
+            to: { type: string, format: date-time }
+        events:
+          type: array
+          description: One entry per event Meta counted in the window or scored, busiest first.
+          items:
+            type: object
+            required: [name, last7Days, last24Hours, lastSeenHour, daily, serverSharePct, matchQuality, matchKeys, diagnostics, dedup]
+            properties:
+              name: { type: string, example: Purchase }
+              last7Days: { type: integer }
+              last24Hours: { type: integer }
+              lastSeenHour: { type: [string, "null"], format: date-time, description: "Start of the last hour Meta counted the event in: Meta's stats are hourly." }
+              daily:
+                type: array
+                items:
+                  type: object
+                  required: [date, count]
+                  properties:
+                    date: { type: string, format: date }
+                    count: { type: integer }
+              serverSharePct: { type: [number, "null"], description: 'Percent of the window''s events received through the Conversions API. Null when not measured (only the 12 busiest events are split by source).' }
+              matchQuality: { type: [number, "null"], description: 'Event Match Quality, 0 to 10. Meta rates 6 and above as good.' }
+              matchKeys:
+                type: array
+                items:
+                  type: object
+                  required: [key, coveragePct]
+                  properties:
+                    key: { type: string, example: email }
+                    coveragePct: { type: number }
+              diagnostics:
+                type: array
+                items:
+                  type: object
+                  required: [title, description, solution, affectedPct, affectedEvents, totalEvents]
+                  properties:
+                    title: { type: string }
+                    description: { type: string }
+                    solution: { type: string }
+                    affectedPct: { type: number }
+                    affectedEvents: { type: integer }
+                    totalEvents: { type: integer }
+              dedup:
+                type: array
+                description: Per deduplication key, the share of browser and server copies carrying it and of browser copies Meta paired through it.
+                items:
+                  type: object
+                  required: [key, browserWithKeyPct, serverWithKeyPct, browserDedupedPct]
+                  properties:
+                    key: { type: string, example: event_id }
+                    browserWithKeyPct: { type: number }
+                    serverWithKeyPct: { type: number }
+                    browserDedupedPct: { type: number }
+        findings:
+          type: array
+          description: Problems the numbers show, most damaging first.
+          items:
+            type: object
+            required: [id, severity, title, detail, fix]
+            properties:
+              id: { type: string, example: 'browser_only:Purchase' }
+              severity: { type: string, enum: [high, medium, low] }
+              title: { type: string }
+              detail: { type: string }
+              eventName: { type: string }
+              fix:
+                type: object
+                required: [by, label, steps]
+                properties:
+                  by: { type: string, enum: [zernio, you, meta], description: 'Who makes the fix: Zernio once turned on, you in your site or API call, or a setting in Events Manager.' }
+                  label: { type: string }
+                  steps: { type: array, items: { type: string } }
+                  url: { type: string, description: A Zernio dashboard path or an Events Manager link. }
+        unavailable:
+          type: array
+          description: What the audit could not read, and why.
+          items:
+            type: object
+            required: [id, reason]
+            properties:
+              id: { type: string, example: domain_verification }
+              reason: { type: string }
+        checkedAt: { type: string, format: date-time }
     ConversionAuditAnswer:
       type: object
       required: [report, fixPrompt, publicReport]
@@ -119862,6 +119979,90 @@ paths:
           $ref: '#/components/responses/NotFound'
         '429':
           $ref: '#/components/responses/RateLimited'
+
+  /v1/conversion-audit/meta-audit:
+    get:
+      x-resource-group: "ads"
+      operationId: getMetaConversionAudit
+      tags: [Conversion Audit]
+      x-platforms: [meta]
+      summary: Audit a connected Meta pixel from inside Events Manager
+      description: |
+        The connected follow-up to the Conversion Leak Report. A page scan only sees the browser; this reads what Meta itself recorded for the ad account's pixel (dataset) with the connection's own token, over the last 7 days.
+
+        ### What it reads
+
+        - each event's volume per day, its last 24 hours and the last hour Meta counted it in
+        - the share of each event that arrived through the Conversions API (server) rather than the browser pixel
+        - Event Match Quality per event, with the coverage of every customer-information key Meta matched on (email, phone, external id, IP address, user agent, `fbp`, `fbc`, name and address fields)
+        - the event_id, external_id and fbp deduplication coverage of browser and server copies, where an event has both
+        - Meta's diagnostics for the dataset and its failed dataset checks
+        - whether automatic advanced matching and first-party cookies are on
+
+        Each `findings` entry is a problem one of those numbers shows, with its fix and who makes it (`fix.by`):
+
+        - `zernio`: turning on Zernio server-side events or the Zernio site tag fixes it
+        - `you`: a change in your site or API call
+        - `meta`: a setting only Events Manager has
+
+        Meta does not return a business's verified domains or an Aggregated Event Measurement setup to this API, so both are listed under `unavailable`, with any read Meta refused.
+
+        `accountId` is a Meta ads connection (or the Facebook account it belongs to). Without `adAccountId`, the first selected ad account that has a pixel is audited; without `pixelId`, its most recently active pixel. The result is cached for 10 minutes per pixel.
+      parameters:
+        - name: accountId
+          in: query
+          required: true
+          schema:
+            type: string
+          description: The Meta ads connection to read with.
+          example: 6a10b66d520992756da032cb
+        - name: adAccountId
+          in: query
+          required: false
+          schema:
+            type: string
+            pattern: '^act_\d+$'
+          description: The ad account whose pixel is audited. Must be selected on the connection.
+          example: act_757082720485182
+        - name: pixelId
+          in: query
+          required: false
+          schema:
+            type: string
+            pattern: '^\d+$'
+          description: One of the ad account's pixels (`datasets[].id`).
+          example: "1729525464415281"
+      responses:
+        '200':
+          description: The pixel's events, findings and what Meta did not expose
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MetaDatasetAudit'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: The ad account is not selected on the connection, or the key cannot use ads
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '501':
+          description: The connection is not a Meta connection
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '502':
+          description: Meta refused to list the ad account's pixels
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
   # ============================================
   # Changelog

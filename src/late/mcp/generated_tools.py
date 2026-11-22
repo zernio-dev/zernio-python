@@ -31211,6 +31211,49 @@ def register_generated_tools(mcp, _get_client):
         except Exception as e:
             raise ToolError(f"Error: {e}") from e
 
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Audit a connected Meta pixel from inside Events Manager",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def conversion_audit_get_meta_conversion_audit(
+        account_id: str, ad_account_id: str | None = None, pixel_id: str | None = None
+    ) -> str:
+        """Audit a connected Meta pixel from inside Events Manager
+
+        The connected follow-up to the Conversion Leak Report. A page scan only sees the browser; this reads what Meta itself recorded for the ad account's pixel (dataset) with the connection's own token, over the last 7 days.
+
+        ### What it reads
+
+        - each event's volume per day, its last 24 hours and the last hour Meta counted it in
+        - the share of each event that arrived through the Conversions API (server) rather than the browser pixel
+        - Event Match Quality per event, with the coverage of every customer-information key Meta matched on (email, phone, external id, IP address, user agent, `fbp`, `fbc`, name and address fields)
+        - the event_id, external_id and fbp deduplication coverage of browser and server copies, where an event has both
+        - Meta's diagnostics for the dataset and its failed dataset checks
+        - whether automatic advanced matching and first-party cookies are on
+
+        Each `findings` entry is a problem one of those numbers shows, with its fix and who makes it (`fix.by`):
+
+        - `zernio`: turning ...
+
+        Platforms: meta
+
+        Args:
+            account_id: The Meta ads connection to read with. (required)
+            ad_account_id: The ad account whose pixel is audited. Must be selected on the connection.
+            pixel_id: One of the ad account's pixels (`datasets[].id`)."""
+        client = _get_client()
+        try:
+            response = client.conversion_audit.get_meta_conversion_audit(
+                account_id=account_id, ad_account_id=ad_account_id, pixel_id=pixel_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
     # CONVERSIONS
 
     @mcp.tool(

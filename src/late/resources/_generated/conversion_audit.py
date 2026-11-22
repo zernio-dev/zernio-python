@@ -117,6 +117,23 @@ class ConversionAuditResource:
         )
         return self._client._get("/v1/conversion-audit/latest", params=params)
 
+    def get_meta_conversion_audit(
+        self,
+        account_id: str,
+        *,
+        ad_account_id: str | None = None,
+        pixel_id: str | None = None,
+    ) -> dict[str, Any]:
+        """Audit a connected Meta pixel from inside Events Manager"""
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "pixelId": pixel_id,
+            }
+        )
+        return self._client._get("/v1/conversion-audit/meta-audit", params=params)
+
     async def aaudit_conversion_tracking(self, url: str) -> dict[str, Any]:
         """Audit a site's ad conversion tracking (async)"""
         params = self._build_query(
@@ -134,3 +151,22 @@ class ConversionAuditResource:
             }
         )
         return await self._client._aget("/v1/conversion-audit/latest", params=params)
+
+    async def aget_meta_conversion_audit(
+        self,
+        account_id: str,
+        *,
+        ad_account_id: str | None = None,
+        pixel_id: str | None = None,
+    ) -> dict[str, Any]:
+        """Audit a connected Meta pixel from inside Events Manager (async)"""
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "pixelId": pixel_id,
+            }
+        )
+        return await self._client._aget(
+            "/v1/conversion-audit/meta-audit", params=params
+        )
