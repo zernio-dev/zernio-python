@@ -17495,16 +17495,21 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """List automations
 
-        Lists the automations on the profiles your key can reach, newest first, across every kind: ad rules, event automations, scheduled automations, sequences and comment to DM.
+            Lists the automations on the profiles your key can reach, newest first, across every kind: ad rules, event automations, scheduled automations, sequences, comment to DM and flows. One `cursor` pages them all.
 
-        Sequences and comment to DM need what `/v1/sequences` and `/v1/comment-automations` need: the inbox add-on, and a key with the `messages` group; without them they are left out.
+            Each kind is listed only for callers its own route lets read it; the others are left out, never an error:
 
-        Args:
-            account_id: Only automations on this account: the ads connection of an ad rule, or one of the `accountIds` of an event or scheduled automation.
-            ad_account_id: Only ad rules checking this platform ad account.
-            kind: Only these kinds, comma separated: `ad_rule`, `event`, `scheduled`, `sequence`, `comment`.
-            limit
-            cursor: `nextCursor` from the previous page."""
+            - **Sequences, comment to DM and flows** need the inbox add-on and a key with the `messages` group, as `/v1/sequences`, `/v1/comment-automations` and `/v1/workflows` do.
+            - **Ad rules, event and scheduled automations** need only access to their profile, as reading, pausing and deleting them does. Creating, editing, activating or previewing an ad rule needs the ads add-on.
+
+            Args:
+                account_id: Only automations on this account: the ads connection of an ad rule, or one of the `accountIds` of an event or scheduled automation.
+                ad_account_id: Only ad rules checking this platform ad account.
+                kind: Only these kinds, comma separated: `ad_rule`, `event`, `scheduled`, `sequence`, `comment`, `workflow`.
+                limit
+                cursor: `nextCursor` from the previous page, sent back unchanged with the same `kind`, `accountId` and `adAccountId`.
+
+        Opaque: it holds the creation time and id of the page's last automation, and the next page is every kind's automations strictly older than it, so an automation created meanwhile never shifts or repeats a page."""
         client = _get_client()
         try:
             response = client.automations.list_automations(
