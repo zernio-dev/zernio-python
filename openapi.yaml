@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.736.0"
+  version: "1.737.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -2015,6 +2015,34 @@ components:
               id: { type: string, example: domain_verification }
               reason: { type: string }
         checkedAt: { type: string, format: date-time }
+    ConversionAuditMonitor:
+      type: object
+      required: [id, host, reportUrl, score, grade, scoreHistory, createdAt, lastCheckedAt, nextCheckAt, lastAlertedAt]
+      properties:
+        id: { type: string, description: "The monitor id." }
+        host: { type: string, description: "The watched host, lowercase and without `www.`." }
+        reportUrl: { type: string, description: "The host's public report on is-bleeding.com." }
+        score: { type: [integer, "null"], description: 'The score of the last check (0 to 100), or null before the first readable scan.' }
+        grade: { type: [string, "null"], description: "The grade of the last check." }
+        scoreHistory:
+          type: array
+          description: The score of each of the last 30 checks, oldest first.
+          items:
+            type: object
+            required: [at, score]
+            properties:
+              at: { type: string, format: date-time }
+              score: { type: integer }
+        createdAt: { type: string, format: date-time }
+        lastCheckedAt: { type: [string, "null"], format: date-time }
+        nextCheckAt: { type: string, format: date-time, description: "When the next daily check is due." }
+        lastAlertedAt: { type: [string, "null"], format: date-time, description: "When the last alert email went out." }
+    ConversionAuditMonitorAnswer:
+      type: object
+      required: [monitor, created]
+      properties:
+        monitor: { $ref: '#/components/schemas/ConversionAuditMonitor' }
+        created: { type: boolean, description: "False when the domain was already watched." }
     ConversionAuditAnswer:
       type: object
       required: [report, fixPrompt, publicReport]
@@ -120063,6 +120091,121 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+
+  /v1/conversion-audit/monitors:
+    get:
+      x-resource-group: accounts
+      operationId: listConversionAuditMonitors
+      tags:
+        - Conversion Audit
+      summary: List watched domains
+      description: >
+        The domains you watch with the Conversion Leak Report, each with its last score and the score of each daily
+        check.
+
+
+        Zernio rescans every watched domain once a day. When tracking breaks, it emails you what changed and the fix
+        prompt. `createConversionAuditMonitor` lists what counts as a break.
+      responses:
+        '200':
+          description: Your watched domains, sorted by host
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [monitors]
+                properties:
+                  monitors:
+                    type: array
+                    items: { $ref: '#/components/schemas/ConversionAuditMonitor' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/ResourceGroupForbidden' }
+    post:
+      x-resource-group: accounts
+      operationId: createConversionAuditMonitor
+      tags:
+        - Conversion Audit
+      summary: Watch a domain
+      description: >
+        Watch a domain's conversion tracking. Zernio rescans its homepage once a day and emails the account's address
+        when tracking breaks, with what changed and the fix prompt for a coding agent. A break is:
+
+
+        - a score drop of 5 points or more
+
+        - an ad network that stops tracking or stops firing
+
+        - a pixel that starts firing before the cookie banner is answered
+
+        - a server-side path that disappears
+
+
+        A break is confirmed by a second scan before any email goes out. The first check compares against the host's
+        stored report when it has one, so run `auditConversionTracking` first to start from today's state.
+
+
+        Watching a domain you already watch returns it with `created: false` and status `200`. An account can watch
+        up to 25 domains.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [url]
+              properties:
+                url:
+                  type: string
+                  maxLength: 2048
+                  description: The domain to watch. A full URL is reduced to its host; `www.` and letter case are ignored.
+                  example: example.com
+      responses:
+        '200':
+          description: You already watch this domain
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ConversionAuditMonitorAnswer' }
+        '201':
+          description: The domain is now watched
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ConversionAuditMonitorAnswer' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403':
+          description: The account already watches 25 domains, or the key's resource group is disabled
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+  /v1/conversion-audit/monitors/{monitorId}:
+    delete:
+      x-resource-group: accounts
+      operationId: deleteConversionAuditMonitor
+      tags:
+        - Conversion Audit
+      summary: Stop watching a domain
+      description: Stops the daily checks and alert emails for this domain. The host's public report stays.
+      parameters:
+        - name: monitorId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The monitor's `id`, from `listConversionAuditMonitors` or `createConversionAuditMonitor`.
+      responses:
+        '200':
+          description: The domain is no longer watched
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [deleted]
+                properties:
+                  deleted: { type: boolean, description: "Always true." }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/ResourceGroupForbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
 
   # ============================================
   # Changelog

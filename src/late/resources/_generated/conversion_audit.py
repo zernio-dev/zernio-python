@@ -134,6 +134,23 @@ class ConversionAuditResource:
         )
         return self._client._get("/v1/conversion-audit/meta-audit", params=params)
 
+    def list_conversion_audit_monitors(self) -> dict[str, Any]:
+        """List watched domains"""
+        return self._client._get("/v1/conversion-audit/monitors")
+
+    def create_conversion_audit_monitor(self, url: str) -> dict[str, Any]:
+        """Watch a domain"""
+        payload = self._build_body(
+            {
+                "url": url,
+            }
+        )
+        return self._client._post("/v1/conversion-audit/monitors", data=payload)
+
+    def delete_conversion_audit_monitor(self, monitor_id: str) -> dict[str, Any]:
+        """Stop watching a domain"""
+        return self._client._delete(f"/v1/conversion-audit/monitors/{monitor_id}")
+
     async def aaudit_conversion_tracking(self, url: str) -> dict[str, Any]:
         """Audit a site's ad conversion tracking (async)"""
         params = self._build_query(
@@ -169,4 +186,23 @@ class ConversionAuditResource:
         )
         return await self._client._aget(
             "/v1/conversion-audit/meta-audit", params=params
+        )
+
+    async def alist_conversion_audit_monitors(self) -> dict[str, Any]:
+        """List watched domains (async)"""
+        return await self._client._aget("/v1/conversion-audit/monitors")
+
+    async def acreate_conversion_audit_monitor(self, url: str) -> dict[str, Any]:
+        """Watch a domain (async)"""
+        payload = self._build_body(
+            {
+                "url": url,
+            }
+        )
+        return await self._client._apost("/v1/conversion-audit/monitors", data=payload)
+
+    async def adelete_conversion_audit_monitor(self, monitor_id: str) -> dict[str, Any]:
+        """Stop watching a domain (async)"""
+        return await self._client._adelete(
+            f"/v1/conversion-audit/monitors/{monitor_id}"
         )

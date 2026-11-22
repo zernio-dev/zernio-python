@@ -31254,6 +31254,82 @@ def register_generated_tools(mcp, _get_client):
         except Exception as e:
             raise ToolError(f"Error: {e}") from e
 
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List watched domains",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def conversion_audit_list_conversion_audit_monitors() -> str:
+        """List watched domains
+
+        The domains you watch with the Conversion Leak Report, each with its last score and the score of each daily check.
+
+        Zernio rescans every watched domain once a day. When tracking breaks, it emails you what changed and the fix prompt. `createConversionAuditMonitor` lists what counts as a break."""
+        client = _get_client()
+        try:
+            response = client.conversion_audit.list_conversion_audit_monitors()
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Watch a domain",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def conversion_audit_create_conversion_audit_monitor(url: str) -> str:
+        """Watch a domain
+
+        Watch a domain's conversion tracking. Zernio rescans its homepage once a day and emails the account's address when tracking breaks, with what changed and the fix prompt for a coding agent. A break is:
+
+        - a score drop of 5 points or more
+        - an ad network that stops tracking or stops firing
+        - a pixel that starts firing before the cookie banner is answered
+        - a server-side path that disappears
+
+        A break is confirmed by a second scan before any email goes out. The first check compares against the host's stored report when it has one, so run `auditConversionTracking` first to start from today's state.
+
+        Watching a domain you already watch returns it with `created: false` and status `200`. An account can watch up to 25 domains.
+
+        Args:
+            url: The domain to watch. A full URL is reduced to its host; `www.` and letter case are ignored. (required)"""
+        client = _get_client()
+        try:
+            response = client.conversion_audit.create_conversion_audit_monitor(url=url)
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Stop watching a domain",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def conversion_audit_delete_conversion_audit_monitor(monitor_id: str) -> str:
+        """Stop watching a domain
+
+        Stops the daily checks and alert emails for this domain. The host's public report stays.
+
+        Args:
+            monitor_id: The monitor's `id`, from `listConversionAuditMonitors` or `createConversionAuditMonitor`. (required)"""
+        client = _get_client()
+        try:
+            response = client.conversion_audit.delete_conversion_audit_monitor(
+                monitor_id=monitor_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
     # CONVERSIONS
 
     @mcp.tool(

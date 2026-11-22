@@ -1073,8 +1073,11 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 ### Conversion Audit
 | Method | Description |
 |--------|-------------|
+| `conversion_audit.list_conversion_audit_monitors()` | List watched domains |
+| `conversion_audit.create_conversion_audit_monitor()` | Watch a domain |
 | `conversion_audit.get_latest_conversion_audit()` | Get a host's latest stored conversion audit |
 | `conversion_audit.get_meta_conversion_audit()` | Audit a connected Meta pixel from inside Events Manager |
+| `conversion_audit.delete_conversion_audit_monitor()` | Stop watching a domain |
 | `conversion_audit.audit_conversion_tracking()` | Audit a site's ad conversion tracking |
 
 ### Conversions
