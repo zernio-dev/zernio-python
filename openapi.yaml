@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.748.0"
+  version: "1.750.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -24458,10 +24458,19 @@ components:
             - $ref: '#/components/schemas/CommentAutomationDefinition'
             - $ref: '#/components/schemas/AutomationRecord'
             - type: object
-              required: [platform, orTriggers]
+              required: [platform, orTriggers, stats]
               properties:
                 kind: { type: string, const: comment }
                 platform: { type: string, description: "The account's platform. On TikTok, Threads, LinkedIn and YouTube it only posts the public reply." }
+                readOnly: { type: boolean, description: 'Always true when present. Present when the graph only comes near what the automation does. It is read here and edited through `/v1/comment-automations`; an edit here is refused.' }
+                stats:
+                  type: object
+                  description: 'Counters since it was created, the same `/v1/comment-automations` returns.'
+                  additionalProperties: { type: integer }
+                  properties:
+                    triggered: { type: integer }
+                    dmsSent: { type: integer }
+                    dmsFailed: { type: integer }
     AutomationProblems:
       type: object
       description: 'Every problem with the automation, each at a JSON path such as `steps[0].by`. The first one also fills `error` and `param`.'
