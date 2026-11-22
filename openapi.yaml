@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.738.1"
+  version: "1.739.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -2124,6 +2124,9 @@ components:
               serverSideVerified:
                 type: boolean
                 description: 'The Zernio site tag on the page belongs to an account whose destination for this platform accepted the site''s events in the last 7 days.'
+              serverTool:
+                type: string
+                description: 'A third-party server-side tool installed on the site that may already send this platform''s events (Elevar, Littledata, Stape), when its status is `likely`. Which platforms the tool feeds is not visible from the page.'
               status:
                 type: string
                 enum: [good, warn, missing, not-firing]
