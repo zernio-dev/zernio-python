@@ -17488,16 +17488,18 @@ def register_generated_tools(mcp, _get_client):
     def automations_list_automations(
         account_id: str | None = None,
         ad_account_id: str | None = None,
+        kind: str | None = None,
         limit: int = 50,
         cursor: str | None = None,
     ) -> str:
         """List automations
 
-        Lists the automations on the profiles your key can reach, newest first, across every kind: ad rules, event automations and scheduled automations.
+        Lists the automations on the profiles your key can reach, newest first, across every kind: ad rules, event automations, scheduled automations and sequences. Sequences need what `/v1/sequences` needs: the inbox add-on, and a key with the `messages` group; without them they are left out.
 
         Args:
             account_id: Only automations on this account: the ads connection of an ad rule, or one of the `accountIds` of an event or scheduled automation.
             ad_account_id: Only ad rules checking this platform ad account.
+            kind: Only these kinds, comma separated: `ad_rule`, `event`, `scheduled`, `sequence`.
             limit
             cursor: `nextCursor` from the previous page."""
         client = _get_client()
@@ -17505,6 +17507,7 @@ def register_generated_tools(mcp, _get_client):
             response = client.automations.list_automations(
                 account_id=account_id,
                 ad_account_id=ad_account_id,
+                kind=kind,
                 limit=limit,
                 cursor=cursor,
             )
@@ -17528,6 +17531,7 @@ def register_generated_tools(mcp, _get_client):
         - **Ad rule**: a `schedule` over campaigns, ad sets, ads, Google keywords or Google search terms, with metric `conditions` and ad `steps`. It stays paused unless `status` is `active`; preview it first with `POST /v1/automations/preview`.
         - **Event**: a Zernio event in `trigger.type`, such as `post.failed`, with notify steps. It is on unless `status` is `paused`.
         - **Scheduled**: a `schedule` over a profile's posts, with notify steps and an optional boost. It is on unless `status` is `paused`.
+        - **Sequence**: an `enrollment` trigger on one messaging account, with message steps sent over time. It is on unless `status` is `draft`. It needs what `/v1/sequences` needs: the inbox add-on and a key with the `messages` group.
 
         Everything an automation cannot hold is refused at once: the 400 lists every problem with its JSON path in `details.problems`.
 

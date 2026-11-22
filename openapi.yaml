@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.740.0"
+  version: "1.741.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -24219,27 +24219,79 @@ components:
               - $ref: '#/components/schemas/AutomationNotifyStep'
               - $ref: '#/components/schemas/AutomationBoostStep'
         limits: { $ref: '#/components/schemas/AutomationEventLimits' }
+    SequenceAutomationDefinition:
+      type: object
+      required: [name, trigger, steps]
+      description: 'Messages a contact over time from one account, starting when the contact is enrolled (`POST /v1/sequences/{sequenceId}/enroll`, a flow, or by hand). The same sequence `/v1/sequences` serves. Unknown fields are refused.'
+      properties:
+        name: { type: string, minLength: 1, maxLength: 200 }
+        description: { type: string }
+        status: { type: string, enum: [draft, active, paused], default: active, description: 'A new sequence is on unless `draft`. A draft can be activated; a sequence that ran can only be paused and activated again.' }
+        trigger:
+          type: object
+          required: [type, profileId, accountId]
+          additionalProperties: false
+          properties:
+            type: { type: string, const: enrollment }
+            profileId: { type: string }
+            accountId: { type: string, description: 'The account it messages from, on the profile. It cannot change once saved.' }
+        steps:
+          type: array
+          maxItems: 50
+          description: 'At least one step for an active sequence. Steps change only while it is a draft or paused.'
+          items: { $ref: '#/components/schemas/AutomationSequenceStep' }
+        limits:
+          type: object
+          additionalProperties: false
+          properties:
+            stopOn: { type: array, items: { type: string, enum: [reply, unsubscribe] }, description: 'What ends an enrollment early. Omitted, both do.' }
+    AutomationSequenceStep:
+      type: object
+      required: [type, after]
+      additionalProperties: false
+      description: 'Waits `after` the previous step (the first, after the enrollment), then sends `message`, or `template` on WhatsApp. Needs `message.text`, `message.attachments` or `template.name`.'
+      properties:
+        type: { type: string, const: messages.send }
+        after: { type: string, description: 'Whole minutes as a duration, such as `0m`, `90m` or `1d`.', example: 1d }
+        message:
+          type: object
+          additionalProperties: false
+          properties:
+            text: { type: string }
+            attachments: { type: array, items: { type: object, required: [type, url], properties: { type: { type: string }, url: { type: string }, filename: { type: string } } } }
+        template:
+          type: object
+          required: [name, language]
+          additionalProperties: false
+          description: WhatsApp only.
+          properties:
+            name: { type: string }
+            language: { type: string }
+            components: { type: array, items: {} }
+            variableMapping: { type: object, additionalProperties: true, description: 'Which contact field fills each template variable, by its number.' }
     AutomationDefinition:
       description: |
-        An automation of one of three kinds, told apart by its shape:
+        An automation of one of four kinds, told apart by its shape:
 
         - **Ad rule**: a `schedule` trigger over campaigns, ad sets, ads, Google keywords or Google search terms, with metric `conditions` and ad `steps`.
         - **Event**: a Zernio event in `trigger.type`, narrowed by `trigger.filter`, with notify steps, or none to only record each matching event as a check.
         - **Scheduled**: a `schedule` trigger over `subjects.each: post`, narrowed by `filter`, with notify and boost steps.
+        - **Sequence**: an `enrollment` trigger on one account, with message steps sent over time.
       oneOf:
         - $ref: '#/components/schemas/AdRuleAutomationDefinition'
         - $ref: '#/components/schemas/EventAutomationDefinition'
         - $ref: '#/components/schemas/ScheduledAutomationDefinition'
+        - $ref: '#/components/schemas/SequenceAutomationDefinition'
     AutomationRecord:
       type: object
       required: [id, kind, status, version, lastCheckAt, nextCheckAt, createdAt, updatedAt]
       properties:
         id: { type: string }
-        kind: { type: string, enum: [ad_rule, event, scheduled] }
-        status: { type: string, enum: [active, paused] }
+        kind: { type: string, enum: [ad_rule, event, scheduled, sequence] }
+        status: { type: string, enum: [draft, active, paused], description: Only a sequence can be a draft. }
         version: { type: string, description: 'Send it back as `If-Match` when editing, so an edit made after someone else saved is refused.' }
         lastCheckAt: { type: [string, 'null'], format: date-time, description: 'Null until an ad rule first checks. Always null for event and scheduled automations; their checks list when they ran.' }
-        nextCheckAt: { type: [string, 'null'], format: date-time, description: 'Null while paused. Always null for event and scheduled automations.' }
+        nextCheckAt: { type: [string, 'null'], format: date-time, description: 'Null while paused. Always null for event, scheduled and sequence automations.' }
         createdAt: { type: string, format: date-time }
         updatedAt: { type: string, format: date-time }
         template:
@@ -24274,6 +24326,22 @@ components:
               required: [limits]
               properties:
                 kind: { type: string, const: scheduled }
+        - allOf:
+            - $ref: '#/components/schemas/SequenceAutomationDefinition'
+            - $ref: '#/components/schemas/AutomationRecord'
+            - type: object
+              required: [limits, platform, enrollments]
+              properties:
+                kind: { type: string, const: sequence }
+                platform: { type: string, description: "The account's platform. On `whatsapp` every step sends a template." }
+                enrollments:
+                  type: object
+                  required: [total, completed, exited]
+                  description: Contacts ever enrolled, and how many finished or left early. Each enrollment is listed by `GET /v1/sequences/{sequenceId}/enrollments`.
+                  properties:
+                    total: { type: integer }
+                    completed: { type: integer }
+                    exited: { type: integer }
     AutomationProblems:
       type: object
       description: 'Every problem with the automation, each at a JSON path such as `steps[0].by`. The first one also fills `error` and `param`.'
@@ -87291,7 +87359,7 @@ paths:
       tags: [Automations]
       summary: List automations
       description: |
-        Lists the automations on the profiles your key can reach, newest first, across every kind: ad rules, event automations and scheduled automations.
+        Lists the automations on the profiles your key can reach, newest first, across every kind: ad rules, event automations, scheduled automations and sequences. Sequences need what `/v1/sequences` needs: the inbox add-on, and a key with the `messages` group; without them they are left out.
       security:
         - bearerAuth: []
       parameters:
@@ -87303,6 +87371,10 @@ paths:
           in: query
           schema: { type: string }
           description: Only ad rules checking this platform ad account.
+        - name: kind
+          in: query
+          schema: { type: string, example: 'ad_rule,event' }
+          description: 'Only these kinds, comma separated: `ad_rule`, `event`, `scheduled`, `sequence`.'
         - name: limit
           in: query
           schema: { type: integer, minimum: 1, maximum: 100, default: 50 }
@@ -87334,6 +87406,7 @@ paths:
         - **Ad rule**: a `schedule` over campaigns, ad sets, ads, Google keywords or Google search terms, with metric `conditions` and ad `steps`. It stays paused unless `status` is `active`; preview it first with `POST /v1/automations/preview`.
         - **Event**: a Zernio event in `trigger.type`, such as `post.failed`, with notify steps. It is on unless `status` is `paused`.
         - **Scheduled**: a `schedule` over a profile's posts, with notify steps and an optional boost. It is on unless `status` is `paused`.
+        - **Sequence**: an `enrollment` trigger on one messaging account, with message steps sent over time. It is on unless `status` is `draft`. It needs what `/v1/sequences` needs: the inbox add-on and a key with the `messages` group.
 
         Everything an automation cannot hold is refused at once: the 400 lists every problem with its JSON path in `details.problems`.
       security:
@@ -87427,8 +87500,8 @@ paths:
                       type: object
                       required: [kind, type]
                       properties:
-                        kind: { type: string, enum: [ad_rule, event, scheduled] }
-                        type: { type: string, description: '`schedule`, or the Zernio event name.', example: post.failed }
+                        kind: { type: string, enum: [ad_rule, event, scheduled, sequence] }
+                        type: { type: string, description: '`schedule`, `enrollment`, or the Zernio event name.', example: post.failed }
                         label: { type: string, description: Event triggers only. }
                         subject: { type: string, description: 'What an event is about, such as `post` or `account`.' }
                         scope: { type: object, description: 'Which of `profileId` and `accountIds` an event trigger needs.' }

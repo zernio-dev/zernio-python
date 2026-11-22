@@ -106,6 +106,7 @@ class AutomationsResource:
         *,
         account_id: str | None = None,
         ad_account_id: str | None = None,
+        kind: str | None = None,
         limit: int | None = 50,
         cursor: str | None = None,
     ) -> dict[str, Any]:
@@ -114,6 +115,7 @@ class AutomationsResource:
             {
                 "accountId": account_id,
                 "adAccountId": ad_account_id,
+                "kind": kind,
                 "limit": limit,
                 "cursor": cursor,
             }
@@ -512,6 +514,7 @@ class AutomationsResource:
         *,
         account_id: str | None = None,
         ad_account_id: str | None = None,
+        kind: str | None = None,
         limit: int | None = 50,
         cursor: str | None = None,
     ) -> dict[str, Any]:
@@ -520,6 +523,7 @@ class AutomationsResource:
             {
                 "accountId": account_id,
                 "adAccountId": ad_account_id,
+                "kind": kind,
                 "limit": limit,
                 "cursor": cursor,
             }
