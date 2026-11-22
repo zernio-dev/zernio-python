@@ -32979,6 +32979,9 @@ def register_generated_tools(mcp, _get_client):
             ]
         ]
         | None = None,
+        event_name_map: dict[str, Any] | None = None,
+        value_override: dict[str, Any] | None = None,
+        value_condition: dict[str, Any] | None = None,
         api_secret: str | None = None,
     ) -> str:
         """Add a forwarding rule
@@ -32986,6 +32989,12 @@ def register_generated_tools(mcp, _get_client):
         Saves where a profile's events go: every event sent to `POST /v1/events` for that profile is then forwarded to this destination.
 
         Pick `destinationId` from `GET /v1/ads/conversions/destinations`. Set `eventNames` to forward only those events, such as only `Purchase`; leave it out to forward every event.
+
+        - `eventNameMap` renames events for this destination (send your `Lead` as its `Purchase`).
+        - `valueOverride` changes the value it gets (a fixed amount or a percent of the event's value).
+        - `valueCondition` forwards only events above, below or equal to a value.
+
+        Each applies to this rule only: the event is stored, and sent to other rules, as received.
 
         Platforms: meta, google, tiktok, linkedin, microsoft, x, pinterest, reddit, openai, applovinads, snapchatads, taboolaads, klaviyo, attentive, impact, awin, campaignmanager360, tradedeskads, amazonads, googleanalytics, hubspot, salesforce, gohighlevel
 
@@ -32995,6 +33004,9 @@ def register_generated_tools(mcp, _get_client):
             destination_id: The platform destination: a pixel, a conversion action, a conversion rule, or a GA4 web stream measurement id (`G-…`). (required)
             event_names
             sources: Forward only events from these sources, such as only `web` for a tracked website. Leave it out to forward events from every source.
+            event_name_map
+            value_override: Object with keys: mode (one of: original, fixed, percent; required); amount (number) - Required for `fixed` and `percent` (at most 1000 for `percent`); null for `original`.
+            value_condition: Object with keys: operator (one of: gt, lt, eq; required); amount (number, required)
             api_secret: Google Analytics streams only: the stream's Measurement Protocol API secret (GA4 Admin › Data streams). Optional when the connection has edit access, since Zernio then creates it. Checked against Google's validation server, stored encrypted, never returned. Change it with `PATCH /v1/events/forwarding-rules/{ruleId}`."""
         client = _get_client()
         try:
@@ -33004,6 +33016,9 @@ def register_generated_tools(mcp, _get_client):
                 destination_id=destination_id,
                 event_names=event_names,
                 sources=sources,
+                event_name_map=event_name_map,
+                value_override=value_override,
+                value_condition=value_condition,
                 api_secret=api_secret,
             )
             return _format_response(response)
@@ -33012,24 +33027,39 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
-            title="Change a forwarding rule's API secret",
+            title="Update a forwarding rule",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
         )
     )
-    def conversions_update_forwarding_rule(rule_id: str, api_secret: str) -> str:
-        """Change a forwarding rule's API secret
+    def conversions_update_forwarding_rule(
+        rule_id: str,
+        api_secret: str | None = None,
+        event_name_map: dict[str, Any] | None = None,
+        value_override: dict[str, Any] | None = None,
+        value_condition: dict[str, Any] | None = None,
+    ) -> str:
+        """Update a forwarding rule
 
-        Replaces the `apiSecret` of a rule whose destination needs one, such as a Google Analytics data stream's Measurement Protocol API secret. Before saving, Zernio sends one hit to Google's validation server; Google does not confirm the secret itself, so check GA4 Realtime after the next events.
+        Changes the fields you send and keeps the others. Send `eventNameMap: null` to stop renaming, `valueOverride: { \"mode\": \"original\" }` to send the event's own value again, and `valueCondition: null` to forward whatever the value.
+
+        `apiSecret` replaces the secret of a rule whose destination needs one, such as a Google Analytics data stream's Measurement Protocol API secret. Before saving, Zernio sends one hit to Google's validation server; Google does not confirm the secret itself, so check GA4 Realtime after the next events.
 
         Args:
             rule_id: The rule `id`. (required)
-            api_secret: (required)"""
+            api_secret
+            event_name_map
+            value_override: Object with keys: mode (one of: original, fixed, percent; required); amount (number) - Required for `fixed` and `percent` (at most 1000 for `percent`); null for `original`.
+            value_condition: Object with keys: operator (one of: gt, lt, eq; required); amount (number, required)"""
         client = _get_client()
         try:
             response = client.conversions.update_forwarding_rule(
-                rule_id=rule_id, api_secret=api_secret
+                rule_id=rule_id,
+                api_secret=api_secret,
+                event_name_map=event_name_map,
+                value_override=value_override,
+                value_condition=value_condition,
             )
             return _format_response(response)
         except Exception as e:

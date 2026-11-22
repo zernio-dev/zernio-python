@@ -604,6 +604,9 @@ class ConversionsResource:
         *,
         event_names: list[str] | None = None,
         sources: list[str] | None = None,
+        event_name_map: Any | None = None,
+        value_override: Any | None = None,
+        value_condition: Any | None = None,
         api_secret: str | None = None,
     ) -> dict[str, Any]:
         """Add a forwarding rule"""
@@ -614,16 +617,30 @@ class ConversionsResource:
                 "destinationId": destination_id,
                 "eventNames": event_names,
                 "sources": sources,
+                "eventNameMap": event_name_map,
+                "valueOverride": value_override,
+                "valueCondition": value_condition,
                 "apiSecret": api_secret,
             }
         )
         return self._client._post("/v1/events/forwarding-rules", data=payload)
 
-    def update_forwarding_rule(self, rule_id: str, api_secret: str) -> dict[str, Any]:
-        """Change a forwarding rule's API secret"""
+    def update_forwarding_rule(
+        self,
+        rule_id: str,
+        *,
+        api_secret: str | None = None,
+        event_name_map: Any | None = None,
+        value_override: Any | None = None,
+        value_condition: Any | None = None,
+    ) -> dict[str, Any]:
+        """Update a forwarding rule"""
         payload = self._build_body(
             {
                 "apiSecret": api_secret,
+                "eventNameMap": event_name_map,
+                "valueOverride": value_override,
+                "valueCondition": value_condition,
             }
         )
         return self._client._patch(
@@ -1619,6 +1636,9 @@ class ConversionsResource:
         *,
         event_names: list[str] | None = None,
         sources: list[str] | None = None,
+        event_name_map: Any | None = None,
+        value_override: Any | None = None,
+        value_condition: Any | None = None,
         api_secret: str | None = None,
     ) -> dict[str, Any]:
         """Add a forwarding rule (async)"""
@@ -1629,18 +1649,30 @@ class ConversionsResource:
                 "destinationId": destination_id,
                 "eventNames": event_names,
                 "sources": sources,
+                "eventNameMap": event_name_map,
+                "valueOverride": value_override,
+                "valueCondition": value_condition,
                 "apiSecret": api_secret,
             }
         )
         return await self._client._apost("/v1/events/forwarding-rules", data=payload)
 
     async def aupdate_forwarding_rule(
-        self, rule_id: str, api_secret: str
+        self,
+        rule_id: str,
+        *,
+        api_secret: str | None = None,
+        event_name_map: Any | None = None,
+        value_override: Any | None = None,
+        value_condition: Any | None = None,
     ) -> dict[str, Any]:
-        """Change a forwarding rule's API secret (async)"""
+        """Update a forwarding rule (async)"""
         payload = self._build_body(
             {
                 "apiSecret": api_secret,
+                "eventNameMap": event_name_map,
+                "valueOverride": value_override,
+                "valueCondition": value_condition,
             }
         )
         return await self._client._apatch(
