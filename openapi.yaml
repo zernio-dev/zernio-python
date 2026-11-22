@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.760.0"
+  version: "1.760.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -52043,8 +52043,6 @@ paths:
       description: |
         Starts Login with Amazon for Amazon Ads (scope `advertising::campaign_management`). The Amazon login becomes an account with platform `amazonads`; every advertiser profile it reaches, in the NA, EU and FE regions, is a conversions destination (`GET /v1/ads/conversions/destinations`).
 
-        **Not open yet:** this answers 503 `FEATURE_NOT_AVAILABLE` until Amazon approves Zernio for the Amazon Ads API. Ask support for early access.
-
         Errors on the redirect: `amazonads_no_profiles` (the login reaches no advertiser), `amazonads_no_refresh_token`.
       security:
         - bearerAuth: []
@@ -52088,7 +52086,7 @@ paths:
         '404':
           description: Profile not found or access denied.
         '503':
-          description: Amazon Ads is not open yet (Zernio's Amazon Ads API access is pending), code FEATURE_NOT_AVAILABLE.
+          description: Amazon Ads is not configured on this server, code FEATURE_NOT_AVAILABLE.
 
   /v1/connect/hubspot:
     get:
@@ -108473,7 +108471,7 @@ paths:
         - Awin (`awin`) via the Conversion API (`POST /s2s/advertiser/{advertiserId}/orders`)
         - Campaign Manager 360 (`campaignmanager360`) via the Data Manager API `ingestEvents`, to a Floodlight activity
         - The Trade Desk (`tradedeskads`) via the Real-Time Conversions API (`POST https://insight.adsrvr.org/track/realtimeconversion`)
-        - Amazon Ads (`amazonads`) via the Amazon Ads Conversions API (`POST /adsApi/v1/create/events`); opens once Amazon approves Zernio's Ads API access
+        - Amazon Ads (`amazonads`) via the Amazon Ads Conversions API (`POST /adsApi/v1/create/events`)
 
         ### `destinationId` per platform
 
