@@ -17499,11 +17499,12 @@ def register_generated_tools(mcp, _get_client):
 
             Each kind is listed only for callers its own route lets read it; the others are left out, never an error:
 
-            - **Sequences, comment to DM and flows** need the inbox add-on and a key with the `messages` group, as `/v1/sequences`, `/v1/comment-automations` and `/v1/workflows` do.
+            - **Sequences and comment to DM** need the inbox add-on and a key with the `messages` group, as `/v1/sequences` and `/v1/comment-automations` do.
+            - **Flows** need the inbox add-on and a full-access key, as `/v1/workflows` does.
             - **Ad rules, event and scheduled automations** need only access to their profile, as reading, pausing and deleting them does. Creating, editing, activating or previewing an ad rule needs the ads add-on.
 
             Args:
-                account_id: Only automations on this account: the ads connection of an ad rule, or one of the `accountIds` of an event or scheduled automation.
+                account_id: Only automations on this account: the ads connection of an ad rule, one of the `accountIds` of an event or scheduled automation, or the account a sequence, comment to DM or flow runs on.
                 ad_account_id: Only ad rules checking this platform ad account.
                 kind: Only these kinds, comma separated: `ad_rule`, `event`, `scheduled`, `sequence`, `comment`, `workflow`.
                 limit
@@ -17534,7 +17535,7 @@ def register_generated_tools(mcp, _get_client):
     def automations_create_automation(body: dict[str, Any]) -> str:
         """Create an automation
 
-        Creates an automation. Its shape picks the kind:
+        Creates an automation. Its trigger picks the kind:
 
         - **Ad rule**: a `schedule` over campaigns, ad sets, ads, Google keywords or Google search terms, with metric `conditions` and ad `steps`. It stays paused unless `status` is `active`; preview it first with `POST /v1/automations/preview`.
         - **Event**: a Zernio event in `trigger.type`, such as `post.failed`, with notify steps. It is on unless `status` is `paused`.
@@ -17718,8 +17719,11 @@ def register_generated_tools(mcp, _get_client):
     def automations_update_automation(
         automation_id: str,
         name: str | None = None,
-        status: Literal["active", "paused"] | None = None,
+        description: str | None = None,
+        status: Literal["draft", "active", "paused"] | None = None,
         trigger: dict[str, Any] | None = None,
+        or_triggers: list[dict[str, Any]] | None = None,
+        graph: dict[str, Any] | None = None,
         subjects: dict[str, Any] | None = None,
         filter: dict[str, Any] | None = None,
         conditions: dict[str, Any] | None = None,
@@ -17738,21 +17742,27 @@ def register_generated_tools(mcp, _get_client):
         Args:
             automation_id: (required)
             name
-            status
-            trigger: Object with keys: type (string, required); every (one of: 15m, 30m, 1h, 3h, 6h, 12h, 1d) - Run every interval. Send this or `times`, not both.; times (list of objects with keys days, at) - Set weekly times. Send this or `every`, not both.; startsAt (string) - Runs from this time on.; endsAt (string) - Stops running after this time. Must be after `startsAt`.; quietHours (object with keys from, to) - A daily window with no checks. It may wrap past midnight, such as `22:00` to `06:00`.
+            description: Sequences and flows.
+            status: `draft` only for a sequence or a flow that has not left draft.
+            trigger: The trigger of the automation's kind.
+            or_triggers: Comment to DM.
+            graph: Comment to DM and flows: the whole graph, as read.
             subjects: Object with keys: each (one of: campaign, adset, ad, keyword, search_term; required) - The objects judged one by one.; adAccounts (list of objects with keys accountId, adAccountId, required) - The ad account to check. One per ad rule, and an edit cannot move it to another.; campaignIds (list of string) - Only these platform campaigns or their ad sets and ads. Leave out to check the whole ad account.; filters (list of objects with keys field, op, value) - All must hold.; groups (list of objects with keys name, filters) - Judges campaigns together (campaign rules only): each group's numbers are summed and its rates computed on the totals, and a matching group acts on each of ...
             filter: Object with keys: field (string, required) - A fact name from the catalog.; op (one of: equals, not_equals, contains, not_contains, starts_with, ends_with, exists, not_exists, matches, greater_than, less_than, greater_or_equal, less_or_equal, before, after, has_tag, not_has_tag, is_true, is_false; required); value (string or number, required)
             conditions: Object with keys: all (list of objects with keys metric, window, op, value, model, compareTo, of, required)
             alert: Object with keys: confirmChecks (integer); hold (object with keys all); critical (object with keys all)
             steps: The steps the automation's kind takes. Each item is an object with keys: id (string); type (string, required)
-            limits: Object with keys: cooldown (string) - How long an object is left alone after the rule acts on it. Whole minutes, up to `30d`.; maxChangesPerDay (integer) - Most changes across the last 24 hours. Needs an `ads.*` step.; maxChangesPerObject (integer) - Most times the rule may change one object, counted over the last 400 days. Needs an `ads.*` step."""
+            limits: The limits of the automation's kind."""
         client = _get_client()
         try:
             response = client.automations.update_automation(
                 automation_id=automation_id,
                 name=name,
+                description=description,
                 status=status,
                 trigger=trigger,
+                or_triggers=or_triggers,
+                graph=graph,
                 subjects=subjects,
                 filter=filter,
                 conditions=conditions,
