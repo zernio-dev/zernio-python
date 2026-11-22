@@ -1126,6 +1126,10 @@ def register_generated_tools(mcp, _get_client):
             "whopads",
             "applovinads",
             "snapchatads",
+            "klaviyo",
+            "attentive",
+            "impact",
+            "awin",
             "hubspot",
             "webflow",
             "googleanalytics",
@@ -28918,6 +28922,186 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="Connect a Klaviyo account",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def connect_klaviyo_credentials(
+        api_key: str,
+        profile_id: str,
+        name: str | None = None,
+        state: str | None = None,
+        redirect_url: str | None = None,
+    ) -> str:
+        """Connect a Klaviyo account
+
+        Connect Klaviyo with a private API key (Settings, API keys) that has the Events (write) and Accounts (read) scopes.
+
+        Zernio reads the key's account once to check it, then sends the events you forward to it (`POST /v1/events`, forwarding rules) to Klaviyo's Events API. Connecting the same account again replaces its key.
+
+        Requires the Ads add-on.
+
+        Args:
+            api_key: Klaviyo private API key, starting with pk_. (required)
+            name: Optional display name for the account.
+            profile_id: Your Zernio profile ID (required)
+            state: Optional state passthrough for the connect flow.
+            redirect_url: Optional URL to redirect to after a successful connection, echoed back as redirectUrl."""
+        client = _get_client()
+        try:
+            response = client.connect.connect_klaviyo_credentials(
+                api_key=api_key,
+                name=name,
+                profile_id=profile_id,
+                state=state,
+                redirect_url=redirect_url,
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Connect an Attentive company",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def connect_attentive_credentials(
+        api_key: str,
+        profile_id: str,
+        name: str | None = None,
+        state: str | None = None,
+        redirect_url: str | None = None,
+    ) -> str:
+        """Connect an Attentive company
+
+        Connect Attentive with the API key of a custom app (Integrations, Custom apps) that can write Custom Events and eCommerce events.
+
+        Zernio reads the key's company from Attentive once to check it, then sends the events you forward to it to Attentive. Connecting the same company again replaces its key.
+
+        Requires the Ads add-on.
+
+        Args:
+            api_key: API key of an Attentive custom app. (required)
+            name: Optional display name for the account.
+            profile_id: Your Zernio profile ID (required)
+            state: Optional state passthrough for the connect flow.
+            redirect_url: Optional URL to redirect to after a successful connection, echoed back as redirectUrl."""
+        client = _get_client()
+        try:
+            response = client.connect.connect_attentive_credentials(
+                api_key=api_key,
+                name=name,
+                profile_id=profile_id,
+                state=state,
+                redirect_url=redirect_url,
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Connect an Impact program",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def connect_impact_credentials(
+        account_sid: str,
+        auth_token: str,
+        program_id: str,
+        event_type_id: str,
+        profile_id: str,
+        name: str | None = None,
+        state: str | None = None,
+        redirect_url: str | None = None,
+    ) -> str:
+        """Connect an Impact program
+
+        Connect impact.com with an access token (Settings, API) that can read Campaigns and write Conversions, the program the conversions count in and the event type they count as.
+
+        Zernio lists the account's programs once to check the token, then sends the conversions you forward to it to `<programId>:<eventTypeId>`. Another event type of the same account is another forwarding rule with that `destinationId`.
+
+        Requires the Ads add-on.
+
+        Args:
+            account_sid: Account SID, starting with IR. (required)
+            auth_token: Auth Token of the same access token. (required)
+            program_id: Numeric program (campaign) id. (required)
+            event_type_id: Numeric event type id (ActionTrackerId), from Settings, Event Types. (required)
+            name: Optional display name for the account.
+            profile_id: Your Zernio profile ID (required)
+            state: Optional state passthrough for the connect flow.
+            redirect_url: Optional URL to redirect to after a successful connection, echoed back as redirectUrl."""
+        client = _get_client()
+        try:
+            response = client.connect.connect_impact_credentials(
+                account_sid=account_sid,
+                auth_token=auth_token,
+                program_id=program_id,
+                event_type_id=event_type_id,
+                name=name,
+                profile_id=profile_id,
+                state=state,
+                redirect_url=redirect_url,
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Connect an Awin advertiser",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def connect_awin_credentials(
+        api_key: str,
+        advertiser_id: str,
+        profile_id: str,
+        name: str | None = None,
+        state: str | None = None,
+        redirect_url: str | None = None,
+    ) -> str:
+        """Connect an Awin advertiser
+
+        Connect Awin with your advertiser id and an API key (Settings, User settings, API credentials).
+
+        Zernio checks the key with one test order (`isTest`, not tracked by Awin) before saving it. Events sent with `testCode` reach Awin the same way.
+
+        Requires the Ads add-on.
+
+        Args:
+            api_key: Awin API key. (required)
+            advertiser_id: Numeric Awin advertiser id. (required)
+            name: Optional display name for the account.
+            profile_id: Your Zernio profile ID (required)
+            state: Optional state passthrough for the connect flow.
+            redirect_url: Optional URL to redirect to after a successful connection, echoed back as redirectUrl."""
+        client = _get_client()
+        try:
+            response = client.connect.connect_awin_credentials(
+                api_key=api_key,
+                advertiser_id=advertiser_id,
+                name=name,
+                profile_id=profile_id,
+                state=state,
+                redirect_url=redirect_url,
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="Connect a Whop account",
             readOnlyHint=False,
             destructiveHint=True,
@@ -32020,7 +32204,7 @@ def register_generated_tools(mcp, _get_client):
 
         Paginate with `cursor`: pass the `nextCursor` of the previous page until it comes back `null`.
 
-        Platforms: meta, google, tiktok, linkedin, microsoft, x, pinterest, reddit, openai, applovinads, snapchatads, googleanalytics, stripe, hubspot, salesforce, gohighlevel
+        Platforms: meta, google, tiktok, linkedin, microsoft, x, pinterest, reddit, openai, applovinads, snapchatads, klaviyo, attentive, impact, awin, googleanalytics, stripe, hubspot, salesforce, gohighlevel
 
         Args:
             profile_id: The profile to list. Omit to cover every profile you can access.
@@ -32085,7 +32269,7 @@ def register_generated_tools(mcp, _get_client):
 
         - A signal left out counts as `DENIED`. Zernio has no ...
 
-        Platforms: meta, google, tiktok, linkedin, microsoft, x, pinterest, reddit, openai, applovinads, snapchatads, googleanalytics, gohighlevel
+        Platforms: meta, google, tiktok, linkedin, microsoft, x, pinterest, reddit, openai, applovinads, snapchatads, klaviyo, attentive, impact, awin, googleanalytics, gohighlevel
 
         Args:
             profile_id: Profile the events belong to. Its saved destinations receive the events. (required)
@@ -32547,7 +32731,7 @@ def register_generated_tools(mcp, _get_client):
 
         Pick `destinationId` from `GET /v1/ads/conversions/destinations`. Set `eventNames` to forward only those events, such as only `Purchase`; leave it out to forward every event.
 
-        Platforms: meta, google, tiktok, linkedin, microsoft, x, pinterest, reddit, openai, applovinads, snapchatads, googleanalytics, hubspot, salesforce, gohighlevel
+        Platforms: meta, google, tiktok, linkedin, microsoft, x, pinterest, reddit, openai, applovinads, snapchatads, klaviyo, attentive, impact, awin, googleanalytics, hubspot, salesforce, gohighlevel
 
         Args:
             profile_id: (required)
@@ -32707,6 +32891,8 @@ def register_generated_tools(mcp, _get_client):
     def conversions_update_tracking_site(
         site_id: str,
         name: str | None = None,
+        pixels: list[dict[str, Any]] | None = None,
+        consent_mode_bridge: bool | None = None,
         domains: list[str] | None = None,
         consent_mode: Literal["eu_opt_in", "opt_in", "opt_out"] | None = None,
         custom_hostname: str | None = None,
@@ -32723,9 +32909,13 @@ def register_generated_tools(mcp, _get_client):
 
         `googleTagIds` lists the site's own Google tags that the same proxy relays to Google's tag gateway. Load each from its `proxy.googleTags[].src` instead of googletagmanager.com. `null` or an empty list removes them.
 
+        `pixels` lists the ad pixels the tag loads for you. In the EEA, UK and Switzerland none loads until the visitor accepts on the site's consent banner. Elsewhere `consentMode` decides. Remove your own copy of each pixel, or it fires twice. `null` or an empty list removes them. ...
+
         Args:
             site_id: (required)
             name
+            pixels: The ad pixels the tag loads once consent allows, up to 20, one Microsoft UET tag at most. `null` or `[]` removes them. Each item is an object with keys: platform (one of: meta, google, tiktok, linkedin, pinterest, snapchat, reddit, x, microsoft; required); id (string, required) - The id the platform's own snippet loads, such as a Meta pixel id, `AW-123456789` or `G-XXXXXXXXXX` for Google, a TikTok pixel code, a LinkedIn partner id or a ...
+            consent_mode_bridge: Write the site's consent banner into Google Consent Mode v2: a denied default in the EEA, UK and Switzerland where the page sets none, then each update.
             domains: Hosts allowed to send events, such as `brand.com`. Events from any other origin are dropped.
             consent_mode
             custom_hostname: A subdomain of one of the site's domains, never the domain itself. `null` removes it.
@@ -32736,6 +32926,8 @@ def register_generated_tools(mcp, _get_client):
             response = client.conversions.update_tracking_site(
                 site_id=site_id,
                 name=name,
+                pixels=pixels,
+                consent_mode_bridge=consent_mode_bridge,
                 domains=domains,
                 consent_mode=consent_mode,
                 custom_hostname=custom_hostname,

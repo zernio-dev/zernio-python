@@ -667,6 +667,8 @@ class ConversionsResource:
         site_id: str,
         *,
         name: str | None = None,
+        pixels: Any | None = None,
+        consent_mode_bridge: bool | None = None,
         domains: list[str] | None = None,
         consent_mode: Any | None = None,
         custom_hostname: Any | None = None,
@@ -677,6 +679,8 @@ class ConversionsResource:
         payload = self._build_body(
             {
                 "name": name,
+                "pixels": pixels,
+                "consentModeBridge": consent_mode_bridge,
                 "domains": domains,
                 "consentMode": consent_mode,
                 "customHostname": custom_hostname,
@@ -1682,6 +1686,8 @@ class ConversionsResource:
         site_id: str,
         *,
         name: str | None = None,
+        pixels: Any | None = None,
+        consent_mode_bridge: bool | None = None,
         domains: list[str] | None = None,
         consent_mode: Any | None = None,
         custom_hostname: Any | None = None,
@@ -1692,6 +1698,8 @@ class ConversionsResource:
         payload = self._build_body(
             {
                 "name": name,
+                "pixels": pixels,
+                "consentModeBridge": consent_mode_bridge,
                 "domains": domains,
                 "consentMode": consent_mode,
                 "customHostname": custom_hostname,

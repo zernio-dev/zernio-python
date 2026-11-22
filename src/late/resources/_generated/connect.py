@@ -1029,6 +1029,98 @@ class ConnectResource:
         )
         return self._client._post("/v1/connect/snapchat-ads/credentials", data=payload)
 
+    def connect_klaviyo_credentials(
+        self,
+        api_key: str,
+        profile_id: str,
+        *,
+        name: str | None = None,
+        state: str | None = None,
+        redirect_url: str | None = None,
+    ) -> dict[str, Any]:
+        """Connect a Klaviyo account"""
+        payload = self._build_body(
+            {
+                "apiKey": api_key,
+                "name": name,
+                "profileId": profile_id,
+                "state": state,
+                "redirect_url": redirect_url,
+            }
+        )
+        return self._client._post("/v1/connect/klaviyo/credentials", data=payload)
+
+    def connect_attentive_credentials(
+        self,
+        api_key: str,
+        profile_id: str,
+        *,
+        name: str | None = None,
+        state: str | None = None,
+        redirect_url: str | None = None,
+    ) -> dict[str, Any]:
+        """Connect an Attentive company"""
+        payload = self._build_body(
+            {
+                "apiKey": api_key,
+                "name": name,
+                "profileId": profile_id,
+                "state": state,
+                "redirect_url": redirect_url,
+            }
+        )
+        return self._client._post("/v1/connect/attentive/credentials", data=payload)
+
+    def connect_impact_credentials(
+        self,
+        account_sid: str,
+        auth_token: str,
+        program_id: str,
+        event_type_id: str,
+        profile_id: str,
+        *,
+        name: str | None = None,
+        state: str | None = None,
+        redirect_url: str | None = None,
+    ) -> dict[str, Any]:
+        """Connect an Impact program"""
+        payload = self._build_body(
+            {
+                "accountSid": account_sid,
+                "authToken": auth_token,
+                "programId": program_id,
+                "eventTypeId": event_type_id,
+                "name": name,
+                "profileId": profile_id,
+                "state": state,
+                "redirect_url": redirect_url,
+            }
+        )
+        return self._client._post("/v1/connect/impact/credentials", data=payload)
+
+    def connect_awin_credentials(
+        self,
+        api_key: str,
+        advertiser_id: str,
+        profile_id: str,
+        *,
+        name: str | None = None,
+        state: str | None = None,
+        redirect_url: str | None = None,
+    ) -> dict[str, Any]:
+        """Connect an Awin advertiser"""
+        payload = self._build_body(
+            {
+                "apiKey": api_key,
+                "advertiserId": advertiser_id,
+                "name": name,
+                "profileId": profile_id,
+                "state": state,
+                "redirect_url": redirect_url,
+            }
+        )
+        return self._client._post("/v1/connect/awin/credentials", data=payload)
+
     def connect_whop_ads_credentials(
         self,
         api_key: str,
@@ -2746,6 +2838,102 @@ class ConnectResource:
         return await self._client._apost(
             "/v1/connect/snapchat-ads/credentials", data=payload
         )
+
+    async def aconnect_klaviyo_credentials(
+        self,
+        api_key: str,
+        profile_id: str,
+        *,
+        name: str | None = None,
+        state: str | None = None,
+        redirect_url: str | None = None,
+    ) -> dict[str, Any]:
+        """Connect a Klaviyo account (async)"""
+        payload = self._build_body(
+            {
+                "apiKey": api_key,
+                "name": name,
+                "profileId": profile_id,
+                "state": state,
+                "redirect_url": redirect_url,
+            }
+        )
+        return await self._client._apost(
+            "/v1/connect/klaviyo/credentials", data=payload
+        )
+
+    async def aconnect_attentive_credentials(
+        self,
+        api_key: str,
+        profile_id: str,
+        *,
+        name: str | None = None,
+        state: str | None = None,
+        redirect_url: str | None = None,
+    ) -> dict[str, Any]:
+        """Connect an Attentive company (async)"""
+        payload = self._build_body(
+            {
+                "apiKey": api_key,
+                "name": name,
+                "profileId": profile_id,
+                "state": state,
+                "redirect_url": redirect_url,
+            }
+        )
+        return await self._client._apost(
+            "/v1/connect/attentive/credentials", data=payload
+        )
+
+    async def aconnect_impact_credentials(
+        self,
+        account_sid: str,
+        auth_token: str,
+        program_id: str,
+        event_type_id: str,
+        profile_id: str,
+        *,
+        name: str | None = None,
+        state: str | None = None,
+        redirect_url: str | None = None,
+    ) -> dict[str, Any]:
+        """Connect an Impact program (async)"""
+        payload = self._build_body(
+            {
+                "accountSid": account_sid,
+                "authToken": auth_token,
+                "programId": program_id,
+                "eventTypeId": event_type_id,
+                "name": name,
+                "profileId": profile_id,
+                "state": state,
+                "redirect_url": redirect_url,
+            }
+        )
+        return await self._client._apost("/v1/connect/impact/credentials", data=payload)
+
+    async def aconnect_awin_credentials(
+        self,
+        api_key: str,
+        advertiser_id: str,
+        profile_id: str,
+        *,
+        name: str | None = None,
+        state: str | None = None,
+        redirect_url: str | None = None,
+    ) -> dict[str, Any]:
+        """Connect an Awin advertiser (async)"""
+        payload = self._build_body(
+            {
+                "apiKey": api_key,
+                "advertiserId": advertiser_id,
+                "name": name,
+                "profileId": profile_id,
+                "state": state,
+                "redirect_url": redirect_url,
+            }
+        )
+        return await self._client._apost("/v1/connect/awin/credentials", data=payload)
 
     async def aconnect_whop_ads_credentials(
         self,
