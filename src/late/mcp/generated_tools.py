@@ -59559,6 +59559,7 @@ def register_generated_tools(mcp, _get_client):
         | None = None,
         limit: int = 25,
         skip: int = 0,
+        cursor: str | None = None,
     ) -> str:
         """List workflow runs
 
@@ -59568,11 +59569,16 @@ def register_generated_tools(mcp, _get_client):
             workflow_id: (required)
             status
             limit
-            skip"""
+            skip
+            cursor: The previous page's pagination.nextCursor. Pages stay stable while runs start or end; skip applies after it. Page past the first 1000 runs with the cursor: a larger skip may be refused with 400."""
         client = _get_client()
         try:
             response = client.workflows.list_workflow_executions(
-                workflow_id=workflow_id, status=status, limit=limit, skip=skip
+                workflow_id=workflow_id,
+                status=status,
+                limit=limit,
+                skip=skip,
+                cursor=cursor,
             )
             return _format_response(response)
         except Exception as e:

@@ -196,6 +196,7 @@ class WorkflowsResource:
         status: str | None = None,
         limit: int | None = 25,
         skip: int | None = 0,
+        cursor: str | None = None,
     ) -> dict[str, Any]:
         """List workflow runs"""
         params = self._build_query(
@@ -203,6 +204,7 @@ class WorkflowsResource:
                 "status": status,
                 "limit": limit,
                 "skip": skip,
+                "cursor": cursor,
             }
         )
         return self._client._get(
@@ -374,6 +376,7 @@ class WorkflowsResource:
         status: str | None = None,
         limit: int | None = 25,
         skip: int | None = 0,
+        cursor: str | None = None,
     ) -> dict[str, Any]:
         """List workflow runs (async)"""
         params = self._build_query(
@@ -381,6 +384,7 @@ class WorkflowsResource:
                 "status": status,
                 "limit": limit,
                 "skip": skip,
+                "cursor": cursor,
             }
         )
         return await self._client._aget(
