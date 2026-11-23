@@ -292,8 +292,10 @@ class MetricsResource:
         limit: int | None = 50,
         cursor: str | None = None,
         campaign_id: str | None = None,
+        metrics: str | None = None,
+        granularity: str | None = "total",
     ) -> dict[str, Any]:
-        """Read the uploaded results of each campaign over a window"""
+        """Read the delivery metrics or the uploaded results of each campaign over a window"""
         params = self._build_query(
             {
                 "limit": limit,
@@ -301,6 +303,8 @@ class MetricsResource:
                 "fromDate": from_date,
                 "toDate": to_date,
                 "campaignId": campaign_id,
+                "metrics": metrics,
+                "granularity": granularity,
             }
         )
         return self._client._get("/v1/metrics/campaigns", params=params)
@@ -616,8 +620,10 @@ class MetricsResource:
         limit: int | None = 50,
         cursor: str | None = None,
         campaign_id: str | None = None,
+        metrics: str | None = None,
+        granularity: str | None = "total",
     ) -> dict[str, Any]:
-        """Read the uploaded results of each campaign over a window (async)"""
+        """Read the delivery metrics or the uploaded results of each campaign over a window (async)"""
         params = self._build_query(
             {
                 "limit": limit,
@@ -625,6 +631,8 @@ class MetricsResource:
                 "fromDate": from_date,
                 "toDate": to_date,
                 "campaignId": campaign_id,
+                "metrics": metrics,
+                "granularity": granularity,
             }
         )
         return await self._client._aget("/v1/metrics/campaigns", params=params)

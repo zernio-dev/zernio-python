@@ -1494,7 +1494,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `metrics.get_account_metrics()` | Read follower and post totals per account, platform or scope over time |
 | `metrics.get_ad_account_metrics()` | Read the uploaded results summed across ad accounts |
 | `metrics.get_ad_metrics()` | Read ad metrics by id, or one ad day by day with breakdowns |
-| `metrics.get_campaign_metrics()` | Read the uploaded results of each campaign over a window |
+| `metrics.get_campaign_metrics()` | Read the delivery metrics or the uploaded results of each campaign over a window |
 | `metrics.get_inbox_metrics()` | Read message volume and response times |
 | `metrics.get_insight_metrics()` | Read live account or post insights from the platform |
 | `metrics.get_metrics_catalog()` | List the metrics, groupings and limits of each metrics endpoint |
