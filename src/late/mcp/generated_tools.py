@@ -54619,19 +54619,24 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=True,
         )
     )
-    def voice_transfer_voice_call(id: str, to: str) -> str:
+    def voice_transfer_voice_call(
+        id: str, to: str, caller_id: Literal["business", "caller"] = "business"
+    ) -> str:
         """Blind-transfer a live call
 
         Moves the call's current leg to a new destination (a phone number or a SIP endpoint).
 
-        This is a BLIND transfer: control of the leg is handed off and the call ends normally when the transferred leg hangs up. The caller ID presented on the transfer leg is always your own number.
+        This is a BLIND transfer: control of the leg is handed off and the call ends normally when the transferred leg hangs up. The caller ID presented on the transfer leg is your own number unless you pass `callerId: \"caller\"` on an inbound call, which presents the original caller's number.
 
         Args:
             id: (required)
-            to: +E164 phone number (tel: prefix optional) or a sip: URI. wss:// is not a valid transfer target. (required)"""
+            to: +E164 phone number (tel: prefix optional) or a sip: URI. wss:// is not a valid transfer target. (required)
+            caller_id: Caller ID shown on the transfer leg. `business` is your own number. `caller` is the original caller's number, for inbound calls only. The carrier may refuse `caller` on some routes: you get a 422, then retry with `business`."""
         client = _get_client()
         try:
-            response = client.voice.transfer_voice_call(id=id, to=to)
+            response = client.voice.transfer_voice_call(
+                id=id, to=to, caller_id=caller_id
+            )
             return _format_response(response)
         except Exception as e:
             raise ToolError(f"Error: {e}") from e

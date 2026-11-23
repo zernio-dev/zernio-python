@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.791.0"
+  version: "1.792.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -76272,7 +76272,7 @@ paths:
       description: |
         Moves the call's current leg to a new destination (a phone number or a SIP endpoint).
 
-        This is a BLIND transfer: control of the leg is handed off and the call ends normally when the transferred leg hangs up. The caller ID presented on the transfer leg is always your own number.
+        This is a BLIND transfer: control of the leg is handed off and the call ends normally when the transferred leg hangs up. The caller ID presented on the transfer leg is your own number unless you pass `callerId: "caller"` on an inbound call, which presents the original caller's number.
       security:
         - bearerAuth: []
       parameters:
@@ -76286,6 +76286,7 @@ paths:
               required: [to]
               properties:
                 to: { type: string, description: "+E164 phone number (tel: prefix optional) or a sip: URI. wss:// is not a valid transfer target." }
+                callerId: { type: string, enum: [business, caller], default: business, description: "Caller ID shown on the transfer leg. `business` is your own number. `caller` is the original caller's number, for inbound calls only. The carrier may refuse `caller` on some routes: you get a 422, then retry with `business`." }
       responses:
         '200':
           description: Transfer issued.
@@ -76297,9 +76298,11 @@ paths:
                   success: { type: boolean }
                   callId: { type: string }
                   transferredTo: { type: string }
+        '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: Call not found }
         '409': { description: "Call is not connected yet, or has already ended" }
+        '422': { description: "The carrier refused presenting the caller's number on this route. Retry with callerId business." }
 
   /v1/voice/calls/estimate:
     get:
