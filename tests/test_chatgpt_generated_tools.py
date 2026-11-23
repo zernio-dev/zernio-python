@@ -27,6 +27,11 @@ LIVE_TOOLS = json.loads((FIXTURES / "chatgpt_live_tools.json").read_text())
 LIVE_INSTRUCTIONS = (FIXTURES / "chatgpt_live_instructions.txt").read_text()
 CONVERSATIONS = "https://api.test.com/v1/inbox/conversations"
 LINK_SCOPES = {"posts:read", "posts:write", "accounts:read", "analytics:read"}
+OPEN_WORLD_READS = {
+    "reddit_get_reddit_feed",
+    "instagram_get_instagram_business_discovery",
+    "twitter_engagement_search_tweets",
+}
 GROUP_DENIED = {
     "error": "This connector token has the 'messages' resource group disabled.",
     "code": "insufficient_permissions",
@@ -76,7 +81,8 @@ async def test_every_generated_tool_has_explicit_hints_and_its_oauth_scope():
         hints = listed[name]["annotations"]
         assert hints["readOnlyHint"] is True, name
         assert hints["destructiveHint"] is False, name
-        assert hints["openWorldHint"] is False, name
+        # Reads of public content (Reddit, other Instagram accounts) are open-world.
+        assert hints["openWorldHint"] is (name in OPEN_WORLD_READS), name
         assert listed[name]["_meta"]["securitySchemes"] == [
             {"type": "oauth2", "scopes": [TOOL_OAUTH_SCOPES[name][0]]}
         ], name
