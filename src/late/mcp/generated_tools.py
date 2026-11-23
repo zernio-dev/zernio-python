@@ -45742,6 +45742,55 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="Read the delivery metrics of ad sets over a window",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def metrics_get_ad_set_metrics(
+        from_date: str,
+        to_date: str,
+        metrics: str,
+        limit: int = 50,
+        cursor: str | None = None,
+        ad_set_id: str | None = None,
+        campaign_id: str | None = None,
+        granularity: Literal["total", "day"] = "total",
+    ) -> str:
+        """Read the delivery metrics of ad sets over a window
+
+        Sums the delivery metrics of every ad of each ad set from the stored daily rows, over `fromDate` to `toDate` (both required, at most 400 days). Send the ad sets by id with `adSetId` (up to 100), or one `campaignId` for its ad sets, paged with `cursor`.
+
+        Each ad set comes with its `campaignId` and the `currency` of its ad account, and `granularity=day` adds one point per day. A query reads at most 9,200 ad set days (100 ad sets for 92 days, 23 for 400) and answers 422 `query_too_large` beyond that.
+
+        Args:
+            limit: With campaignId, ad sets per page, 50 by default, 100 at most.
+            cursor: With campaignId, pagination.nextCursor of the previous page, sent with the same query.
+            from_date: First day, inclusive. (required)
+            to_date: Last day, inclusive. The range is at most 400 days. (required)
+            ad_set_id: Comma-separated platform ad set ids, up to 100. Send adSetId or campaignId.
+            campaign_id: One platform campaign id, for its ad sets. Send adSetId or campaignId.
+            metrics: Comma-separated delivery metrics, as GET /v1/metrics/catalog?entity=ad-sets lists them (spend, impressions, reach, clicks, ctr, cpc, cpm, conversions, roas...). (required)
+            granularity: day adds one point per day to each ad set."""
+        client = _get_client()
+        try:
+            response = client.metrics.get_ad_set_metrics(
+                limit=limit,
+                cursor=cursor,
+                from_date=from_date,
+                to_date=to_date,
+                ad_set_id=ad_set_id,
+                campaign_id=campaign_id,
+                metrics=metrics,
+                granularity=granularity,
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="Read the uploaded results summed across ad accounts",
             readOnlyHint=True,
             destructiveHint=False,

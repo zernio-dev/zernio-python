@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.781.0"
+  version: "1.782.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -4004,6 +4004,82 @@ components:
                   items:
                     type: string
                   description: With metrics, asked campaignIds that are not campaigns the caller can see.
+            - $ref: '#/components/schemas/MetricsFreshness'
+    AdSetMetricRow:
+      type: object
+      properties:
+        platform:
+          type: string
+        adAccountId:
+          type: string
+        campaignId:
+          type: [string, "null"]
+        adSetId:
+          type: string
+        name:
+          type: [string, "null"]
+          description: The ad set name. null before its first sync.
+        currency:
+          type: [string, "null"]
+          description: The ad account currency every money metric of this ad set is in. Ad sets of different ad accounts are never summed together.
+        metrics:
+          allOf:
+            - $ref: '#/components/schemas/AdMetrics'
+          description: Only the asked metrics, summed over every ad of the ad set with rates recomputed from the sums. reach is deduplicated across the range for Meta and TikTok when the platform returns it.
+        daily:
+          type: array
+          description: With granularity=day, one point per day with delivery, each carrying date and the asked metrics.
+          items:
+            allOf:
+              - $ref: '#/components/schemas/AdMetrics'
+              - type: object
+                required:
+                  - date
+                properties:
+                  date:
+                    type: string
+                    format: date
+        lastSyncedAt:
+          type: [string, "null"]
+          description: When the newest daily row of the ad set was synced.
+      required:
+        - platform
+        - adAccountId
+        - campaignId
+        - adSetId
+        - name
+        - currency
+        - metrics
+        - lastSyncedAt
+    AdSetMetricsResponse:
+      type: object
+      required:
+        - data
+        - pagination
+        - meta
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/AdSetMetricRow'
+        pagination:
+          $ref: '#/components/schemas/MetricsPagination'
+        meta:
+          allOf:
+            - type: object
+              required:
+                - fromDate
+                - toDate
+              properties:
+                fromDate:
+                  type: string
+                toDate:
+                  type: string
+                missingIds:
+                  type: array
+                  items:
+                    type: string
+                  description: With adSetId, asked ids that are not ad sets the caller can see.
             - $ref: '#/components/schemas/MetricsFreshness'
     AdAccountMetricsResponse:
       type: object
@@ -37651,6 +37727,95 @@ paths:
           $ref: '#/components/responses/MetricsAdsForbidden'
         '422':
           description: 'More than 9,200 campaign days with metrics: split the range or the campaignIds.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/MetricsRateLimited'
+        '503':
+          $ref: '#/components/responses/TemporarilyUnavailable'
+  /v1/metrics/ad-sets:
+    get:
+      x-resource-group: ads
+      operationId: getAdSetMetrics
+      tags:
+        - Metrics
+      summary: Read the delivery metrics of ad sets over a window
+      description: |-
+        Sums the delivery metrics of every ad of each ad set from the stored daily rows, over `fromDate` to `toDate` (both required, at most 400 days). Send the ad sets by id with `adSetId` (up to 100), or one `campaignId` for its ad sets, paged with `cursor`.
+
+        Each ad set comes with its `campaignId` and the `currency` of its ad account, and `granularity=day` adds one point per day. A query reads at most 9,200 ad set days (100 ad sets for 92 days, 23 for 400) and answers 422 `query_too_large` beyond that.
+      parameters:
+        - name: limit
+          in: query
+          description: With campaignId, ad sets per page, 50 by default, 100 at most.
+          schema:
+            default: 50
+            type: integer
+            exclusiveMinimum: 0
+            maximum: 100
+        - name: cursor
+          in: query
+          description: With campaignId, pagination.nextCursor of the previous page, sent with the same query.
+          schema:
+            type: string
+            minLength: 1
+        - name: fromDate
+          in: query
+          required: true
+          description: First day, inclusive.
+          schema:
+            type: string
+            format: date
+        - name: toDate
+          in: query
+          required: true
+          description: Last day, inclusive. The range is at most 400 days.
+          schema:
+            type: string
+            format: date
+        - name: adSetId
+          in: query
+          description: Comma-separated platform ad set ids, up to 100. Send adSetId or campaignId.
+          schema:
+            type: string
+            minLength: 1
+        - name: campaignId
+          in: query
+          description: One platform campaign id, for its ad sets. Send adSetId or campaignId.
+          schema:
+            type: string
+            minLength: 1
+        - name: metrics
+          in: query
+          required: true
+          description: 'Comma-separated delivery metrics, as GET /v1/metrics/catalog?entity=ad-sets lists them (spend, impressions, reach, clicks, ctr, cpc, cpm, conversions, roas...).'
+          schema:
+            type: string
+            minLength: 1
+        - name: granularity
+          in: query
+          description: day adds one point per day to each ad set.
+          schema:
+            type: string
+            enum: [total, day]
+            default: total
+      responses:
+        '200':
+          description: One row per visible ad set.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdSetMetricsResponse'
+        '400':
+          $ref: '#/components/responses/MetricsBadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/MetricsAdsForbidden'
+        '422':
+          description: 'More than 9,200 ad set days: split the range or the ad sets.'
           content:
             application/json:
               schema:

@@ -309,6 +309,33 @@ class MetricsResource:
         )
         return self._client._get("/v1/metrics/campaigns", params=params)
 
+    def get_ad_set_metrics(
+        self,
+        from_date: str,
+        to_date: str,
+        metrics: str,
+        *,
+        limit: int | None = 50,
+        cursor: str | None = None,
+        ad_set_id: str | None = None,
+        campaign_id: str | None = None,
+        granularity: str | None = "total",
+    ) -> dict[str, Any]:
+        """Read the delivery metrics of ad sets over a window"""
+        params = self._build_query(
+            {
+                "limit": limit,
+                "cursor": cursor,
+                "fromDate": from_date,
+                "toDate": to_date,
+                "adSetId": ad_set_id,
+                "campaignId": campaign_id,
+                "metrics": metrics,
+                "granularity": granularity,
+            }
+        )
+        return self._client._get("/v1/metrics/ad-sets", params=params)
+
     def get_ad_account_metrics(
         self, from_date: str, to_date: str, *, ad_account_id: str | None = None
     ) -> dict[str, Any]:
@@ -636,6 +663,33 @@ class MetricsResource:
             }
         )
         return await self._client._aget("/v1/metrics/campaigns", params=params)
+
+    async def aget_ad_set_metrics(
+        self,
+        from_date: str,
+        to_date: str,
+        metrics: str,
+        *,
+        limit: int | None = 50,
+        cursor: str | None = None,
+        ad_set_id: str | None = None,
+        campaign_id: str | None = None,
+        granularity: str | None = "total",
+    ) -> dict[str, Any]:
+        """Read the delivery metrics of ad sets over a window (async)"""
+        params = self._build_query(
+            {
+                "limit": limit,
+                "cursor": cursor,
+                "fromDate": from_date,
+                "toDate": to_date,
+                "adSetId": ad_set_id,
+                "campaignId": campaign_id,
+                "metrics": metrics,
+                "granularity": granularity,
+            }
+        )
+        return await self._client._aget("/v1/metrics/ad-sets", params=params)
 
     async def aget_ad_account_metrics(
         self, from_date: str, to_date: str, *, ad_account_id: str | None = None
