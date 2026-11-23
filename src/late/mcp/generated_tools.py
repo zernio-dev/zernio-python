@@ -12295,7 +12295,11 @@ def register_generated_tools(mcp, _get_client):
         `dsaBeneficiary`: required for EU targeting unless the ad account has
         a default payor.
                 brand_identity: TikTok only; non-TikTok platforms ignore this field. Synthetic Brand Identity used when the ad attributes to a CUSTOMIZED_USER (instead of a real TT_USER @username). Required on the FIRST CUSTOMIZED_USER ad on a `tiktokads` SocialAccount with no cached identity. Omit it on later ads: the identity is cached on the account after first creation. Alternative: configure once via `PATCH /v1/connect/tiktok-ads`, then create ads without this field. Object with keys: displayName (string, required) - Brand name shown above the ad on TikTok.; imageUrl (string, required) - Public URL of a square brand image (≥98×98 px, JPG/PNG). Used as the brand avatar on the ad.
-                identity_id: TikTok: the identity the ad runs as, from GET /v1/ads/tiktok-identities. Overrides the connected account's own identity; must be authorized on the advertiser.
+                identity_id: The profile the ad runs as.
+
+        - TikTok: the identity from GET /v1/ads/tiktok-identities. Overrides the connected account's own identity; must be authorized on the advertiser.
+        - Snapchat: the Public Profile ID (a UUID), required on most organizations. Without it the create answers 422 on identityId and uploads nothing.
+        - To find a Snapchat Public Profile ID: in Snapchat Business Manager, open Public Profiles, select the profile and copy its ID.
                 identity_type: TikTok only. Forces the identity attribution on the ad:
 
           - `TT_USER`: the posting account's open_id (real @username
