@@ -13,11 +13,11 @@ from late.mcp.auth import ZernioTokenVerifier
 @pytest.fixture(autouse=True)
 def _clear_verification_cache():
     auth._VERIFIED_AT.clear()
-    auth._USER_ID_BY_TOKEN.clear()
+    auth._IDENTITY_BY_TOKEN.clear()
     auth._IN_FLIGHT.clear()
     yield
     auth._VERIFIED_AT.clear()
-    auth._USER_ID_BY_TOKEN.clear()
+    auth._IDENTITY_BY_TOKEN.clear()
     auth._IN_FLIGHT.clear()
 
 
@@ -176,8 +176,34 @@ async def test_a_valid_token_without_a_readable_user_id_is_granted_without_one(
 
 
 async def test_a_rejected_token_forgets_its_user_id():
-    auth._remember_user_id(auth.token_cache_key("sk_revoked"), "u" * 24)
+    auth._remember_identity(auth.token_cache_key("sk_revoked"), {"user_id": "u" * 24})
 
     auth.forget_rejected_token("sk_revoked")
 
-    assert auth.token_cache_key("sk_revoked") not in auth._USER_ID_BY_TOKEN
+    assert auth.token_cache_key("sk_revoked") not in auth._IDENTITY_BY_TOKEN
+
+
+async def test_a_grant_carries_the_oauth_scope_the_verify_answer_returned():
+    verifier = _verifier_answering(
+        httpx.Response(
+            200, json={"userId": "u" * 24, "scope": "posts:read accounts:read"}
+        )
+    )
+    await verifier.verify_token("oat_live")
+
+    cached = await verifier.verify_token("oat_live")
+
+    assert cached is not None
+    assert cached.claims["resolved_by"] == "cache"
+    assert cached.claims["scope"] == "posts:read accounts:read"
+
+
+async def test_an_api_key_grant_has_no_scope_claim():
+    verifier = _verifier_answering(
+        httpx.Response(200, json={"userId": "u" * 24, "scope": None})
+    )
+
+    granted = await verifier.verify_token("sk_live")
+
+    assert granted is not None
+    assert "scope" not in granted.claims

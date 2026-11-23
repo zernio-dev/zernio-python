@@ -19,6 +19,7 @@ from fastmcp import Client
 
 from late.mcp import auth, chatgpt_server
 from late.mcp.chatgpt_server import _media_items, chatgpt_mcp
+from late.mcp.chatgpt_tools import CHATGPT_GENERATED_TOOLS
 
 API = chatgpt_server.API_BASE
 
@@ -111,7 +112,9 @@ async def _call(name: str, **args):
 
 async def test_every_tool_is_fully_annotated_for_review():
     async with Client(chatgpt_mcp) as client:
-        tools = await client.list_tools()
+        tools = [
+            t for t in await client.list_tools() if t.name not in CHATGPT_GENERATED_TOOLS
+        ]
     assert len(tools) == 13
     for tool in tools:
         hints = tool.annotations

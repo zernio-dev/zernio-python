@@ -79,6 +79,9 @@ OAUTH_SCOPES = [
     "files:write",
     "campaigns:write",
     "money:write",
+    "ads:read",
+    "contacts:read",
+    "messaging:read",
 ]
 
 # Documentation
