@@ -23053,14 +23053,17 @@ def register_generated_tools(mcp, _get_client):
                 post_id: Zernio post ID or platform-specific post ID. On LinkedIn, pass the post id exactly as the feed returns it (urn:li:share:<id> or urn:li:ugcPost:<id>); a bare number is read as an activity id (urn:li:activity:<n>). (required)
                 account_id: (required)
                 message: Reply text. On LinkedIn, mention with @[https://www.linkedin.com/in/vanity] (resolved to LinkedIn's live name, same rules and errors as post content) or @[Name](urn:li:person|organization:ID); a hand-written name must match LinkedIn's exactly or it renders as plain text. (required)
-                attachment_url: (Facebook, Bluesky, LinkedIn and Threads) URL of an image to attach to the comment or reply. The URL must be publicly fetchable. Returns 400 for other platforms.
-                attachment_type: (Facebook and Threads, optional) How `attachmentUrl` is published. Requires `attachmentUrl`; returns 400 on other platforms.
+                attachment_url: (Facebook, Bluesky, LinkedIn, Threads and X) URL of an image to attach to the comment or reply. The URL must be publicly fetchable. Returns 400 for other platforms.
+                attachment_type: (Facebook, Threads and X, optional) How `attachmentUrl` is published. Requires `attachmentUrl`; returns 400 on other platforms.
 
-        - Omitted: a GIF is detected and posted animated. Detection uses GIPHY links (page, media, embed, sticker; `gph.is` on Threads), `.gif` paths, and an `image/gif` response on Threads.
+        - Omitted: a GIF is detected and posted animated. Detection uses GIPHY links (page, media, embed, sticker; `gph.is` on Threads and X), `.gif` paths, and an `image/gif` response on Threads and X.
         - `image`: forces a still photo. Threads converts a GIF or WebP to JPEG or PNG.
         - `gif`: forces an animated GIF.
         - Threads GIFs must come from GIPHY, otherwise the request returns 400 `invalid_field_value`.
-        - Facebook gets a GIPHY link as its direct GIF.
+        - Facebook and X get a GIPHY link as their direct GIF.
+        - X takes one image or GIF from any host, and returns 400 for video or HTML URLs.
+        - On X, images over 5 MB are compressed and a GIF over 15 MB posts as a still image.
+        - On X, a GIF always posts animated, even with `attachmentType: image`.
                 comment_id: Reply to specific comment (optional)
                 mention_author: (LinkedIn only) When true, the reply starts with an @mention of the author of `commentId` (a member or a page), tagged with their URN and the name LinkedIn returns for them. Requires `commentId`.
 
