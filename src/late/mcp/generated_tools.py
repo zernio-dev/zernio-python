@@ -17764,6 +17764,70 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="List an automation's runs",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def automations_list_automation_runs(
+        automation_id: str,
+        status: Literal["live", "paused", "completed", "exited", "failed"]
+        | None = None,
+        since: str | None = None,
+        limit: int = 20,
+        cursor: str | None = None,
+    ) -> str:
+        """List an automation's runs
+
+        Every run of any kind of automation, newest first, in one shape. Flows read both their run stores, comment to DM reads its engine runs and its older trigger logs, and ad rules, event and scheduled automations list their checks that acted or tried to (`/checks` lists every check).
+
+        Args:
+            automation_id: (required)
+            status
+            since: Only runs started at or after this time.
+            limit
+            cursor: `nextCursor` from the previous page."""
+        client = _get_client()
+        try:
+            response = client.automations.list_automation_runs(
+                automation_id=automation_id,
+                status=status,
+                since=since,
+                limit=limit,
+                cursor=cursor,
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get one run of an automation",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def automations_get_automation_run(automation_id: str, run_id: str) -> str:
+        """Get one run of an automation
+
+        The run with each step it took, where its store keeps them: a flow run's nodes, a comment to DM log's DM and public reply, an ad rule, event or scheduled check's actions.
+
+        Args:
+            automation_id: (required)
+            run_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.automations.get_automation_run(
+                automation_id=automation_id, run_id=run_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="Preview an unsaved automation",
             readOnlyHint=False,
             destructiveHint=True,

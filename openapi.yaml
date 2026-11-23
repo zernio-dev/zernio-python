@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.790.0"
+  version: "1.791.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -25164,6 +25164,53 @@ components:
         - $ref: '#/components/schemas/AdRuleAutomationCheck'
         - $ref: '#/components/schemas/EventAutomationCheck'
         - $ref: '#/components/schemas/ScheduledAutomationCheck'
+    AutomationRun:
+      description: 'One subject going through an automation, the same shape for every kind. A flow, sequence or comment to DM run is one conversation, contact or comment; an ad rule, event or scheduled automation run is one check that acted or tried to.'
+      type: object
+      required: [id, automationId, kind, status, subject, startedAt, endedAt, exitReason, error, steps]
+      properties:
+        id: { type: string }
+        automationId: { type: string }
+        kind: { type: string, enum: [ad_rule, event, scheduled, sequence, comment, workflow] }
+        status:
+          type: string
+          enum: [live, paused, completed, exited, failed]
+          description: '`live` while it runs or waits (a comment to DM run waiting for its follow gate is live).'
+        subject:
+          type: [object, 'null']
+          description: 'What the run is about. Null for a scheduled check, which judges many subjects.'
+          properties:
+            type: { type: string, description: 'For example `conversation`, `contact`, `comment`, `message` or `post`.' }
+            id: { type: string }
+        startedAt: { type: string, format: date-time }
+        endedAt: { type: [string, 'null'], format: date-time }
+        exitReason: { type: [string, 'null'], description: 'Why an exited or failed run stopped, for example `replied`, `unsubscribed` or `skipped`.' }
+        error: { type: [string, 'null'] }
+        steps:
+          type: object
+          required: [done, currentNodeId]
+          properties:
+            done: { type: integer, description: Steps the run has taken. }
+            currentNodeId: { type: [string, 'null'], description: 'The graph node the run is at, where its kind has one.' }
+    AutomationRunDetail:
+      allOf:
+        - $ref: '#/components/schemas/AutomationRun'
+        - type: object
+          required: [trace]
+          properties:
+            trace:
+              type: [array, 'null']
+              description: 'Each step in order. Null where the run''s store keeps no step by step record (runs on the automation engine keep where they are and how many steps they took).'
+              items:
+                type: object
+                required: [type, nodeId, subjectId, status, at, note]
+                properties:
+                  type: { type: string }
+                  nodeId: { type: [string, 'null'] }
+                  subjectId: { type: [string, 'null'], description: 'The object an ad rule, event or scheduled automation acted on.' }
+                  status: { type: [string, 'null'] }
+                  at: { type: [string, 'null'], format: date-time }
+                  note: { type: [string, 'null'], description: 'Which branch a condition took, or why a step failed or was skipped.' }
     AutomationAction:
       allOf:
         - $ref: '#/components/schemas/AutomationActionResult'
@@ -89339,6 +89386,81 @@ paths:
                 properties:
                   checks: { type: array, items: { $ref: '#/components/schemas/AutomationCheck' } }
                   nextCursor: { type: [string, 'null'], description: Null on the last page. }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /v1/automations/{automationId}/runs:
+    get:
+      x-resource-group: ads
+      operationId: listAutomationRuns
+      tags: [Automations]
+      summary: List an automation's runs
+      description: |
+        Every run of any kind of automation, newest first, in one shape. Flows read both their run stores, comment to DM reads its engine runs and its older trigger logs, and ad rules, event and scheduled automations list their checks that acted or tried to (`/checks` lists every check).
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: automationId
+          in: path
+          required: true
+          schema: { type: string }
+        - name: status
+          in: query
+          schema: { type: string, enum: [live, paused, completed, exited, failed] }
+        - name: since
+          in: query
+          description: Only runs started at or after this time.
+          schema: { type: string, format: date-time }
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 20 }
+        - name: cursor
+          in: query
+          description: '`nextCursor` from the previous page.'
+          schema: { type: string }
+      responses:
+        '200':
+          description: Runs
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [runs, nextCursor]
+                properties:
+                  runs: { type: array, items: { $ref: '#/components/schemas/AutomationRun' } }
+                  nextCursor: { type: [string, 'null'], description: Null on the last page. }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /v1/automations/{automationId}/runs/{runId}:
+    get:
+      x-resource-group: ads
+      operationId: getAutomationRun
+      tags: [Automations]
+      summary: Get one run of an automation
+      description: |
+        The run with each step it took, where its store keeps them: a flow run's nodes, a comment to DM log's DM and public reply, an ad rule, event or scheduled check's actions.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: automationId
+          in: path
+          required: true
+          schema: { type: string }
+        - name: runId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Run
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [run]
+                properties:
+                  run: { $ref: '#/components/schemas/AutomationRunDetail' }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
