@@ -91,6 +91,52 @@ SAME_ARGUMENTS_IDEMPOTENT_NOTE = (
     "another on purpose, or if that 409 does not clear, change an argument such as the name."
 )
 
+# POSTs that only read (queries, reports, previews, validations, estimates), so their
+# tools are annotated read-only instead of as writes.
+READ_ONLY_OPERATIONS = {
+    "validatePostLength",
+    "validatePost",
+    "validateMedia",
+    "queryMetaAds",
+    "queryGoogleAds",
+    "queryTikTokAds",
+    "queryGoogleAnalytics",
+    "runGoogleAnalyticsReport",
+    "runGoogleAnalyticsRealtimeReport",
+    "queryGoogleSearchConsoleSearchAnalytics",
+    "inspectGoogleSearchConsoleUrl",
+    "batchGetGoogleBusinessReviews",
+    "searchGoogleBusinessLocations",
+    "fetchGoogleBusinessVerificationOptions",
+    "previewAutomationDraft",
+    "previewAutomation",
+    "previewAdRule",
+    "generateAdPreviews",
+    "generateKeywordIdeas",
+    "generateKeywordHistoricalMetrics",
+    "estimateAdReach",
+    "getLinkedInBidPricing",
+    "getLinkedInSupplyForecast",
+    "previewTopup",
+    "previewCampaignPayoutBatch",
+    "validatePhoneNumberKycAddress",
+    "validateWhatsAppNumberKycAddress",
+    "checkPhoneNumberPortability",
+}
+
+# Reads of public content outside the user's own workspace. OpenAI's plugin
+# guidelines ask for openWorldHint true on these ("public or open-ended
+# entities, including read-only web search"); every other read stays false.
+OPEN_WORLD_READ_OPERATIONS = {
+    "searchReddit",
+    "getRedditFeed",
+    "getRedditPostComments",
+    "searchTweets",
+    "getTweet",
+    "getInstagramBusinessDiscovery",
+    "searchAdLibrary",
+}
+
 # Operations to SKIP (not useful for MCP)
 SKIP_OPERATIONS = {
     # OAuth redirect endpoints
@@ -715,6 +761,8 @@ def generate_tool_handler(
     description: str = "",
     platforms: list[str] | None = None,
     idempotency_scope: str | None = None,
+    *,
+    open_world: bool | None = None,
 ) -> str:
     """Generate a complete tool handler function."""
     lines = []
@@ -754,15 +802,17 @@ def generate_tool_handler(
     docstring = "\n    ".join(line.rstrip() for line in doc_lines)
 
     # Tool annotation (required by the Anthropic Connectors Directory AND the
-    # ChatGPT Apps submission, which needs all three hints set explicitly).
+    # ChatGPT plugin review, which needs all three hints set explicitly).
     # title is rendered via repr() so quotes/specials in the summary are
-    # escaped safely. openWorldHint mirrors read_only: write tools act on
-    # external social platforms (publish/send/etc.) so they touch the open
-    # world; GET tools only read, so they don't change external state.
+    # escaped safely. Every write counts as destructive and open-world: it
+    # publishes, sends, spends or changes a connected platform, and OpenAI
+    # reads "can be undone" as no reason for destructiveHint false.
+    if open_world is None:
+        open_world = not read_only
     annotation = (
         f"annotations=ToolAnnotations(title={title!r}, "
         f"readOnlyHint={read_only}, destructiveHint={not read_only}, "
-        f"openWorldHint={not read_only})"
+        f"openWorldHint={open_world})"
     )
 
     lines.append("")
@@ -787,6 +837,28 @@ def generate_tool_handler(
     lines.append("        raise ToolError(f'Error: {e}') from e")
 
     return "\n".join(lines)
+
+
+def declared_oauth_scope(scopes: list[str], read_only: bool) -> str | None:
+    """The one scope a tool declares, out of the spec's x-oauth-scopes (any of which reaches it).
+
+    A read prefers a :read scope and a write a :write one, so ChatGPT asks for
+    the narrowest permission the operation needs.
+    """
+    preferred = ":read" if read_only else ":write"
+    return next((s for s in scopes if s.endswith(preferred)), scopes[0] if scopes else None)
+
+
+def oauth_scope_table(operations: list[dict[str, Any]]) -> list[str]:
+    scoped = sorted((op["tool_name"], op["oauth_scope"]) for op in operations if op["oauth_scope"])
+    return [
+        "",
+        "",
+        "# The OAuth scope each tool declares (securitySchemes), from the spec's x-oauth-scopes.",
+        "TOOL_OAUTH_SCOPE: dict[str, str] = {",
+        *(f'    "{name}": "{scope}",' for name, scope in scoped),
+        "}",
+    ]
 
 
 def main() -> int:
@@ -839,6 +911,7 @@ def main() -> int:
             seen_tool_names.add(tool_name)
 
             summary = operation.get("summary", operation_id)
+            read_only = method == "get" or operation_id in READ_ONLY_OPERATIONS
             operations.append({
                 "tool_name": tool_name,
                 "resource": resource,
@@ -846,12 +919,9 @@ def main() -> int:
                 "summary": summary,
                 "description": operation.get("description", ""),
                 "platforms": operation.get("x-platforms", []),
-                # HTTP method drives the tool annotation: GET is read-only,
-                # everything else (POST/PUT/PATCH/DELETE) is treated as a
-                # destructive write. Required by Anthropic's Connectors
-                # Directory (every tool must carry readOnlyHint or
-                # destructiveHint).
-                "read_only": method == "get",
+                "read_only": read_only,
+                "open_world": not read_only or operation_id in OPEN_WORLD_READ_OPERATIONS,
+                "oauth_scope": declared_oauth_scope(operation.get("x-oauth-scopes") or [], read_only),
                 # Human-readable title for the annotation. First line of the
                 # OpenAPI summary, capped so it stays a short label.
                 "title": summary.split("\n")[0].strip()[:80],
@@ -987,6 +1057,7 @@ def main() -> int:
                 op["description"],
                 op["platforms"],
                 op["idempotency_scope"],
+                open_world=op["open_world"],
             )
             # Indent for being inside register function
             handler_lines = handler.split("\n")
@@ -995,6 +1066,8 @@ def main() -> int:
                     lines.append(f"    {hl}")
                 else:
                     lines.append("")
+
+    lines.extend(oauth_scope_table(operations))
 
     # Output
     output_file = project_root / "src" / "late" / "mcp" / "generated_tools.py"

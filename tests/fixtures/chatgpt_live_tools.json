@@ -1,0 +1,2520 @@
+[
+ {
+  "_meta": {
+   "fastmcp": {
+    "tags": []
+   },
+   "openai/profile": true,
+   "securitySchemes": [
+    {
+     "scopes": [
+      "accounts:read"
+     ],
+     "type": "oauth2"
+    }
+   ]
+  },
+  "annotations": {
+   "destructiveHint": false,
+   "idempotentHint": true,
+   "openWorldHint": false,
+   "readOnlyHint": true
+  },
+  "description": "Use this to identify which Zernio account is connected, for example when the user has several Zernio accounts or asks who they are signed in as. Returns the stable account id plus name and email when available. Do not use it to look up other people.",
+  "inputSchema": {
+   "additionalProperties": false,
+   "properties": {},
+   "type": "object"
+  },
+  "name": "get_profile",
+  "outputSchema": {
+   "properties": {
+    "email": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Email"
+    },
+    "id": {
+     "description": "Stable Zernio user id for the signed-in account",
+     "title": "Id",
+     "type": "string"
+    },
+    "name": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Name"
+    }
+   },
+   "required": [
+    "id"
+   ],
+   "title": "Profile",
+   "type": "object"
+  },
+  "title": "Get signed-in Zernio profile"
+ },
+ {
+  "_meta": {
+   "fastmcp": {
+    "tags": []
+   },
+   "securitySchemes": [
+    {
+     "scopes": [
+      "accounts:read"
+     ],
+     "type": "oauth2"
+    }
+   ]
+  },
+  "annotations": {
+   "destructiveHint": false,
+   "idempotentHint": true,
+   "openWorldHint": false,
+   "readOnlyHint": true
+  },
+  "description": "Use this when the user wants to see which social media accounts are connected to Zernio, or before scheduling or publishing so you can pass the right account_ids. Returns each account's id, platform, username and connection status. Optionally filter by platform (instagram, tiktok, youtube, twitter, linkedin, facebook, threads, pinterest, reddit, bluesky, googlebusiness, telegram, snapchat, discord, slack).",
+  "inputSchema": {
+   "additionalProperties": false,
+   "properties": {
+    "cursor": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "description": "next_cursor of the previous page. Keep the same platform."
+    },
+    "platform": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "description": "Only return accounts on this platform"
+    }
+   },
+   "type": "object"
+  },
+  "name": "list_social_accounts",
+  "outputSchema": {
+   "properties": {
+    "accounts": {
+     "items": {
+      "properties": {
+       "display_name": {
+        "anyOf": [
+         {
+          "type": "string"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "default": null,
+        "title": "Display Name"
+       },
+       "id": {
+        "description": "Account id to pass as account_id / account_ids",
+        "title": "Id",
+        "type": "string"
+       },
+       "platform": {
+        "title": "Platform",
+        "type": "string"
+       },
+       "profile_url": {
+        "anyOf": [
+         {
+          "type": "string"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "default": null,
+        "title": "Profile Url"
+       },
+       "status": {
+        "enum": [
+         "connected",
+         "needs_reconnection",
+         "disconnected"
+        ],
+        "title": "Status",
+        "type": "string"
+       },
+       "username": {
+        "anyOf": [
+         {
+          "type": "string"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "default": null,
+        "title": "Username"
+       }
+      },
+      "required": [
+       "id",
+       "platform",
+       "status"
+      ],
+      "title": "SocialAccount",
+      "type": "object"
+     },
+     "title": "Accounts",
+     "type": "array"
+    },
+    "next_cursor": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Next Cursor"
+    }
+   },
+   "required": [
+    "accounts"
+   ],
+   "title": "SocialAccountList",
+   "type": "object"
+  },
+  "title": "List connected social accounts"
+ },
+ {
+  "_meta": {
+   "fastmcp": {
+    "tags": []
+   },
+   "securitySchemes": [
+    {
+     "scopes": [
+      "posts:read"
+     ],
+     "type": "oauth2"
+    }
+   ]
+  },
+  "annotations": {
+   "destructiveHint": false,
+   "idempotentHint": true,
+   "openWorldHint": false,
+   "readOnlyHint": true
+  },
+  "description": "Use this when the user wants to review their scheduled, draft, published or failed posts, for example 'what is scheduled this week' or 'which posts failed'. Returns each post's id, status, text, scheduled time and per-platform status. Newest first. For one post's full details use get_post; for performance numbers use get_post_analytics.",
+  "inputSchema": {
+   "additionalProperties": false,
+   "properties": {
+    "account_id": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "description": "Only posts targeting this social account"
+    },
+    "limit": {
+     "default": 20,
+     "description": "Maximum posts to return",
+     "maximum": 50,
+     "minimum": 1,
+     "type": "integer"
+    },
+    "status": {
+     "anyOf": [
+      {
+       "enum": [
+        "draft",
+        "scheduled",
+        "published",
+        "failed"
+       ],
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "description": "Only posts in this status"
+    }
+   },
+   "type": "object"
+  },
+  "name": "list_posts",
+  "outputSchema": {
+   "properties": {
+    "posts": {
+     "items": {
+      "properties": {
+       "content": {
+        "anyOf": [
+         {
+          "type": "string"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "default": null,
+        "title": "Content"
+       },
+       "id": {
+        "title": "Id",
+        "type": "string"
+       },
+       "media_urls": {
+        "items": {
+         "type": "string"
+        },
+        "title": "Media Urls",
+        "type": "array"
+       },
+       "published_at": {
+        "anyOf": [
+         {
+          "type": "string"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "default": null,
+        "title": "Published At"
+       },
+       "scheduled_for": {
+        "anyOf": [
+         {
+          "type": "string"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "default": null,
+        "description": "ISO 8601, UTC",
+        "title": "Scheduled For"
+       },
+       "status": {
+        "description": "draft, scheduled, publishing, published, failed or partial",
+        "title": "Status",
+        "type": "string"
+       },
+       "targets": {
+        "items": {
+         "properties": {
+          "account_id": {
+           "anyOf": [
+            {
+             "type": "string"
+            },
+            {
+             "type": "null"
+            }
+           ],
+           "default": null,
+           "title": "Account Id"
+          },
+          "error": {
+           "anyOf": [
+            {
+             "type": "string"
+            },
+            {
+             "type": "null"
+            }
+           ],
+           "default": null,
+           "title": "Error"
+          },
+          "platform": {
+           "title": "Platform",
+           "type": "string"
+          },
+          "post_url": {
+           "anyOf": [
+            {
+             "type": "string"
+            },
+            {
+             "type": "null"
+            }
+           ],
+           "default": null,
+           "description": "Public URL once published",
+           "title": "Post Url"
+          },
+          "status": {
+           "anyOf": [
+            {
+             "type": "string"
+            },
+            {
+             "type": "null"
+            }
+           ],
+           "default": null,
+           "description": "pending, publishing, published or failed",
+           "title": "Status"
+          },
+          "username": {
+           "anyOf": [
+            {
+             "type": "string"
+            },
+            {
+             "type": "null"
+            }
+           ],
+           "default": null,
+           "title": "Username"
+          }
+         },
+         "required": [
+          "platform"
+         ],
+         "title": "PostTarget",
+         "type": "object"
+        },
+        "title": "Targets",
+        "type": "array"
+       },
+       "timezone": {
+        "anyOf": [
+         {
+          "type": "string"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "default": null,
+        "title": "Timezone"
+       },
+       "title": {
+        "anyOf": [
+         {
+          "type": "string"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "default": null,
+        "title": "Title"
+       }
+      },
+      "required": [
+       "id",
+       "status",
+       "targets"
+      ],
+      "title": "Post",
+      "type": "object"
+     },
+     "title": "Posts",
+     "type": "array"
+    },
+    "total": {
+     "title": "Total",
+     "type": "integer"
+    }
+   },
+   "required": [
+    "posts",
+    "total"
+   ],
+   "title": "PostList",
+   "type": "object"
+  },
+  "title": "List posts"
+ },
+ {
+  "_meta": {
+   "fastmcp": {
+    "tags": []
+   },
+   "securitySchemes": [
+    {
+     "scopes": [
+      "posts:read"
+     ],
+     "type": "oauth2"
+    }
+   ]
+  },
+  "annotations": {
+   "destructiveHint": false,
+   "idempotentHint": true,
+   "openWorldHint": false,
+   "readOnlyHint": true
+  },
+  "description": "Use this when the user asks about one specific post: its full text, media, schedule, per-platform status, public links or failure reason. Requires the post id from list_posts or from an earlier create result.",
+  "inputSchema": {
+   "additionalProperties": false,
+   "properties": {
+    "post_id": {
+     "description": "Zernio post id",
+     "type": "string"
+    }
+   },
+   "required": [
+    "post_id"
+   ],
+   "type": "object"
+  },
+  "name": "get_post",
+  "outputSchema": {
+   "properties": {
+    "post": {
+     "properties": {
+      "content": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "default": null,
+       "title": "Content"
+      },
+      "id": {
+       "title": "Id",
+       "type": "string"
+      },
+      "media_urls": {
+       "items": {
+        "type": "string"
+       },
+       "title": "Media Urls",
+       "type": "array"
+      },
+      "published_at": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "default": null,
+       "title": "Published At"
+      },
+      "scheduled_for": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "default": null,
+       "description": "ISO 8601, UTC",
+       "title": "Scheduled For"
+      },
+      "status": {
+       "description": "draft, scheduled, publishing, published, failed or partial",
+       "title": "Status",
+       "type": "string"
+      },
+      "targets": {
+       "items": {
+        "properties": {
+         "account_id": {
+          "anyOf": [
+           {
+            "type": "string"
+           },
+           {
+            "type": "null"
+           }
+          ],
+          "default": null,
+          "title": "Account Id"
+         },
+         "error": {
+          "anyOf": [
+           {
+            "type": "string"
+           },
+           {
+            "type": "null"
+           }
+          ],
+          "default": null,
+          "title": "Error"
+         },
+         "platform": {
+          "title": "Platform",
+          "type": "string"
+         },
+         "post_url": {
+          "anyOf": [
+           {
+            "type": "string"
+           },
+           {
+            "type": "null"
+           }
+          ],
+          "default": null,
+          "description": "Public URL once published",
+          "title": "Post Url"
+         },
+         "status": {
+          "anyOf": [
+           {
+            "type": "string"
+           },
+           {
+            "type": "null"
+           }
+          ],
+          "default": null,
+          "description": "pending, publishing, published or failed",
+          "title": "Status"
+         },
+         "username": {
+          "anyOf": [
+           {
+            "type": "string"
+           },
+           {
+            "type": "null"
+           }
+          ],
+          "default": null,
+          "title": "Username"
+         }
+        },
+        "required": [
+         "platform"
+        ],
+        "title": "PostTarget",
+        "type": "object"
+       },
+       "title": "Targets",
+       "type": "array"
+      },
+      "timezone": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "default": null,
+       "title": "Timezone"
+      },
+      "title": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "default": null,
+       "title": "Title"
+      }
+     },
+     "required": [
+      "id",
+      "status",
+      "targets"
+     ],
+     "title": "Post",
+     "type": "object"
+    }
+   },
+   "required": [
+    "post"
+   ],
+   "title": "PostResult",
+   "type": "object"
+  },
+  "title": "Get post details"
+ },
+ {
+  "_meta": {
+   "fastmcp": {
+    "tags": []
+   },
+   "securitySchemes": [
+    {
+     "scopes": [
+      "posts:read",
+      "accounts:read"
+     ],
+     "type": "oauth2"
+    }
+   ]
+  },
+  "annotations": {
+   "destructiveHint": false,
+   "idempotentHint": true,
+   "openWorldHint": false,
+   "readOnlyHint": true
+  },
+  "description": "Use this whenever the user asks whether a text or media can go out, fits, or is allowed on a chosen platform, for example character limits or required media, and before scheduling when in doubt. Use it instead of answering from general knowledge: the rules are enforced by Zernio. Nothing is created. Returns valid true/false plus each error or warning with the platform it applies to.",
+  "inputSchema": {
+   "additionalProperties": false,
+   "properties": {
+    "account_ids": {
+     "description": "Target social account ids from list_social_accounts",
+     "items": {
+      "type": "string"
+     },
+     "type": "array"
+    },
+    "content": {
+     "description": "Post text to check",
+     "type": "string"
+    },
+    "media_urls": {
+     "anyOf": [
+      {
+       "items": {
+        "type": "string"
+       },
+       "type": "array"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "description": "Public image, video or PDF URLs to attach"
+    }
+   },
+   "required": [
+    "content",
+    "account_ids"
+   ],
+   "type": "object"
+  },
+  "name": "validate_post",
+  "outputSchema": {
+   "properties": {
+    "issues": {
+     "items": {
+      "properties": {
+       "message": {
+        "title": "Message",
+        "type": "string"
+       },
+       "platform": {
+        "anyOf": [
+         {
+          "type": "string"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "default": null,
+        "title": "Platform"
+       },
+       "severity": {
+        "enum": [
+         "error",
+         "warning"
+        ],
+        "title": "Severity",
+        "type": "string"
+       }
+      },
+      "required": [
+       "severity",
+       "message"
+      ],
+      "title": "ValidationIssue",
+      "type": "object"
+     },
+     "title": "Issues",
+     "type": "array"
+    },
+    "valid": {
+     "title": "Valid",
+     "type": "boolean"
+    }
+   },
+   "required": [
+    "valid",
+    "issues"
+   ],
+   "title": "ValidationResult",
+   "type": "object"
+  },
+  "title": "Check a post against platform rules"
+ },
+ {
+  "_meta": {
+   "fastmcp": {
+    "tags": []
+   },
+   "securitySchemes": [
+    {
+     "scopes": [
+      "posts:write",
+      "accounts:read"
+     ],
+     "type": "oauth2"
+    }
+   ]
+  },
+  "annotations": {
+   "destructiveHint": false,
+   "idempotentHint": false,
+   "openWorldHint": true,
+   "readOnlyHint": false
+  },
+  "description": "Use this when the user wants a post published later at a specific time on one or more of their connected accounts. The post stays editable and cancellable until that time. Requires the text, the account_ids from list_social_accounts and the time. Media is attached from public URLs. For publishing right now use publish_post_now instead; for a text-only check use validate_post.",
+  "inputSchema": {
+   "additionalProperties": false,
+   "properties": {
+    "account_ids": {
+     "description": "Target social account ids from list_social_accounts",
+     "items": {
+      "type": "string"
+     },
+     "type": "array"
+    },
+    "content": {
+     "description": "Post text. Platform limits apply, for example 280 characters on X",
+     "type": "string"
+    },
+    "media_urls": {
+     "anyOf": [
+      {
+       "items": {
+        "type": "string"
+       },
+       "type": "array"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "description": "Public image, video or PDF URLs to attach"
+    },
+    "scheduled_for": {
+     "description": "When to publish, ISO 8601 such as 2026-10-01T09:00:00+02:00",
+     "type": "string"
+    },
+    "timezone": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "description": "IANA timezone, needed only when scheduled_for has no UTC offset"
+    },
+    "title": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "description": "Title for YouTube or Pinterest"
+    }
+   },
+   "required": [
+    "content",
+    "account_ids",
+    "scheduled_for"
+   ],
+   "type": "object"
+  },
+  "name": "schedule_post",
+  "outputSchema": {
+   "properties": {
+    "post": {
+     "properties": {
+      "content": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "default": null,
+       "title": "Content"
+      },
+      "id": {
+       "title": "Id",
+       "type": "string"
+      },
+      "media_urls": {
+       "items": {
+        "type": "string"
+       },
+       "title": "Media Urls",
+       "type": "array"
+      },
+      "published_at": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "default": null,
+       "title": "Published At"
+      },
+      "scheduled_for": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "default": null,
+       "description": "ISO 8601, UTC",
+       "title": "Scheduled For"
+      },
+      "status": {
+       "description": "draft, scheduled, publishing, published, failed or partial",
+       "title": "Status",
+       "type": "string"
+      },
+      "targets": {
+       "items": {
+        "properties": {
+         "account_id": {
+          "anyOf": [
+           {
+            "type": "string"
+           },
+           {
+            "type": "null"
+           }
+          ],
+          "default": null,
+          "title": "Account Id"
+         },
+         "error": {
+          "anyOf": [
+           {
+            "type": "string"
+           },
+           {
+            "type": "null"
+           }
+          ],
+          "default": null,
+          "title": "Error"
+         },
+         "platform": {
+          "title": "Platform",
+          "type": "string"
+         },
+         "post_url": {
+          "anyOf": [
+           {
+            "type": "string"
+           },
+           {
+            "type": "null"
+           }
+          ],
+          "default": null,
+          "description": "Public URL once published",
+          "title": "Post Url"
+         },
+         "status": {
+          "anyOf": [
+           {
+            "type": "string"
+           },
+           {
+            "type": "null"
+           }
+          ],
+          "default": null,
+          "description": "pending, publishing, published or failed",
+          "title": "Status"
+         },
+         "username": {
+          "anyOf": [
+           {
+            "type": "string"
+           },
+           {
+            "type": "null"
+           }
+          ],
+          "default": null,
+          "title": "Username"
+         }
+        },
+        "required": [
+         "platform"
+        ],
+        "title": "PostTarget",
+        "type": "object"
+       },
+       "title": "Targets",
+       "type": "array"
+      },
+      "timezone": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "default": null,
+       "title": "Timezone"
+      },
+      "title": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "default": null,
+       "title": "Title"
+      }
+     },
+     "required": [
+      "id",
+      "status",
+      "targets"
+     ],
+     "title": "Post",
+     "type": "object"
+    }
+   },
+   "required": [
+    "post"
+   ],
+   "title": "PostResult",
+   "type": "object"
+  },
+  "title": "Schedule a post"
+ },
+ {
+  "_meta": {
+   "fastmcp": {
+    "tags": []
+   },
+   "securitySchemes": [
+    {
+     "scopes": [
+      "posts:write",
+      "accounts:read"
+     ],
+     "type": "oauth2"
+    }
+   ]
+  },
+  "annotations": {
+   "destructiveHint": true,
+   "idempotentHint": false,
+   "openWorldHint": true,
+   "readOnlyHint": false
+  },
+  "description": "Use this only when the user explicitly wants the post live right now on one or more of their connected accounts. The content becomes public on those platforms immediately and this cannot be undone from ChatGPT, so confirm the final text and accounts with the user first. Calling it twice publishes twice. Returns the post with its public links. To publish later use schedule_post.",
+  "inputSchema": {
+   "additionalProperties": false,
+   "properties": {
+    "account_ids": {
+     "description": "Target social account ids from list_social_accounts",
+     "items": {
+      "type": "string"
+     },
+     "type": "array"
+    },
+    "content": {
+     "description": "Post text. Platform limits apply, for example 280 characters on X",
+     "type": "string"
+    },
+    "media_urls": {
+     "anyOf": [
+      {
+       "items": {
+        "type": "string"
+       },
+       "type": "array"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "description": "Public image, video or PDF URLs to attach"
+    },
+    "title": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "description": "Title for YouTube or Pinterest"
+    }
+   },
+   "required": [
+    "content",
+    "account_ids"
+   ],
+   "type": "object"
+  },
+  "name": "publish_post_now",
+  "outputSchema": {
+   "properties": {
+    "post": {
+     "properties": {
+      "content": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "default": null,
+       "title": "Content"
+      },
+      "id": {
+       "title": "Id",
+       "type": "string"
+      },
+      "media_urls": {
+       "items": {
+        "type": "string"
+       },
+       "title": "Media Urls",
+       "type": "array"
+      },
+      "published_at": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "default": null,
+       "title": "Published At"
+      },
+      "scheduled_for": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "default": null,
+       "description": "ISO 8601, UTC",
+       "title": "Scheduled For"
+      },
+      "status": {
+       "description": "draft, scheduled, publishing, published, failed or partial",
+       "title": "Status",
+       "type": "string"
+      },
+      "targets": {
+       "items": {
+        "properties": {
+         "account_id": {
+          "anyOf": [
+           {
+            "type": "string"
+           },
+           {
+            "type": "null"
+           }
+          ],
+          "default": null,
+          "title": "Account Id"
+         },
+         "error": {
+          "anyOf": [
+           {
+            "type": "string"
+           },
+           {
+            "type": "null"
+           }
+          ],
+          "default": null,
+          "title": "Error"
+         },
+         "platform": {
+          "title": "Platform",
+          "type": "string"
+         },
+         "post_url": {
+          "anyOf": [
+           {
+            "type": "string"
+           },
+           {
+            "type": "null"
+           }
+          ],
+          "default": null,
+          "description": "Public URL once published",
+          "title": "Post Url"
+         },
+         "status": {
+          "anyOf": [
+           {
+            "type": "string"
+           },
+           {
+            "type": "null"
+           }
+          ],
+          "default": null,
+          "description": "pending, publishing, published or failed",
+          "title": "Status"
+         },
+         "username": {
+          "anyOf": [
+           {
+            "type": "string"
+           },
+           {
+            "type": "null"
+           }
+          ],
+          "default": null,
+          "title": "Username"
+         }
+        },
+        "required": [
+         "platform"
+        ],
+        "title": "PostTarget",
+        "type": "object"
+       },
+       "title": "Targets",
+       "type": "array"
+      },
+      "timezone": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "default": null,
+       "title": "Timezone"
+      },
+      "title": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "default": null,
+       "title": "Title"
+      }
+     },
+     "required": [
+      "id",
+      "status",
+      "targets"
+     ],
+     "title": "Post",
+     "type": "object"
+    }
+   },
+   "required": [
+    "post"
+   ],
+   "title": "PostResult",
+   "type": "object"
+  },
+  "title": "Publish a post immediately"
+ },
+ {
+  "_meta": {
+   "fastmcp": {
+    "tags": []
+   },
+   "securitySchemes": [
+    {
+     "scopes": [
+      "posts:write"
+     ],
+     "type": "oauth2"
+    }
+   ]
+  },
+  "annotations": {
+   "destructiveHint": true,
+   "idempotentHint": true,
+   "openWorldHint": false,
+   "readOnlyHint": false
+  },
+  "description": "Use this when the user wants to change the text, media, title or publish time of a post that has not been published yet (draft, scheduled or failed). Only the fields given are changed; new media_urls replace the existing media. Published posts cannot be edited here. Requires the post id from list_posts.",
+  "inputSchema": {
+   "additionalProperties": false,
+   "properties": {
+    "content": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "description": "New post text"
+    },
+    "media_urls": {
+     "anyOf": [
+      {
+       "items": {
+        "type": "string"
+       },
+       "type": "array"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "description": "Replacement media URLs; an empty list removes media"
+    },
+    "post_id": {
+     "description": "Zernio post id",
+     "type": "string"
+    },
+    "scheduled_for": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "description": "New publish time, ISO 8601"
+    },
+    "timezone": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "description": "IANA timezone, needed only when scheduled_for has no UTC offset"
+    },
+    "title": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "description": "New title for YouTube or Pinterest"
+    }
+   },
+   "required": [
+    "post_id"
+   ],
+   "type": "object"
+  },
+  "name": "update_scheduled_post",
+  "outputSchema": {
+   "properties": {
+    "post": {
+     "properties": {
+      "content": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "default": null,
+       "title": "Content"
+      },
+      "id": {
+       "title": "Id",
+       "type": "string"
+      },
+      "media_urls": {
+       "items": {
+        "type": "string"
+       },
+       "title": "Media Urls",
+       "type": "array"
+      },
+      "published_at": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "default": null,
+       "title": "Published At"
+      },
+      "scheduled_for": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "default": null,
+       "description": "ISO 8601, UTC",
+       "title": "Scheduled For"
+      },
+      "status": {
+       "description": "draft, scheduled, publishing, published, failed or partial",
+       "title": "Status",
+       "type": "string"
+      },
+      "targets": {
+       "items": {
+        "properties": {
+         "account_id": {
+          "anyOf": [
+           {
+            "type": "string"
+           },
+           {
+            "type": "null"
+           }
+          ],
+          "default": null,
+          "title": "Account Id"
+         },
+         "error": {
+          "anyOf": [
+           {
+            "type": "string"
+           },
+           {
+            "type": "null"
+           }
+          ],
+          "default": null,
+          "title": "Error"
+         },
+         "platform": {
+          "title": "Platform",
+          "type": "string"
+         },
+         "post_url": {
+          "anyOf": [
+           {
+            "type": "string"
+           },
+           {
+            "type": "null"
+           }
+          ],
+          "default": null,
+          "description": "Public URL once published",
+          "title": "Post Url"
+         },
+         "status": {
+          "anyOf": [
+           {
+            "type": "string"
+           },
+           {
+            "type": "null"
+           }
+          ],
+          "default": null,
+          "description": "pending, publishing, published or failed",
+          "title": "Status"
+         },
+         "username": {
+          "anyOf": [
+           {
+            "type": "string"
+           },
+           {
+            "type": "null"
+           }
+          ],
+          "default": null,
+          "title": "Username"
+         }
+        },
+        "required": [
+         "platform"
+        ],
+        "title": "PostTarget",
+        "type": "object"
+       },
+       "title": "Targets",
+       "type": "array"
+      },
+      "timezone": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "default": null,
+       "title": "Timezone"
+      },
+      "title": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "default": null,
+       "title": "Title"
+      }
+     },
+     "required": [
+      "id",
+      "status",
+      "targets"
+     ],
+     "title": "Post",
+     "type": "object"
+    }
+   },
+   "required": [
+    "post"
+   ],
+   "title": "PostResult",
+   "type": "object"
+  },
+  "title": "Edit a scheduled post"
+ },
+ {
+  "_meta": {
+   "fastmcp": {
+    "tags": []
+   },
+   "securitySchemes": [
+    {
+     "scopes": [
+      "posts:write"
+     ],
+     "type": "oauth2"
+    }
+   ]
+  },
+  "annotations": {
+   "destructiveHint": true,
+   "idempotentHint": true,
+   "openWorldHint": false,
+   "readOnlyHint": false
+  },
+  "description": "Use this when the user wants to delete a draft, scheduled or failed post so it will not be published. This removes the post from Zernio and cannot be undone. Posts that are already published are left untouched and this tool reports that. Requires the post id from list_posts.",
+  "inputSchema": {
+   "additionalProperties": false,
+   "properties": {
+    "post_id": {
+     "description": "Zernio post id",
+     "type": "string"
+    }
+   },
+   "required": [
+    "post_id"
+   ],
+   "type": "object"
+  },
+  "name": "cancel_scheduled_post",
+  "outputSchema": {
+   "properties": {
+    "deleted": {
+     "title": "Deleted",
+     "type": "boolean"
+    },
+    "post_id": {
+     "title": "Post Id",
+     "type": "string"
+    },
+    "previous_status": {
+     "title": "Previous Status",
+     "type": "string"
+    }
+   },
+   "required": [
+    "post_id",
+    "deleted",
+    "previous_status"
+   ],
+   "title": "CancelResult",
+   "type": "object"
+  },
+  "title": "Cancel a scheduled post"
+ },
+ {
+  "_meta": {
+   "fastmcp": {
+    "tags": []
+   },
+   "securitySchemes": [
+    {
+     "scopes": [
+      "posts:write"
+     ],
+     "type": "oauth2"
+    }
+   ]
+  },
+  "annotations": {
+   "destructiveHint": true,
+   "idempotentHint": false,
+   "openWorldHint": true,
+   "readOnlyHint": false
+  },
+  "description": "Use this when a post shows status failed and the user wants Zernio to try publishing it again on the platforms that failed. This publishes the same content publicly on retry, so confirm with the user first. Requires the post id from list_posts. Read the failure reason with get_post before retrying; a reconnect or content fix may be needed first.",
+  "inputSchema": {
+   "additionalProperties": false,
+   "properties": {
+    "post_id": {
+     "description": "Zernio post id of a failed post",
+     "type": "string"
+    }
+   },
+   "required": [
+    "post_id"
+   ],
+   "type": "object"
+  },
+  "name": "retry_failed_post",
+  "outputSchema": {
+   "properties": {
+    "post": {
+     "properties": {
+      "content": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "default": null,
+       "title": "Content"
+      },
+      "id": {
+       "title": "Id",
+       "type": "string"
+      },
+      "media_urls": {
+       "items": {
+        "type": "string"
+       },
+       "title": "Media Urls",
+       "type": "array"
+      },
+      "published_at": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "default": null,
+       "title": "Published At"
+      },
+      "scheduled_for": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "default": null,
+       "description": "ISO 8601, UTC",
+       "title": "Scheduled For"
+      },
+      "status": {
+       "description": "draft, scheduled, publishing, published, failed or partial",
+       "title": "Status",
+       "type": "string"
+      },
+      "targets": {
+       "items": {
+        "properties": {
+         "account_id": {
+          "anyOf": [
+           {
+            "type": "string"
+           },
+           {
+            "type": "null"
+           }
+          ],
+          "default": null,
+          "title": "Account Id"
+         },
+         "error": {
+          "anyOf": [
+           {
+            "type": "string"
+           },
+           {
+            "type": "null"
+           }
+          ],
+          "default": null,
+          "title": "Error"
+         },
+         "platform": {
+          "title": "Platform",
+          "type": "string"
+         },
+         "post_url": {
+          "anyOf": [
+           {
+            "type": "string"
+           },
+           {
+            "type": "null"
+           }
+          ],
+          "default": null,
+          "description": "Public URL once published",
+          "title": "Post Url"
+         },
+         "status": {
+          "anyOf": [
+           {
+            "type": "string"
+           },
+           {
+            "type": "null"
+           }
+          ],
+          "default": null,
+          "description": "pending, publishing, published or failed",
+          "title": "Status"
+         },
+         "username": {
+          "anyOf": [
+           {
+            "type": "string"
+           },
+           {
+            "type": "null"
+           }
+          ],
+          "default": null,
+          "title": "Username"
+         }
+        },
+        "required": [
+         "platform"
+        ],
+        "title": "PostTarget",
+        "type": "object"
+       },
+       "title": "Targets",
+       "type": "array"
+      },
+      "timezone": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "default": null,
+       "title": "Timezone"
+      },
+      "title": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "default": null,
+       "title": "Title"
+      }
+     },
+     "required": [
+      "id",
+      "status",
+      "targets"
+     ],
+     "title": "Post",
+     "type": "object"
+    }
+   },
+   "required": [
+    "post"
+   ],
+   "title": "PostResult",
+   "type": "object"
+  },
+  "title": "Retry a failed post"
+ },
+ {
+  "_meta": {
+   "fastmcp": {
+    "tags": []
+   },
+   "securitySchemes": [
+    {
+     "scopes": [
+      "analytics:read"
+     ],
+     "type": "oauth2"
+    }
+   ]
+  },
+  "annotations": {
+   "destructiveHint": false,
+   "idempotentHint": true,
+   "openWorldHint": false,
+   "readOnlyHint": true
+  },
+  "description": "Use this when the user asks how a specific published post performed: impressions, reach, likes, comments, shares, saves, clicks, views and engagement rate, per platform. Numbers sync from the platforms periodically, so a just-published post may report pending data. Requires the post id from list_posts.",
+  "inputSchema": {
+   "additionalProperties": false,
+   "properties": {
+    "post_id": {
+     "description": "Zernio post id of a published post",
+     "type": "string"
+    }
+   },
+   "required": [
+    "post_id"
+   ],
+   "type": "object"
+  },
+  "name": "get_post_analytics",
+  "outputSchema": {
+   "properties": {
+    "content": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Content"
+    },
+    "message": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "description": "Explains pending or unavailable data",
+     "title": "Message"
+    },
+    "metrics": {
+     "properties": {
+      "clicks": {
+       "default": 0,
+       "title": "Clicks",
+       "type": "integer"
+      },
+      "comments": {
+       "default": 0,
+       "title": "Comments",
+       "type": "integer"
+      },
+      "engagement_rate": {
+       "anyOf": [
+        {
+         "type": "number"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "default": null,
+       "title": "Engagement Rate"
+      },
+      "impressions": {
+       "default": 0,
+       "title": "Impressions",
+       "type": "integer"
+      },
+      "likes": {
+       "default": 0,
+       "title": "Likes",
+       "type": "integer"
+      },
+      "reach": {
+       "default": 0,
+       "title": "Reach",
+       "type": "integer"
+      },
+      "saves": {
+       "default": 0,
+       "title": "Saves",
+       "type": "integer"
+      },
+      "shares": {
+       "default": 0,
+       "title": "Shares",
+       "type": "integer"
+      },
+      "views": {
+       "default": 0,
+       "title": "Views",
+       "type": "integer"
+      }
+     },
+     "title": "Metrics",
+     "type": "object"
+    },
+    "platforms": {
+     "items": {
+      "properties": {
+       "metrics": {
+        "anyOf": [
+         {
+          "properties": {
+           "clicks": {
+            "default": 0,
+            "title": "Clicks",
+            "type": "integer"
+           },
+           "comments": {
+            "default": 0,
+            "title": "Comments",
+            "type": "integer"
+           },
+           "engagement_rate": {
+            "anyOf": [
+             {
+              "type": "number"
+             },
+             {
+              "type": "null"
+             }
+            ],
+            "default": null,
+            "title": "Engagement Rate"
+           },
+           "impressions": {
+            "default": 0,
+            "title": "Impressions",
+            "type": "integer"
+           },
+           "likes": {
+            "default": 0,
+            "title": "Likes",
+            "type": "integer"
+           },
+           "reach": {
+            "default": 0,
+            "title": "Reach",
+            "type": "integer"
+           },
+           "saves": {
+            "default": 0,
+            "title": "Saves",
+            "type": "integer"
+           },
+           "shares": {
+            "default": 0,
+            "title": "Shares",
+            "type": "integer"
+           },
+           "views": {
+            "default": 0,
+            "title": "Views",
+            "type": "integer"
+           }
+          },
+          "title": "Metrics",
+          "type": "object"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "default": null
+       },
+       "platform": {
+        "title": "Platform",
+        "type": "string"
+       },
+       "post_url": {
+        "anyOf": [
+         {
+          "type": "string"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "default": null,
+        "title": "Post Url"
+       },
+       "status": {
+        "anyOf": [
+         {
+          "type": "string"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "default": null,
+        "title": "Status"
+       },
+       "sync_status": {
+        "anyOf": [
+         {
+          "type": "string"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "default": null,
+        "description": "synced, pending or unavailable",
+        "title": "Sync Status"
+       },
+       "username": {
+        "anyOf": [
+         {
+          "type": "string"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "default": null,
+        "title": "Username"
+       }
+      },
+      "required": [
+       "platform"
+      ],
+      "title": "PlatformAnalytics",
+      "type": "object"
+     },
+     "title": "Platforms",
+     "type": "array"
+    },
+    "post_id": {
+     "title": "Post Id",
+     "type": "string"
+    },
+    "published_at": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Published At"
+    },
+    "status": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Status"
+    },
+    "sync_status": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Sync Status"
+    }
+   },
+   "required": [
+    "post_id",
+    "metrics",
+    "platforms"
+   ],
+   "title": "PostAnalytics",
+   "type": "object"
+  },
+  "title": "Get analytics for one post"
+ },
+ {
+  "_meta": {
+   "fastmcp": {
+    "tags": []
+   },
+   "securitySchemes": [
+    {
+     "scopes": [
+      "analytics:read"
+     ],
+     "type": "oauth2"
+    }
+   ]
+  },
+  "annotations": {
+   "destructiveHint": false,
+   "idempotentHint": true,
+   "openWorldHint": false,
+   "readOnlyHint": true
+  },
+  "description": "Use this when the user asks how their accounts or platforms performed over a period, for example 'how did Instagram do last month'. Returns daily totals (impressions, reach, likes, comments, shares, saves, clicks, views) and per-platform totals for the date range, defaulting to the last 30 days. Filter by account_id or platform. For a single post use get_post_analytics.",
+  "inputSchema": {
+   "additionalProperties": false,
+   "properties": {
+    "account_id": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "description": "Only this social account"
+    },
+    "from_date": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "description": "Start date YYYY-MM-DD, default 30 days ago"
+    },
+    "platform": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "description": "Only this platform, for example instagram"
+    },
+    "to_date": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "description": "End date YYYY-MM-DD, default today"
+    }
+   },
+   "type": "object"
+  },
+  "name": "get_account_analytics",
+  "outputSchema": {
+   "properties": {
+    "days": {
+     "items": {
+      "properties": {
+       "date": {
+        "title": "Date",
+        "type": "string"
+       },
+       "metrics": {
+        "properties": {
+         "clicks": {
+          "default": 0,
+          "title": "Clicks",
+          "type": "integer"
+         },
+         "comments": {
+          "default": 0,
+          "title": "Comments",
+          "type": "integer"
+         },
+         "engagement_rate": {
+          "anyOf": [
+           {
+            "type": "number"
+           },
+           {
+            "type": "null"
+           }
+          ],
+          "default": null,
+          "title": "Engagement Rate"
+         },
+         "impressions": {
+          "default": 0,
+          "title": "Impressions",
+          "type": "integer"
+         },
+         "likes": {
+          "default": 0,
+          "title": "Likes",
+          "type": "integer"
+         },
+         "reach": {
+          "default": 0,
+          "title": "Reach",
+          "type": "integer"
+         },
+         "saves": {
+          "default": 0,
+          "title": "Saves",
+          "type": "integer"
+         },
+         "shares": {
+          "default": 0,
+          "title": "Shares",
+          "type": "integer"
+         },
+         "views": {
+          "default": 0,
+          "title": "Views",
+          "type": "integer"
+         }
+        },
+        "title": "Metrics",
+        "type": "object"
+       },
+       "post_count": {
+        "title": "Post Count",
+        "type": "integer"
+       }
+      },
+      "required": [
+       "date",
+       "post_count",
+       "metrics"
+      ],
+      "title": "DailyMetrics",
+      "type": "object"
+     },
+     "title": "Days",
+     "type": "array"
+    },
+    "from_date": {
+     "title": "From Date",
+     "type": "string"
+    },
+    "platform_totals": {
+     "items": {
+      "properties": {
+       "metrics": {
+        "properties": {
+         "clicks": {
+          "default": 0,
+          "title": "Clicks",
+          "type": "integer"
+         },
+         "comments": {
+          "default": 0,
+          "title": "Comments",
+          "type": "integer"
+         },
+         "engagement_rate": {
+          "anyOf": [
+           {
+            "type": "number"
+           },
+           {
+            "type": "null"
+           }
+          ],
+          "default": null,
+          "title": "Engagement Rate"
+         },
+         "impressions": {
+          "default": 0,
+          "title": "Impressions",
+          "type": "integer"
+         },
+         "likes": {
+          "default": 0,
+          "title": "Likes",
+          "type": "integer"
+         },
+         "reach": {
+          "default": 0,
+          "title": "Reach",
+          "type": "integer"
+         },
+         "saves": {
+          "default": 0,
+          "title": "Saves",
+          "type": "integer"
+         },
+         "shares": {
+          "default": 0,
+          "title": "Shares",
+          "type": "integer"
+         },
+         "views": {
+          "default": 0,
+          "title": "Views",
+          "type": "integer"
+         }
+        },
+        "title": "Metrics",
+        "type": "object"
+       },
+       "platform": {
+        "title": "Platform",
+        "type": "string"
+       },
+       "post_count": {
+        "title": "Post Count",
+        "type": "integer"
+       }
+      },
+      "required": [
+       "platform",
+       "post_count",
+       "metrics"
+      ],
+      "title": "PlatformTotals",
+      "type": "object"
+     },
+     "title": "Platform Totals",
+     "type": "array"
+    },
+    "to_date": {
+     "title": "To Date",
+     "type": "string"
+    }
+   },
+   "required": [
+    "from_date",
+    "to_date",
+    "days",
+    "platform_totals"
+   ],
+   "title": "AccountAnalytics",
+   "type": "object"
+  },
+  "title": "Get daily analytics across accounts"
+ },
+ {
+  "_meta": {
+   "fastmcp": {
+    "tags": []
+   },
+   "securitySchemes": [
+    {
+     "scopes": [
+      "analytics:read"
+     ],
+     "type": "oauth2"
+    }
+   ]
+  },
+  "annotations": {
+   "destructiveHint": false,
+   "idempotentHint": true,
+   "openWorldHint": false,
+   "readOnlyHint": true
+  },
+  "description": "Use this when the user asks when they should post for the most engagement. Computed from the engagement history of the user's own published posts, as weekday and hour in UTC, best first. Filter by account_id or platform. Returns nothing useful until the account has published posts with synced analytics.",
+  "inputSchema": {
+   "additionalProperties": false,
+   "properties": {
+    "account_id": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "description": "Only this social account"
+    },
+    "platform": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "description": "Only this platform, for example instagram"
+    }
+   },
+   "type": "object"
+  },
+  "name": "get_best_time_to_post",
+  "outputSchema": {
+   "properties": {
+    "based_on_posts": {
+     "title": "Based On Posts",
+     "type": "integer"
+    },
+    "slots": {
+     "description": "Best slots first",
+     "items": {
+      "properties": {
+       "avg_engagement": {
+        "title": "Avg Engagement",
+        "type": "number"
+       },
+       "day": {
+        "title": "Day",
+        "type": "string"
+       },
+       "hour_utc": {
+        "title": "Hour Utc",
+        "type": "integer"
+       },
+       "post_count": {
+        "title": "Post Count",
+        "type": "integer"
+       }
+      },
+      "required": [
+       "day",
+       "hour_utc",
+       "avg_engagement",
+       "post_count"
+      ],
+      "title": "BestTimeSlot",
+      "type": "object"
+     },
+     "title": "Slots",
+     "type": "array"
+    }
+   },
+   "required": [
+    "slots",
+    "based_on_posts"
+   ],
+   "title": "BestTimes",
+   "type": "object"
+  },
+  "title": "Get best times to post"
+ }
+]
