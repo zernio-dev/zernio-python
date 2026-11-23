@@ -172,6 +172,25 @@ async def test_a_link_without_the_tools_scope_is_asked_to_relink(monkeypatch):
     assert "messaging:read" in result.content[0].text
 
 
+async def test_each_group_refusal_logs_whether_it_asked_to_relink(monkeypatch, caplog):
+    monkeypatch.setattr(
+        "late.mcp.middleware.missing_scope._granted_scopes", lambda: LINK_SCOPES
+    )
+
+    with caplog.at_level("INFO", logger="late.mcp.tools"):
+        await _list_conversations(httpx.Response(403, json=GROUP_DENIED))
+
+    (line,) = [
+        json.loads(r.message)
+        for r in caplog.records
+        if "mcp_scope_challenge" in r.message
+    ]
+    assert line["tool"] == "messages_list_inbox_conversations"
+    assert line["needed_scope"] == "messaging:read"
+    assert line["challenged"] is True
+    assert "messaging:read" not in line["token_scope"]
+
+
 @pytest.mark.parametrize(
     ("granted", "body"),
     [
