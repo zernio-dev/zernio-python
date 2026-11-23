@@ -5880,7 +5880,7 @@ def register_generated_tools(mcp, _get_client):
 
             Responds `429` when Google's API quota is ...
 
-            Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit, microsoft, amazon, tradedesk, applovin
+            Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit, microsoft, amazon, tradedesk, applovin, snapchat
 
             Args:
                 account_id: Account ID (required)
@@ -6176,6 +6176,7 @@ def register_generated_tools(mcp, _get_client):
             "twitter",
             "xads",
             "redditads",
+            "snapchatads",
         ]
         | None = None,
         type: Literal[
@@ -6199,7 +6200,7 @@ def register_generated_tools(mcp, _get_client):
         On Reddit, `size` is the lower bound of Reddit's matched-users range, and `status` is `too_small`
         while the list has matched fewer than 1,000 people.
 
-        Platforms (the platform parameter takes): facebook, instagram, googleads, tiktok, tiktokads, pinterest, linkedin, linkedinads, twitter, xads, redditads
+        Platforms (the platform parameter takes): facebook, instagram, googleads, tiktok, tiktokads, pinterest, linkedin, linkedinads, twitter, xads, redditads, snapchatads
 
         Args:
             account_id: Account ID (required)
@@ -6248,7 +6249,7 @@ def register_generated_tools(mcp, _get_client):
         - Meta: `pixelId` required, `retentionDays` 1-180, optional `urlContains` or raw `rule`. `event` is not accepted.
         - TikTok: `pixelId` required, `retentionDays` one of 7, 14, 30, 60, 90, 180. `event` is a TikTok pixel event (see below), optional ...
 
-        Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit
+        Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit, snapchat
 
         Args:
             body: Full request body as documented in the API reference. (required)"""
@@ -6274,7 +6275,7 @@ def register_generated_tools(mcp, _get_client):
 
         Returns the local audience record and fresh data from Meta (if available).
 
-        Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit
+        Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit, snapchat
 
         Args:
             audience_id: The Zernio audience id (the id field of GET /v1/ads/audiences), not the platform segment id. (required)"""
@@ -6358,7 +6359,7 @@ def register_generated_tools(mcp, _get_client):
 
         If the platform refuses, the error is returned and the Zernio record is kept, so a retry is safe. An audience the platform no longer has counts as removed.
 
-        Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit
+        Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit, snapchat
 
         Args:
             audience_id: (required)"""
@@ -6397,7 +6398,7 @@ def register_generated_tools(mcp, _get_client):
         | Meta | every key |
         | Google | `email`, `phone`, and the address (`firstName`, `lastName`, `country`, `zip`) when all four are present with ...
 
-        Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit
+        Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit, snapchat
 
         Args:
             audience_id: The Zernio audience id (the id field of GET /v1/ads/audiences), not the platform segment id. (required)
@@ -6435,7 +6436,7 @@ def register_generated_tools(mcp, _get_client):
         - LinkedIn removes them from the list Zernio keeps and uploads what is left about a minute later.
         - ...
 
-        Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit
+        Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit, snapchat
 
         Args:
             audience_id: The Zernio audience id (the id field of GET /v1/ads/audiences), not the platform segment id. (required)
@@ -6918,6 +6919,7 @@ def register_generated_tools(mcp, _get_client):
             "microsoft",
             "amazon",
             "tradedesk",
+            "snapchat",
         ]
         | None = None,
         account_id: str | None = None,
@@ -6955,7 +6957,7 @@ def register_generated_tools(mcp, _get_client):
 
             1. Filter by platformAdId (the Meta ...
 
-            Platforms (the platform parameter takes): facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit, microsoft, amazon, tradedesk
+            Platforms (the platform parameter takes): facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit, microsoft, amazon, tradedesk, snapchat
 
             Args:
                 page: Page number (1-based)
@@ -7613,6 +7615,7 @@ def register_generated_tools(mcp, _get_client):
             "microsoft",
             "amazon",
             "tradedesk",
+            "snapchat",
         ]
         | None = None,
         status: Literal[
@@ -7653,7 +7656,7 @@ def register_generated_tools(mcp, _get_client):
 
             Zernio's own status writes re-read the switches they change. A change made in the ...
 
-            Platforms (the platform parameter takes): facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit, microsoft, amazon, tradedesk
+            Platforms (the platform parameter takes): facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit, microsoft, amazon, tradedesk, snapchat
 
             Args:
                 include_empty: Meta only. Set true to also list campaigns with ZERO ads, with `adCount: 0` and zeroed metrics.
@@ -7801,7 +7804,7 @@ def register_generated_tools(mcp, _get_client):
             - OpenAI: `goal` sets the campaign objective, and `conversions` needs an active standard conversion event on the account.
             - Reddit: see below. ...
 
-            Platforms: meta, google, linkedin, tiktok, x, pinterest, openai, reddit, amazon, tradedesk, applovin
+            Platforms: meta, google, linkedin, tiktok, x, pinterest, openai, reddit, amazon, tradedesk, applovin, snapchat
 
             Args:
                 account_id: Zernio SocialAccount id (posting or ads variant); its platform decides where the campaign is created. (required)
@@ -7905,6 +7908,7 @@ def register_generated_tools(mcp, _get_client):
             "microsoft",
             "amazon",
             "tradedesk",
+            "snapchat",
         ],
     ) -> str:
         """Pause or resume a campaign
@@ -7928,7 +7932,7 @@ def register_generated_tools(mcp, _get_client):
 
         - ...
 
-        Platforms (the platform parameter takes): facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit, microsoft, amazon, tradedesk
+        Platforms (the platform parameter takes): facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit, microsoft, amazon, tradedesk, snapchat
 
         Args:
             campaign_id: Platform campaign ID (required)
@@ -8169,6 +8173,7 @@ def register_generated_tools(mcp, _get_client):
             "microsoft",
             "amazon",
             "tradedesk",
+            "snapchat",
         ],
         account_id: str | None = None,
         bid_strategy: Literal[
@@ -8210,7 +8215,7 @@ def register_generated_tools(mcp, _get_client):
             | `sharedBudgetId` | 400 | Yes | 400 |
             | `budget` (CBO; ABO returns 409) | Yes | Daily only | OpenAI and Reddit: daily or lifetime; Amazon: daily, or the lifetime type a Sponsored Brands campaign was ...
 
-            Platforms (the platform parameter takes): facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit, microsoft, amazon, tradedesk
+            Platforms (the platform parameter takes): facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit, microsoft, amazon, tradedesk, snapchat
 
             Args:
                 campaign_id: Platform campaign ID (required)
@@ -8285,6 +8290,7 @@ def register_generated_tools(mcp, _get_client):
             "microsoft",
             "amazon",
             "tradedesk",
+            "snapchat",
         ],
         account_id: str | None = None,
         ad_account_id: str | None = None,
@@ -8309,7 +8315,7 @@ def register_generated_tools(mcp, _get_client):
 
         To delete such a shell, send `accountId` in the body or the query string. We skip the local lookup entirely and forward the delete to the platform of that connection. `accountId` is ...
 
-        Platforms (the platform parameter takes): facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit, microsoft, amazon, tradedesk
+        Platforms (the platform parameter takes): facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit, microsoft, amazon, tradedesk, snapchat
 
         Args:
             campaign_id: Platform campaign ID (required)
@@ -8521,11 +8527,11 @@ def register_generated_tools(mcp, _get_client):
 
         `updated` / `skipped` count campaigns.
 
-        Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit, microsoft, amazon, tradedesk, applovin
+        Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit, microsoft, amazon, tradedesk, applovin, snapchat
 
         Args:
             status: (required)
-            campaigns: Each item is an object with keys: platformCampaignId (string, required) - The campaign id on the ad platform (e.g. the numeric Google campaign id), not a Zernio id.; platform (one of: facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit, microsoft, googleads, tiktokads, linkedinads, pinterestads, xads, openaiads, redditads, microsoftads; required) - The ad platform, e.g. `google` for Google Ads. The ads connection slug (`googleads`, `tiktokads`, ...) is accepted as an alias. `metaads` is not: send ... (required)"""
+            campaigns: Each item is an object with keys: platformCampaignId (string, required) - The campaign id on the ad platform (e.g. the numeric Google campaign id), not a Zernio id.; platform (one of: facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit, microsoft, googleads, tiktokads, linkedinads, pinterestads, xads, openaiads, redditads, microsoftads, snapchat, snapchatads; required) - The ad platform, e.g. `google` for Google Ads. The ads connection slug (`googleads`, `tiktokads`, ...) is accepted as an alias. `metaads` is not: send ... (required)"""
         client = _get_client()
         try:
             response = client.ad_campaigns.bulk_update_ad_campaign_status(
@@ -8732,6 +8738,7 @@ def register_generated_tools(mcp, _get_client):
             "twitter",
             "openai",
             "reddit",
+            "snapchat",
         ]
         | None = None,
         status: Literal[
@@ -8767,7 +8774,7 @@ def register_generated_tools(mcp, _get_client):
 
             So ...
 
-            Platforms (the platform parameter takes): facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit
+            Platforms (the platform parameter takes): facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit, snapchat
 
             Args:
                 account_id: Account ID
@@ -8829,6 +8836,7 @@ def register_generated_tools(mcp, _get_client):
             "twitter",
             "openai",
             "reddit",
+            "snapchat",
         ],
         campaign_id: str,
         name: str,
@@ -8862,11 +8870,11 @@ def register_generated_tools(mcp, _get_client):
         - `targeting` sets a Demand Gen ad group's locations and languages (`countries`, `regions`, `cities`, `zips`, `metros`, `languages`), created atomically with the ad group. Without it the ad group serves worldwide.
         - `targeting` returns 400 for any other targeting field, and on campaigns that keep geo on the campaign: Search, Display, and Demand Gen campaigns migrated from ...
 
-        Platforms: google, reddit
+        Platforms: google, reddit, snapchat
 
         Args:
             account_id: Zernio SocialAccount id owning the Google Ads or Reddit Ads connection. (required)
-            platform: "google" and "reddit" are implemented; every other value returns 501. (required)
+            platform: "google", "reddit" and "snapchat" are implemented; every other value returns 501. (required)
             campaign_id: Platform campaign ID the ad group is created under (numeric on Google). (required)
             name: (required)
             status
@@ -9118,6 +9126,7 @@ def register_generated_tools(mcp, _get_client):
             "twitter",
             "openai",
             "reddit",
+            "snapchat",
         ],
         budget: dict[str, Any] | None = None,
         status: Literal["active", "paused"] | None = None,
@@ -9166,7 +9175,7 @@ def register_generated_tools(mcp, _get_client):
             - Sending `valueRulesApplied: false` TOGETHER with `valueRuleSetId` returns 400 `mutually_exclusive_fields`.
             - Eligibility: only ad sets on ...
 
-            Platforms (the platform parameter takes): facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit
+            Platforms (the platform parameter takes): facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit, snapchat
 
             Args:
                 ad_set_id: Platform ad set ID (required)
@@ -9292,7 +9301,7 @@ def register_generated_tools(mcp, _get_client):
         soft-flags the line item. Google removes the ad group. All remain readable
         for reporting.
 
-        Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit, amazon, tradedesk
+        Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit, amazon, tradedesk, snapchat
 
         Args:
             ad_set_id: Platform ad set ID (required)"""
@@ -9312,7 +9321,7 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def ad_campaigns_get_ad_set_targeting(
-        ad_set_id: str, platform: Literal["reddit", "amazon"] | None = None
+        ad_set_id: str, platform: Literal["reddit", "amazon", "snapchat"] | None = None
     ) -> str:
         """Read an ad group's targeting and schedule
 
@@ -9331,7 +9340,7 @@ def register_generated_tools(mcp, _get_client):
 
         On Amazon it reads the ad group's live targets and negative targets in Amazon's own expression shape: `targeting` is `{ product, targets, negativeTargets }`, each target with `targetId`, `state`, `expressionType`, ...
 
-        Platforms: reddit, amazon
+        Platforms: reddit, amazon, snapchat
 
         Args:
             ad_set_id: Reddit ad group ID (required)
@@ -9369,6 +9378,7 @@ def register_generated_tools(mcp, _get_client):
             "microsoft",
             "amazon",
             "tradedesk",
+            "snapchat",
         ],
     ) -> str:
         """Pause or resume a single ad set
@@ -9400,7 +9410,7 @@ def register_generated_tools(mcp, _get_client):
 
         - When that live read ...
 
-        Platforms (the platform parameter takes): facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit, microsoft, amazon, tradedesk
+        Platforms (the platform parameter takes): facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit, microsoft, amazon, tradedesk, snapchat
 
         Args:
             ad_set_id: Platform ad set ID (required)
@@ -9440,6 +9450,7 @@ def register_generated_tools(mcp, _get_client):
             "microsoft",
             "amazon",
             "tradedesk",
+            "snapchat",
         ]
         | None = None,
         status: Literal[
@@ -9500,7 +9511,7 @@ def register_generated_tools(mcp, _get_client):
 
             The older days (up to 730 days back) are imported in the background; repeat the request until it returns 200. A request scoped to no Meta ...
 
-            Platforms (the platform parameter takes): facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit, microsoft, amazon, tradedesk
+            Platforms (the platform parameter takes): facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit, microsoft, amazon, tradedesk, snapchat
 
             Args:
                 page: Page number (1-based)
@@ -9611,6 +9622,7 @@ def register_generated_tools(mcp, _get_client):
             "microsoft",
             "amazon",
             "applovin",
+            "snapchat",
         ]
         | None = None,
         sort_by: Literal[
@@ -9628,7 +9640,7 @@ def register_generated_tools(mcp, _get_client):
 
         A Meta range older than the imported history answers `202` with `backfillPending: true` and the covered part; repeat the request until it returns 200.
 
-        Platforms (the platform parameter takes): facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit, microsoft, amazon, applovin
+        Platforms (the platform parameter takes): facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit, microsoft, amazon, applovin, snapchat
 
         Args:
             account_id: Account ID. Sibling-expanded to its linked posting and ads pair. An id the API key cannot reach answers 404. (required)
@@ -9678,6 +9690,7 @@ def register_generated_tools(mcp, _get_client):
             "reddit",
             "microsoft",
             "amazon",
+            "snapchat",
         ]
         | None = None,
         breakdown: Literal["adAccount"] | None = None,
@@ -9698,7 +9711,7 @@ def register_generated_tools(mcp, _get_client):
         - Date range defaults to the last 90 days. Capped at 730 days.
         - With adAccountId set to a Google customer id ...
 
-        Platforms (the platform parameter takes): facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit, microsoft, amazon
+        Platforms (the platform parameter takes): facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit, microsoft, amazon, snapchat
 
         Args:
             account_id: Account ID. Sibling-expanded to its linked posting↔ads pair. An id that does not exist or sits on a profile the API key cannot reach answers 404 (code: account_not_found). (required)
@@ -9753,7 +9766,7 @@ def register_generated_tools(mcp, _get_client):
             - the creative's `effective_object_story_id` (`{pageId}_{postId}` shape, Facebook side)
             - the creative's `effective_instagram_media_id` ...
 
-            Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit, microsoft, amazon, tradedesk, applovin
+            Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit, microsoft, amazon, tradedesk, applovin, snapchat
 
             Args:
                 ad_id: Zernio `_id` (hex), Meta `platformAdId` (numeric), or one of the creative's effective story/media IDs. See description for details.
@@ -9835,7 +9848,7 @@ def register_generated_tools(mcp, _get_client):
 
         - KEYWORD ...
 
-        Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit, microsoft, amazon, applovin
+        Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit, microsoft, amazon, applovin, snapchat
 
         Args:
             ad_id: (required)
@@ -9903,7 +9916,7 @@ def register_generated_tools(mcp, _get_client):
 
         When the ad set and campaign were ...
 
-        Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit, microsoft, amazon, tradedesk, applovin
+        Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit, microsoft, amazon, tradedesk, applovin, snapchat
 
         Args:
             ad_id: (required)"""
@@ -9953,7 +9966,7 @@ def register_generated_tools(mcp, _get_client):
 
         After the write the switch is read back from ...
 
-        Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit, microsoft, amazon, applovin
+        Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit, microsoft, amazon, applovin, snapchat
 
         Args:
             ad_id: Zernio `_id` (hex), Meta `platformAdId` (numeric), or one of the creative's effective story/media IDs. (required)
@@ -11732,7 +11745,7 @@ def register_generated_tools(mcp, _get_client):
 
             Creates a paid ad with your own creative, building the campaign and ad set it needs or adding it to existing ones.
 
-            Works across Meta, Google Ads, Pinterest, TikTok, X, LinkedIn, OpenAI Ads (ChatGPT Ads), Reddit Ads, Microsoft Ads and Amazon Ads (Sponsored Products, Sponsored Brands and Sponsored Display, see `AmazonAdsPlatformData`). Per-platform required fields, budget minimums, and video-ad rules are documented on each property below.
+            Works across Meta, Google Ads, Pinterest, TikTok, X, LinkedIn, OpenAI Ads (ChatGPT Ads), Reddit Ads, Microsoft Ads, Snapchat Ads and Amazon Ads (Sponsored Products, Sponsored Brands and Sponsored Display, see `AmazonAdsPlatformData`). Per-platform required fields, budget minimums, and video-ad rules are documented on each property below.
 
             ### Request shapes
 
@@ -11742,9 +11755,9 @@ def register_generated_tools(mcp, _get_client):
             - Meta-only multi-creative shape via the creatives array: one ad set with N ads sharing budget and targeting.
             - Attach shape via adSetId: adds one new ad to an existing ad set, inheriting its budget, targeting, and schedule (Meta, Google Ads, TikTok, and LinkedIn).
 
-            On LinkedIn, adSetId in the attach shape is the existing Campaign id, and the budget, schedule, targeting and bidding fields must be omitted. `goal` ...
+            On LinkedIn, adSetId in the attach shape is the existing Campaign id, and the budget, schedule, targeting and bidding fields must be ...
 
-            Platforms: meta, google, tiktok, linkedin, pinterest, x, openai, reddit, microsoft, amazon, applovin
+            Platforms: meta, google, tiktok, linkedin, pinterest, x, openai, reddit, microsoft, amazon, applovin, snapchat
 
             Safe to retry: an identical call within 24 hours returns the first result instead of creating a second one, and answers 409 while the first is still running. To create another on purpose, or if that 409 does not clear, change an argument such as the name.
 
@@ -13683,7 +13696,7 @@ def register_generated_tools(mcp, _get_client):
 
             Breakdowns and Google's impression ...
 
-            Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit, microsoft, amazon, applovin
+            Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit, microsoft, amazon, applovin, snapchat
 
             Args:
                 campaign_id: Platform campaign id (platformCampaignId). (required)
@@ -14104,7 +14117,7 @@ def register_generated_tools(mcp, _get_client):
 
             The newer way to read this is `GET ...
 
-            Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit, microsoft, amazon, applovin
+            Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit, microsoft, amazon, applovin, snapchat
 
             Args:
                 ad_id: (required)
@@ -14913,7 +14926,7 @@ def register_generated_tools(mcp, _get_client):
             - `behavior`: Meta, TikTok and LinkedIn, matched by name; ids feed `TargetingSpec.behaviors` (details below)
             - `interestKeyword`: TikTok only. The \"Additional interests\" of TikTok Ads Manager (e.g. `folk` returns `Folk Music`), from TikTok's keyword recommendations for the seed `q` ...
 
-            Platforms: meta, google, tiktok, linkedin, pinterest, reddit
+            Platforms: meta, google, tiktok, linkedin, pinterest, reddit, snapchat
 
             Args:
                 account_id: Account ID (a connected account on the target ad platform). (required)
@@ -15034,7 +15047,7 @@ def register_generated_tools(mcp, _get_client):
             return `available: false` with no bounds, so clients can hide or grey out the
             estimate rather than treat the absence as an error.
 
-            Platforms: meta, linkedin, pinterest, x
+            Platforms: meta, linkedin, pinterest, x, snapchat
 
             Args:
                 account_id: Zernio account ID on the target ad platform (the estimate runs against its platform). (required)
@@ -26720,12 +26733,13 @@ def register_generated_tools(mcp, _get_client):
         - X Ads (platform=xads): `x_ads_denied`, `x_ads_auth_failed`, `x_ads_config_error`, `x_ads_account_not_found`, `x_ads_state_error`, `x_ads_token_failed`, `x_ads_token_missing`, `x_ads_callback_error`.
         - Reddit Ads (platform=redditads): `reddit_ads_auth_failed`, `reddit_ads_invalid_state`, `reddit_ads_access_denied`, `reddit_ads_scope_not_granted`, `reddit_ads_no_ad_accounts`, `reddit_ads_callback_error`.
         - Microsoft Ads (platform=microsoftads): `microsoft_ads_auth_failed`, `microsoft_ads_invalid_state`, `microsoft_ads_access_denied`, `microsoft_ads_scope_not_granted`, `microsoft_ads_unknown_user`, `microsoft_ads_no_ad_accounts`, `microsoft_ads_callback_error`.
+        - Snapchat Ads (platform=snapchatads): `snapchat_ads_auth_failed`, `snapchat_ads_invalid_state`, `snapchat_ads_access_denied`, `snapchat_ads_no_ad_accounts`, `snapchat_ads_callback_error`.
         - Shopify (platform=shopify): `shopify_auth_failed`, `shopify_config_error`, `shopify_invalid_state`, `shopify_invalid_hmac`, `shopify_invalid_shop`, `shopify_missing_scopes`, `shopify_callback_error`.
 
         Notes:
 
         1. On this endpoint every upstream OAuth error collapses into `oauth_denied`, with the provider's values in the `platform_error*` params. The dedicated ads flows differ: they use their own denial slugs, and `google_ads_auth_failed` and `tiktok_ads_auth_failed` may carry the provider's raw error string in `error_message`.
-        2. On the tiktok and twitter ads flows `platform` carries the ads platform id (`tiktokads`, `xads`), not the value in the request path. The googleads, redditads, microsoftads and shopify flows report `googleads`, `redditads`, `microsoftads` and `shopify`.
+        2. On the tiktok and twitter ads flows `platform` carries the ads platform id (`tiktokads`, `xads`), not the value in the request path. The googleads, redditads, microsoftads, snapchatads and shopify flows report `googleads`, `redditads`, `microsoftads`, `snapchatads` and `shopify`.
         3. `missing_tiktok_permissions`: the TikTok authorization left out a permission the already-connected account needs, so nothing changed and it keeps working as before. User-fixable: connect again and accept every permission on TikTok's screen.
         4. `instagram_login_method_mismatch`: an Instagram Login authorization landed on a profile whose Instagram account is connected through Facebook Login, so nothing changed. To refresh it, connect again with `loginMethod=facebook_login`. To move it to Instagram Login, disconnect it first.
                 scopes: Comma-separated permission areas to request instead of the platform's full permission set.
@@ -26964,6 +26978,7 @@ def register_generated_tools(mcp, _get_client):
             "googleads",
             "redditads",
             "microsoftads",
+            "snapchatads",
         ],
         profile_id: str,
         identity_provider: Literal["microsoft", "google"] = "microsoft",
@@ -27000,7 +27015,7 @@ def register_generated_tools(mcp, _get_client):
 
             A reconnect is accepted when the new grant shares at least one ad ...
 
-            Platforms (the platform parameter takes): facebook, instagram, linkedin, tiktok, twitter, pinterest, googleads, redditads, microsoftads
+            Platforms (the platform parameter takes): facebook, instagram, linkedin, tiktok, twitter, pinterest, googleads, redditads, microsoftads, snapchatads
 
             Args:
                 identity_provider: Microsoft Ads only. How the user signs in to Microsoft Advertising: `google` for a Microsoft Advertising login that is a Google account. `google` on any other platform returns 400 `invalid_field_value`.
@@ -27024,7 +27039,7 @@ def register_generated_tools(mcp, _get_client):
         - `twitter` (X Ads): required.
         - `tiktok`: optional. Omit it for ads-only mode (no TikTok posting account linked; ad creation uses a Brand Identity instead of a TT_USER).
         - Same-token platforms (`facebook`, `instagram`, `linkedin`, `pinterest`): picks which posting account the ads connection uses when the profile holds several of that platform. With one, it can be omitted.
-        - Standalone platforms (`googleads`, `redditads`, `microsoftads`): ignored.
+        - Standalone platforms (`googleads`, `redditads`, `microsoftads`, `snapchatads`): ignored.
 
         On same-token platforms, an id that names no active account of the platform on the profile is ignored. Exception: with `force=true`, when it names the posting account the profile's ads connection hangs off, that account is no longer connected.
 
@@ -27036,12 +27051,12 @@ def register_generated_tools(mcp, _get_client):
         On success:
 
         - `tiktok`: lands on the URL unchanged.
-        - `twitter`, `googleads`, `redditads` and `microsoftads`: append `connected` (the ads platform id: `xads`, `googleads`, `redditads` or `microsoftads`), `profileId`, `accountId` (the ads connection) and `username`.
+        - `twitter`, `googleads`, `redditads`, `microsoftads` and `snapchatads`: append `connected` (the ads platform id: `xads`, `googleads`, `redditads`, `microsoftads` or `snapchatads`), `profileId`, `accountId` (the ads connection) and `username`.
         - Same-token platforms (`facebook`, `instagram`, `linkedin`, `pinterest`): append `connected`, `profileId`, `accountId`, `username` and, on API-key calls, `connect_token`.
 
         On failure the same error contract applies as on GET /v1/connect/{platform}: `error` and `platform` are always appended, other params are optional, and the value list there is not exhaustive.
 
-        On the tiktok, twitter, googleads, redditads and microsoftads flows, `platform` carries the ads platform id (`tiktokads`, `xads`, `googleads`, `redditads`, `microsoftads`), not the value used in the request path.
+        On the tiktok, twitter, googleads, redditads, microsoftads and snapchatads flows, `platform` carries the ads platform id (`tiktokads`, `xads`, `googleads`, `redditads`, `microsoftads`, `snapchatads`), not the value used in the request path.
                 headless: Enable headless mode (same-token platforms only)
                 force: Force a fresh OAuth even when an account already exists.
 
@@ -27059,6 +27074,7 @@ def register_generated_tools(mcp, _get_client):
         - `googleads`: bare customer id digits.
         - `redditads`: Reddit ad account id, `a2_<id>` or `t2_<id>`.
         - `microsoftads`: bare numeric account id (the Id, not the account number).
+        - `snapchatads`: Snapchat ad account UUID.
         - `twitter` (X Ads): base36 account id.
         - `tiktok` (TikTok Ads): numeric advertiser id.
 
@@ -27074,7 +27090,7 @@ def register_generated_tools(mcp, _get_client):
 
         **Through OAuth**: on Meta the scope is kept when this call returns an `authUrl`, so the Meta Ads account created after OAuth is scoped (only its scoped ad accounts synced and subscribed) from the start.
 
-        On `googleads`, `redditads` and `microsoftads` it is kept through OAuth when `redirect_url` is set, so the new connection syncs only scoped ad accounts from the first sync.
+        On `googleads`, `redditads`, `microsoftads` and `snapchatads` it is kept through OAuth when `redirect_url` is set, so the new connection syncs only scoped ad accounts from the first sync.
 
         On `tiktok` it is kept through OAuth with or without `redirect_url`. The TikTok Ads connection holds only the scoped advertisers from the first sync, and is named after the first of them. Its `platformUserId` and cached Brand Identity follow that advertiser too.
 
