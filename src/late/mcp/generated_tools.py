@@ -22887,8 +22887,8 @@ def register_generated_tools(mcp, _get_client):
                 post_id: Zernio post ID or platform-specific post ID. On LinkedIn, pass the post id exactly as the feed returns it (urn:li:share:<id> or urn:li:ugcPost:<id>); a bare number is read as an activity id (urn:li:activity:<n>). (required)
                 account_id: (required)
                 message: Reply text. On LinkedIn, mention with @[https://www.linkedin.com/in/vanity] (resolved to LinkedIn's live name, same rules and errors as post content) or @[Name](urn:li:person|organization:ID); a hand-written name must match LinkedIn's exactly or it renders as plain text. (required)
-                attachment_url: (Facebook only) URL of an image to attach, publishing a photo comment alongside the text. The URL must be publicly accessible so Meta can fetch it. Returns 400 for other platforms.
-                attachment_type: (Facebook only) How Facebook publishes `attachmentUrl`: `image` (default) as a photo comment, `gif` as an animated GIF comment. A GIF sent as `image` is stored as a still photo. Requires `attachmentUrl`.
+                attachment_url: (Facebook, Bluesky and LinkedIn) URL of an image to attach to the comment or reply. The URL must be publicly fetchable. Returns 400 for other platforms.
+                attachment_type: (Facebook only) How Facebook publishes `attachmentUrl`: `image` (default) as a photo comment, `gif` as an animated GIF comment. A GIF sent as `image` is stored as a still photo. Requires `attachmentUrl`. Returns 400 on other platforms.
                 comment_id: Reply to specific comment (optional)
                 mention_author: (LinkedIn only) When true, the reply starts with an @mention of the author of `commentId` (a member or a page), tagged with their URN and the name LinkedIn returns for them. Requires `commentId`.
 
