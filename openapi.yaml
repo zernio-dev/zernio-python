@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.769.0"
+  version: "1.770.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -94371,26 +94371,26 @@ paths:
                     longHeadline: { type: string, minLength: 1, maxLength: 90, description: "Google Display only. Replaces the responsive display ad's long headline." }
                     businessName: { type: string, minLength: 1, maxLength: 25, description: "Google Display only. Replaces the responsive display ad's business name." }
                     squareImageUrl: { type: string, format: uri, description: "Google Display only. Uploaded as a new square (1:1) marketing image asset that replaces the current one." }
-                    body: { type: string, description: "Primary text. On a Meta asset_feed creative it replaces the feed's only body option (422 when it has several: send `bodies`)." }
+                    body: { type: string, description: "Primary text. On a Meta asset_feed creative it replaces the feed's only body option and the story text (422 when it has several: send `bodies`). Sent with `bodies`, it sets the story's fallback primary text (`link_data.message` or `video_data.message`) while `bodies` replaces the options." }
                     bodies:
                       type: array
                       minItems: 1
                       maxItems: 50
                       items: { type: string, minLength: 1 }
-                      description: "Meta only. The primary text options of an asset_feed creative, one text per option in the order GET /v1/ads/{adId} returns them. Each replaces the option in its position and keeps its rule. A different count returns 422, as does a single-text creative (send `body`). Not with `body`."
+                      description: "Meta only. The primary text options of an asset_feed creative, one text per option in the order GET /v1/ads/{adId} returns them. Each replaces the option in its position and keeps its rule.\n\nA different count returns 422, as does a single-text creative (send `body`). Add `body` to set the story's fallback text as well."
                     headlines:
                       type: array
                       minItems: 1
                       maxItems: 50
                       items: { type: string, minLength: 1 }
-                      description: "Meta only. Same as `bodies`, for the headline options (Meta `asset_feed_spec.titles`). Cannot be sent with `headline`. Not the top-level Google `headlines`."
+                      description: "Meta only. Same as `bodies`, for the headline options (Meta `asset_feed_spec.titles`). Add `headline` to set the story's fallback title. Not the top-level Google `headlines`."
                     description: { type: string, maxLength: 255, description: "Link description slot (Meta `link_data.description` / `video_data.link_description`, LinkedIn creative description)." }
                     descriptions:
                       type: array
                       minItems: 1
                       maxItems: 50
                       items: { type: string, minLength: 1 }
-                      description: "Meta only. Same as `bodies`, for the description options. Cannot be sent with `description`. Not the top-level Google `descriptions`."
+                      description: "Meta only. Same as `bodies`, for the description options. Add `description` to set the story's fallback description. Not the top-level Google `descriptions`."
                     callToAction: { type: string }
                     linkUrl: { type: string, format: uri }
                     imageUrl: { type: string, format: uri }
