@@ -934,6 +934,13 @@ def main() -> int:
                 "idempotency_scope": tool_name if operation_id in SAME_ARGUMENTS_IDEMPOTENT_OPERATIONS else None,
             })
 
+    # The ChatGPT surface declares each listed tool's OAuth scope from this
+    # table: a spec without any x-oauth-scopes (fetched before the API served
+    # them) would empty it, so refuse to generate rather than ship that.
+    if operations and not any(op["oauth_scopes"] for op in operations):
+        print("Error: the spec carries no x-oauth-scopes; not regenerating.", file=sys.stderr)
+        return 1
+
     # Generate output file
     lines = [
         '"""',

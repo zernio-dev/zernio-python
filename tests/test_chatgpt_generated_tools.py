@@ -15,14 +15,16 @@ import httpx
 import pytest
 import respx
 from fastmcp import Client
+from fastmcp.server.auth import AccessToken
 
 from late.mcp.chatgpt_server import CHATGPT_SCOPES, chatgpt_mcp
 from late.mcp.chatgpt_tools import CHATGPT_GENERATED_TOOLS, concise_description
 from late.mcp.generated_tools import TOOL_OAUTH_SCOPES
+from late.mcp.middleware.missing_scope import _granted_scopes
 
-LIVE_TOOLS = json.loads(
-    (Path(__file__).parent / "fixtures" / "chatgpt_live_tools.json").read_text()
-)
+FIXTURES = Path(__file__).parent / "fixtures"
+LIVE_TOOLS = json.loads((FIXTURES / "chatgpt_live_tools.json").read_text())
+LIVE_INSTRUCTIONS = (FIXTURES / "chatgpt_live_instructions.txt").read_text()
 CONVERSATIONS = "https://api.test.com/v1/inbox/conversations"
 LINK_SCOPES = {"posts:read", "posts:write", "accounts:read", "analytics:read"}
 GROUP_DENIED = {
@@ -52,6 +54,11 @@ async def test_the_live_tools_keep_the_definitions_openai_approved():
 
     for live in LIVE_TOOLS:
         assert listed[live["name"]] == live, live["name"]
+
+
+async def test_the_server_instructions_keep_their_published_text():
+    async with Client(chatgpt_mcp) as client:
+        assert client.instructions == LIVE_INSTRUCTIONS
 
 
 async def test_lists_the_live_tools_and_the_wave_and_no_tool_search_proxy():
@@ -127,6 +134,18 @@ def test_a_description_keeps_its_first_paragraph_and_one_line_per_argument():
     )
 
 
+def test_a_title_only_description_keeps_undocumented_arguments_by_name():
+    doc = """Get workflow
+
+    Args:
+        workflow_id: (required)
+        account_id"""
+
+    assert concise_description(doc) == (
+        "Get workflow\n\nArgs:\n    workflow_id: (required)\n    account_id"
+    )
+
+
 async def _list_conversations(response: httpx.Response):
     with respx.mock:
         respx.get(url__startswith=CONVERSATIONS).mock(return_value=response)
@@ -175,3 +194,35 @@ async def test_other_403s_stay_plain_errors(monkeypatch, granted, body):
 
     assert result.is_error
     assert not (result.meta or {}).get("mcp/www_authenticate")
+
+
+async def test_a_generated_tool_answers_from_the_api():
+    with respx.mock:
+        respx.get(url__startswith=CONVERSATIONS).mock(
+            return_value=httpx.Response(
+                200, json={"data": [{"id": "conv_1", "participantName": "Ana"}]}
+            )
+        )
+        async with Client(chatgpt_mcp) as client:
+            result = await client.call_tool(
+                "messages_list_inbox_conversations", {}, raise_on_error=False
+            )
+
+    assert not result.is_error
+    assert "conv_1" in result.content[0].text
+
+
+@pytest.mark.parametrize(
+    ("claims", "granted"),
+    [
+        ({"scope": "posts:read messaging:read"}, {"posts:read", "messaging:read"}),
+        ({"user_id": "u1"}, None),
+    ],
+)
+def test_the_granted_scopes_come_from_the_verified_token(monkeypatch, claims, granted):
+    token = AccessToken(token="t", client_id="zernio", scopes=[], claims=claims)
+    monkeypatch.setattr(
+        "late.mcp.middleware.missing_scope.get_access_token", lambda: token
+    )
+
+    assert _granted_scopes() == granted

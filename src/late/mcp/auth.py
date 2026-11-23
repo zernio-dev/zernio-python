@@ -154,6 +154,8 @@ def _touch(token_key: str) -> None:
     with _VERIFIED_CACHE_LOCK:
         if token_key in _VERIFIED_AT:
             _VERIFIED_AT.move_to_end(token_key)
+        if token_key in _IDENTITY_BY_TOKEN:
+            _IDENTITY_BY_TOKEN.move_to_end(token_key)
 
 
 def _forget(token_key: str) -> None:
@@ -179,7 +181,11 @@ def _identity_in(response: httpx.Response) -> dict[str, str]:
     if not isinstance(body, dict):
         return {}
     named = {"user_id": body.get("userId"), "scope": body.get("scope")}
-    return {claim: value for claim, value in named.items() if isinstance(value, str) and value}
+    return {
+        claim: value
+        for claim, value in named.items()
+        if isinstance(value, str) and value
+    }
 
 
 def forget_rejected_token(token: str) -> None:

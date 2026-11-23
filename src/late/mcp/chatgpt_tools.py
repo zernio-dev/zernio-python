@@ -74,7 +74,7 @@ CHATGPT_GENERATED_TOOLS = WAVE_1
 _SUMMARY_MAX = 400
 _PARAM_MAX = 100
 _ARGS_HEADING = re.compile(r"\n[ \t]*Args:\n")
-_PARAM_LINE = re.compile(r"^([ \t]+)(\w+):\s*(.*)$")
+_PARAM_LINE = re.compile(r"^([ \t]+)(\w+)(?::[ \t]*(.*))?$")
 
 
 def _clip(text: str, limit: int) -> str:
@@ -89,7 +89,7 @@ def _argument_lines(args: str) -> list[str]:
         return []
     indent = matches[0][1]
     return [
-        f"    {m[2]}: {_clip(m[3], _PARAM_MAX)}".rstrip()
+        f"    {m[2]}: {_clip(m[3] or '', _PARAM_MAX)}".rstrip(": ")
         for m in matches
         if m[1] == indent
     ]
@@ -104,16 +104,18 @@ def concise_description(doc: str) -> str:
     """
     narrative, *rest = _ARGS_HEADING.split(doc, maxsplit=1)
     paragraphs = [p for p in inspect.cleandoc(narrative).split("\n\n") if p.strip()]
-    lines = [_clip(p, _SUMMARY_MAX) for p in paragraphs[:2]]
+    sections = [_clip(p, _SUMMARY_MAX) for p in paragraphs[:2]]
     arguments = _argument_lines(rest[0]) if rest else []
     if arguments:
-        lines += ["Args:", *arguments]
-    return "\n\n".join(lines[:2]) + ("\n\n" + "\n".join(lines[2:]) if arguments else "")
+        sections.append("\n".join(["Args:", *arguments]))
+    return "\n\n".join(sections)
 
 
 def oauth_scopes_of(tools: Iterable[str]) -> list[str]:
     """The scopes these generated tools declare, deduplicated in first-use order."""
-    return list(dict.fromkeys(TOOL_OAUTH_SCOPES[tool][0] for tool in tools))
+    return list(
+        dict.fromkeys(s for tool in tools for s in TOOL_OAUTH_SCOPES.get(tool, ())[:1])
+    )
 
 
 class _ListedToolsOnly:
@@ -128,7 +130,12 @@ class _ListedToolsOnly:
         def register(fn: Callable[..., Any]) -> Callable[..., Any]:
             if fn.__name__ not in self._listed:
                 return fn
-            scopes = [TOOL_OAUTH_SCOPES[fn.__name__][0]]
+            scopes = list(TOOL_OAUTH_SCOPES.get(fn.__name__, ()))[:1]
+            if not scopes:
+                raise LookupError(
+                    f"{fn.__name__} is listed for ChatGPT but the spec gives it no "
+                    "x-oauth-scopes; regenerate from a spec that has them"
+                )
             meta = {"securitySchemes": [{"type": "oauth2", "scopes": scopes}]}
             description = concise_description(fn.__doc__ or fn.__name__)
             self._server.tool(meta=meta, description=description, **kwargs)(fn)
