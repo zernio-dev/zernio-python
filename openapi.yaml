@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.784.0"
+  version: "1.785.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -3514,6 +3514,11 @@ components:
                     - type: integer
                     - type: 'null'
                   description: 'With include=total: the posts the list holds, counted on the first page and carried by the cursor.'
+                syncRequestedAccountIds:
+                  type: array
+                  items:
+                    type: string
+                  description: 'On a list of posts: the accounts this read queued for a fresh sync, because they were never synced or their stored numbers are over 90 minutes old. The answer holds the stored numbers; the synced ones arrive within minutes.'
                 metricsSample:
                   description: 'With groupBy=format: how many of the newest posts the metrics sum, and the most it reads. Below limit, every post of the range is counted.'
                   type: object
