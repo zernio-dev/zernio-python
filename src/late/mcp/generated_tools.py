@@ -54873,8 +54873,9 @@ def register_generated_tools(mcp, _get_client):
     def voice_delete_sip_trunk(id: str) -> str:
         """Delete a SIP trunk
 
-        Tears down the trunk and its carrier-side objects. Refused while any
-        number is still attached: detach them first.
+        Detaches every number still attached to the trunk (their inbound calls
+        go back to Zernio calling), then tears down the trunk and its
+        carrier-side objects. Its credentials stop working immediately.
 
         Args:
             id: (required)"""

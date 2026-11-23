@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.782.2"
+  version: "1.783.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -83445,8 +83445,9 @@ paths:
       tags: [Voice]
       summary: Delete a SIP trunk
       description: |
-        Tears down the trunk and its carrier-side objects. Refused while any
-        number is still attached: detach them first.
+        Detaches every number still attached to the trunk (their inbound calls
+        go back to Zernio calling), then tears down the trunk and its
+        carrier-side objects. Its credentials stop working immediately.
       security:
         - bearerAuth: []
       parameters:
@@ -83460,10 +83461,13 @@ paths:
                 type: object
                 properties:
                   deleted: { type: boolean }
+                  detachedNumbers:
+                    type: array
+                    items: { type: string }
+                    description: 'Numbers (E.164) that were attached to the trunk and are now detached.'
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: SIP trunk not found }
-        '409': { description: 'Numbers are still attached to this trunk (code invalid_resource_state).' }
 
   /v1/phone-numbers/sip-trunks/{id}/rotate-credentials:
     post:
