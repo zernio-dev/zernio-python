@@ -461,6 +461,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `connect.connect_snapchat_ads_credentials()` | Connect a Snapchat Ads pixel |
 | `connect.connect_taboola_ads_credentials()` | Connect a Taboola account |
 | `connect.connect_trade_desk_ads_credentials()` | Connect a Trade Desk tracking tag |
+| `connect.connect_trade_desk_ads_partner()` | Connect a Trade Desk partner for ads management |
 | `connect.connect_webflow_with_site_token()` | Connect Webflow with a site API token |
 | `connect.connect_wechat_credentials()` | Connect WeChat Official Account |
 | `connect.connect_whats_app_credentials()` | Connect WhatsApp via credentials |

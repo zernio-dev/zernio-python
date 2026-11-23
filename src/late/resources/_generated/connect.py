@@ -1205,6 +1205,31 @@ class ConnectResource:
         )
         return self._client._post("/v1/connect/tradedesk-ads/credentials", data=payload)
 
+    def connect_trade_desk_ads_partner(
+        self,
+        partner_id: str,
+        api_token: str,
+        profile_id: str,
+        *,
+        ad_account_ids: list[str] | None = None,
+        name: str | None = None,
+        state: str | None = None,
+        redirect_url: str | None = None,
+    ) -> dict[str, Any]:
+        """Connect a Trade Desk partner for ads management"""
+        payload = self._build_body(
+            {
+                "partnerId": partner_id,
+                "apiToken": api_token,
+                "adAccountIds": ad_account_ids,
+                "name": name,
+                "profileId": profile_id,
+                "state": state,
+                "redirect_url": redirect_url,
+            }
+        )
+        return self._client._post("/v1/connect/tradedesk-ads/partner", data=payload)
+
     def connect_taboola_ads_credentials(
         self,
         taboola_account_id: str,
@@ -3126,6 +3151,33 @@ class ConnectResource:
         )
         return await self._client._apost(
             "/v1/connect/tradedesk-ads/credentials", data=payload
+        )
+
+    async def aconnect_trade_desk_ads_partner(
+        self,
+        partner_id: str,
+        api_token: str,
+        profile_id: str,
+        *,
+        ad_account_ids: list[str] | None = None,
+        name: str | None = None,
+        state: str | None = None,
+        redirect_url: str | None = None,
+    ) -> dict[str, Any]:
+        """Connect a Trade Desk partner for ads management (async)"""
+        payload = self._build_body(
+            {
+                "partnerId": partner_id,
+                "apiToken": api_token,
+                "adAccountIds": ad_account_ids,
+                "name": name,
+                "profileId": profile_id,
+                "state": state,
+                "redirect_url": redirect_url,
+            }
+        )
+        return await self._client._apost(
+            "/v1/connect/tradedesk-ads/partner", data=payload
         )
 
     async def aconnect_taboola_ads_credentials(

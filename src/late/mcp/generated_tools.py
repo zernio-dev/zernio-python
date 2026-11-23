@@ -1143,6 +1143,7 @@ def register_generated_tools(mcp, _get_client):
             "stripe",
             "campaignmanager360",
             "tradedeskads",
+            "tradedeskdsp",
             "amazonads",
         ]
         | None = None,
@@ -29358,6 +29359,58 @@ def register_generated_tools(mcp, _get_client):
             response = client.connect.connect_trade_desk_ads_credentials(
                 advertiser_id=advertiser_id,
                 tracker_id=tracker_id,
+                name=name,
+                profile_id=profile_id,
+                state=state,
+                redirect_url=redirect_url,
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Connect a Trade Desk partner for ads management",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def connect_trade_desk_ads_partner(
+        partner_id: str,
+        api_token: str,
+        profile_id: str,
+        ad_account_ids: list[str] | None = None,
+        name: str | None = None,
+        state: str | None = None,
+        redirect_url: str | None = None,
+    ) -> str:
+        """Connect a Trade Desk partner for ads management
+
+        Connects a Trade Desk partner with an API token for ads management. Sending conversions to a tracking tag is a separate connection: `POST /v1/connect/tradedesk-ads/credentials`.
+
+        Connects a Trade Desk partner with an API token. The Trade Desk has no OAuth: your Trade Desk account manager enables API access for your user, who then creates a token in the Partner Portal under Manage API Tokens.
+
+        Zernio lists the partner's advertisers with the token before saving anything. Each advertiser becomes an ad account of the connection (`GET /v1/ads/accounts`), and `adAccountIds` keeps only some of them. The token is stored encrypted and never returned.
+
+        Requires the Ads add-on.
+
+        Platforms: tradedeskdsp
+
+        Args:
+            partner_id: Trade Desk Partner ID, a short code such as `ptn1234`. Stored and echoed lowercased. (required)
+            api_token: API token of a Trade Desk user with API access to the partner. (required)
+            ad_account_ids: Advertiser ids to keep. Left out or empty, a new connection keeps every advertiser and a reconnect keeps its saved selection.
+            name: Optional display name for the account.
+            profile_id: Your Zernio profile ID (required)
+            state: Optional state passthrough for the connect flow.
+            redirect_url: Optional URL to redirect to after a successful connection, echoed back as redirectUrl."""
+        client = _get_client()
+        try:
+            response = client.connect.connect_trade_desk_ads_partner(
+                partner_id=partner_id,
+                api_token=api_token,
+                ad_account_ids=ad_account_ids,
                 name=name,
                 profile_id=profile_id,
                 state=state,
