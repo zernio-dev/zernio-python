@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.766.0"
+  version: "1.767.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -2074,7 +2074,7 @@ components:
           $ref: '#/components/schemas/ConversionAuditReport'
         networks:
           type: array
-          description: 'Each ad network with its final setup and leak, computed exactly as the public report page shows them, best setup first.'
+          description: 'Each ad network with its final setup and leak, computed exactly as the public report page shows them, best setup first. Empty when `report.scannerBlocked` is set: the scan could not see any network.'
           items:
             type: object
             required: [key, name, setup, leakPct, loadedBy]
@@ -2239,6 +2239,9 @@ components:
           type: string
           enum: [full, limited, none]
           description: '`full` = pixels were visible, `limited` = tags load dynamically so not all are visible, `none` = nothing found.'
+        scannerBlocked:
+          type: boolean
+          description: 'Always `true` when present: set when the site served our page fetch a bot wall and showed no pixel. The report is a partial, source-only read, so `score` and `grade` are placeholders, not a verdict, and `networks` is empty.'
         siteSignals:
           type: array
           items: { type: string }
