@@ -177,7 +177,9 @@ async def test_a_link_without_the_tools_scope_is_asked_to_relink(monkeypatch):
     )
     assert 'error="insufficient_scope"' in challenge
     assert "messaging:read" in challenge
-    assert "messaging:read" in result.content[0].text
+    text = result.content[0].text
+    assert "read your inbox" in text
+    assert "Settings > Plugins" in text and "Reconnect" in text
 
 
 async def test_each_group_refusal_logs_whether_it_asked_to_relink(monkeypatch, caplog):

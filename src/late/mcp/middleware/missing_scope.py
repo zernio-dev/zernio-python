@@ -25,6 +25,23 @@ from late.mcp.telemetry import tool_call_logger
 
 _INSUFFICIENT_PERMISSIONS = "insufficient_permissions"
 
+_SCOPE_PURPOSE = {
+    "messaging:read": "read your inbox, comments and messages",
+    "ads:read": "read your ad accounts, campaigns and results",
+    "contacts:read": "read your contacts and leads",
+}
+
+
+def relink_instructions(needed: str) -> str:
+    """What the model tells the user when ChatGPT does not show its re-link prompt."""
+    purpose = _SCOPE_PURPOSE.get(needed, f"use this ({needed})")
+    return (
+        f"Zernio needs a new permission to {purpose}, which this ChatGPT connection "
+        f"has not granted yet ('{needed}'). Tell the user to reconnect Zernio in ChatGPT: "
+        "Settings > Plugins (called Apps in some versions) > Zernio > Reconnect, then "
+        "approve the new permission and ask again. Nothing was changed in their account."
+    )
+
 
 def _granted_scopes() -> set[str] | None:
     """The OAuth scope of the calling token, or None for an API key."""
@@ -83,15 +100,7 @@ class MissingScopeChallengeMiddleware(Middleware):
                 raise
             needed = reaching[0]
             return ToolResult(
-                content=[
-                    TextContent(
-                        type="text",
-                        text=(
-                            f"Zernio needs the '{needed}' permission for this, which this "
-                            "ChatGPT connection was not granted. Reconnect Zernio to grant it."
-                        ),
-                    )
-                ],
+                content=[TextContent(type="text", text=relink_instructions(needed))],
                 meta={"mcp/www_authenticate": [self._challenge]},
                 is_error=True,
             )
