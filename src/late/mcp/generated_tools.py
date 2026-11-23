@@ -1301,7 +1301,7 @@ def register_generated_tools(mcp, _get_client):
             title="List trending commercial music",
             readOnlyHint=True,
             destructiveHint=False,
-            openWorldHint=False,
+            openWorldHint=True,
         )
     )
     def accounts_list_tik_tok_commercial_music(
@@ -14855,7 +14855,7 @@ def register_generated_tools(mcp, _get_client):
             title="Search targeting interests",
             readOnlyHint=True,
             destructiveHint=False,
-            openWorldHint=False,
+            openWorldHint=True,
         )
     )
     def ad_targeting_search_ad_interests(q: str, account_id: str) -> str:
@@ -14885,7 +14885,7 @@ def register_generated_tools(mcp, _get_client):
             title="Search targeting options",
             readOnlyHint=True,
             destructiveHint=False,
-            openWorldHint=False,
+            openWorldHint=True,
         )
     )
     def ad_targeting_search_ad_targeting(
@@ -41355,7 +41355,7 @@ def register_generated_tools(mcp, _get_client):
             title="Search Instagram audio",
             readOnlyHint=True,
             destructiveHint=False,
-            openWorldHint=False,
+            openWorldHint=True,
         )
     )
     def instagram_search_instagram_audio(

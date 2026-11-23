@@ -69,7 +69,11 @@ WAVE_1 = (
 )
 
 # The next 70 reads by the same ranking, keeping to the scopes wave 1 already
-# asks for (so a link that re-linked for wave 1 needs nothing new).
+# asks for (so a link that re-linked for wave 1 needs nothing new). Left out
+# on review: X search (bills per tweet read), the Reddit feed (disabled
+# platform), deprecated aliases and legacy analytics replaced by metrics,
+# the raw request logs, a report reader whose creator is a write, and
+# LinkedIn reactors (third-party personal data).
 WAVE_2 = (
     "lead_gen_list_leads",
     "broadcasts_get_broadcast",
@@ -96,24 +100,16 @@ WAVE_2 = (
     "analytics_get_you_tube_demographics",
     "instagram_get_instagram_business_discovery",
     "ad_targeting_search_ad_targeting",
-    "analytics_get_content_decay",
-    "analytics_get_post_samples",
-    "whatsapp_phone_numbers_get_whats_app_phone_numbers",
-    "analytics_get_posting_frequency",
     "ad_creatives_list_ad_creatives",
-    "reddit_get_reddit_feed",
     "email_list_email_messages",
     "messages_search_inbox_conversations",
     "workflows_list_workflows",
     "ad_campaigns_list_ad_sets",
     "analytics_get_analytics_dashboard",
     "analytics_get_linked_in_org_aggregate_analytics",
-    "ad_insights_get_ad_insights_report",
     "contacts_get_contact",
     "voice_list_voice_calls",
     "ad_accounts_get_ads_activity_log",
-    "logs_list_logs",
-    "analytics_get_linked_in_post_reactions",
     "ad_audiences_list_ad_audiences",
     "analytics_get_linked_in_aggregate_analytics",
     "ad_accounts_list_ads_instagram_accounts",
@@ -127,7 +123,6 @@ WAVE_2 = (
     "whatsapp_get_whats_app_template_by_id",
     "inbox_analytics_get_inbox_response_time",
     "accounts_get_account",
-    "twitter_engagement_search_tweets",
     "ad_campaigns_get_ad_review",
     "tracking_tags_get_tracking_tag_stats",
     "account_groups_list_account_groups",
@@ -141,6 +136,15 @@ WAVE_2 = (
     "gmb_verifications_get_google_business_verifications",
     "whatsapp_list_whats_app_account_events",
     "instagram_get_instagram_mentioned_comment",
+    "ad_accounts_list_high_demand_periods",
+    "gmb_services_get_google_business_services",
+    "ad_library_search_ad_library",
+    "inbox_analytics_get_inbox_heatmap",
+    "whatsapp_get_whats_app_template",
+    "accounts_list_tik_tok_commercial_music",
+    "instagram_search_instagram_audio",
+    "email_get_email_message",
+    "whatsapp_list_whats_app_group_chats",
 )
 
 CHATGPT_GENERATED_TOOLS = WAVE_1 + WAVE_2
