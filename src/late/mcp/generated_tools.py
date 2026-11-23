@@ -32090,26 +32090,25 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Adjust uploaded conversions
 
-        Retracts, restates the value of, or enhances conversions you already sent to Google Ads or Impact, for refunds or late customer data. To change Zernio's stored event too, and every platform at once, use `PATCH` or `DELETE /v1/events/{eventId}`.
+        Retracts, restates the value of, or enhances conversions you already sent to Google Ads, Impact or a Microsoft Ads offline conversion goal, for refunds or late customer data. To change Zernio's stored event too, and every platform at once, use `PATCH` or `DELETE /v1/events/{eventId}`.
 
         It adjusts conversions previously uploaded via `POST /v1/ads/conversions`: retract them, restate their value, or enhance them with first-party data. Requires the Ads add-on.
 
-        ### Google Ads and Impact only
+        ### Google Ads, Impact and Microsoft Ads only
 
         Google handles adjustments through the classic Google Ads API (`ConversionAdjustmentUploadService`). The Data Manager `ingestEvents` path used for sending conversions is ingest-only.
 
         On Impact, the partner's commission follows the refund:
 
         - `RETRACTION` reverses the action and `RESTATEMENT` sets its sale amount. Impact has no `ENHANCEMENT`.
-        - The action is found by the `destinationId` event type and `orderId`: the `platformData.order_id` the conversion was sent with, or its `eventId` when it had none.
-        - Impact applies changes ...
+        - The action is found by the `destinationId` event type and `orderId`: the `platformData.order_id` the conversion was sent with, or its ...
 
-        Platforms: google, impact
+        Platforms: google, impact, microsoft
 
         Args:
-            account_id: SocialAccount ID. Must be a `googleads` or `impact` account. (required)
-            destination_id: Conversion action resource name on Google, e.g. `customers/1234567890/conversionActions/987654321`; `<program id>:<event type id>` on Impact. (required)
-            adjustments: Each item is an object with keys: adjustmentType (one of: RETRACTION, RESTATEMENT, ENHANCEMENT; required); adjustmentTime (number, required) - When the adjustment occurred, unix seconds.; orderId (string) - Transaction ID of the original conversion (the `eventId` you sent). Recommended; required for ENHANCEMENT.; gclid (string) - Alternative key. The original click ID. Pair with `conversionTime`. Not valid for ENHANCEMENT.; conversionTime (number) - The original conversion's time, unix seconds. Required when identifying by `gclid`.; restatementValue (number) - RESTATEMENT only. The corrected TOTAL conversion value.; currency (string) - RESTATEMENT only. ISO 4217 currency for `restatementValue`.; user (object with keys email, phone) - ENHANCEMENT only. First-party identifiers (hashed server-side). At least one of email/phone required.; userAgent (string) - ENHANCEMENT only. The original conversion's user agent (improves match quality). (required)"""
+            account_id: SocialAccount ID. Must be a `googleads`, `impact` or `microsoftads` account. (required)
+            destination_id: Conversion action resource name on Google, e.g. `customers/1234567890/conversionActions/987654321`; `<program id>:<event type id>` on Impact; `accounts/{adAccountId}/conversionGoals/{goalId}` on Microsoft Ads. (required)
+            adjustments: Each item is an object with keys: adjustmentType (one of: RETRACTION, RESTATEMENT, ENHANCEMENT; required); adjustmentTime (number, required) - When the adjustment occurred, unix seconds.; orderId (string) - Transaction ID of the original conversion (the `eventId` you sent). Recommended; required for ENHANCEMENT.; gclid (string) - Alternative key. The original click ID. Pair with `conversionTime`. Not valid for ENHANCEMENT.; conversionTime (number) - The original conversion's time, unix seconds. Required when identifying by `gclid` or `msclkid`.; msclkid (string) - Microsoft Ads only, and required there. The click ID the conversion was sent with. Pair with `conversionTime`.; restatementValue (number) - RESTATEMENT only. The corrected TOTAL conversion value.; currency (string) - RESTATEMENT only. ISO 4217 currency for `restatementValue`.; user (object with keys email, phone) - ENHANCEMENT only. First-party identifiers (hashed server-side). At least one of email/phone required.; userAgent (string) - ENHANCEMENT only. The original conversion's user agent (improves match quality). (required)"""
         client = _get_client()
         try:
             response = client.conversions.adjust_conversions(
