@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.773.0"
+  version: "1.774.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -72461,6 +72461,10 @@ paths:
                   type: string
                   format: uri
                   description: '(Facebook only) URL of an image to attach, publishing a photo comment alongside the text. The URL must be publicly accessible so Meta can fetch it. Returns 400 for other platforms.'
+                attachmentType:
+                  type: string
+                  enum: [image, gif]
+                  description: '(Facebook only) How Facebook publishes `attachmentUrl`: `image` (default) as a photo comment, `gif` as an animated GIF comment. A GIF sent as `image` is stored as a still photo. Requires `attachmentUrl`.'
                 commentId: { type: string, description: Reply to specific comment (optional) }
                 mentionAuthor:
                   type: boolean
@@ -72495,6 +72499,7 @@ paths:
 
             - LinkedIn: a profile or company URL mention that cannot be resolved returns `linkedin_mentions_invalid`, or `linkedin_mentions_limit_exceeded` for more than 10, with `details.mentions[]`.
             - `mentionAuthor` without `commentId`, or on a platform other than LinkedIn, is rejected.
+            - `attachmentType` without `attachmentUrl` is rejected.
             - An author whose name LinkedIn does not return gives `linkedin_mention_name_unavailable` with `details.authorUrn`.
           content:
             application/json:

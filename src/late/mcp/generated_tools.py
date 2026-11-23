@@ -22836,6 +22836,7 @@ def register_generated_tools(mcp, _get_client):
         account_id: str,
         message: str,
         attachment_url: str | None = None,
+        attachment_type: Literal["image", "gif"] | None = None,
         comment_id: str | None = None,
         mention_author: bool | None = None,
         parent_cid: str | None = None,
@@ -22865,6 +22866,7 @@ def register_generated_tools(mcp, _get_client):
                 account_id: (required)
                 message: Reply text. On LinkedIn, mention with @[https://www.linkedin.com/in/vanity] (resolved to LinkedIn's live name, same rules and errors as post content) or @[Name](urn:li:person|organization:ID); a hand-written name must match LinkedIn's exactly or it renders as plain text. (required)
                 attachment_url: (Facebook only) URL of an image to attach, publishing a photo comment alongside the text. The URL must be publicly accessible so Meta can fetch it. Returns 400 for other platforms.
+                attachment_type: (Facebook only) How Facebook publishes `attachmentUrl`: `image` (default) as a photo comment, `gif` as an animated GIF comment. A GIF sent as `image` is stored as a still photo. Requires `attachmentUrl`.
                 comment_id: Reply to specific comment (optional)
                 mention_author: (LinkedIn only) When true, the reply starts with an @mention of the author of `commentId` (a member or a page), tagged with their URN and the name LinkedIn returns for them. Requires `commentId`.
 
@@ -22881,6 +22883,7 @@ def register_generated_tools(mcp, _get_client):
                 account_id=account_id,
                 message=message,
                 attachment_url=attachment_url,
+                attachment_type=attachment_type,
                 comment_id=comment_id,
                 mention_author=mention_author,
                 parent_cid=parent_cid,
