@@ -5880,7 +5880,7 @@ def register_generated_tools(mcp, _get_client):
 
             Responds `429` when Google's API quota is ...
 
-            Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit, microsoft, amazon
+            Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit, microsoft, amazon, tradedesk
 
             Args:
                 account_id: Account ID (required)
@@ -6915,6 +6915,7 @@ def register_generated_tools(mcp, _get_client):
             "reddit",
             "microsoft",
             "amazon",
+            "tradedesk",
         ]
         | None = None,
         account_id: str | None = None,
@@ -6952,7 +6953,7 @@ def register_generated_tools(mcp, _get_client):
 
             1. Filter by platformAdId (the Meta ...
 
-            Platforms (the platform parameter takes): facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit, microsoft, amazon
+            Platforms (the platform parameter takes): facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit, microsoft, amazon, tradedesk
 
             Args:
                 page: Page number (1-based)
@@ -7609,6 +7610,7 @@ def register_generated_tools(mcp, _get_client):
             "reddit",
             "microsoft",
             "amazon",
+            "tradedesk",
         ]
         | None = None,
         status: Literal[
@@ -7649,7 +7651,7 @@ def register_generated_tools(mcp, _get_client):
 
             Zernio's own status writes re-read the switches they change. A change made in the ...
 
-            Platforms (the platform parameter takes): facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit, microsoft, amazon
+            Platforms (the platform parameter takes): facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit, microsoft, amazon, tradedesk
 
             Args:
                 include_empty: Meta only. Set true to also list campaigns with ZERO ads, with `adCount: 0` and zeroed metrics.
@@ -7794,7 +7796,7 @@ def register_generated_tools(mcp, _get_client):
             - OpenAI: `goal` sets the campaign objective, and `conversions` needs an active standard conversion event on the account.
             - Reddit: see below. ...
 
-            Platforms: meta, google, linkedin, tiktok, x, pinterest, openai, reddit, amazon
+            Platforms: meta, google, linkedin, tiktok, x, pinterest, openai, reddit, amazon, tradedesk
 
             Args:
                 account_id: Zernio SocialAccount id (posting or ads variant); its platform decides where the campaign is created. (required)
@@ -7891,6 +7893,7 @@ def register_generated_tools(mcp, _get_client):
             "reddit",
             "microsoft",
             "amazon",
+            "tradedesk",
         ],
     ) -> str:
         """Pause or resume a campaign
@@ -7898,6 +7901,8 @@ def register_generated_tools(mcp, _get_client):
         Pauses or resumes a campaign, leaving the on/off switches of its ad sets and ads as they are.
 
         It writes the campaign's own on/off switch and nothing else, on every platform: Meta, TikTok, Google, LinkedIn campaign group, Pinterest, X, ChatGPT (OpenAI).
+
+        The Trade Desk is the exception: its campaigns have no switch of their own and deliver through their ad groups. Pausing a Trade Desk campaign switches off every enabled ad group in it, and `status: active` answers 422: turn the ad groups you want back on with PUT /v1/ads/ad-sets/{adSetId}/status.
 
         Its ad sets and ads keep their own switches:
 
@@ -7910,10 +7915,9 @@ def register_generated_tools(mcp, _get_client):
 
         The campaign's switch is read from the platform first.
 
-        - **Already in the requested state:** nothing is written (`updated: 0`, `skipped: 1`, with the reason).
-        - **Otherwise:** the switch is written (`updated: 1`), read back and stored. The delivery status of the ads under it (up to 20) is re-read and stored, so an immediate GET returns what the platform now ...
+        - ...
 
-        Platforms (the platform parameter takes): facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit, microsoft, amazon
+        Platforms (the platform parameter takes): facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit, microsoft, amazon, tradedesk
 
         Args:
             campaign_id: Platform campaign ID (required)
@@ -8153,6 +8157,7 @@ def register_generated_tools(mcp, _get_client):
             "reddit",
             "microsoft",
             "amazon",
+            "tradedesk",
         ],
         account_id: str | None = None,
         bid_strategy: Literal[
@@ -8194,7 +8199,7 @@ def register_generated_tools(mcp, _get_client):
             | `sharedBudgetId` | 400 | Yes | 400 |
             | `budget` (CBO; ABO returns 409) | Yes | Daily only | OpenAI and Reddit: daily or lifetime; Amazon: daily, or the lifetime type a Sponsored Brands campaign was ...
 
-            Platforms (the platform parameter takes): facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit, microsoft, amazon
+            Platforms (the platform parameter takes): facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit, microsoft, amazon, tradedesk
 
             Args:
                 campaign_id: Platform campaign ID (required)
@@ -8265,6 +8270,7 @@ def register_generated_tools(mcp, _get_client):
             "reddit",
             "microsoft",
             "amazon",
+            "tradedesk",
         ],
         account_id: str | None = None,
         ad_account_id: str | None = None,
@@ -8279,6 +8285,7 @@ def register_generated_tools(mcp, _get_client):
         - OpenAI, Reddit and Pinterest have no campaign delete and archive it instead (see below).
 
         - Amazon archives the campaign: archiving is Amazon's delete, it is permanent, and the campaign stays in reports.
+        - The Trade Desk archives the campaign, which cannot be undone.
 
         Locally, all Ad documents for this campaign are marked `status: cancelled`.
 
@@ -8286,11 +8293,9 @@ def register_generated_tools(mcp, _get_client):
 
         A campaign with zero ads has no local Ad documents to resolve, so it is invisible to `/v1/ads/tree` and this endpoint would 404. That state comes from the two-step create flow (campaign, then ads via `existingCampaignId`) whenever Meta rejects the ad step.
 
-        To delete such a shell, send `accountId` in the body or the query string. We skip the local lookup entirely and forward the delete to the platform of that connection. `accountId` is ignored when the campaign does have ads.
+        To delete such a shell, send `accountId` in the body or the query string. We skip the local lookup entirely and forward the delete to the platform of that connection. `accountId` is ...
 
-        ### Google, TikTok, ...
-
-        Platforms (the platform parameter takes): facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit, microsoft, amazon
+        Platforms (the platform parameter takes): facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit, microsoft, amazon, tradedesk
 
         Args:
             campaign_id: Platform campaign ID (required)
@@ -8498,11 +8503,11 @@ def register_generated_tools(mcp, _get_client):
 
         Each campaign is updated concurrently, and the response contains a per-campaign result so a single bad row does not fail the whole batch.
 
-        Each campaign is read, written and re-read exactly as PUT /v1/ads/campaigns/{campaignId}/status describes: only the campaign's own switch is written, never its ad sets' or ads'.
+        Each campaign is read, written and re-read exactly as PUT /v1/ads/campaigns/{campaignId}/status describes: only the campaign's own switch is written, never its ad sets' or ads' (The Trade Desk excepted: pausing switches off its ad groups and resuming answers 422).
 
         `updated` / `skipped` count campaigns.
 
-        Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit, microsoft, amazon
+        Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit, microsoft, amazon, tradedesk
 
         Args:
             status: (required)
@@ -9269,11 +9274,11 @@ def register_generated_tools(mcp, _get_client):
         `status: cancelled`.
 
         Delete is soft on platforms that have no hard delete: LinkedIn moves the
-        campaign to `PENDING_DELETION`, Pinterest, Reddit and Amazon archive the ad group (permanent on Amazon), and X
+        campaign to `PENDING_DELETION`, Pinterest, Reddit, Amazon and The Trade Desk archive the ad group (permanent on Amazon and The Trade Desk), and X
         soft-flags the line item. Google removes the ad group. All remain readable
         for reporting.
 
-        Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit, amazon
+        Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit, amazon, tradedesk
 
         Args:
             ad_set_id: Platform ad set ID (required)"""
@@ -9349,6 +9354,7 @@ def register_generated_tools(mcp, _get_client):
             "reddit",
             "microsoft",
             "amazon",
+            "tradedesk",
         ],
     ) -> str:
         """Pause or resume a single ad set
@@ -9380,7 +9386,7 @@ def register_generated_tools(mcp, _get_client):
 
         - When that live read ...
 
-        Platforms (the platform parameter takes): facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit, microsoft, amazon
+        Platforms (the platform parameter takes): facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit, microsoft, amazon, tradedesk
 
         Args:
             ad_set_id: Platform ad set ID (required)
@@ -9419,6 +9425,7 @@ def register_generated_tools(mcp, _get_client):
             "reddit",
             "microsoft",
             "amazon",
+            "tradedesk",
         ]
         | None = None,
         status: Literal[
@@ -9479,7 +9486,7 @@ def register_generated_tools(mcp, _get_client):
 
             The older days (up to 730 days back) are imported in the background; repeat the request until it returns 200. A request scoped to no Meta ...
 
-            Platforms (the platform parameter takes): facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit, microsoft, amazon
+            Platforms (the platform parameter takes): facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit, microsoft, amazon, tradedesk
 
             Args:
                 page: Page number (1-based)
@@ -9728,7 +9735,7 @@ def register_generated_tools(mcp, _get_client):
             - the creative's `effective_object_story_id` (`{pageId}_{postId}` shape, Facebook side)
             - the creative's `effective_instagram_media_id` ...
 
-            Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit, microsoft, amazon
+            Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit, microsoft, amazon, tradedesk
 
             Args:
                 ad_id: Zernio `_id` (hex), Meta `platformAdId` (numeric), or one of the creative's effective story/media IDs. See description for details.
@@ -9866,6 +9873,7 @@ def register_generated_tools(mcp, _get_client):
         - Reddit Ads has no delete either: the ad is archived (`configured_status` ARCHIVED).
 
         - Amazon Ads archives the ad (state ARCHIVED). Archiving is permanent.
+        - The Trade Desk has no ad entity: the ad is the creative an ad group serves, so deleting it takes that creative off the ad group. The creative itself is kept.
 
         To delete a whole campaign on purpose use `DELETE /v1/ads/campaigns/{campaignId}`.
 
@@ -9875,9 +9883,9 @@ def register_generated_tools(mcp, _get_client):
 
         ### Meta
 
-        When the ad set and campaign were created by Zernio (by `POST /v1/ads/create` or `POST /v1/ads/boost`) and Meta lists no other ad in the ad set (archived ads count), the emptied ad set is deleted ...
+        When the ad set and campaign were ...
 
-        Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit, microsoft, amazon
+        Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit, microsoft, amazon, tradedesk
 
         Args:
             ad_id: (required)"""
