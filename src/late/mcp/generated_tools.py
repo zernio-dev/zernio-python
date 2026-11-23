@@ -6424,16 +6424,18 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Remove users from audience
 
-        Removes people from a Meta, Reddit or LinkedIn customer list audience. Same body as
+        Removes people from a customer list audience on Meta, Google Ads, TikTok, LinkedIn, Pinterest, X or Reddit. Same body as
         `POST /v1/ads/audiences/{audienceId}/users`: plaintext keys are normalized and SHA-256 hashed
         exactly like an upload and hashed keys are sent as is, so a row removes the person it added.
 
-        - Meta, Reddit and LinkedIn customer_list audiences only. Every other platform returns 422 with code `feature_not_available`, and every other audience type returns 422.
+        - customer_list audiences only. Every other audience type returns 422, and a network without audiences returns 422 with code `feature_not_available`.
         - Max 10,000 users per request. The platform applies the removal asynchronously, so the audience size does not drop immediately.
+        - TikTok, LinkedIn, Pinterest and X match on email only: a row without an email counts in `invalid`, and a request with no email at all returns 400. Google matches on email, phone and name with address, like the upload.
+        - TikTok refuses a removal that would leave the audience under 1,000 people.
         - LinkedIn removes them from the list Zernio keeps and uploads what is left about a minute later.
-        - On Reddit `invalidEntrySamples` is always empty.
+        - ...
 
-        Platforms: meta, reddit, linkedin
+        Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit
 
         Args:
             audience_id: The Zernio audience id (the id field of GET /v1/ads/audiences), not the platform segment id. (required)
