@@ -9,7 +9,9 @@ with the group turned off, or a write scope that includes the read) stays a
 plain error: re-linking cannot fix it.
 """
 
+import json
 from collections.abc import Mapping, Sequence
+from datetime import datetime, timezone
 from typing import Any
 
 from fastmcp.exceptions import ToolError
@@ -19,6 +21,7 @@ from fastmcp.tools import ToolResult
 from mcp.types import CallToolRequestParams, TextContent
 
 from late.client.exceptions import LateAPIError
+from late.mcp.telemetry import tool_call_logger
 
 _INSUFFICIENT_PERMISSIONS = "insufficient_permissions"
 
@@ -66,13 +69,17 @@ class MissingScopeChallengeMiddleware(Middleware):
             return await call_next(context)
         except ToolError as exc:
             reaching = self._scopes_by_tool.get(context.message.name)
+            if not reaching or not _refused_for_a_group(exc.__cause__):
+                raise
             granted = _granted_scopes()
-            if (
-                not reaching
-                or granted is None
-                or granted.intersection(reaching)
-                or not _refused_for_a_group(exc.__cause__)
-            ):
+            relink_helps = granted is not None and not granted.intersection(reaching)
+            _log_group_refusal(
+                tool=context.message.name,
+                needed=reaching[0],
+                granted=granted,
+                challenged=relink_helps,
+            )
+            if not relink_helps:
                 raise
             needed = reaching[0]
             return ToolResult(
@@ -88,3 +95,24 @@ class MissingScopeChallengeMiddleware(Middleware):
                 meta={"mcp/www_authenticate": [self._challenge]},
                 is_error=True,
             )
+
+
+def _log_group_refusal(
+    *, tool: str, needed: str, granted: set[str] | None, challenged: bool
+) -> None:
+    """One line per group 403 on a scoped tool, so a missing re-link prompt shows in Axiom."""
+    tool_call_logger.info(
+        json.dumps(
+            {
+                "event": "mcp_scope_challenge",
+                "ts": datetime.now(timezone.utc).isoformat(timespec="milliseconds"),
+                "surface": "chatgpt",
+                "tool": tool,
+                "needed_scope": needed,
+                "token_scope": " ".join(sorted(granted))
+                if granted is not None
+                else None,
+                "challenged": challenged,
+            }
+        )
+    )
