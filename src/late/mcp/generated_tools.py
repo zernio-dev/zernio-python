@@ -50395,7 +50395,7 @@ def register_generated_tools(mcp, _get_client):
 
         Returns sequences with enrollment stats. Filter by status, platform, or profile.
 
-        Platforms: instagram, facebook, telegram, twitter, bluesky, reddit, whatsapp, slack, imessage, line, wechat
+        Platforms: instagram, facebook, telegram, twitter, bluesky, reddit, whatsapp, slack, sms, rcs, imessage, line, wechat
 
         Args:
             profile_id: Filter by profile. Omit to list across all profiles
@@ -50431,6 +50431,8 @@ def register_generated_tools(mcp, _get_client):
             "reddit",
             "whatsapp",
             "slack",
+            "sms",
+            "rcs",
             "imessage",
             "line",
             "wechat",
@@ -50445,7 +50447,7 @@ def register_generated_tools(mcp, _get_client):
 
         Create a multi-step messaging sequence. Each step has a delay and a message or WhatsApp template.
 
-        Platforms: instagram, facebook, telegram, twitter, bluesky, reddit, whatsapp, slack, imessage, line, wechat
+        Platforms: instagram, facebook, telegram, twitter, bluesky, reddit, whatsapp, slack, sms, rcs, imessage, line, wechat
 
         Args:
             profile_id: (required)
@@ -50485,7 +50487,7 @@ def register_generated_tools(mcp, _get_client):
 
         Returns a sequence with all its steps and enrollment stats.
 
-        Platforms: instagram, facebook, telegram, twitter, bluesky, reddit, whatsapp, slack, imessage, line, wechat
+        Platforms: instagram, facebook, telegram, twitter, bluesky, reddit, whatsapp, slack, sms, rcs, imessage, line, wechat
 
         Args:
             sequence_id: (required)"""
@@ -50516,7 +50518,7 @@ def register_generated_tools(mcp, _get_client):
 
         Update a sequence's name, steps, or exit conditions. Steps can only be modified while the sequence is draft or paused.
 
-        Platforms: instagram, facebook, telegram, twitter, bluesky, reddit, whatsapp, slack, imessage, line, wechat
+        Platforms: instagram, facebook, telegram, twitter, bluesky, reddit, whatsapp, slack, sms, rcs, imessage, line, wechat
 
         Args:
             sequence_id: (required)
@@ -50552,7 +50554,7 @@ def register_generated_tools(mcp, _get_client):
 
         Permanently delete a sequence. Active enrollments are stopped.
 
-        Platforms: instagram, facebook, telegram, twitter, bluesky, reddit, whatsapp, slack, imessage, line, wechat
+        Platforms: instagram, facebook, telegram, twitter, bluesky, reddit, whatsapp, slack, sms, rcs, imessage, line, wechat
 
         Args:
             sequence_id: (required)"""
@@ -50576,7 +50578,7 @@ def register_generated_tools(mcp, _get_client):
 
         Start a draft or paused sequence. The sequence must have at least one step.
 
-        Platforms: instagram, facebook, telegram, twitter, bluesky, reddit, whatsapp, slack, imessage, line, wechat
+        Platforms: instagram, facebook, telegram, twitter, bluesky, reddit, whatsapp, slack, sms, rcs, imessage, line, wechat
 
         Args:
             sequence_id: (required)"""
@@ -50600,7 +50602,7 @@ def register_generated_tools(mcp, _get_client):
 
         Pause an active sequence. Enrolled contacts stop receiving messages until the sequence is reactivated.
 
-        Platforms: instagram, facebook, telegram, twitter, bluesky, reddit, whatsapp, slack, imessage, line, wechat
+        Platforms: instagram, facebook, telegram, twitter, bluesky, reddit, whatsapp, slack, sms, rcs, imessage, line, wechat
 
         Args:
             sequence_id: (required)"""
@@ -50628,7 +50630,7 @@ def register_generated_tools(mcp, _get_client):
 
         Enroll one or more contacts into a sequence. Contacts already enrolled are skipped.
 
-        Platforms: instagram, facebook, telegram, twitter, bluesky, reddit, whatsapp, slack, imessage, line, wechat
+        Platforms: instagram, facebook, telegram, twitter, bluesky, reddit, whatsapp, slack, sms, rcs, imessage, line, wechat
 
         Args:
             sequence_id: (required)
@@ -50658,7 +50660,7 @@ def register_generated_tools(mcp, _get_client):
 
         Remove a contact from a sequence. No further messages will be sent to this contact.
 
-        Platforms: instagram, facebook, telegram, twitter, bluesky, reddit, whatsapp, slack, imessage, line, wechat
+        Platforms: instagram, facebook, telegram, twitter, bluesky, reddit, whatsapp, slack, sms, rcs, imessage, line, wechat
 
         Args:
             sequence_id: (required)
@@ -50690,7 +50692,7 @@ def register_generated_tools(mcp, _get_client):
 
         Returns enrolled contacts with their progress, status, and next scheduled step.
 
-        Platforms: instagram, facebook, telegram, twitter, bluesky, reddit, whatsapp, slack, imessage, line, wechat
+        Platforms: instagram, facebook, telegram, twitter, bluesky, reddit, whatsapp, slack, sms, rcs, imessage, line, wechat
 
         Args:
             sequence_id: (required)
@@ -59756,6 +59758,9 @@ def register_generated_tools(mcp, _get_client):
             "tiktok",
             "line",
             "wechat",
+            "sms",
+            "rcs",
+            "imessage",
         ] = "whatsapp",
         description: str | None = None,
         nodes: list[dict[str, Any]] | None = None,
@@ -59766,7 +59771,7 @@ def register_generated_tools(mcp, _get_client):
 
         Create a branching conversation workflow (draft) from a node/edge graph. Created in `draft` status; activate it to start matching inbound messages. The graph is validated structurally; completeness (a trigger node + reachable entry) is required at activation.
 
-        Platforms (the platform parameter takes): whatsapp, instagram, facebook, telegram, twitter, bluesky, reddit, tiktok, line, wechat
+        Platforms (the platform parameter takes): whatsapp, instagram, facebook, telegram, twitter, bluesky, reddit, tiktok, line, wechat, sms, rcs, imessage
 
         Args:
             profile_id: (required)

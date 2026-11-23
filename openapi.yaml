@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.793.1"
+  version: "1.794.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -87389,7 +87389,7 @@ paths:
               properties:
                 profileId: { type: string }
                 accountId: { type: string }
-                platform: { type: string, enum: [whatsapp, instagram, facebook, telegram, twitter, bluesky, reddit, tiktok, line, wechat], default: whatsapp }
+                platform: { type: string, enum: [whatsapp, instagram, facebook, telegram, twitter, bluesky, reddit, tiktok, line, wechat, sms, rcs, imessage], default: whatsapp }
                 name: { type: string }
                 description: { type: string }
                 nodes: { type: array, items: { $ref: '#/components/schemas/WorkflowNode' } }
@@ -87974,7 +87974,7 @@ paths:
     get:
       x-resource-group: "messages"
       x-oauth-scopes: ["messaging:write", "messaging:read"]
-      x-platforms: [instagram, facebook, telegram, twitter, bluesky, reddit, whatsapp, slack, imessage, line, wechat]
+      x-platforms: [instagram, facebook, telegram, twitter, bluesky, reddit, whatsapp, slack, sms, rcs, imessage, line, wechat]
       operationId: listSequences
       summary: List sequences
       description: Returns sequences with enrollment stats. Filter by status, platform, or profile.
@@ -88025,7 +88025,7 @@ paths:
     post:
       x-resource-group: "messages"
       x-oauth-scopes: ["messaging:write"]
-      x-platforms: [instagram, facebook, telegram, twitter, bluesky, reddit, whatsapp, slack, imessage, line, wechat]
+      x-platforms: [instagram, facebook, telegram, twitter, bluesky, reddit, whatsapp, slack, sms, rcs, imessage, line, wechat]
       operationId: createSequence
       summary: Create sequence
       description: Create a multi-step messaging sequence. Each step has a delay and a message or WhatsApp template.
@@ -88040,7 +88040,7 @@ paths:
               properties:
                 profileId: { type: string }
                 accountId: { type: string }
-                platform: { type: string, enum: [instagram, facebook, telegram, twitter, bluesky, reddit, whatsapp, slack, imessage, line, wechat] }
+                platform: { type: string, enum: [instagram, facebook, telegram, twitter, bluesky, reddit, whatsapp, slack, sms, rcs, imessage, line, wechat] }
                 name: { type: string }
                 description: { type: string }
                 steps:
@@ -88093,7 +88093,7 @@ paths:
     get:
       x-resource-group: "messages"
       x-oauth-scopes: ["messaging:write", "messaging:read"]
-      x-platforms: [instagram, facebook, telegram, twitter, bluesky, reddit, whatsapp, slack, imessage, line, wechat]
+      x-platforms: [instagram, facebook, telegram, twitter, bluesky, reddit, whatsapp, slack, sms, rcs, imessage, line, wechat]
       operationId: getSequence
       summary: Get sequence with steps
       description: Returns a sequence with all its steps and enrollment stats.
@@ -88140,7 +88140,7 @@ paths:
     patch:
       x-resource-group: "messages"
       x-oauth-scopes: ["messaging:write"]
-      x-platforms: [instagram, facebook, telegram, twitter, bluesky, reddit, whatsapp, slack, imessage, line, wechat]
+      x-platforms: [instagram, facebook, telegram, twitter, bluesky, reddit, whatsapp, slack, sms, rcs, imessage, line, wechat]
       operationId: updateSequence
       summary: Update sequence
       description: Update a sequence's name, steps, or exit conditions. Steps can only be modified while the sequence is draft or paused.
@@ -88208,7 +88208,7 @@ paths:
     delete:
       x-resource-group: "messages"
       x-oauth-scopes: ["messaging:write"]
-      x-platforms: [instagram, facebook, telegram, twitter, bluesky, reddit, whatsapp, slack, imessage, line, wechat]
+      x-platforms: [instagram, facebook, telegram, twitter, bluesky, reddit, whatsapp, slack, sms, rcs, imessage, line, wechat]
       operationId: deleteSequence
       summary: Delete sequence
       description: Permanently delete a sequence. Active enrollments are stopped.
@@ -88225,7 +88225,7 @@ paths:
     post:
       x-resource-group: "messages"
       x-oauth-scopes: ["messaging:write"]
-      x-platforms: [instagram, facebook, telegram, twitter, bluesky, reddit, whatsapp, slack, imessage, line, wechat]
+      x-platforms: [instagram, facebook, telegram, twitter, bluesky, reddit, whatsapp, slack, sms, rcs, imessage, line, wechat]
       operationId: activateSequence
       summary: Activate sequence
       description: Start a draft or paused sequence. The sequence must have at least one step.
@@ -88254,7 +88254,7 @@ paths:
     post:
       x-resource-group: "messages"
       x-oauth-scopes: ["messaging:write"]
-      x-platforms: [instagram, facebook, telegram, twitter, bluesky, reddit, whatsapp, slack, imessage, line, wechat]
+      x-platforms: [instagram, facebook, telegram, twitter, bluesky, reddit, whatsapp, slack, sms, rcs, imessage, line, wechat]
       operationId: pauseSequence
       summary: Pause sequence
       description: Pause an active sequence. Enrolled contacts stop receiving messages until the sequence is reactivated.
@@ -88283,7 +88283,7 @@ paths:
     post:
       x-resource-group: "messages"
       x-oauth-scopes: ["messaging:write"]
-      x-platforms: [instagram, facebook, telegram, twitter, bluesky, reddit, whatsapp, slack, imessage, line, wechat]
+      x-platforms: [instagram, facebook, telegram, twitter, bluesky, reddit, whatsapp, slack, sms, rcs, imessage, line, wechat]
       operationId: enrollContacts
       summary: Enroll contacts in a sequence
       description: Enroll one or more contacts into a sequence. Contacts already enrolled are skipped.
@@ -88329,7 +88329,7 @@ paths:
     delete:
       x-resource-group: "messages"
       x-oauth-scopes: ["messaging:write"]
-      x-platforms: [instagram, facebook, telegram, twitter, bluesky, reddit, whatsapp, slack, imessage, line, wechat]
+      x-platforms: [instagram, facebook, telegram, twitter, bluesky, reddit, whatsapp, slack, sms, rcs, imessage, line, wechat]
       operationId: unenrollContact
       summary: Unenroll contact
       description: Remove a contact from a sequence. No further messages will be sent to this contact.
@@ -88347,7 +88347,7 @@ paths:
     get:
       x-resource-group: "messages"
       x-oauth-scopes: ["messaging:write", "messaging:read"]
-      x-platforms: [instagram, facebook, telegram, twitter, bluesky, reddit, whatsapp, slack, imessage, line, wechat]
+      x-platforms: [instagram, facebook, telegram, twitter, bluesky, reddit, whatsapp, slack, sms, rcs, imessage, line, wechat]
       operationId: listSequenceEnrollments
       summary: List enrollments for a sequence
       description: Returns enrolled contacts with their progress, status, and next scheduled step.
