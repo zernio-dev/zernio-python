@@ -16356,6 +16356,59 @@ components:
           type: array
           items: { type: string }
           description: "Custom audience ids of people who engaged but have not bought. Required with new_customers_excluding_engaged, not allowed with the other strategies."
+    AppLovinAdsPlatformData:
+      type: object
+      additionalProperties: false
+      description: 'AppLovin options in platformSpecificData. Campaign fields apply to a new campaign; assets, languages and brandInfo to the creative set (the ad).'
+      properties:
+        campaignType: { type: string, enum: [APP, WEB], description: Required for a new campaign. }
+        os: { type: string, enum: [IOS, ANDROID], description: APP campaigns. Required. }
+        packageName: { type: string, example: com.acme.game, description: APP campaigns. Required. }
+        itunesId: { type: integer, example: 1234567890, description: iOS APP campaigns. Required. }
+        websiteUrl: { type: string, format: uri, description: WEB campaigns. Required unless linkUrl is sent. }
+        biddingStrategy: { type: string, enum: [TARGET_GOAL_WITH_CPI_BILLING, AUTO_BIDDING_WITH_CPM_BILLING], description: 'Defaults to CPI billing for a CPI goal, CPM billing otherwise. TARGET_GOAL_WITH_CPI_BILLING takes an APP campaign with a CPI goal only. Set at creation only.' }
+        goalType: { type: string, enum: [CPI, CPE, CPP, AD_ROAS, CHK_ROAS, BLD_ROAS], description: 'APP takes all, WEB takes CPE, CPP and CHK_ROAS. Defaults from goal: app_promotion is CPI, conversions CPP, lead_generation CPE. Set at creation only.' }
+        goalValue: { type: number, example: 2.5, description: 'The goal for every country (a cost, or a ROAS ratio). APP limits: CPI below 200, CPE and CPP below 500, AD_ROAS at least 0.1, CHK_ROAS at least 0.01, BLD_ROAS at least 0.05. Send this or countryGoalValues.' }
+        countryGoalValues: { type: object, additionalProperties: { type: number }, example: { US: 2.5 }, description: Per-country goal values for targeted countries. }
+        roasDayTarget: { type: string, enum: [DAY0, DAY7, DAY28], description: 'Required for ROAS goals (and WEB CPP). APP takes DAY7 or DAY28, WEB DAY0 or DAY7.' }
+        eventTarget: { type: string, example: GENERATE_LEAD, description: Required for a CPE goal. }
+        countryBudgets: { type: object, additionalProperties: { type: number }, example: { US: 40, CA: 10 }, description: 'Per-country daily budgets, instead of budgetAmount. AppLovin budgets are daily only.' }
+        tracking:
+          type: object
+          required: [method, impressionUrl, clickUrl]
+          description: APP campaigns. Required.
+          properties:
+            method: { type: string, enum: [ADJUST, APPSFLYER, APSALAR, BRANCH, KOCHAVA, TENJIN] }
+            impressionUrl: { type: string, format: uri }
+            clickUrl: { type: string, format: uri }
+        audienceStrategy: { type: string, enum: [UNIVERSAL, PROSPECTING, DISCOVERY], description: WEB campaigns. }
+        assets:
+          type: array
+          minItems: 1
+          maxItems: 40
+          description: 'The creative set media: URLs Zernio uploads to AppLovin, or ids of assets already there. Needs a HOSTED_HTML asset, or an IMG_INTER_P image plus a VID_LONG_P or VID_SHORT_P video.'
+          items:
+            oneOf:
+              - type: object
+                required: [type, url]
+                properties:
+                  type: { type: string, enum: [HOSTED_HTML, VID_LONG_P, VID_SHORT_P, IMG_BANNER, IMG_INTER_P] }
+                  url: { type: string, format: uri }
+              - type: object
+                required: [id]
+                properties:
+                  id: { type: string }
+        languages: { type: array, items: { type: string }, example: [ENGLISH], description: Creative set languages as AppLovin names them. All languages by default. }
+        brandInfo:
+          type: object
+          required: [title, description, buttonLabel, buttonColor, iconUrl]
+          description: WEB creative sets. Omitted means the account-level brand info.
+          properties:
+            title: { type: string, maxLength: 25 }
+            description: { type: string, maxLength: 75 }
+            buttonLabel: { type: string, maxLength: 13 }
+            buttonColor: { type: string, pattern: "^#[0-9A-Fa-f]{6}$", example: "#00B3FF" }
+            iconUrl: { type: string, format: uri }
     LinkedInAdsPlatformData:
       type: object
       additionalProperties: false
@@ -57326,15 +57379,19 @@ paths:
       x-resource-group: "accounts"
       operationId: connectAppLovinAdsCredentials
       tags: [Connect]
-      summary: Connect an AppLovin Axon account
+      summary: Connect an AppLovin account
       description: |
-        Connect AppLovin Axon with the Conversion API key and Event Key from the Keys page of Axon Ads Manager.
+        Connect an AppLovin account (Axon ads) with the Conversion API key and Event Key from the Keys page of AppLovin Axon Ads Manager, the Campaign Management API key with its account id, or all of them.
 
-        Zernio checks both keys with Axon before saving them. The account then receives the conversion events you forward to it (`POST /v1/events`, forwarding rules), and its Event Key works as a site tag on tracking sites.
+        Zernio checks each key set with AppLovin before saving it.
+
+        - With the conversion keys, the account receives the conversion events you forward to it (`POST /v1/events`, forwarding rules), and its Event Key works as a site tag on tracking sites.
+        - With the Campaign Management keys, Zernio reads, creates and manages the account's campaigns and creative sets (`/v1/ads`).
+        - Connecting the Campaign Management keys to a profile that already has the conversion keys adds them to the same connection. A connection made with the Campaign Management keys only cannot take the conversion keys later: connect all keys together instead.
 
         Add the optional Report Key to sync AppLovin spend. Every few hours Zernio reads spend, impressions and clicks per campaign and creative set for the last 7 days, so AppLovin campaigns show in the ads campaign listings and in campaign results.
 
-        Zernio checks the Report Key with AppLovin before saving it. Connecting again without a Report Key keeps the one already saved.
+        Connecting again without a key keeps the one already saved.
 
         Requires the Ads add-on.
       requestBody:
@@ -57343,14 +57400,25 @@ paths:
           application/json:
             schema:
               type: object
-              required: [apiKey, eventKey, profileId]
+              required: [profileId]
+              description: 'Send apiKey with eventKey, campaignApiKey with accountId, or all four. Each pair goes together (400 otherwise).'
               properties:
                 apiKey:
                   type: string
-                  description: Conversion API key from the Keys page of Axon Ads Manager.
+                  description: 'Conversion API key from the Keys page of AppLovin Axon Ads Manager. Sent with eventKey.'
                 eventKey:
                   type: string
-                  description: 'Event Key from the Keys page of Axon Ads Manager: 8 to 128 letters, digits, dots, dashes or underscores.'
+                  description: 'Event Key from the Keys page of AppLovin Axon Ads Manager: 8 to 128 letters, digits, dots, dashes or underscores. Sent with apiKey.'
+                campaignApiKey:
+                  type: string
+                  description: 'Campaign Management API key from the Keys page of ads.axon.ai (visible to account Admins only). Sent with accountId. Lets Zernio read, create and manage campaigns and creative sets.'
+                accountId:
+                  type: string
+                  pattern: '^\d{1,20}$'
+                  description: 'Numeric AppLovin account id (Account menu, then Go to settings, in ads.axon.ai). Sent with campaignApiKey.'
+                reconnectAccountId:
+                  type: string
+                  description: 'The Zernio id of the AppLovin connection being reconnected (a connection on this profile). The keys sent update that connection, which keeps its identity, instead of creating one: send it to add or replace keys on an existing connection.'
                 reportKey:
                   type: string
                   description: 'Optional Report Key from the Keys page of your AppLovin account. With it, Zernio syncs AppLovin spend per campaign.'
@@ -57370,6 +57438,8 @@ paths:
             example:
               apiKey: "axon-conversion-api-key"
               eventKey: "abc123def456"
+              campaignApiKey: "axon-campaign-management-key"
+              accountId: "123456"
               profileId: "6507a1b2c3d4e5f6a7b8c9d0"
       responses:
         '200':
@@ -57380,7 +57450,8 @@ paths:
                 type: object
                 properties:
                   accountId: { type: string }
-                  eventKey: { type: string }
+                  eventKey: { type: string, description: Present when the request sent the conversion keys. }
+                  axonAccountId: { type: string, description: The AppLovin account id. Present when the request sent the Campaign Management keys. }
                   accountName: { type: string }
                   redirectUrl: { type: string }
               example:
@@ -57389,7 +57460,7 @@ paths:
                 accountName: "Axon abc123"
         '400': { $ref: '#/components/responses/BadRequest' }
         '401':
-          description: "Unauthorized, or Axon did not accept the Conversion API key and Event Key, or AppLovin did not accept the Report Key (code invalid_credentials)."
+          description: "Unauthorized, or AppLovin did not accept the Conversion API key and Event Key, the Campaign Management key or the Report Key (code invalid_credentials)."
         '402': { $ref: '#/components/responses/PaymentRequired' }
         '403':
           description: Ads add-on required.
@@ -87829,7 +87900,7 @@ paths:
       x-resource-group: "ads"
       operationId: listAds
       tags: ["Ad Campaigns"]
-      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit", "microsoft", "amazon", "tradedesk"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit", "microsoft", "amazon", "tradedesk", "applovin"]
       summary: List ads
       description: |
         Lists your ads with their performance over a date range, including ads created directly in each platform's ads manager.
@@ -91477,7 +91548,7 @@ paths:
       x-resource-group: "ads"
       operationId: listAdCampaigns
       tags: ["Ad Campaigns"]
-      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit", "microsoft", "amazon", "tradedesk"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit", "microsoft", "amazon", "tradedesk", "applovin"]
       summary: List campaigns
       description: |
         Lists your campaigns with spend, impressions and clicks summed across their ads, plus each campaign's status and budget.
@@ -91570,7 +91641,7 @@ paths:
       x-resource-group: "ads"
       operationId: createAdCampaign
       tags: ["Ad Campaigns"]
-      x-platforms: ["meta", "google", "linkedin", "tiktok", "x", "pinterest", "openai", "reddit", "amazon", "tradedesk"]
+      x-platforms: ["meta", "google", "linkedin", "tiktok", "x", "pinterest", "openai", "reddit", "amazon", "tradedesk", "applovin"]
       summary: Create a standalone campaign
       description: |
         Creates an empty campaign, paused, so you can add ad sets and ads to it afterwards.
@@ -91658,11 +91729,26 @@ paths:
                 budgetAmount: { type: number, description: "Campaign-level (CBO) budget in WHOLE currency units (USD: 50 = $50.00), NOT cents. Meta's own Marketing API takes this same number in minor units, so it is an easy and expensive mix-up. Requires budgetType." }
                 budgetType: { type: string, enum: [daily, lifetime] }
                 status: { type: string, enum: [ACTIVE, PAUSED], default: PAUSED }
-                startDate: { type: string, format: date-time, description: "Reddit and Amazon only (400 elsewhere). Campaign start (ISO 8601); a value without an offset is read in the ad account time zone. Requires a campaign budget (`budgetAmount` + `budgetType`, 400 otherwise). Defaults to now." }
-                endDate: { type: string, format: date-time, description: "Reddit and Amazon only (400 elsewhere). Campaign end (ISO 8601); a value without an offset is read in the ad account time zone. Requires a campaign budget (400 otherwise), and is required for `budgetType: lifetime`." }
+                startDate: { type: string, format: date-time, description: "Reddit, Amazon and AppLovin only (400 elsewhere). Campaign start (ISO 8601); a value without an offset is read in the ad account time zone. Requires a campaign budget (`budgetAmount` + `budgetType`, 400 otherwise). AppLovin reads it in UTC and refuses a start before today. Defaults to now." }
+                endDate: { type: string, format: date-time, description: "Reddit, Amazon and AppLovin only (400 elsewhere). Campaign end (ISO 8601); a value without an offset is read in the ad account time zone. Requires a campaign budget (400 otherwise), and is required for `budgetType: lifetime`. On AppLovin no endDate means continuous delivery." }
+                countries:
+                  type: array
+                  items: { type: string, pattern: "^[A-Z]{2}$" }
+                  example: [US, CA]
+                  description: "AppLovin only (400 elsewhere), where the campaign carries the targeting: the countries it serves, at least one."
+                regions:
+                  type: array
+                  items: { type: object, properties: { key: { type: string, example: CA } }, required: [key] }
+                  description: "AppLovin only (400 elsewhere). US state codes (`CA` or `US-CA`), with `US` in countries. Never together with metros."
+                metros:
+                  type: array
+                  items: { type: object, properties: { key: { type: string, example: 'New York-Newark-Jersey City, NY-NJ-PA' } }, required: [key] }
+                  description: "AppLovin only (400 elsewhere). AppLovin metro names, with `US` in countries. Never together with regions."
                 platformSpecificData:
-                  allOf: [{ $ref: '#/components/schemas/AmazonAdsCampaignPlatformData' }]
-                  description: "Amazon Ads only (400 elsewhere), and required there: the ad product and its campaign settings."
+                  description: "Amazon Ads (required there: the ad product and its campaign settings) and AppLovin (the campaign type, app or website, goal, bidding and tracking; its creative set fields do not apply here) only, 400 elsewhere."
+                  oneOf:
+                    - $ref: '#/components/schemas/AmazonAdsCampaignPlatformData'
+                    - $ref: '#/components/schemas/AppLovinAdsPlatformData'
                 locationTargetingType:
                   allOf: [{ $ref: '#/components/schemas/GoogleLocationTargetingType' }]
                   description: "Google only (400 elsewhere). Written on the new campaign."
@@ -91739,7 +91825,7 @@ paths:
       x-resource-group: "ads"
       operationId: updateAdCampaignStatus
       tags: ["Ad Campaigns"]
-      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "openai", "reddit", "microsoft", "amazon", "tradedesk"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "openai", "reddit", "microsoft", "amazon", "tradedesk", "applovin"]
       summary: Pause or resume a campaign
       description: |
         Pauses or resumes a campaign, leaving the on/off switches of its ad sets and ads as they are.
@@ -92113,7 +92199,7 @@ paths:
       x-resource-group: "ads"
       operationId: updateAdCampaign
       tags: ["Ad Campaigns"]
-      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "openai", "reddit", "microsoft", "amazon", "tradedesk"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "openai", "reddit", "microsoft", "amazon", "tradedesk", "applovin"]
       summary: Update a campaign
       description: |
         Changes a campaign's settings, such as its name, budget, bidding or tracking URLs.
@@ -92203,13 +92289,16 @@ paths:
                 bidStrategy:
                   allOf: [{ $ref: '#/components/schemas/BidStrategy' }]
                   description: |
-                    **Meta + Google.**
+                    **Meta, Google and AppLovin.**
 
                     - Meta: the campaign default that ad sets inherit unless they override it.
                     - Google: the campaign's own bidding strategy. LOWEST_COST_WITHOUT_CAP = Maximize Conversions, COST_CAP + bidAmount = Target CPA, LOWEST_COST_WITH_MIN_ROAS + roasAverageFloor = Target ROAS, LOWEST_COST_WITH_BID_CAP + bidAmount = Maximize Clicks with a CPC ceiling.
                     - Google: portfolioBidStrategyId attaches a portfolio strategy instead.
-                bidAmount: { type: number, description: "**Google only.** Whole currency units (USD: 12 = $12.00). Max CPC for LOWEST_COST_WITH_BID_CAP, CPA target for COST_CAP; required for both." }
-                roasAverageFloor: { type: number, description: "**Google only.** Decimal ROAS multiplier (2.0 = 2.0x), required for LOWEST_COST_WITH_MIN_ROAS." }
+                    - AppLovin: sets the campaign goal value; the goal type itself cannot change. COST_CAP + bidAmount for a CPI, CPE or CPP goal, LOWEST_COST_WITH_MIN_ROAS + roasAverageFloor for a ROAS goal.
+                    - AppLovin app limits, checked before AppLovin is called: CPI below 200, CPE and CPP below 500, AD_ROAS at least 0.1, CHK_ROAS at least 0.01, BLD_ROAS at least 0.05.
+                    - AppLovin: a goal set per country, or the other goal family, is a 422.
+                bidAmount: { type: number, description: "**Google and AppLovin.** Whole currency units (USD: 12 = $12.00). Google: max CPC for LOWEST_COST_WITH_BID_CAP, CPA target for COST_CAP; required for both. AppLovin: the CPI, CPE or CPP goal value, with COST_CAP." }
+                roasAverageFloor: { type: number, description: "**Google and AppLovin.** Decimal ROAS multiplier (2.0 = 2.0x), required for LOWEST_COST_WITH_MIN_ROAS. AppLovin: the ROAS goal value." }
                 portfolioBidStrategyId: { type: string, pattern: '^\d+$', description: "**Google only.** Attach an existing portfolio bid strategy (numeric id from GET /v1/ads/bid-strategies) instead of setting bidStrategy. Exclusive with bidStrategy." }
                 allowSharedBudgetUpdate: { type: boolean, default: false, description: "Google only. Explicitly allow changing a shared campaign budget (flagged as shared by Google, or used by more than one campaign), affecting every campaign that uses it. Does not bypass an unknown sharing state. Also required to move a campaign onto a shared budget with sharedBudgetId." }
                 targetImpressionShare:
@@ -92230,7 +92319,7 @@ paths:
                   properties:
                     amount: { type: number, description: Budget amount in the ad account's currency }
                     type: { type: string, enum: [daily, lifetime] }
-                name: { type: string, maxLength: 255, description: "**Meta and Reddit.** Rename the campaign." }
+                name: { type: string, maxLength: 255, description: "**Meta, Reddit and AppLovin.** Rename the campaign." }
                 platformSpecificData:
                   type: object
                   description: "**Meta only.** Platform implied by the `platform` body param, same convention as POST /v1/ads/create."
@@ -92599,7 +92688,7 @@ paths:
       x-resource-group: "ads"
       operationId: bulkUpdateAdCampaignStatus
       tags: ["Ad Campaigns"]
-      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit", "microsoft", "amazon", "tradedesk"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit", "microsoft", "amazon", "tradedesk", "applovin"]
       summary: Pause or resume many campaigns
       description: |
         Pauses or resumes up to 50 campaigns in one call, with a separate result per campaign so one failure does not block the rest.
@@ -93116,7 +93205,7 @@ paths:
       x-resource-group: "ads"
       operationId: listAdSets
       tags: ["Ad Campaigns"]
-      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "openai", "reddit", "microsoft", "amazon", "tradedesk"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "openai", "reddit", "microsoft", "amazon", "tradedesk", "applovin"]
       summary: List ad sets
       description: |
         Lists ad sets (ad groups on Google) with their targeting, bidding and optimization settings, optionally for one campaign.
@@ -94175,7 +94264,7 @@ paths:
       x-resource-group: "ads"
       operationId: getAdTree
       tags: ["Ad Campaigns"]
-      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit", "microsoft", "amazon", "tradedesk"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit", "microsoft", "amazon", "tradedesk", "applovin"]
       summary: Get campaign tree
       description: |
         Shows your campaigns with their ad sets and ads nested inside, with spend and results rolled up at every level.
@@ -94265,7 +94354,7 @@ paths:
       x-resource-group: "ads"
       operationId: listAdsByPerformance
       tags: ["Ad Campaigns"]
-      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit", "microsoft", "amazon"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit", "microsoft", "amazon", "applovin"]
       summary: Rank ads by performance
       description: |
         Returns an ads account's ads ranked by spend, impressions, clicks, results or ROAS over a date range, each with its creative (type, thumbnail, headline, body, link) and campaign.
@@ -94282,7 +94371,7 @@ paths:
         - { name: adAccountId, in: query, schema: { type: string }, description: "Optional platform-native ad account ID (e.g. Meta `act_…`) to rank one ad account only." }
         - { name: fromDate, in: query, required: true, schema: { type: string, format: date }, description: "Inclusive start of the range (YYYY-MM-DD)." }
         - { name: toDate, in: query, required: true, schema: { type: string, format: date }, description: "Inclusive end of the range (YYYY-MM-DD). Max 730-day range." }
-        - { name: platform, in: query, schema: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit, microsoft, amazon] }, description: Restrict to one platform. }
+        - { name: platform, in: query, schema: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit, microsoft, amazon, applovin] }, description: Restrict to one platform. }
         - { name: sortBy, in: query, schema: { type: string, enum: [spend, impressions, clicks, conversions, roas], default: spend }, description: "Metric the ads are ranked by, highest first." }
         - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 50 }, description: "How many ads to return." }
       responses:
@@ -94319,7 +94408,7 @@ paths:
       x-resource-group: "ads"
       operationId: getAdsTimeline
       tags: ["Ad Campaigns"]
-      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit", "microsoft", "amazon"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit", "microsoft", "amazon", "applovin"]
       summary: Get daily account metrics
       description: |
         Returns an ads account's spend, results and other metrics day by day, ready for a daily performance chart.
@@ -94386,7 +94475,7 @@ paths:
       x-resource-group: "ads"
       operationId: getAd
       tags: ["Ad Campaigns"]
-      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit", "microsoft", "amazon", "tradedesk"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit", "microsoft", "amazon", "tradedesk", "applovin"]
       summary: Get ad details
       description: |
         Shows one ad with its creative, targeting, status and performance metrics.
@@ -94508,7 +94597,7 @@ paths:
       x-resource-group: "ads"
       operationId: updateAd
       tags: ["Ad Campaigns"]
-      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit", "microsoft", "amazon"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit", "microsoft", "amazon", "applovin"]
       summary: Update ad
       description: |
         Changes an ad's status, budget, targeting or creative and applies the change on the platform.
@@ -94933,7 +95022,7 @@ paths:
       x-resource-group: "ads"
       operationId: deleteAd
       tags: ["Ad Campaigns"]
-      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit", "microsoft", "amazon", "tradedesk"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit", "microsoft", "amazon", "tradedesk", "applovin"]
       summary: Cancel an ad
       description: |
         Deletes an ad on the platform while keeping its history, and removes empty parents only when they were created through this API.
@@ -95002,7 +95091,7 @@ paths:
       x-resource-group: "ads"
       operationId: updateAdStatus
       tags: ["Ad Campaigns"]
-      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit", "microsoft", "amazon"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit", "microsoft", "amazon", "applovin"]
       summary: Pause or resume a single ad
       description: |
         Pauses or resumes a single ad without touching its ad set, campaign or sibling ads.
@@ -95942,7 +96031,7 @@ paths:
       x-resource-group: "ads"
       operationId: getCampaignAnalytics
       tags: ["Ad Insights"]
-      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit", "microsoft", "amazon"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit", "microsoft", "amazon", "applovin"]
       summary: Get campaign analytics
       description: |
         Returns a campaign's performance summary and daily timeline, with optional breakdowns by age, gender and other audience dimensions.
@@ -96824,7 +96913,7 @@ paths:
       x-resource-group: "ads"
       operationId: getAdAnalytics
       tags: ["Ad Insights"]
-      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit", "microsoft", "amazon"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit", "microsoft", "amazon", "applovin"]
       summary: Get ad analytics
       description: |
         Returns one ad's performance summary and daily timeline, with optional audience breakdowns on Meta, TikTok and LinkedIn.
@@ -102981,7 +103070,7 @@ paths:
       x-resource-group: "ads"
       operationId: listAdAccounts
       tags: ["Ad Accounts"]
-      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit", "microsoft", "amazon", "tradedesk"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit", "microsoft", "amazon", "tradedesk", "applovin"]
       summary: List ad accounts
       description: |
         Lists the ad accounts a connection can manage, such as Meta ad accounts, TikTok advertisers or Google Ads customers.
@@ -104321,7 +104410,7 @@ paths:
       x-resource-group: "ads"
       operationId: createStandaloneAd
       tags: ["Ad Campaigns"]
-      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "openai", "reddit", "microsoft", "amazon"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "openai", "reddit", "microsoft", "amazon", "applovin"]
       summary: Create standalone ad
       description: |
         Creates a paid ad with your own creative, building the campaign and ad set it needs or adding it to existing ones.
@@ -105554,9 +105643,14 @@ paths:
                     `PUT /v1/ads/ad-sets/{adSetId}`.
                 platformSpecificData:
                   description: |
-                    Platform-specific options. The platform is derived from `accountId`; options for a different platform return a 400. LinkedIn (campaign bidding and delivery controls), Meta (the bid trio) and Amazon Ads (required: the ad product, products, creative and targeting) have options today.
+                    Platform-specific options. The platform is derived from `accountId`; options for a different platform return a 400. LinkedIn (campaign bidding and delivery controls), Meta (the bid trio) Amazon Ads (required: the ad product, products, creative and targeting) and AppLovin (the campaign and creative set) have options today.
 
                     **Amazon Ads**: see `AmazonAdsPlatformData`. Amazon has no dry run, so `validateOnly` returns a 501.
+
+                    **AppLovin**
+
+                    - A new campaign needs `campaignType` (`APP` or `WEB`), the goal and, for an app, `os`, `packageName` and `tracking`. With `existingCampaignId`, only the creative set fields (`assets`, `languages`, `brandInfo`) apply.
+                    - Zernio checks every documented AppLovin rule (goal value limits, ROAS day targets, US-only regions and metros, the asset combination, brand info lengths) before calling AppLovin, because 100 refused calls in five minutes lock the AppLovin account for a day. `validateOnly` runs those checks and calls nothing.
 
                     **Meta**
 
@@ -105567,6 +105661,7 @@ paths:
                     - $ref: '#/components/schemas/LinkedInAdsPlatformData'
                     - $ref: '#/components/schemas/MetaAdsPlatformData'
                     - $ref: '#/components/schemas/AmazonAdsPlatformData'
+                    - $ref: '#/components/schemas/AppLovinAdsPlatformData'
                 dsaBeneficiary:
                   type: string
                   maxLength: 100

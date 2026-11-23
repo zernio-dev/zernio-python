@@ -1044,20 +1044,26 @@ class ConnectResource:
 
     def connect_app_lovin_ads_credentials(
         self,
-        api_key: str,
-        event_key: str,
         profile_id: str,
         *,
+        api_key: str | None = None,
+        event_key: str | None = None,
+        campaign_api_key: str | None = None,
+        account_id: str | None = None,
+        reconnect_account_id: str | None = None,
         report_key: str | None = None,
         name: str | None = None,
         state: str | None = None,
         redirect_url: str | None = None,
     ) -> dict[str, Any]:
-        """Connect an AppLovin Axon account"""
+        """Connect an AppLovin account"""
         payload = self._build_body(
             {
                 "apiKey": api_key,
                 "eventKey": event_key,
+                "campaignApiKey": campaign_api_key,
+                "accountId": account_id,
+                "reconnectAccountId": reconnect_account_id,
                 "reportKey": report_key,
                 "name": name,
                 "profileId": profile_id,
@@ -2982,20 +2988,26 @@ class ConnectResource:
 
     async def aconnect_app_lovin_ads_credentials(
         self,
-        api_key: str,
-        event_key: str,
         profile_id: str,
         *,
+        api_key: str | None = None,
+        event_key: str | None = None,
+        campaign_api_key: str | None = None,
+        account_id: str | None = None,
+        reconnect_account_id: str | None = None,
         report_key: str | None = None,
         name: str | None = None,
         state: str | None = None,
         redirect_url: str | None = None,
     ) -> dict[str, Any]:
-        """Connect an AppLovin Axon account (async)"""
+        """Connect an AppLovin account (async)"""
         payload = self._build_body(
             {
                 "apiKey": api_key,
                 "eventKey": event_key,
+                "campaignApiKey": campaign_api_key,
+                "accountId": account_id,
+                "reconnectAccountId": reconnect_account_id,
                 "reportKey": report_key,
                 "name": name,
                 "profileId": profile_id,
