@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.789.1"
+  version: "1.790.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -24319,16 +24319,22 @@ components:
             - commerce.order.updated
             - commerce.order.refunded
             - message.received
+            - message.sent
             - message.failed
             - conversation.started
             - reaction.received
             - referral.received
             - comment.received
+            - mention.received
             - review.new
             - call.received
             - call.ended
             - call.failed
+            - call.recording_ready
             - lead.received
+            - email.opened
+            - email.link_clicked
+            - email.thread_replied
           example: post.failed
         profileId: { type: string, description: 'The profile whose events start it, from `GET /v1/profiles`.' }
         accountIds: { type: array, minItems: 1, maxItems: 100, items: { type: string }, description: Only events of these accounts. Leave out for every account of the profile. }
