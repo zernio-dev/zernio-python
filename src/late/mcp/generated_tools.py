@@ -27682,7 +27682,9 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def connect_get_hub_spot_connect_url(
-        profile_id: str, redirect_url: str | None = None
+        profile_id: str,
+        redirect_url: str | None = None,
+        reconnect_account_id: str | None = None,
     ) -> str:
         """Get HubSpot OAuth connect URL
 
@@ -27706,11 +27708,14 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             profile_id: Your Zernio profile ID (get from /v1/profiles). (required)
-            redirect_url: Custom redirect after connection. Must be an absolute http(s) URL or custom app scheme such as `myapp://callback`; relative and unsafe URLs return 400."""
+            redirect_url: Custom redirect after connection. Must be an absolute http(s) URL or custom app scheme such as `myapp://callback`; relative and unsafe URLs return 400.
+            reconnect_account_id: The HubSpot portal connection being reconnected. In a workspace with no billing set up, the connect is allowed only when it returns to that same portal."""
         client = _get_client()
         try:
             response = client.connect.get_hub_spot_connect_url(
-                profile_id=profile_id, redirect_url=redirect_url
+                profile_id=profile_id,
+                redirect_url=redirect_url,
+                reconnect_account_id=reconnect_account_id,
             )
             return _format_response(response)
         except Exception as e:
@@ -27725,7 +27730,9 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def connect_get_gohighlevel_connect_url(
-        profile_id: str, redirect_url: str | None = None
+        profile_id: str,
+        redirect_url: str | None = None,
+        reconnect_account_id: str | None = None,
     ) -> str:
         """Get HighLevel OAuth connect URL
 
@@ -27745,11 +27752,14 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             profile_id: Your Zernio profile ID (get from /v1/profiles). (required)
-            redirect_url: Custom redirect after connection. Must be an absolute http(s) URL or custom app scheme such as `myapp://callback`; relative and unsafe URLs return 400."""
+            redirect_url: Custom redirect after connection. Must be an absolute http(s) URL or custom app scheme such as `myapp://callback`; relative and unsafe URLs return 400.
+            reconnect_account_id: The GoHighLevel location connection being reconnected. In a workspace with no billing set up, the connect is allowed only when it returns to that same location."""
         client = _get_client()
         try:
             response = client.connect.get_gohighlevel_connect_url(
-                profile_id=profile_id, redirect_url=redirect_url
+                profile_id=profile_id,
+                redirect_url=redirect_url,
+                reconnect_account_id=reconnect_account_id,
             )
             return _format_response(response)
         except Exception as e:
@@ -27767,6 +27777,7 @@ def register_generated_tools(mcp, _get_client):
         profile_id: str,
         environment: Literal["production", "sandbox"] = "production",
         redirect_url: str | None = None,
+        reconnect_account_id: str | None = None,
     ) -> str:
         """Get Salesforce OAuth connect URL
 
@@ -27789,13 +27800,15 @@ def register_generated_tools(mcp, _get_client):
         Args:
             profile_id: Your Zernio profile ID (get from /v1/profiles). (required)
             environment: Sign in at login.salesforce.com (`production`, also Developer Edition orgs) or test.salesforce.com (`sandbox`).
-            redirect_url: Custom redirect after connection. Must be an absolute http(s) URL or custom app scheme such as `myapp://callback`; relative and unsafe URLs return 400."""
+            redirect_url: Custom redirect after connection. Must be an absolute http(s) URL or custom app scheme such as `myapp://callback`; relative and unsafe URLs return 400.
+            reconnect_account_id: The Salesforce org connection being reconnected. In a workspace with no billing set up, the connect is allowed only when it returns to that same org."""
         client = _get_client()
         try:
             response = client.connect.get_salesforce_connect_url(
                 profile_id=profile_id,
                 environment=environment,
                 redirect_url=redirect_url,
+                reconnect_account_id=reconnect_account_id,
             )
             return _format_response(response)
         except Exception as e:
@@ -27854,7 +27867,9 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def connect_get_word_press_auth_url(
-        profile_id: str, redirect_url: str | None = None
+        profile_id: str,
+        redirect_url: str | None = None,
+        reconnect_account_id: str | None = None,
     ) -> str:
         """Get WordPress.com OAuth connect URL
 
@@ -27878,11 +27893,14 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             profile_id: Your Zernio profile ID (get from /v1/profiles). (required)
-            redirect_url: Custom redirect after connection. Must be an absolute http(s) URL or custom app scheme such as `myapp://callback`; relative and unsafe URLs return 400."""
+            redirect_url: Custom redirect after connection. Must be an absolute http(s) URL or custom app scheme such as `myapp://callback`; relative and unsafe URLs return 400.
+            reconnect_account_id: The WordPress site connection being reconnected. In a workspace with no billing set up, the connect is allowed only when it returns to that same site."""
         client = _get_client()
         try:
             response = client.connect.get_word_press_auth_url(
-                profile_id=profile_id, redirect_url=redirect_url
+                profile_id=profile_id,
+                redirect_url=redirect_url,
+                reconnect_account_id=reconnect_account_id,
             )
             return _format_response(response)
         except Exception as e:
@@ -27897,7 +27915,9 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def connect_get_wix_connect_url(
-        profile_id: str, redirect_url: str | None = None
+        profile_id: str,
+        redirect_url: str | None = None,
+        reconnect_account_id: str | None = None,
     ) -> str:
         """Get Wix site install URL
 
@@ -27917,11 +27937,14 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             profile_id: Your Zernio profile ID (get from /v1/profiles). (required)
-            redirect_url: Custom redirect after connection. Must be an absolute http(s) URL or custom app scheme such as `myapp://callback`; relative and unsafe URLs return 400."""
+            redirect_url: Custom redirect after connection. Must be an absolute http(s) URL or custom app scheme such as `myapp://callback`; relative and unsafe URLs return 400.
+            reconnect_account_id: The Wix site connection being reconnected. In a workspace with no billing set up, the connect is allowed only when it returns to that same site."""
         client = _get_client()
         try:
             response = client.connect.get_wix_connect_url(
-                profile_id=profile_id, redirect_url=redirect_url
+                profile_id=profile_id,
+                redirect_url=redirect_url,
+                reconnect_account_id=reconnect_account_id,
             )
             return _format_response(response)
         except Exception as e:
@@ -27936,7 +27959,9 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def connect_get_webflow_connect_url(
-        profile_id: str, redirect_url: str | None = None
+        profile_id: str,
+        redirect_url: str | None = None,
+        reconnect_account_id: str | None = None,
     ) -> str:
         """Get Webflow OAuth URL
 
@@ -27958,11 +27983,14 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             profile_id: Your Zernio profile ID (get from /v1/profiles). (required)
-            redirect_url: Custom redirect after connection. Must be an absolute http(s) URL or custom app scheme such as `myapp://callback`; relative and unsafe URLs return 400."""
+            redirect_url: Custom redirect after connection. Must be an absolute http(s) URL or custom app scheme such as `myapp://callback`; relative and unsafe URLs return 400.
+            reconnect_account_id: The Webflow site connection being reconnected. In a workspace with no billing set up, the connect is allowed only when it returns to that same site."""
         client = _get_client()
         try:
             response = client.connect.get_webflow_connect_url(
-                profile_id=profile_id, redirect_url=redirect_url
+                profile_id=profile_id,
+                redirect_url=redirect_url,
+                reconnect_account_id=reconnect_account_id,
             )
             return _format_response(response)
         except Exception as e:
@@ -27976,7 +28004,9 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=True,
         )
     )
-    def connect_webflow_with_site_token(profile_id: str, site_token: str) -> str:
+    def connect_webflow_with_site_token(
+        profile_id: str, site_token: str, reconnect_account_id: str | None = None
+    ) -> str:
         """Connect Webflow with a site API token
 
         Connects one Webflow site using a site API token. Zernio checks the token's scopes, reads its site, and stores the token encrypted.
@@ -27992,11 +28022,14 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             profile_id: Your Zernio profile ID (get from /v1/profiles). (required)
-            site_token: Webflow site API token with Sites read and CMS read and write access. (required)"""
+            site_token: Webflow site API token with Sites read and CMS read and write access. (required)
+            reconnect_account_id: The Webflow site connection being reconnected. In a workspace with no billing set up, the connect is allowed only when it returns to that same site."""
         client = _get_client()
         try:
             response = client.connect.connect_webflow_with_site_token(
-                profile_id=profile_id, site_token=site_token
+                profile_id=profile_id,
+                site_token=site_token,
+                reconnect_account_id=reconnect_account_id,
             )
             return _format_response(response)
         except Exception as e:
@@ -28051,7 +28084,11 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def connect_word_press_with_application_password(
-        profile_id: str, site_url: str, username: str, application_password: str
+        profile_id: str,
+        site_url: str,
+        username: str,
+        application_password: str,
+        reconnect_account_id: str | None = None,
     ) -> str:
         """Connect self-hosted WordPress with an application password
 
@@ -28068,7 +28105,8 @@ def register_generated_tools(mcp, _get_client):
             profile_id: Your Zernio profile ID (get from /v1/profiles). (required)
             site_url: HTTPS base URL of the WordPress installation, including a subdirectory path when applicable. (required)
             username: WordPress login name. A colon is not allowed. (required)
-            application_password: Application password created for the WordPress user. Spaces in WordPress display formatting are accepted. (required)"""
+            application_password: Application password created for the WordPress user. Spaces in WordPress display formatting are accepted. (required)
+            reconnect_account_id: The WordPress site connection being reconnected. In a workspace with no billing set up, the connect is allowed only when it returns to that same site."""
         client = _get_client()
         try:
             response = client.connect.connect_word_press_with_application_password(
@@ -28076,6 +28114,7 @@ def register_generated_tools(mcp, _get_client):
                 site_url=site_url,
                 username=username,
                 application_password=application_password,
+                reconnect_account_id=reconnect_account_id,
             )
             return _format_response(response)
         except Exception as e:

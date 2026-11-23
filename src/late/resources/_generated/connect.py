@@ -442,25 +442,35 @@ class ConnectResource:
         return self._client._get("/v1/connect/amazonads", params=params)
 
     def get_hub_spot_connect_url(
-        self, profile_id: str, *, redirect_url: str | None = None
+        self,
+        profile_id: str,
+        *,
+        redirect_url: str | None = None,
+        reconnect_account_id: str | None = None,
     ) -> dict[str, Any]:
         """Get HubSpot OAuth connect URL"""
         params = self._build_query(
             {
                 "profileId": profile_id,
                 "redirect_url": redirect_url,
+                "reconnectAccountId": reconnect_account_id,
             }
         )
         return self._client._get("/v1/connect/hubspot", params=params)
 
     def get_gohighlevel_connect_url(
-        self, profile_id: str, *, redirect_url: str | None = None
+        self,
+        profile_id: str,
+        *,
+        redirect_url: str | None = None,
+        reconnect_account_id: str | None = None,
     ) -> dict[str, Any]:
         """Get HighLevel OAuth connect URL"""
         params = self._build_query(
             {
                 "profileId": profile_id,
                 "redirect_url": redirect_url,
+                "reconnectAccountId": reconnect_account_id,
             }
         )
         return self._client._get("/v1/connect/gohighlevel", params=params)
@@ -471,6 +481,7 @@ class ConnectResource:
         *,
         environment: str | None = "production",
         redirect_url: str | None = None,
+        reconnect_account_id: str | None = None,
     ) -> dict[str, Any]:
         """Get Salesforce OAuth connect URL"""
         params = self._build_query(
@@ -478,6 +489,7 @@ class ConnectResource:
                 "profileId": profile_id,
                 "environment": environment,
                 "redirect_url": redirect_url,
+                "reconnectAccountId": reconnect_account_id,
             }
         )
         return self._client._get("/v1/connect/salesforce", params=params)
@@ -500,49 +512,69 @@ class ConnectResource:
         return self._client._get("/v1/connect/stripe", params=params)
 
     def get_word_press_auth_url(
-        self, profile_id: str, *, redirect_url: str | None = None
+        self,
+        profile_id: str,
+        *,
+        redirect_url: str | None = None,
+        reconnect_account_id: str | None = None,
     ) -> dict[str, Any]:
         """Get WordPress.com OAuth connect URL"""
         params = self._build_query(
             {
                 "profileId": profile_id,
                 "redirect_url": redirect_url,
+                "reconnectAccountId": reconnect_account_id,
             }
         )
         return self._client._get("/v1/connect/wordpress", params=params)
 
     def get_wix_connect_url(
-        self, profile_id: str, *, redirect_url: str | None = None
+        self,
+        profile_id: str,
+        *,
+        redirect_url: str | None = None,
+        reconnect_account_id: str | None = None,
     ) -> dict[str, Any]:
         """Get Wix site install URL"""
         params = self._build_query(
             {
                 "profileId": profile_id,
                 "redirect_url": redirect_url,
+                "reconnectAccountId": reconnect_account_id,
             }
         )
         return self._client._get("/v1/connect/wix", params=params)
 
     def get_webflow_connect_url(
-        self, profile_id: str, *, redirect_url: str | None = None
+        self,
+        profile_id: str,
+        *,
+        redirect_url: str | None = None,
+        reconnect_account_id: str | None = None,
     ) -> dict[str, Any]:
         """Get Webflow OAuth URL"""
         params = self._build_query(
             {
                 "profileId": profile_id,
                 "redirect_url": redirect_url,
+                "reconnectAccountId": reconnect_account_id,
             }
         )
         return self._client._get("/v1/connect/webflow", params=params)
 
     def connect_webflow_with_site_token(
-        self, profile_id: str, site_token: str
+        self,
+        profile_id: str,
+        site_token: str,
+        *,
+        reconnect_account_id: str | None = None,
     ) -> dict[str, Any]:
         """Connect Webflow with a site API token"""
         payload = self._build_body(
             {
                 "profileId": profile_id,
                 "siteToken": site_token,
+                "reconnectAccountId": reconnect_account_id,
             }
         )
         return self._client._post("/v1/connect/webflow/token", data=payload)
@@ -569,7 +601,13 @@ class ConnectResource:
         return self._client._get("/v1/connect/email", params=params)
 
     def connect_word_press_with_application_password(
-        self, profile_id: str, site_url: str, username: str, application_password: str
+        self,
+        profile_id: str,
+        site_url: str,
+        username: str,
+        application_password: str,
+        *,
+        reconnect_account_id: str | None = None,
     ) -> dict[str, Any]:
         """Connect self-hosted WordPress with an application password"""
         payload = self._build_body(
@@ -578,6 +616,7 @@ class ConnectResource:
                 "siteUrl": site_url,
                 "username": username,
                 "applicationPassword": application_password,
+                "reconnectAccountId": reconnect_account_id,
             }
         )
         return self._client._post("/v1/connect/wordpress/token", data=payload)
@@ -2372,25 +2411,35 @@ class ConnectResource:
         return await self._client._aget("/v1/connect/amazonads", params=params)
 
     async def aget_hub_spot_connect_url(
-        self, profile_id: str, *, redirect_url: str | None = None
+        self,
+        profile_id: str,
+        *,
+        redirect_url: str | None = None,
+        reconnect_account_id: str | None = None,
     ) -> dict[str, Any]:
         """Get HubSpot OAuth connect URL (async)"""
         params = self._build_query(
             {
                 "profileId": profile_id,
                 "redirect_url": redirect_url,
+                "reconnectAccountId": reconnect_account_id,
             }
         )
         return await self._client._aget("/v1/connect/hubspot", params=params)
 
     async def aget_gohighlevel_connect_url(
-        self, profile_id: str, *, redirect_url: str | None = None
+        self,
+        profile_id: str,
+        *,
+        redirect_url: str | None = None,
+        reconnect_account_id: str | None = None,
     ) -> dict[str, Any]:
         """Get HighLevel OAuth connect URL (async)"""
         params = self._build_query(
             {
                 "profileId": profile_id,
                 "redirect_url": redirect_url,
+                "reconnectAccountId": reconnect_account_id,
             }
         )
         return await self._client._aget("/v1/connect/gohighlevel", params=params)
@@ -2401,6 +2450,7 @@ class ConnectResource:
         *,
         environment: str | None = "production",
         redirect_url: str | None = None,
+        reconnect_account_id: str | None = None,
     ) -> dict[str, Any]:
         """Get Salesforce OAuth connect URL (async)"""
         params = self._build_query(
@@ -2408,6 +2458,7 @@ class ConnectResource:
                 "profileId": profile_id,
                 "environment": environment,
                 "redirect_url": redirect_url,
+                "reconnectAccountId": reconnect_account_id,
             }
         )
         return await self._client._aget("/v1/connect/salesforce", params=params)
@@ -2430,49 +2481,69 @@ class ConnectResource:
         return await self._client._aget("/v1/connect/stripe", params=params)
 
     async def aget_word_press_auth_url(
-        self, profile_id: str, *, redirect_url: str | None = None
+        self,
+        profile_id: str,
+        *,
+        redirect_url: str | None = None,
+        reconnect_account_id: str | None = None,
     ) -> dict[str, Any]:
         """Get WordPress.com OAuth connect URL (async)"""
         params = self._build_query(
             {
                 "profileId": profile_id,
                 "redirect_url": redirect_url,
+                "reconnectAccountId": reconnect_account_id,
             }
         )
         return await self._client._aget("/v1/connect/wordpress", params=params)
 
     async def aget_wix_connect_url(
-        self, profile_id: str, *, redirect_url: str | None = None
+        self,
+        profile_id: str,
+        *,
+        redirect_url: str | None = None,
+        reconnect_account_id: str | None = None,
     ) -> dict[str, Any]:
         """Get Wix site install URL (async)"""
         params = self._build_query(
             {
                 "profileId": profile_id,
                 "redirect_url": redirect_url,
+                "reconnectAccountId": reconnect_account_id,
             }
         )
         return await self._client._aget("/v1/connect/wix", params=params)
 
     async def aget_webflow_connect_url(
-        self, profile_id: str, *, redirect_url: str | None = None
+        self,
+        profile_id: str,
+        *,
+        redirect_url: str | None = None,
+        reconnect_account_id: str | None = None,
     ) -> dict[str, Any]:
         """Get Webflow OAuth URL (async)"""
         params = self._build_query(
             {
                 "profileId": profile_id,
                 "redirect_url": redirect_url,
+                "reconnectAccountId": reconnect_account_id,
             }
         )
         return await self._client._aget("/v1/connect/webflow", params=params)
 
     async def aconnect_webflow_with_site_token(
-        self, profile_id: str, site_token: str
+        self,
+        profile_id: str,
+        site_token: str,
+        *,
+        reconnect_account_id: str | None = None,
     ) -> dict[str, Any]:
         """Connect Webflow with a site API token (async)"""
         payload = self._build_body(
             {
                 "profileId": profile_id,
                 "siteToken": site_token,
+                "reconnectAccountId": reconnect_account_id,
             }
         )
         return await self._client._apost("/v1/connect/webflow/token", data=payload)
@@ -2499,7 +2570,13 @@ class ConnectResource:
         return await self._client._aget("/v1/connect/email", params=params)
 
     async def aconnect_word_press_with_application_password(
-        self, profile_id: str, site_url: str, username: str, application_password: str
+        self,
+        profile_id: str,
+        site_url: str,
+        username: str,
+        application_password: str,
+        *,
+        reconnect_account_id: str | None = None,
     ) -> dict[str, Any]:
         """Connect self-hosted WordPress with an application password (async)"""
         payload = self._build_body(
@@ -2508,6 +2585,7 @@ class ConnectResource:
                 "siteUrl": site_url,
                 "username": username,
                 "applicationPassword": application_password,
+                "reconnectAccountId": reconnect_account_id,
             }
         )
         return await self._client._apost("/v1/connect/wordpress/token", data=payload)

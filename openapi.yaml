@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.779.0"
+  version: "1.780.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -52620,6 +52620,11 @@ paths:
           description: >-
             Custom redirect after connection. Must be an absolute http(s) URL or custom app scheme such as
             `myapp://callback`; relative and unsafe URLs return 400.
+        - name: reconnectAccountId
+          in: query
+          schema:
+            type: string
+          description: 'The HubSpot portal connection being reconnected. In a workspace with no billing set up, the connect is allowed only when it returns to that same portal.'
       responses:
         '200':
           description: OAuth authorization URL and authenticated state
@@ -52687,6 +52692,11 @@ paths:
           description: >-
             Custom redirect after connection. Must be an absolute http(s) URL or custom app scheme such as
             `myapp://callback`; relative and unsafe URLs return 400.
+        - name: reconnectAccountId
+          in: query
+          schema:
+            type: string
+          description: 'The GoHighLevel location connection being reconnected. In a workspace with no billing set up, the connect is allowed only when it returns to that same location.'
       responses:
         '200':
           description: OAuth authorization URL and authenticated state
@@ -52765,6 +52775,11 @@ paths:
           description: >-
             Custom redirect after connection. Must be an absolute http(s) URL or custom app scheme such as
             `myapp://callback`; relative and unsafe URLs return 400.
+        - name: reconnectAccountId
+          in: query
+          schema:
+            type: string
+          description: 'The Salesforce org connection being reconnected. In a workspace with no billing set up, the connect is allowed only when it returns to that same org.'
       responses:
         '200':
           description: OAuth authorization URL and authenticated state
@@ -52905,6 +52920,11 @@ paths:
           in: query
           schema: { type: string }
           description: 'Custom redirect after connection. Must be an absolute http(s) URL or custom app scheme such as `myapp://callback`; relative and unsafe URLs return 400.'
+        - name: reconnectAccountId
+          in: query
+          schema:
+            type: string
+          description: 'The WordPress site connection being reconnected. In a workspace with no billing set up, the connect is allowed only when it returns to that same site.'
       responses:
         '200':
           description: OAuth authorization URL and authenticated state
@@ -52956,6 +52976,11 @@ paths:
           in: query
           schema: { type: string }
           description: 'Custom redirect after connection. Must be an absolute http(s) URL or custom app scheme such as `myapp://callback`; relative and unsafe URLs return 400.'
+        - name: reconnectAccountId
+          in: query
+          schema:
+            type: string
+          description: 'The Wix site connection being reconnected. In a workspace with no billing set up, the connect is allowed only when it returns to that same site.'
       responses:
         '200':
           description: Wix installer URL and authenticated state
@@ -53009,6 +53034,11 @@ paths:
           in: query
           schema: { type: string }
           description: 'Custom redirect after connection. Must be an absolute http(s) URL or custom app scheme such as `myapp://callback`; relative and unsafe URLs return 400.'
+        - name: reconnectAccountId
+          in: query
+          schema:
+            type: string
+          description: 'The Webflow site connection being reconnected. In a workspace with no billing set up, the connect is allowed only when it returns to that same site.'
       responses:
         '200':
           description: Webflow consent URL and authenticated state
@@ -53057,6 +53087,7 @@ paths:
               properties:
                 profileId: { type: string, description: 'Your Zernio profile ID (get from /v1/profiles).' }
                 siteToken: { type: string, minLength: 1, maxLength: 512, writeOnly: true, description: 'Webflow site API token with Sites read and CMS read and write access.' }
+                reconnectAccountId: { type: string, description: 'The Webflow site connection being reconnected. In a workspace with no billing set up, the connect is allowed only when it returns to that same site.' }
       responses:
         '200':
           description: Webflow site connected as a platform account
@@ -53139,6 +53170,7 @@ paths:
                 siteUrl: { type: string, format: uri, pattern: '^https://', description: 'HTTPS base URL of the WordPress installation, including a subdirectory path when applicable.' }
                 username: { type: string, minLength: 1, maxLength: 255, pattern: '^[^:\r\n]+$', description: 'WordPress login name. A colon is not allowed.' }
                 applicationPassword: { type: string, minLength: 1, maxLength: 1024, writeOnly: true, description: 'Application password created for the WordPress user. Spaces in WordPress display formatting are accepted.' }
+                reconnectAccountId: { type: string, description: 'The WordPress site connection being reconnected. In a workspace with no billing set up, the connect is allowed only when it returns to that same site.' }
       responses:
         '200':
           description: WordPress site connected as a platform account
