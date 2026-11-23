@@ -428,6 +428,7 @@ class ConnectResource:
         *,
         redirect_url: str | None = None,
         reconnect_account_id: str | None = None,
+        region: str | None = "NA",
     ) -> dict[str, Any]:
         """Get Amazon Ads OAuth connect URL"""
         params = self._build_query(
@@ -435,6 +436,7 @@ class ConnectResource:
                 "profileId": profile_id,
                 "redirect_url": redirect_url,
                 "reconnectAccountId": reconnect_account_id,
+                "region": region,
             }
         )
         return self._client._get("/v1/connect/amazonads", params=params)
@@ -2325,6 +2327,7 @@ class ConnectResource:
         *,
         redirect_url: str | None = None,
         reconnect_account_id: str | None = None,
+        region: str | None = "NA",
     ) -> dict[str, Any]:
         """Get Amazon Ads OAuth connect URL (async)"""
         params = self._build_query(
@@ -2332,6 +2335,7 @@ class ConnectResource:
                 "profileId": profile_id,
                 "redirect_url": redirect_url,
                 "reconnectAccountId": reconnect_account_id,
+                "region": region,
             }
         )
         return await self._client._aget("/v1/connect/amazonads", params=params)

@@ -5879,7 +5879,7 @@ def register_generated_tools(mcp, _get_client):
 
             Responds `429` when Google's API quota is ...
 
-            Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit, microsoft
+            Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit, microsoft, amazon
 
             Args:
                 account_id: Account ID (required)
@@ -6912,6 +6912,7 @@ def register_generated_tools(mcp, _get_client):
             "openai",
             "reddit",
             "microsoft",
+            "amazon",
         ]
         | None = None,
         account_id: str | None = None,
@@ -6949,7 +6950,7 @@ def register_generated_tools(mcp, _get_client):
 
             1. Filter by platformAdId (the Meta ...
 
-            Platforms (the platform parameter takes): facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit, microsoft
+            Platforms (the platform parameter takes): facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit, microsoft, amazon
 
             Args:
                 page: Page number (1-based)
@@ -7425,7 +7426,11 @@ def register_generated_tools(mcp, _get_client):
         - A customer synced for the first time is populated on the next discovery pass rather than waiting for its daily slot.
         - Connecting an account or triggering a manual sync refreshes it immediately.
 
-        Platforms: google
+        ### Amazon
+
+        Amazon Sponsored Products and Sponsored Brands keywords and ad group negatives are listed too (`platform: amazon`), refreshed about every six hours with their trailing 30-day metrics from the targeting reports. `resourceName` is `{adGroupId}~{keywordId}` there. Campaign-level ...
+
+        Platforms: google, amazon
 
         Args:
             page: Page number (1-based)
@@ -7482,7 +7487,11 @@ def register_generated_tools(mcp, _get_client):
         which replaces the set). Set `negative: true` to add ad-group-level negatives
         instead of positive keywords.
 
-        Platforms: google
+        ### Amazon
+
+        On an Amazon Ads connection the keywords go to a Sponsored Products or Sponsored Brands ad group (a Sponsored Display ad group returns 422). Positives bid the ad group default. Negatives match exact or phrase: a negative sent without `matchType` is exact, and a broad negative returns 422.
+
+        Platforms: google, amazon
 
         Args:
             account_id: Account ID (Google Ads) (required)
@@ -7524,7 +7533,11 @@ def register_generated_tools(mcp, _get_client):
 
         Negative keywords have no status or bid on Google and cannot be paused, enabled or given a bid.
 
-        Platforms: google
+        ### Amazon
+
+        Amazon keywords take `status` and `cpcBid`. Amazon negative keywords take `status` only (a `cpcBid` on one returns 422), and a Sponsored Brands negative cannot be paused (422).
+
+        Platforms: google, amazon
 
         Args:
             keyword_id: Zernio keyword ID (`id`), or Google's native `{adSetId}~{platformCriterionId}` (the tail of `resourceName`, e.g. 1234567890~987654321). A bare criterion id is rejected because it is only unique within its ad group. (required)
@@ -7554,7 +7567,11 @@ def register_generated_tools(mcp, _get_client):
 
         Removes one keyword criterion (positive or negative) from its ad group (M.140).
 
-        Platforms: google
+        ### Amazon
+
+        On Amazon the keyword is archived, which is Amazon's delete: it stays in reports and can never be enabled again.
+
+        Platforms: google, amazon
 
         Args:
             keyword_id: Zernio keyword ID (`id`), or Google's native `{adSetId}~{platformCriterionId}` (the tail of `resourceName`, e.g. 1234567890~987654321). A bare criterion id is rejected because it is only unique within its ad group. (required)"""
@@ -7589,6 +7606,7 @@ def register_generated_tools(mcp, _get_client):
             "openai",
             "reddit",
             "microsoft",
+            "amazon",
         ]
         | None = None,
         status: Literal[
@@ -7629,7 +7647,7 @@ def register_generated_tools(mcp, _get_client):
 
             Zernio's own status writes re-read the switches they change. A change made in the ...
 
-            Platforms (the platform parameter takes): facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit, microsoft
+            Platforms (the platform parameter takes): facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit, microsoft, amazon
 
             Args:
                 include_empty: Meta only. Set true to also list campaigns with ZERO ads, with `adCount: 0` and zeroed metrics.
@@ -7735,6 +7753,7 @@ def register_generated_tools(mcp, _get_client):
         status: Literal["ACTIVE", "PAUSED"] = "PAUSED",
         start_date: str | None = None,
         end_date: str | None = None,
+        platform_specific_data: dict[str, Any] | None = None,
         location_targeting_type: Literal["presence", "presence_or_interest"]
         | None = None,
         bid_strategy: Literal[
@@ -7773,7 +7792,7 @@ def register_generated_tools(mcp, _get_client):
             - OpenAI: `goal` sets the campaign objective, and `conversions` needs an active standard conversion event on the account.
             - Reddit: see below. ...
 
-            Platforms: meta, google, linkedin, tiktok, x, pinterest, openai, reddit
+            Platforms: meta, google, linkedin, tiktok, x, pinterest, openai, reddit, amazon
 
             Args:
                 account_id: Zernio SocialAccount id (posting or ads variant); its platform decides where the campaign is created. (required)
@@ -7790,8 +7809,9 @@ def register_generated_tools(mcp, _get_client):
                 budget_amount: Campaign-level (CBO) budget in WHOLE currency units (USD: 50 = $50.00), NOT cents. Meta's own Marketing API takes this same number in minor units, so it is an easy and expensive mix-up. Requires budgetType.
                 budget_type
                 status
-                start_date: Reddit only (400 elsewhere). Campaign start (ISO 8601); a value without an offset is read in the ad account time zone. Requires a campaign budget (`budgetAmount` + `budgetType`, 400 otherwise). Defaults to now.
-                end_date: Reddit only (400 elsewhere). Campaign end (ISO 8601); a value without an offset is read in the ad account time zone. Requires a campaign budget (400 otherwise), and is required for `budgetType: lifetime`.
+                start_date: Reddit and Amazon only (400 elsewhere). Campaign start (ISO 8601); a value without an offset is read in the ad account time zone. Requires a campaign budget (`budgetAmount` + `budgetType`, 400 otherwise). Defaults to now.
+                end_date: Reddit and Amazon only (400 elsewhere). Campaign end (ISO 8601); a value without an offset is read in the ad account time zone. Requires a campaign budget (400 otherwise), and is required for `budgetType: lifetime`.
+                platform_specific_data: Amazon Ads only (400 elsewhere), and required there: the ad product and its campaign settings. Object with keys: adProduct (one of: SPONSORED_PRODUCTS; required); targetingType (one of: MANUAL, AUTO) - Required for a new campaign. MANUAL targets keywords and productTargets; AUTO lets Amazon match searches and products (tune them with autoTargeting). Immutable.; biddingStrategy (one of: LEGACY_FOR_SALES, AUTO_FOR_SALES, MANUAL) - Dynamic bidding: LEGACY_FOR_SALES lowers bids when a sale is unlikely, AUTO_FOR_SALES raises and lowers them (up to +100%), MANUAL keeps them fixed.; placementBidding (list of objects with keys placement, percentage) - Bid increase per placement, added on top of the bid (50 on a 1.00 bid gives 1.50 at the top of search).; portfolioId (string)
                 location_targeting_type: Google only (400 elsewhere). Written on the new campaign.
                 bid_strategy: Campaign bid strategy.
 
@@ -7832,6 +7852,7 @@ def register_generated_tools(mcp, _get_client):
                 status=status,
                 start_date=start_date,
                 end_date=end_date,
+                platform_specific_data=platform_specific_data,
                 location_targeting_type=location_targeting_type,
                 bid_strategy=bid_strategy,
                 bid_amount=bid_amount,
@@ -7867,6 +7888,7 @@ def register_generated_tools(mcp, _get_client):
             "openai",
             "reddit",
             "microsoft",
+            "amazon",
         ],
     ) -> str:
         """Pause or resume a campaign
@@ -7889,7 +7911,7 @@ def register_generated_tools(mcp, _get_client):
         - **Already in the requested state:** nothing is written (`updated: 0`, `skipped: 1`, with the reason).
         - **Otherwise:** the switch is written (`updated: 1`), read back and stored. The delivery status of the ads under it (up to 20) is re-read and stored, so an immediate GET returns what the platform now ...
 
-        Platforms (the platform parameter takes): facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit, microsoft
+        Platforms (the platform parameter takes): facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit, microsoft, amazon
 
         Args:
             campaign_id: Platform campaign ID (required)
@@ -8128,6 +8150,7 @@ def register_generated_tools(mcp, _get_client):
             "openai",
             "reddit",
             "microsoft",
+            "amazon",
         ],
         account_id: str | None = None,
         bid_strategy: Literal[
@@ -8167,11 +8190,9 @@ def register_generated_tools(mcp, _get_client):
             | `networkSettings` | 400 | Search only | 400 |
             | `trackingUrlTemplate`, `finalUrlSuffix` | 400 | Yes | 400 |
             | `sharedBudgetId` | 400 | Yes | 400 |
-            | `budget` (CBO; ABO returns 409) | Yes | Daily only | OpenAI and Reddit: daily or lifetime; others 501 |
-            | `name` | Yes | 501 | Reddit: Yes; others 501 |
-            | ...
+            | `budget` (CBO; ABO returns 409) | Yes | Daily only | OpenAI and Reddit: daily or lifetime; Amazon: daily, or the lifetime type a Sponsored Brands campaign was ...
 
-            Platforms (the platform parameter takes): facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit, microsoft
+            Platforms (the platform parameter takes): facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit, microsoft, amazon
 
             Args:
                 campaign_id: Platform campaign ID (required)
@@ -8241,6 +8262,7 @@ def register_generated_tools(mcp, _get_client):
             "openai",
             "reddit",
             "microsoft",
+            "amazon",
         ],
         account_id: str | None = None,
         ad_account_id: str | None = None,
@@ -8254,6 +8276,8 @@ def register_generated_tools(mcp, _get_client):
         - Meta, Google, TikTok, LinkedIn and X delete it.
         - OpenAI, Reddit and Pinterest have no campaign delete and archive it instead (see below).
 
+        - Amazon archives the campaign: archiving is Amazon's delete, it is permanent, and the campaign stays in reports.
+
         Locally, all Ad documents for this campaign are marked `status: cancelled`.
 
         ### Empty campaigns
@@ -8262,11 +8286,9 @@ def register_generated_tools(mcp, _get_client):
 
         To delete such a shell, send `accountId` in the body or the query string. We skip the local lookup entirely and forward the delete to the platform of that connection. `accountId` is ignored when the campaign does have ads.
 
-        ### Google, TikTok, LinkedIn, Pinterest, Reddit and OpenAI
+        ### Google, TikTok, ...
 
-        Google, TikTok, LinkedIn, Pinterest and Reddit take the ad account from the synced ...
-
-        Platforms (the platform parameter takes): facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit, microsoft
+        Platforms (the platform parameter takes): facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit, microsoft, amazon
 
         Args:
             campaign_id: Platform campaign ID (required)
@@ -8322,9 +8344,13 @@ def register_generated_tools(mcp, _get_client):
 
         ### Platform
 
-        The platform is always discovered from the campaign itself. A non-Google campaign returns 501 rather than 404, whether or not `platform` was passed.
+        The platform is always discovered from the campaign itself. A campaign on another platform than Google or Amazon returns 501 rather than 404, whether or not `platform` was passed.
 
-        Platforms: google
+        ### Amazon
+
+        Amazon Sponsored Products campaigns hold campaign-level negative keywords (exact or phrase), read live with no cache (`cachedAt` null). Sponsored Brands and Sponsored Display campaigns have none and return 422.
+
+        Platforms (the platform parameter takes): facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit
 
         Args:
             campaign_id: Platform campaign ID (required)
@@ -8375,10 +8401,14 @@ def register_generated_tools(mcp, _get_client):
         - Send the same request again to finish a failed replace.
         - Send an empty array to clear every campaign negative.
 
-        The platform is always discovered from the campaign itself; a non-Google
-        campaign returns 501 rather than 404, whether or not `platform` was sent.
+        The platform is always discovered from the campaign itself; a campaign on another
+        platform than Google or Amazon returns 501 rather than 404, whether or not `platform` was sent.
 
-        Platforms: google
+        ### Amazon
+
+        On an Amazon Sponsored Products campaign the missing negatives are created and the rest archived. A negative without `matchType` is exact; broad returns 422.
+
+        Platforms (the platform parameter takes): facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit
 
         Args:
             campaign_id: Platform campaign ID (required)
@@ -8426,10 +8456,14 @@ def register_generated_tools(mcp, _get_client):
         - Keywords already on the campaign are not added twice; keywords not on it are skipped on remove.
         - Changes go to Google in `create`/`remove` mutates of up to 5,000 operations, like the full replace.
 
-        The platform is always discovered from the campaign itself; a non-Google
-        campaign returns 501 rather than 404, whether or not `platform` was sent.
+        The platform is always discovered from the campaign itself; a campaign on another
+        platform than Google or Amazon returns 501 rather than 404, whether or not `platform` was sent.
 
-        Platforms: google
+        ### Amazon
+
+        On an Amazon Sponsored Products campaign `add` creates the missing negatives and `remove` archives the matching ones (text and match type, case-insensitive). A negative without `matchType` is exact; broad returns 422.
+
+        Platforms (the platform parameter takes): facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit
 
         Args:
             campaign_id: Platform campaign ID (required)
@@ -8466,7 +8500,7 @@ def register_generated_tools(mcp, _get_client):
 
         `updated` / `skipped` count campaigns.
 
-        Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit, microsoft
+        Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit, microsoft, amazon
 
         Args:
             status: (required)
@@ -9233,11 +9267,11 @@ def register_generated_tools(mcp, _get_client):
         `status: cancelled`.
 
         Delete is soft on platforms that have no hard delete: LinkedIn moves the
-        campaign to `PENDING_DELETION`, Pinterest and Reddit archive the ad group, and X
+        campaign to `PENDING_DELETION`, Pinterest, Reddit and Amazon archive the ad group (permanent on Amazon), and X
         soft-flags the line item. Google removes the ad group. All remain readable
         for reporting.
 
-        Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit
+        Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit, amazon
 
         Args:
             ad_set_id: Platform ad set ID (required)"""
@@ -9250,20 +9284,20 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
-            title="Read a Reddit ad group's targeting and schedule",
+            title="Read an ad group's targeting and schedule",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
         )
     )
     def ad_campaigns_get_ad_set_targeting(
-        ad_set_id: str, platform: Literal["reddit"] | None = None
+        ad_set_id: str, platform: Literal["reddit", "amazon"] | None = None
     ) -> str:
-        """Read a Reddit ad group's targeting and schedule
+        """Read an ad group's targeting and schedule
 
         Shows a Reddit ad group's live targeting and schedule in the same shape PUT /v1/ads/ad-sets/{adSetId} takes, so you can prefill an editor.
 
-        It is read live from Reddit on every call. Reddit only; every other platform returns 501.
+        It is read live from the platform on every call. Reddit and Amazon only; every other platform returns 501.
 
         ### How fields come back
 
@@ -9272,7 +9306,11 @@ def register_generated_tools(mcp, _get_client):
         - Languages come back as lowercase ISO 639-1 codes.
         - Targeting Zernio cannot edit (devices, platforms, carriers, automated expansion) is left out and kept on every edit.
 
-        Platforms: reddit
+        ### Amazon
+
+        On Amazon it reads the ad group's live targets and negative targets in Amazon's own expression shape: `targeting` is `{ product, targets, negativeTargets }`, each target with `targetId`, `state`, `expressionType`, ...
+
+        Platforms: reddit, amazon
 
         Args:
             ad_set_id: Reddit ad group ID (required)
@@ -9308,6 +9346,7 @@ def register_generated_tools(mcp, _get_client):
             "openai",
             "reddit",
             "microsoft",
+            "amazon",
         ],
     ) -> str:
         """Pause or resume a single ad set
@@ -9339,7 +9378,7 @@ def register_generated_tools(mcp, _get_client):
 
         - When that live read ...
 
-        Platforms (the platform parameter takes): facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit, microsoft
+        Platforms (the platform parameter takes): facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit, microsoft, amazon
 
         Args:
             ad_set_id: Platform ad set ID (required)
@@ -9377,6 +9416,7 @@ def register_generated_tools(mcp, _get_client):
             "openai",
             "reddit",
             "microsoft",
+            "amazon",
         ]
         | None = None,
         status: Literal[
@@ -9437,7 +9477,7 @@ def register_generated_tools(mcp, _get_client):
 
             The older days (up to 730 days back) are imported in the background; repeat the request until it returns 200. A request scoped to no Meta ...
 
-            Platforms (the platform parameter takes): facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit, microsoft
+            Platforms (the platform parameter takes): facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit, microsoft, amazon
 
             Args:
                 page: Page number (1-based)
@@ -9546,6 +9586,7 @@ def register_generated_tools(mcp, _get_client):
             "openai",
             "reddit",
             "microsoft",
+            "amazon",
         ]
         | None = None,
         sort_by: Literal[
@@ -9563,7 +9604,7 @@ def register_generated_tools(mcp, _get_client):
 
         A Meta range older than the imported history answers `202` with `backfillPending: true` and the covered part; repeat the request until it returns 200.
 
-        Platforms (the platform parameter takes): facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit, microsoft
+        Platforms (the platform parameter takes): facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit, microsoft, amazon
 
         Args:
             account_id: Account ID. Sibling-expanded to its linked posting and ads pair. An id the API key cannot reach answers 404. (required)
@@ -9612,6 +9653,7 @@ def register_generated_tools(mcp, _get_client):
             "openai",
             "reddit",
             "microsoft",
+            "amazon",
         ]
         | None = None,
         compare: Literal["previous"] | None = None,
@@ -9631,7 +9673,7 @@ def register_generated_tools(mcp, _get_client):
         - Date range defaults to the last 90 days. Capped at 730 days.
         - With adAccountId set to a Google customer id ...
 
-        Platforms (the platform parameter takes): facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit, microsoft
+        Platforms (the platform parameter takes): facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit, microsoft, amazon
 
         Args:
             account_id: Account ID. Sibling-expanded to its linked posting↔ads pair. An id that does not exist or sits on a profile the API key cannot reach answers 404 (code: account_not_found). (required)
@@ -9684,7 +9726,7 @@ def register_generated_tools(mcp, _get_client):
             - the creative's `effective_object_story_id` (`{pageId}_{postId}` shape, Facebook side)
             - the creative's `effective_instagram_media_id` ...
 
-            Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit, microsoft
+            Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit, microsoft, amazon
 
             Args:
                 ad_id: Zernio `_id` (hex), Meta `platformAdId` (numeric), or one of the creative's effective story/media IDs. See description for details.
@@ -9766,7 +9808,7 @@ def register_generated_tools(mcp, _get_client):
 
         - KEYWORD ...
 
-        Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit, microsoft
+        Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit, microsoft, amazon
 
         Args:
             ad_id: (required)
@@ -9821,6 +9863,8 @@ def register_generated_tools(mcp, _get_client):
         - OpenAI Ads has no delete API: the ad is archived instead (a terminal state, the closest equivalent).
         - Reddit Ads has no delete either: the ad is archived (`configured_status` ARCHIVED).
 
+        - Amazon Ads archives the ad (state ARCHIVED). Archiving is permanent.
+
         To delete a whole campaign on purpose use `DELETE /v1/ads/campaigns/{campaignId}`.
 
         ### Parents
@@ -9829,11 +9873,9 @@ def register_generated_tools(mcp, _get_client):
 
         ### Meta
 
-        When the ad set and campaign were created by Zernio (by `POST /v1/ads/create` or `POST /v1/ads/boost`) and Meta lists no other ad in the ad set (archived ads count), the emptied ad set is deleted too. The campaign follows once it holds no other ad set.
+        When the ad set and campaign were created by Zernio (by `POST /v1/ads/create` or `POST /v1/ads/boost`) and Meta lists no other ad in the ad set (archived ads count), the emptied ad set is deleted ...
 
-        ### LinkedIn ...
-
-        Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit, microsoft
+        Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit, microsoft, amazon
 
         Args:
             ad_id: (required)"""
@@ -9883,7 +9925,7 @@ def register_generated_tools(mcp, _get_client):
 
         After the write the switch is read back from ...
 
-        Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit, microsoft
+        Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit, microsoft, amazon
 
         Args:
             ad_id: Zernio `_id` (hex), Meta `platformAdId` (numeric), or one of the creative's effective story/media IDs. (required)
@@ -11662,7 +11704,7 @@ def register_generated_tools(mcp, _get_client):
 
             Creates a paid ad with your own creative, building the campaign and ad set it needs or adding it to existing ones.
 
-            Works across Meta, Google Ads, Pinterest, TikTok, X, LinkedIn, OpenAI Ads (ChatGPT Ads), Reddit Ads and Microsoft Ads. Per-platform required fields, budget minimums, and video-ad rules are documented on each property below.
+            Works across Meta, Google Ads, Pinterest, TikTok, X, LinkedIn, OpenAI Ads (ChatGPT Ads), Reddit Ads, Microsoft Ads and Amazon Ads (Sponsored Products, Sponsored Brands and Sponsored Display, see `AmazonAdsPlatformData`). Per-platform required fields, budget minimums, and video-ad rules are documented on each property below.
 
             ### Request shapes
 
@@ -11672,9 +11714,9 @@ def register_generated_tools(mcp, _get_client):
             - Meta-only multi-creative shape via the creatives array: one ad set with N ads sharing budget and targeting.
             - Attach shape via adSetId: adds one new ad to an existing ad set, inheriting its budget, targeting, and schedule (Meta, Google Ads, TikTok, and LinkedIn).
 
-            On LinkedIn, adSetId in the attach shape is the existing Campaign id, and the budget, schedule, targeting and bidding fields must be omitted. `goal` may be omitted too (taken from the Campaign's objective), and the created ad's `targeting` echoes the ...
+            On LinkedIn, adSetId in the attach shape is the existing Campaign id, and the budget, schedule, targeting and bidding fields must be omitted. `goal` ...
 
-            Platforms: meta, google, tiktok, linkedin, pinterest, x, openai, reddit, microsoft
+            Platforms: meta, google, tiktok, linkedin, pinterest, x, openai, reddit, microsoft, amazon
 
             Safe to retry: an identical call within 24 hours returns the first result instead of creating a second one, and answers 409 while the first is still running. To create another on purpose, or if that 409 does not clear, change an argument such as the name.
 
@@ -12128,9 +12170,9 @@ def register_generated_tools(mcp, _get_client):
                 asset_group: Object with keys: name (string) - Defaults to the request name.; finalUrl (string, required) - Required destination URL.; headlines (list of string, required); longHeadline (string, required); descriptions (list of string, required) - At least one description must be 60 characters or fewer.; businessName (string, required); images (object with keys landscape, square, logo, required) - Public HTTP(S) image URLs. GIF, JPEG or PNG, at most 5120 KB per image. Google validates dimensions and aspect ratios.; youtubeVideoId (string) - Optional existing YouTube video id. Google can generate video when omitted. Video uploads and arbitrary video URLs are not supported.
                 merchant_center: Google Performance Max only; any other campaign type returns 400. Links the new campaign to a Merchant Center account. Google rejects the create, and nothing is created, when the ad account is not linked to that Merchant Center. Object with keys: merchantId (string, required) - Numeric Merchant Center id.; feedLabel (string) - Feed label to use. Omitted, every feed of the Merchant Center is used.; listingType (one of: vehicles) - Set to `vehicles` for vehicle listings. Omitted, the campaign is a retail Performance Max campaign. Vehicle ads require Google to allowlist the ad account; ...
                 demand_gen: Object with keys: adGroupName (string) - Defaults to the ad name.; finalUrl (string, required); businessName (string, required); headlines (list of string, required) - Distinct texts. A carousel ad takes exactly one.; longHeadlines (list of string) - Video ads only, and required there.; descriptions (list of string, required) - A carousel ad takes exactly one.; callToAction (string) - Image and carousel ads only. Call to action text such as 'Learn more'; Google picks one when omitted.; images (object with keys landscape, square, portrait, logo, required) - Public image URLs. An image ad needs landscape or square; video and carousel ads take only one logo (carousel images go on each card).; youtubeVideoIds (list of string) - Makes the ad a video responsive ad.; carouselCards (list of objects with keys headline, finalUrl, callToAction, images) - Makes the ad a carousel ad. Each card needs its own image (no two cards may share one); use the same image shape on every card. Card images are uploaded to ...; channels (list of string) - Channel controls on the new ad group. Only the listed channels serve; Google Maps, which this list cannot select, is turned off. Omit to send no channel ...; audience (object with keys userLists, userInterests, customAudiences, ageRanges, genders); audienceId (string) - Attach an existing Google Audience by numeric id instead of audience.
-                keywords: Google Search only. Keywords on the new ad group; entries are strings (BROAD) or { text, matchType }. Editable later via PUT /v1/ads/{adId} targeting.keywords.
-                negative_keywords: Google Search only; other platforms return 400. Ad-group-level negative keywords on the new ad group. Editable later via PUT /v1/ads/{adId} targeting.negativeKeywords.
-                campaign_negative_keywords: Google Search only; other platforms return 400. Campaign-level negative keywords (campaign_criterion.negative), created alongside the ad group. Editable later via PUT /v1/ads/campaigns/{campaignId}/negative-keywords.
+                keywords: Google Search, Microsoft Ads, and Amazon Sponsored Products (MANUAL campaigns) and Sponsored Brands. Keywords on the new ad group; entries are strings (BROAD) or { text, matchType }. Editable later via PUT /v1/ads/{adId} targeting.keywords.
+                negative_keywords: Google Search and Amazon Sponsored Products and Sponsored Brands (EXACT or PHRASE only); other platforms return 400. Ad-group-level negative keywords on the new ad group. Editable later via PUT /v1/ads/{adId} targeting.negativeKeywords.
+                campaign_negative_keywords: Google Search and Amazon Sponsored Products; other platforms return 400. Campaign-level negative keywords (campaign_criterion.negative on Google), created alongside the ad group. Editable later via PUT /v1/ads/campaigns/{campaignId}/negative-keywords.
                 additional_headlines: Google Search RSA only. Extra text assets, as strings or objects with text and optional pinnedField. String input remains supported.
 
         - The effective create lists, including primary text and after deduplication, must contain 3-15 headlines and 2-4 descriptions. Excess entries return 400.
@@ -12196,7 +12238,7 @@ def register_generated_tools(mcp, _get_client):
         attaching, and requires `valueRuleSetId`. `false` is REJECTED here with 400:
         a newly created ad set has nothing to detach, so detaching lives on
         `PUT /v1/ads/ad-sets/{adSetId}`.
-                platform_specific_data: Platform-specific options. The platform is derived from `accountId`; options for a different platform return a 400. LinkedIn (campaign bidding and delivery controls) and Meta (the bid trio) have options today. **Meta** - `bidStrategy`, `bidAmount` and `roasAverageFloor` may be sent here instead of at the root (the preferred home going forward). Sending them in BOTH places returns a 400 (`mutually_exclusive_fields`). - Sending any bid field in `adSetId` attach mode is a 400 (the ad set already has its bid). - `dailyMinSpendTarget` / `lifetimeMinSpendTarget` set the new ad set's minimum spend and live here only; also rejected in `adSetId` attach mode. Object with keys: costType (one of: CPM, CPC, CPV) - Campaign cost model (billing event). Defaults to `CPM`. Required when `unitCost` is set so the manual bid applies to an explicit cost model.; unitCost (number) - Manual bid in WHOLE account-currency units (e.g. 2.5 = $2.50). Requires `costType`. Omit for LinkedIn's automated (max delivery) bidding. LinkedIn enforces ...; optimizationTargetType (string) - Campaign `optimizationTargetType` (e.g. `MAX_CLICK`, `TARGET_COST_PER_CLICK`, `MAX_IMPRESSION`). Forwarded verbatim; LinkedIn validates compatibility with the ...; creativeSelection (one of: OPTIMIZED, ROUND_ROBIN) - How LinkedIn rotates creatives within the campaign. Defaults to `OPTIMIZED`.; audienceExpansionEnabled (boolean) - Enable LinkedIn audience expansion. Defaults to false.; offsiteDeliveryEnabled (boolean) - Deliver on the LinkedIn Audience Network. Defaults to false.; connectedTelevisionOnly (boolean) - Restrict delivery to Connected TV inventory.; carousel (object with keys cards) - POST /v1/ads/create only. Carousel ad with 2-10 image cards. Mutually exclusive with the other creative sources.; document (object with keys url, title) - POST /v1/ads/create only. Document ad rendered as an in-feed viewer. PDF, PPT or DOC up to 100MB. Mutually exclusive with the other creative sources.; spotlight (object with keys headline, description, callToAction, landingUrl, logoUrl, organizationName, showMemberProfilePhoto, backgroundImageUrl) - POST /v1/ads/create only. Dynamic Spotlight Ad personalized with the viewer's profile photo. Supported goals: traffic, awareness. logoUrl and organizationName ...; follower (object with keys headline, description, callToAction, logoUrl, organizationName, showMemberProfilePhoto) - POST /v1/ads/create only. Dynamic Follower Ad promoting the Company Page. Supported goals: engagement, awareness. headline and description take exactly one of ...; jobs (object with keys headline, buttonLabel, logoUrl, organizationName, showMemberProfilePhoto) - POST /v1/ads/create only. Dynamic Jobs Ad promoting your open roles, personalized with the viewer's profile photo. Mutually exclusive with the other creative ...; textAd (object with keys headline, description, landingUrl, imageUrl) - POST /v1/ads/create only. Classic right-rail Text Ad. The copy lives here; ad-level body and headline are not used. Mutually exclusive with the other creative ...; conversation (object with keys subject, sender, body, footer, headline, firstMessageId, messages) - POST /v1/ads/create only. Conversation Ad: a choose-your-path message tree delivered to the member's LinkedIn inbox. - Messages are flat nodes wired by local ...; event (object with keys urn) - POST /v1/ads/create only. Promotes an existing LinkedIn Event; no headline needed. Mutually exclusive with the other creative sources.; thoughtLeader (object with keys postUrn) - POST /v1/ads/create only. Sponsors an existing LinkedIn post (a share or ugcPost authored by your organization's Company Page) as the creative, keeping its ...
+                platform_specific_data: Platform-specific options. The platform is derived from `accountId`; options for a different platform return a 400. LinkedIn (campaign bidding and delivery controls), Meta (the bid trio) and Amazon Ads (required: the ad product, products, creative and targeting) have options today. **Amazon Ads**: see `AmazonAdsPlatformData`. Amazon has no dry run, so `validateOnly` returns a 501. **Meta** - `bidStrategy`, `bidAmount` and `roasAverageFloor` may be sent here instead of at the root (the preferred home going forward). Sending them in BOTH places returns a 400 (`mutually_exclusive_fields`). - Sending any bid field in `adSetId` attach mode is a 400 (the ad set already has its bid). - `dailyMinSpendTarget` / `lifetimeMinSpendTarget` set the new ad set's minimum spend and live here only; also rejected in `adSetId` attach mode. Object with keys: costType (one of: CPM, CPC, CPV) - Campaign cost model (billing event). Defaults to `CPM`. Required when `unitCost` is set so the manual bid applies to an explicit cost model.; unitCost (number) - Manual bid in WHOLE account-currency units (e.g. 2.5 = $2.50). Requires `costType`. Omit for LinkedIn's automated (max delivery) bidding. LinkedIn enforces ...; optimizationTargetType (string) - Campaign `optimizationTargetType` (e.g. `MAX_CLICK`, `TARGET_COST_PER_CLICK`, `MAX_IMPRESSION`). Forwarded verbatim; LinkedIn validates compatibility with the ...; creativeSelection (one of: OPTIMIZED, ROUND_ROBIN) - How LinkedIn rotates creatives within the campaign. Defaults to `OPTIMIZED`.; audienceExpansionEnabled (boolean) - Enable LinkedIn audience expansion. Defaults to false.; offsiteDeliveryEnabled (boolean) - Deliver on the LinkedIn Audience Network. Defaults to false.; connectedTelevisionOnly (boolean) - Restrict delivery to Connected TV inventory.; carousel (object with keys cards) - POST /v1/ads/create only. Carousel ad with 2-10 image cards. Mutually exclusive with the other creative sources.; document (object with keys url, title) - POST /v1/ads/create only. Document ad rendered as an in-feed viewer. PDF, PPT or DOC up to 100MB. Mutually exclusive with the other creative sources.; spotlight (object with keys headline, description, callToAction, landingUrl, logoUrl, organizationName, showMemberProfilePhoto, backgroundImageUrl) - POST /v1/ads/create only. Dynamic Spotlight Ad personalized with the viewer's profile photo. Supported goals: traffic, awareness. logoUrl and organizationName ...; follower (object with keys headline, description, callToAction, logoUrl, organizationName, showMemberProfilePhoto) - POST /v1/ads/create only. Dynamic Follower Ad promoting the Company Page. Supported goals: engagement, awareness. headline and description take exactly one of ...; jobs (object with keys headline, buttonLabel, logoUrl, organizationName, showMemberProfilePhoto) - POST /v1/ads/create only. Dynamic Jobs Ad promoting your open roles, personalized with the viewer's profile photo. Mutually exclusive with the other creative ...; textAd (object with keys headline, description, landingUrl, imageUrl) - POST /v1/ads/create only. Classic right-rail Text Ad. The copy lives here; ad-level body and headline are not used. Mutually exclusive with the other creative ...; conversation (object with keys subject, sender, body, footer, headline, firstMessageId, messages) - POST /v1/ads/create only. Conversation Ad: a choose-your-path message tree delivered to the member's LinkedIn inbox. - Messages are flat nodes wired by local ...; event (object with keys urn) - POST /v1/ads/create only. Promotes an existing LinkedIn Event; no headline needed. Mutually exclusive with the other creative sources.; thoughtLeader (object with keys postUrn) - POST /v1/ads/create only. Sponsors an existing LinkedIn post (a share or ugcPost authored by your organization's Company Page) as the creative, keeping its ...
                 dsa_beneficiary: Legal entity that benefits from the ad. Required when targeting EU users
         (EU DSA, Article 26). Optional if the ad account has a default beneficiary:
         set it once via `PATCH /v1/ads/accounts` or in Meta Ads Manager, and Meta
@@ -13613,7 +13655,7 @@ def register_generated_tools(mcp, _get_client):
 
             Breakdowns and Google's impression ...
 
-            Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit, microsoft
+            Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit, microsoft, amazon
 
             Args:
                 campaign_id: Platform campaign id (platformCampaignId). (required)
@@ -14034,7 +14076,7 @@ def register_generated_tools(mcp, _get_client):
 
             The newer way to read this is `GET ...
 
-            Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit, microsoft
+            Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit, microsoft, amazon
 
             Args:
                 ad_id: (required)
@@ -27574,10 +27616,15 @@ def register_generated_tools(mcp, _get_client):
         profile_id: str,
         redirect_url: str | None = None,
         reconnect_account_id: str | None = None,
+        region: Literal["NA", "EU", "FE"] = "NA",
     ) -> str:
         """Get Amazon Ads OAuth connect URL
 
-        Starts Login with Amazon for Amazon Ads (scope `advertising::campaign_management`). The Amazon login becomes an account with platform `amazonads`; every advertiser profile it reaches, in the NA, EU and FE regions, is a conversions destination (`GET /v1/ads/conversions/destinations`).
+        Starts Login with Amazon for Amazon Ads (scope `advertising::campaign_management`). The Amazon login becomes an account with platform `amazonads`.
+
+        Every seller and vendor advertiser profile it reaches, in the NA, EU and FE regions, is an ad account (`GET /v1/ads/accounts`) and a conversions destination (`GET /v1/ads/conversions/destinations`).
+
+        Pass `region` so the user signs in on their own region's Amazon consent page; the connection still reaches the profiles of every region.
 
         Errors on the redirect: `amazonads_no_profiles` (the login reaches no advertiser), `amazonads_no_refresh_token`.
 
@@ -27586,13 +27633,15 @@ def register_generated_tools(mcp, _get_client):
         Args:
             profile_id: Your Zernio profile ID (get from /v1/profiles). (required)
             redirect_url: Custom redirect after connection. Must be an absolute http(s) URL or custom app scheme.
-            reconnect_account_id: Zernio account ID of the Amazon Ads account being reconnected."""
+            reconnect_account_id: Zernio account ID of the Amazon Ads account being reconnected.
+            region: Amazon region whose consent page the user signs in on: NA (amazon.com), EU (Europe, Middle East, India) or FE (Japan, Australia, Singapore)."""
         client = _get_client()
         try:
             response = client.connect.get_amazon_ads_connect_url(
                 profile_id=profile_id,
                 redirect_url=redirect_url,
                 reconnect_account_id=reconnect_account_id,
+                region=region,
             )
             return _format_response(response)
         except Exception as e:

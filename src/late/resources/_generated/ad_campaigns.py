@@ -452,6 +452,7 @@ class AdCampaignsResource:
         status: str | None = "PAUSED",
         start_date: datetime | str | None = None,
         end_date: datetime | str | None = None,
+        platform_specific_data: Any | None = None,
         location_targeting_type: Any | None = None,
         bid_strategy: str | None = None,
         bid_amount: float | None = None,
@@ -478,6 +479,7 @@ class AdCampaignsResource:
                 "status": status,
                 "startDate": start_date,
                 "endDate": end_date,
+                "platformSpecificData": platform_specific_data,
                 "locationTargetingType": location_targeting_type,
                 "bidStrategy": bid_strategy,
                 "bidAmount": bid_amount,
@@ -1005,7 +1007,7 @@ class AdCampaignsResource:
     def get_ad_set_targeting(
         self, ad_set_id: str, *, platform: str | None = None
     ) -> dict[str, Any]:
-        """Read a Reddit ad group's targeting and schedule"""
+        """Read an ad group's targeting and schedule"""
         params = self._build_query(
             {
                 "platform": platform,
@@ -2406,6 +2408,7 @@ class AdCampaignsResource:
         status: str | None = "PAUSED",
         start_date: datetime | str | None = None,
         end_date: datetime | str | None = None,
+        platform_specific_data: Any | None = None,
         location_targeting_type: Any | None = None,
         bid_strategy: str | None = None,
         bid_amount: float | None = None,
@@ -2432,6 +2435,7 @@ class AdCampaignsResource:
                 "status": status,
                 "startDate": start_date,
                 "endDate": end_date,
+                "platformSpecificData": platform_specific_data,
                 "locationTargetingType": location_targeting_type,
                 "bidStrategy": bid_strategy,
                 "bidAmount": bid_amount,
@@ -2969,7 +2973,7 @@ class AdCampaignsResource:
     async def aget_ad_set_targeting(
         self, ad_set_id: str, *, platform: str | None = None
     ) -> dict[str, Any]:
-        """Read a Reddit ad group's targeting and schedule (async)"""
+        """Read an ad group's targeting and schedule (async)"""
         params = self._build_query(
             {
                 "platform": platform,

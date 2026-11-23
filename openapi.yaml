@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.770.0"
+  version: "1.772.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -16628,6 +16628,274 @@ components:
         campaign bidding and delivery controls, plus the LinkedIn-only creative
         formats on /v1/ads/create. Unknown keys are rejected.
 
+    AmazonSponsoredProductsCampaignData:
+      type: object
+      required: [adProduct]
+      properties:
+        adProduct: { type: string, enum: [SPONSORED_PRODUCTS] }
+        targetingType: { type: string, enum: [MANUAL, AUTO], description: "Required for a new campaign. MANUAL targets keywords and productTargets; AUTO lets Amazon match searches and products (tune them with autoTargeting). Immutable." }
+        biddingStrategy: { type: string, enum: [LEGACY_FOR_SALES, AUTO_FOR_SALES, MANUAL], default: LEGACY_FOR_SALES, description: "Dynamic bidding: LEGACY_FOR_SALES lowers bids when a sale is unlikely, AUTO_FOR_SALES raises and lowers them (up to +100%), MANUAL keeps them fixed." }
+        placementBidding:
+          type: array
+          minItems: 1
+          maxItems: 3
+          description: Bid increase per placement, added on top of the bid (50 on a 1.00 bid gives 1.50 at the top of search).
+          items:
+            type: object
+            required: [placement, percentage]
+            properties:
+              placement: { type: string, enum: [PLACEMENT_TOP, PLACEMENT_PRODUCT_PAGE, PLACEMENT_REST_OF_SEARCH] }
+              percentage: { type: integer, minimum: 0, maximum: 900 }
+        portfolioId: { type: string, pattern: '^\d+$' }
+    AmazonSponsoredBrandsCampaignData:
+      type: object
+      required: [adProduct]
+      properties:
+        adProduct: { type: string, enum: [SPONSORED_BRANDS] }
+        brandEntityId: { type: string, description: "The brand (Brand Registry entity) the campaign advertises. Sellers need one." }
+        bidOptimization: { type: boolean, default: true, description: "Amazon adjusts placement bids itself. Send false to set placementAdjustments." }
+        placementAdjustments:
+          type: array
+          minItems: 1
+          maxItems: 3
+          description: Only with bidOptimization false (400 otherwise).
+          items:
+            type: object
+            required: [placement, percentage]
+            properties:
+              placement: { type: string, enum: [TOP_OF_SEARCH, DETAIL_PAGE, HOME, OTHER] }
+              percentage: { type: integer, minimum: -99, maximum: 900 }
+        portfolioId: { type: string, pattern: '^\d+$' }
+    AmazonSponsoredDisplayCampaignData:
+      type: object
+      required: [adProduct]
+      properties:
+        adProduct: { type: string, enum: [SPONSORED_DISPLAY] }
+        tactic: { type: string, enum: [T00020, T00030], description: "Required for a new campaign. T00020 targets products and categories; T00030 also targets audiences (views, purchases, audience)." }
+        portfolioId: { type: string, pattern: '^\d+$' }
+    AmazonAdsCampaignPlatformData:
+      description: |
+        Amazon Ads: the ad product of the campaign and its settings. Unknown keys return a 400.
+
+        The unified `goal` maps onto the product: Sponsored Products takes `conversions`; Sponsored Brands takes `traffic` (PAGE_VISIT), `awareness` (BRAND_IMPRESSION_SHARE), `video_views` (AD_VIEWS) and `conversions` (ACQUIRE_NEW_CUSTOMERS); Sponsored Display takes `traffic` (optimizes for clicks), `conversions` and `awareness` (optimizes for reach and bills by viewable impressions).
+      oneOf:
+        - $ref: '#/components/schemas/AmazonSponsoredProductsCampaignData'
+        - $ref: '#/components/schemas/AmazonSponsoredBrandsCampaignData'
+        - $ref: '#/components/schemas/AmazonSponsoredDisplayCampaignData'
+      discriminator:
+        propertyName: adProduct
+        mapping:
+          SPONSORED_PRODUCTS: '#/components/schemas/AmazonSponsoredProductsCampaignData'
+          SPONSORED_BRANDS: '#/components/schemas/AmazonSponsoredBrandsCampaignData'
+          SPONSORED_DISPLAY: '#/components/schemas/AmazonSponsoredDisplayCampaignData'
+    AmazonAdvertisedProducts:
+      type: object
+      properties:
+        asins: { type: array, minItems: 1, maxItems: 100, items: { type: string, pattern: '^[A-Za-z0-9]{10}$' }, description: "Vendor profiles: the ASINs to advertise, one product ad each." }
+        skus: { type: array, minItems: 1, maxItems: 100, items: { type: string }, description: "Seller profiles: the SKUs to advertise, one product ad each. Sending the identifier the profile does not use returns a 400." }
+    AmazonSponsoredProductsAdData:
+      allOf:
+        - $ref: '#/components/schemas/AmazonSponsoredProductsCampaignData'
+        - $ref: '#/components/schemas/AmazonAdvertisedProducts'
+        - type: object
+          properties:
+            defaultBid: { type: number, description: "Required for a new ad group. Whole currency units; keywords and targets without their own bid use it. US: 0.02 to 1000." }
+            productTargets:
+              type: array
+              minItems: 1
+              maxItems: 1000
+              description: "MANUAL campaigns. Each entry is one Amazon targeting clause: a product (ASIN_SAME_AS), a category (ASIN_CATEGORY_SAME_AS) optionally refined by brand, price, rating or Prime in the same expression."
+              items:
+                type: object
+                required: [expression]
+                properties:
+                  expression:
+                    type: array
+                    minItems: 1
+                    items:
+                      type: object
+                      required: [type]
+                      properties:
+                        type: { type: string, enum: [ASIN_SAME_AS, ASIN_CATEGORY_SAME_AS, ASIN_BRAND_SAME_AS, ASIN_PRICE_LESS_THAN, ASIN_PRICE_GREATER_THAN, ASIN_PRICE_BETWEEN, ASIN_REVIEW_RATING_LESS_THAN, ASIN_REVIEW_RATING_GREATER_THAN, ASIN_REVIEW_RATING_BETWEEN, ASIN_IS_PRIME_SHIPPING_ELIGIBLE, ASIN_AGE_RANGE_SAME_AS, ASIN_GENRE_SAME_AS, ASIN_EXPANDED_FROM] }
+                        value: { type: string, description: 'Ranges use a hyphen, e.g. "50-120".' }
+                  bid: { type: number }
+            negativeProductTargets:
+              type: array
+              minItems: 1
+              maxItems: 1000
+              items:
+                type: object
+                required: [type, value]
+                properties:
+                  type: { type: string, enum: [ASIN_SAME_AS, ASIN_BRAND_SAME_AS] }
+                  value: { type: string }
+            autoTargeting:
+              type: object
+              description: "AUTO campaigns. Amazon adds the four auto target groups to the ad group itself; this switches them off or bids on them. A group Amazon had not added yet is reported in `warnings`."
+              properties:
+                closeMatch: { $ref: '#/components/schemas/AmazonAutoTargetGroup' }
+                looseMatch: { $ref: '#/components/schemas/AmazonAutoTargetGroup' }
+                substitutes: { $ref: '#/components/schemas/AmazonAutoTargetGroup' }
+                complements: { $ref: '#/components/schemas/AmazonAutoTargetGroup' }
+    AmazonAutoTargetGroup:
+      type: object
+      properties:
+        enabled: { type: boolean }
+        bid: { type: number }
+    AmazonSponsoredBrandsAdData:
+      allOf:
+        - $ref: '#/components/schemas/AmazonSponsoredBrandsCampaignData'
+        - type: object
+          properties:
+            ad:
+              description: "Required. The ad, by format. Assets (logo, video) are Creative Asset Library ids. The product collection format is not offered: Amazon retires it in January 2027 (use manualCollection)."
+              oneOf:
+                - type: object
+                  required: [format, brandName, asins]
+                  properties:
+                    format: { type: string, enum: [manualCollection] }
+                    brandName: { type: string, maxLength: 30 }
+                    brandLogoAssetId: { type: string }
+                    title: { type: string, maxLength: 32 }
+                    asins: { type: array, minItems: 3, maxItems: 10, items: { type: string } }
+                    landingPage:
+                      type: object
+                      required: [pageType]
+                      properties:
+                        pageType: { type: string, enum: [PRODUCT_LIST, STORE] }
+                        url: { type: string, format: uri }
+                - type: object
+                  required: [format, brandName, storeUrl, subpages]
+                  properties:
+                    format: { type: string, enum: [storeSpotlight] }
+                    brandName: { type: string, maxLength: 30 }
+                    brandLogoAssetId: { type: string }
+                    headline: { type: string, maxLength: 50 }
+                    storeUrl: { type: string, format: uri, description: The Store home page the ad lands on. }
+                    subpages:
+                      type: array
+                      minItems: 3
+                      maxItems: 3
+                      items:
+                        type: object
+                        required: [pageTitle, asin, url]
+                        properties:
+                          pageTitle: { type: string }
+                          asin: { type: string }
+                          url: { type: string, format: uri }
+                - type: object
+                  required: [format, videoAssetId, asin]
+                  properties:
+                    format: { type: string, enum: [video] }
+                    videoAssetId: { type: string }
+                    asin: { type: string }
+                    brandName: { type: string, maxLength: 30 }
+                    brandLogoAssetId: { type: string }
+                    headline: { type: string, maxLength: 50 }
+            defaultBid: { type: number, description: "Bid of the keywords and product targets without their own. With goal traffic (cost per click), US: 0.10 to 49, video 0.25 to 49." }
+            productTargets:
+              type: array
+              minItems: 1
+              maxItems: 100
+              items:
+                type: object
+                required: [expressions]
+                properties:
+                  expressions:
+                    type: array
+                    minItems: 1
+                    items:
+                      type: object
+                      required: [type, value]
+                      properties:
+                        type: { type: string, enum: [asinSameAs, asinCategorySameAs, asinBrandSameAs, asinPriceLessThan, asinPriceBetween, asinPriceGreaterThan, asinReviewRatingLessThan, asinReviewRatingBetween, asinReviewRatingGreaterThan] }
+                        value: { type: string }
+                  bid: { type: number }
+            negativeProductTargets:
+              type: array
+              minItems: 1
+              maxItems: 100
+              items:
+                type: object
+                required: [type, value]
+                properties:
+                  type: { type: string, enum: [asinSameAs, asinBrandSameAs] }
+                  value: { type: string }
+    AmazonSponsoredDisplayAdData:
+      allOf:
+        - $ref: '#/components/schemas/AmazonSponsoredDisplayCampaignData'
+        - $ref: '#/components/schemas/AmazonAdvertisedProducts'
+        - type: object
+          properties:
+            defaultBid: { type: number, description: "US: 0.02 to 1000 per click, 1 to 1000 per thousand viewable impressions (goal awareness)." }
+            targets:
+              type: array
+              minItems: 1
+              maxItems: 200
+              description: |
+                Required for a new ad group. Each entry is one Amazon targeting clause, in Amazon's own shape:
+
+                - Contextual: `{ type: similarProduct }`, `{ type: asinSameAs, value: B0... }`, `{ type: asinCategorySameAs, value: "12345" }` with optional brand, price or rating refinements in the same expression, `{ type: contentCategorySameAs, value: "amzn1.iab-content.325" }`.
+                - Audiences (tactic T00030 only): `{ type: views | purchases, value: [{ type: exactProduct | similarProduct | relatedProduct | asinCategorySameAs ... }, { type: lookback, value: "30" }] }`, or `{ type: audience, value: [{ type: audienceSameAs, value: "<audience id>" }] }` for in-market and lifestyle audiences.
+              items:
+                type: object
+                required: [expression]
+                properties:
+                  expression:
+                    type: array
+                    minItems: 1
+                    items:
+                      type: object
+                      required: [type]
+                      properties:
+                        type: { type: string }
+                        value:
+                          oneOf:
+                            - type: string
+                            - type: array
+                              items:
+                                type: object
+                                required: [type]
+                                properties:
+                                  type: { type: string }
+                                  value: { type: string }
+                  bid: { type: number }
+            negativeTargets:
+              type: array
+              minItems: 1
+              maxItems: 100
+              items:
+                type: object
+                required: [type, value]
+                properties:
+                  type: { type: string, enum: [asinSameAs, asinBrandSameAs] }
+                  value: { type: string }
+    AmazonAdsPlatformData:
+      description: |
+        Amazon Ads (required): the ad product and everything the unified fields do not cover. Unknown keys return a 400.
+
+        Unified fields that apply:
+
+        - `name`, `campaignName`, `adSetName`, `adName`, `goal` and the status fields.
+        - `budgetAmount` / `budgetType`: the campaign budget in whole currency units; lifetime on Sponsored Brands only.
+        - `startDate` / `endDate`: calendar days in the profile time zone.
+        - `keywords` and `negativeKeywords` (Sponsored Products and Brands), `campaignNegativeKeywords` (Sponsored Products).
+        - `existingCampaignId`: a new ad group under an existing campaign of the same product, which keeps its goal when `goal` is omitted.
+        - `adSetId`: new ads in an existing ad group.
+
+        Creative and audience fields (headline, body, linkUrl, imageUrl, countries, interests...) return a 400.
+
+        Goals per product are listed on `AmazonAdsCampaignPlatformData`. If anything after the campaign fails, the campaign is archived (Amazon's delete) and the error names the refused item, e.g. `keywords[2]`.
+      oneOf:
+        - $ref: '#/components/schemas/AmazonSponsoredProductsAdData'
+        - $ref: '#/components/schemas/AmazonSponsoredBrandsAdData'
+        - $ref: '#/components/schemas/AmazonSponsoredDisplayAdData'
+      discriminator:
+        propertyName: adProduct
+        mapping:
+          SPONSORED_PRODUCTS: '#/components/schemas/AmazonSponsoredProductsAdData'
+          SPONSORED_BRANDS: '#/components/schemas/AmazonSponsoredBrandsAdData'
+          SPONSORED_DISPLAY: '#/components/schemas/AmazonSponsoredDisplayAdData'
     PinterestPlatformData:
       type: object
       properties:
@@ -22615,7 +22883,7 @@ components:
       properties:
         _id: { type: string }
         name: { type: string }
-        platform: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit, microsoft] }
+        platform: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit, microsoft, amazon] }
         profileId: { type: string, description: 'Profile the row belongs to: the profile of its owning connection (`accountId`); when that connection no longer exists, the requested profile (`profileId` filter) that reaches the row ad account, else the profile of the oldest connection of the row owner that reaches it.' }
         status: { allOf: [{ $ref: '#/components/schemas/AdStatus' }], description: "Delivery status. Derived from the platform `effective_status`, so it inherits ancestor pauses (an ACTIVE ad under a PAUSED campaign reads `paused`). For the ad's own on/off toggle use `configuredStatus`; for the review state use `reviewStatus`." }
         configuredStatus:
@@ -23108,7 +23376,7 @@ components:
           description: Only with `results=true`. The values you sent for this campaign over the range, plus each formula they allow, by metric key. A metric with no value is absent.
           example: { revenue: 7800, sales: 4, cac_percent: 31.2, cost_per_sale: 608.5 }
         platformCampaignId: { type: string }
-        platform: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit, microsoft] }
+        platform: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit, microsoft, amazon] }
         campaignName: { type: string }
         createdTime:
           type: [string, "null"]
@@ -23229,7 +23497,7 @@ components:
       type: object
       properties:
         platformCampaignId: { type: string }
-        platform: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit, microsoft] }
+        platform: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit, microsoft, amazon] }
         campaignName: { type: string }
         status: { allOf: [{ $ref: '#/components/schemas/AdStatus' }], description: "Delivery status derived from child ad statuses. Distinct from `reviewStatus`." }
         reviewStatus:
@@ -52149,7 +52417,11 @@ paths:
       x-platforms: [amazonads]
       summary: Get Amazon Ads OAuth connect URL
       description: |
-        Starts Login with Amazon for Amazon Ads (scope `advertising::campaign_management`). The Amazon login becomes an account with platform `amazonads`; every advertiser profile it reaches, in the NA, EU and FE regions, is a conversions destination (`GET /v1/ads/conversions/destinations`).
+        Starts Login with Amazon for Amazon Ads (scope `advertising::campaign_management`). The Amazon login becomes an account with platform `amazonads`.
+
+        Every seller and vendor advertiser profile it reaches, in the NA, EU and FE regions, is an ad account (`GET /v1/ads/accounts`) and a conversions destination (`GET /v1/ads/conversions/destinations`).
+
+        Pass `region` so the user signs in on their own region's Amazon consent page; the connection still reaches the profiles of every region.
 
         Errors on the redirect: `amazonads_no_profiles` (the login reaches no advertiser), `amazonads_no_refresh_token`.
       security:
@@ -52172,6 +52444,13 @@ paths:
           schema:
             type: string
           description: Zernio account ID of the Amazon Ads account being reconnected.
+        - name: region
+          in: query
+          schema:
+            type: string
+            enum: [NA, EU, FE]
+            default: NA
+          description: 'Amazon region whose consent page the user signs in on: NA (amazon.com), EU (Europe, Middle East, India) or FE (Japan, Australia, Singapore).'
       responses:
         '200':
           description: OAuth authorization URL and authenticated state
@@ -87392,7 +87671,7 @@ paths:
       x-resource-group: "ads"
       operationId: listAds
       tags: ["Ad Campaigns"]
-      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit", "microsoft"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit", "microsoft", "amazon"]
       summary: List ads
       description: |
         Lists your ads with their performance over a date range, including ads created directly in each platform's ads manager.
@@ -87422,7 +87701,7 @@ paths:
         - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 500, default: 50 } }
         - { name: source, in: query, schema: { type: string, enum: [zernio, all], default: all }, description: "all (default) = Zernio-created + platform-discovered ads. zernio = restrict to Zernio-created only." }
         - { name: status, in: query, schema: { $ref: '#/components/schemas/AdStatus' } }
-        - { name: platform, in: query, schema: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit, microsoft] } }
+        - { name: platform, in: query, schema: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit, microsoft, amazon] } }
         - { name: accountId, in: query, schema: { type: string }, description: Account ID }
         - { name: adAccountId, in: query, schema: { type: string }, description: "Platform ad account ID (e.g. act_123 for Meta). Mirrors the same filter on /v1/ads/campaigns and /v1/ads/tree." }
         - { name: pageId, in: query, schema: { type: string }, description: "Meta only: Facebook Page ID. Returns only ads whose creative is backed by this Page (a Meta ad account serves ads for every Page in the Business Manager). Matches each ad's `creative.pageId`; ads with no page signal (rare IG-only creatives) never match. Mirrors the same filter on /v1/ads/campaigns and /v1/ads/tree." }
@@ -88099,7 +88378,7 @@ paths:
       x-resource-group: "ads"
       operationId: listAdKeywords
       tags: ["Ad Campaigns"]
-      x-platforms: ["google"]
+      x-platforms: ["google", "amazon"]
       summary: List Search keywords
       description: |
         Lists the keywords and negative keywords in your Google Search ad groups.
@@ -88114,6 +88393,10 @@ paths:
 
         - A customer synced for the first time is populated on the next discovery pass rather than waiting for its daily slot.
         - Connecting an account or triggering a manual sync refreshes it immediately.
+
+        ### Amazon
+
+        Amazon Sponsored Products and Sponsored Brands keywords and ad group negatives are listed too (`platform: amazon`), refreshed about every six hours with their trailing 30-day metrics from the targeting reports. `resourceName` is `{adGroupId}~{keywordId}` there. Campaign-level negatives are under `GET /v1/ads/campaigns/{campaignId}/negative-keywords`.
       security:
         - bearerAuth: []
       parameters:
@@ -88149,7 +88432,7 @@ paths:
       x-resource-group: "ads"
       operationId: addAdKeywords
       tags: ["Ad Campaigns"]
-      x-platforms: ["google"]
+      x-platforms: ["google", "amazon"]
       summary: 'Add Search ad-group keywords'
       description: |
         Adds keywords, or negative keywords, to a Google Search ad group without replacing the ones already there.
@@ -88159,6 +88442,10 @@ paths:
         `PUT /v1/ads/{adId}`, `keywords`/`negativeKeywords` in `platformSpecificData`,
         which replaces the set). Set `negative: true` to add ad-group-level negatives
         instead of positive keywords.
+
+        ### Amazon
+
+        On an Amazon Ads connection the keywords go to a Sponsored Products or Sponsored Brands ad group (a Sponsored Display ad group returns 422). Positives bid the ad group default. Negatives match exact or phrase: a negative sent without `matchType` is exact, and a broad negative returns 422.
       security:
         - bearerAuth: []
       parameters:
@@ -88211,7 +88498,7 @@ paths:
       x-resource-group: "ads"
       operationId: updateAdKeyword
       tags: ["Ad Campaigns"]
-      x-platforms: ["google"]
+      x-platforms: ["google", "amazon"]
       summary: Update a Search keyword
       description: |
         Pauses, re-enables or sets the bid of a single Google Search keyword. Send `status`, `cpcBid` or both.
@@ -88221,6 +88508,10 @@ paths:
         `cpcBid` is in the ad account currency and takes effect only under Manual CPC bidding. A keyword with no bid of its own reads back `cpcBid: null` and uses its ad group bid.
 
         Negative keywords have no status or bid on Google and cannot be paused, enabled or given a bid.
+
+        ### Amazon
+
+        Amazon keywords take `status` and `cpcBid`. Amazon negative keywords take `status` only (a `cpcBid` on one returns 422), and a Sponsored Brands negative cannot be paused (422).
       security:
         - bearerAuth: []
       parameters:
@@ -88256,12 +88547,16 @@ paths:
       x-resource-group: "ads"
       operationId: removeAdKeyword
       tags: ["Ad Campaigns"]
-      x-platforms: ["google"]
+      x-platforms: ["google", "amazon"]
       summary: Remove a Search keyword
       description: |
         Removes a single keyword or negative keyword from a Google Search ad group.
 
         Removes one keyword criterion (positive or negative) from its ad group (M.140).
+
+        ### Amazon
+
+        On Amazon the keyword is archived, which is Amazon's delete: it stays in reports and can never be enabled again.
       security:
         - bearerAuth: []
       parameters:
@@ -91024,7 +91319,7 @@ paths:
       x-resource-group: "ads"
       operationId: listAdCampaigns
       tags: ["Ad Campaigns"]
-      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit", "microsoft"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit", "microsoft", "amazon"]
       summary: List campaigns
       description: |
         Lists your campaigns with spend, impressions and clicks summed across their ads, plus each campaign's status and budget.
@@ -91067,7 +91362,7 @@ paths:
         - $ref: '#/components/parameters/PageParam'
         - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 20 } }
         - { name: source, in: query, schema: { type: string, enum: [zernio, all], default: all }, description: "`all` (default) returns both Zernio-created ads and those discovered from the platform's ad manager. Matches the web UI's default view. Pass `zernio` to restrict to isExternal=false only. Status is NOT filtered by default; use the `status` param for that." }
-        - { name: platform, in: query, schema: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit, microsoft] } }
+        - { name: platform, in: query, schema: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit, microsoft, amazon] } }
         - { name: status, in: query, schema: { anyOf: [{ $ref: '#/components/schemas/AdStatus' }, { type: string, enum: [not_deleted] }] }, description: 'Filter by derived campaign status (post-aggregation). `not_deleted` keeps every status except `cancelled`.' }
         - { name: adAccountId, in: query, schema: { type: string }, description: Platform ad account ID (e.g. act_123 for Meta) }
         - { name: campaignId, in: query, schema: { type: string }, description: "Platform campaign ID (the `platformCampaignId` on each returned campaign). Returns only that campaign, or an empty list when it is not visible to the caller. Mirrors the same filter on /v1/ads and /v1/ads/tree." }
@@ -91117,7 +91412,7 @@ paths:
       x-resource-group: "ads"
       operationId: createAdCampaign
       tags: ["Ad Campaigns"]
-      x-platforms: ["meta", "google", "linkedin", "tiktok", "x", "pinterest", "openai", "reddit"]
+      x-platforms: ["meta", "google", "linkedin", "tiktok", "x", "pinterest", "openai", "reddit", "amazon"]
       summary: Create a standalone campaign
       description: |
         Creates an empty campaign, paused, so you can add ad sets and ads to it afterwards.
@@ -91148,6 +91443,10 @@ paths:
         - With a budget, the campaign uses Reddit's campaign budget optimization and carries the pixel (see `promotedObject`, which then needs `customEventType` for `conversions`). The budget is daily or lifetime; a lifetime budget needs `endDate` (400 otherwise).
         - `startDate` / `endDate` set the campaign's schedule and need that campaign budget (400 without one).
         - Without a budget, each ad set carries its own budget and dates.
+
+        ### Amazon Ads
+
+        `platformSpecificData` (required) names the ad product and its campaign settings (`AmazonAdsCampaignPlatformData`), and the campaign needs a budget. `goal` must fit the product. `startDate` / `endDate` are calendar days in the profile time zone. Ad groups join it with `existingCampaignId` on POST /v1/ads/create.
       security:
         - bearerAuth: []
       parameters:
@@ -91199,8 +91498,11 @@ paths:
                 budgetAmount: { type: number, description: "Campaign-level (CBO) budget in WHOLE currency units (USD: 50 = $50.00), NOT cents. Meta's own Marketing API takes this same number in minor units, so it is an easy and expensive mix-up. Requires budgetType." }
                 budgetType: { type: string, enum: [daily, lifetime] }
                 status: { type: string, enum: [ACTIVE, PAUSED], default: PAUSED }
-                startDate: { type: string, format: date-time, description: "Reddit only (400 elsewhere). Campaign start (ISO 8601); a value without an offset is read in the ad account time zone. Requires a campaign budget (`budgetAmount` + `budgetType`, 400 otherwise). Defaults to now." }
-                endDate: { type: string, format: date-time, description: "Reddit only (400 elsewhere). Campaign end (ISO 8601); a value without an offset is read in the ad account time zone. Requires a campaign budget (400 otherwise), and is required for `budgetType: lifetime`." }
+                startDate: { type: string, format: date-time, description: "Reddit and Amazon only (400 elsewhere). Campaign start (ISO 8601); a value without an offset is read in the ad account time zone. Requires a campaign budget (`budgetAmount` + `budgetType`, 400 otherwise). Defaults to now." }
+                endDate: { type: string, format: date-time, description: "Reddit and Amazon only (400 elsewhere). Campaign end (ISO 8601); a value without an offset is read in the ad account time zone. Requires a campaign budget (400 otherwise), and is required for `budgetType: lifetime`." }
+                platformSpecificData:
+                  allOf: [{ $ref: '#/components/schemas/AmazonAdsCampaignPlatformData' }]
+                  description: "Amazon Ads only (400 elsewhere), and required there: the ad product and its campaign settings."
                 locationTargetingType:
                   allOf: [{ $ref: '#/components/schemas/GoogleLocationTargetingType' }]
                   description: "Google only (400 elsewhere). Written on the new campaign."
@@ -91277,7 +91579,7 @@ paths:
       x-resource-group: "ads"
       operationId: updateAdCampaignStatus
       tags: ["Ad Campaigns"]
-      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "openai", "reddit", "microsoft"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "openai", "reddit", "microsoft", "amazon"]
       summary: Pause or resume a campaign
       description: |
         Pauses or resumes a campaign, leaving the on/off switches of its ad sets and ads as they are.
@@ -91331,7 +91633,7 @@ paths:
               required: [status, platform]
               properties:
                 status: { type: string, enum: [active, paused] }
-                platform: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit, microsoft] }
+                platform: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit, microsoft, amazon] }
       responses:
         '409': { $ref: '#/components/responses/IdempotencyKeyInFlight' }
         '200':
@@ -91649,7 +91951,7 @@ paths:
       x-resource-group: "ads"
       operationId: updateAdCampaign
       tags: ["Ad Campaigns"]
-      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "openai", "reddit", "microsoft"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "openai", "reddit", "microsoft", "amazon"]
       summary: Update a campaign
       description: |
         Changes a campaign's settings, such as its name, budget, bidding or tracking URLs.
@@ -91666,8 +91968,8 @@ paths:
         | `networkSettings` | 400 | Search only | 400 |
         | `trackingUrlTemplate`, `finalUrlSuffix` | 400 | Yes | 400 |
         | `sharedBudgetId` | 400 | Yes | 400 |
-        | `budget` (CBO; ABO returns 409) | Yes | Daily only | OpenAI and Reddit: daily or lifetime; others 501 |
-        | `name` | Yes | 501 | Reddit: Yes; others 501 |
+        | `budget` (CBO; ABO returns 409) | Yes | Daily only | OpenAI and Reddit: daily or lifetime; Amazon: daily, or the lifetime type a Sponsored Brands campaign was created with; others 501 |
+        | `name` | Yes | 501 | Reddit and Amazon: Yes; others 501 |
         | `platformSpecificData.spendCap` | Yes | 400 | 400 |
         | `accountId` (empty campaigns) | Yes | - | - |
 
@@ -91734,7 +92036,7 @@ paths:
               type: object
               required: [platform]
               properties:
-                platform: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit, microsoft], description: "Required: platform campaign IDs are not globally unique." }
+                platform: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit, microsoft, amazon], description: "Required: platform campaign IDs are not globally unique." }
                 accountId: { type: string, description: "**Meta only.** Zernio SocialAccount id owning the ad account. Needed only for an EMPTY campaign (zero ads); ignored otherwise." }
                 bidStrategy:
                   allOf: [{ $ref: '#/components/schemas/BidStrategy' }]
@@ -91817,7 +92119,7 @@ paths:
       x-resource-group: "ads"
       operationId: deleteAdCampaign
       tags: ["Ad Campaigns"]
-      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "openai", "reddit", "microsoft"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "openai", "reddit", "microsoft", "amazon"]
       summary: Delete a campaign
       description: |
         Deletes a campaign on its platform, including a campaign that never got any ads.
@@ -91826,6 +92128,8 @@ paths:
 
         - Meta, Google, TikTok, LinkedIn and X delete it.
         - OpenAI, Reddit and Pinterest have no campaign delete and archive it instead (see below).
+
+        - Amazon archives the campaign: archiving is Amazon's delete, it is permanent, and the campaign stays in reports.
 
         Locally, all Ad documents for this campaign are marked `status: cancelled`.
 
@@ -91874,7 +92178,7 @@ paths:
               type: object
               required: [platform]
               properties:
-                platform: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit, microsoft] }
+                platform: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit, microsoft, amazon] }
                 accountId: { type: string, description: "Zernio SocialAccount id owning the ad account. Required only to delete an EMPTY campaign (zero ads), which has no local Ad documents to resolve a token from." }
                 adAccountId: { type: string, pattern: '^[0-9a-z]{1,32}$', description: "X only, for an EMPTY campaign that was never synced: the X ad account id the campaign belongs to (lowercase letters and digits). The synced campaign's ad account wins when there is one. Also accepted on the query string." }
       responses:
@@ -91942,7 +92246,7 @@ paths:
       x-resource-group: "ads"
       operationId: listCampaignNegativeKeywords
       tags: ["Ad Campaigns"]
-      x-platforms: ["google"]
+      x-platforms: ["google", "amazon"]
       summary: List campaign-level negative keywords
       description: |
         Lists the negative keywords set on a whole Google campaign, separate from ad group negatives.
@@ -91957,7 +92261,11 @@ paths:
 
         ### Platform
 
-        The platform is always discovered from the campaign itself. A non-Google campaign returns 501 rather than 404, whether or not `platform` was passed.
+        The platform is always discovered from the campaign itself. A campaign on another platform than Google or Amazon returns 501 rather than 404, whether or not `platform` was passed.
+
+        ### Amazon
+
+        Amazon Sponsored Products campaigns hold campaign-level negative keywords (exact or phrase), read live with no cache (`cachedAt` null). Sponsored Brands and Sponsored Display campaigns have none and return 422.
       security:
         - bearerAuth: []
       parameters:
@@ -91990,7 +92298,7 @@ paths:
       x-resource-group: "ads"
       operationId: replaceCampaignNegativeKeywords
       tags: ["Ad Campaigns"]
-      x-platforms: ["google"]
+      x-platforms: ["google", "amazon"]
       summary: Replace campaign-level negative keywords
       description: |
         Replaces a Google campaign's full list of campaign-level negative keywords, or clears it.
@@ -92004,8 +92312,12 @@ paths:
         - Send the same request again to finish a failed replace.
         - Send an empty array to clear every campaign negative.
 
-        The platform is always discovered from the campaign itself; a non-Google
-        campaign returns 501 rather than 404, whether or not `platform` was sent.
+        The platform is always discovered from the campaign itself; a campaign on another
+        platform than Google or Amazon returns 501 rather than 404, whether or not `platform` was sent.
+
+        ### Amazon
+
+        On an Amazon Sponsored Products campaign the missing negatives are created and the rest archived. A negative without `matchType` is exact; broad returns 422.
       security:
         - bearerAuth: []
       parameters:
@@ -92054,7 +92366,7 @@ paths:
       x-resource-group: "ads"
       operationId: editCampaignNegativeKeywords
       tags: ["Ad Campaigns"]
-      x-platforms: ["google"]
+      x-platforms: ["google", "amazon"]
       summary: Add or remove campaign-level negative keywords
       description: |
         Adds and removes single campaign-level negative keywords on a Google campaign without resending the full set.
@@ -92063,8 +92375,12 @@ paths:
         - Keywords already on the campaign are not added twice; keywords not on it are skipped on remove.
         - Changes go to Google in `create`/`remove` mutates of up to 5,000 operations, like the full replace.
 
-        The platform is always discovered from the campaign itself; a non-Google
-        campaign returns 501 rather than 404, whether or not `platform` was sent.
+        The platform is always discovered from the campaign itself; a campaign on another
+        platform than Google or Amazon returns 501 rather than 404, whether or not `platform` was sent.
+
+        ### Amazon
+
+        On an Amazon Sponsored Products campaign `add` creates the missing negatives and `remove` archives the matching ones (text and match type, case-insensitive). A negative without `matchType` is exact; broad returns 422.
       security:
         - bearerAuth: []
       parameters:
@@ -92120,7 +92436,7 @@ paths:
       x-resource-group: "ads"
       operationId: bulkUpdateAdCampaignStatus
       tags: ["Ad Campaigns"]
-      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit", "microsoft"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit", "microsoft", "amazon"]
       summary: Pause or resume many campaigns
       description: |
         Pauses or resumes up to 50 campaigns in one call, with a separate result per campaign so one failure does not block the rest.
@@ -92637,7 +92953,7 @@ paths:
       x-resource-group: "ads"
       operationId: listAdSets
       tags: ["Ad Campaigns"]
-      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "openai", "reddit", "microsoft"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "openai", "reddit", "microsoft", "amazon"]
       summary: List ad sets
       description: |
         Lists ad sets (ad groups on Google) with their targeting, bidding and optimization settings, optionally for one campaign.
@@ -93147,7 +93463,7 @@ paths:
       x-resource-group: "ads"
       operationId: updateAdSet
       tags: ["Ad Campaigns"]
-      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "openai", "reddit"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "openai", "reddit", "amazon"]
       summary: Update an ad set
       description: |
         Changes an ad set's settings, such as its budget, bid strategy, status or delivery options. At least one updatable field is required.
@@ -93531,7 +93847,7 @@ paths:
       x-resource-group: "ads"
       operationId: deleteAdSet
       tags: ["Ad Campaigns"]
-      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit", "amazon"]
       summary: Delete an ad set
       description: |
         Deletes an ad set and its ads while keeping the campaign, archiving it instead on platforms without a hard delete.
@@ -93540,7 +93856,7 @@ paths:
         `status: cancelled`.
 
         Delete is soft on platforms that have no hard delete: LinkedIn moves the
-        campaign to `PENDING_DELETION`, Pinterest and Reddit archive the ad group, and X
+        campaign to `PENDING_DELETION`, Pinterest, Reddit and Amazon archive the ad group (permanent on Amazon), and X
         soft-flags the line item. Google removes the ad group. All remain readable
         for reporting.
       security:
@@ -93567,12 +93883,12 @@ paths:
       x-resource-group: "ads"
       operationId: getAdSetTargeting
       tags: ["Ad Campaigns"]
-      x-platforms: ["reddit"]
-      summary: Read a Reddit ad group's targeting and schedule
+      x-platforms: ["reddit", "amazon"]
+      summary: Read an ad group's targeting and schedule
       description: |
         Shows a Reddit ad group's live targeting and schedule in the same shape PUT /v1/ads/ad-sets/{adSetId} takes, so you can prefill an editor.
 
-        It is read live from Reddit on every call. Reddit only; every other platform returns 501.
+        It is read live from the platform on every call. Reddit and Amazon only; every other platform returns 501.
 
         ### How fields come back
 
@@ -93580,11 +93896,15 @@ paths:
         - Excluded DMAs are listed under `excludedLocations.regions`, since excluded locations have no metro list.
         - Languages come back as lowercase ISO 639-1 codes.
         - Targeting Zernio cannot edit (devices, platforms, carriers, automated expansion) is left out and kept on every edit.
+
+        ### Amazon
+
+        On Amazon it reads the ad group's live targets and negative targets in Amazon's own expression shape: `targeting` is `{ product, targets, negativeTargets }`, each target with `targetId`, `state`, `expressionType`, `expression` and `bid`. Keywords are read through `GET /v1/ads/keywords`. Editing Amazon targets is not available yet.
       security:
         - bearerAuth: []
       parameters:
         - { name: adSetId, in: path, required: true, schema: { type: string }, description: Reddit ad group ID }
-        - { name: platform, in: query, schema: { type: string, enum: [reddit] }, description: "Disambiguates when the same adSetId string exists on more than one connected platform." }
+        - { name: platform, in: query, schema: { type: string, enum: [reddit, amazon] }, description: "Disambiguates when the same adSetId string exists on more than one connected platform." }
       responses:
         '200':
           description: Current ad group targeting and schedule
@@ -93602,13 +93922,13 @@ paths:
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: Ad set not found }
-        '501': { description: "The platform has no ad set targeting read (every platform but Reddit)" }
+        '501': { description: "The platform has no ad set targeting read (every platform but Reddit and Amazon)" }
   /v1/ads/ad-sets/{adSetId}/status:
     put:
       x-resource-group: "ads"
       operationId: updateAdSetStatus
       tags: ["Ad Campaigns"]
-      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "openai", "reddit", "microsoft"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "openai", "reddit", "microsoft", "amazon"]
       summary: Pause or resume a single ad set
       description: |
         Pauses or resumes one ad set without touching its campaign, its sibling ad sets or the switches of its ads.
@@ -93657,7 +93977,7 @@ paths:
               required: [status, platform]
               properties:
                 status: { type: string, enum: [active, paused] }
-                platform: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit, microsoft] }
+                platform: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit, microsoft, amazon] }
       responses:
         '200':
           description: Ad set status updated
@@ -93692,7 +94012,7 @@ paths:
       x-resource-group: "ads"
       operationId: getAdTree
       tags: ["Ad Campaigns"]
-      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit", "microsoft"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit", "microsoft", "amazon"]
       summary: Get campaign tree
       description: |
         Shows your campaigns with their ad sets and ads nested inside, with spend and results rolled up at every level.
@@ -93730,7 +94050,7 @@ paths:
         - $ref: '#/components/parameters/PageParam'
         - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 20 }, description: Campaigns per page }
         - { name: source, in: query, schema: { type: string, enum: [zernio, all], default: all }, description: "`all` (default) returns both Zernio-created ads and those discovered from the platform's ad manager. Matches the web UI's default view. Pass `zernio` to restrict to isExternal=false only. Status is NOT filtered by default; use the `status` param for that." }
-        - { name: platform, in: query, schema: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit, microsoft] } }
+        - { name: platform, in: query, schema: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit, microsoft, amazon] } }
         - { name: status, in: query, schema: { anyOf: [{ $ref: '#/components/schemas/AdStatus' }, { type: string, enum: [not_deleted] }] }, description: 'Filter by derived campaign status (post-aggregation). `not_deleted` keeps every status except `cancelled`.' }
         - { name: adAccountId, in: query, schema: { type: string }, description: "One or more platform ad account IDs to scope the tree to (agency profiles connect a whole Business Manager, but a team usually cares about a subset).\n\n- Comma-separate for multiple (`?adAccountId=act_1,act_2,act_3`); a single value keeps its old shape.\n- Max 50 accounts per request.\n- The plural aliases `adAccountIds` and `platformAdAccountIds` are rejected with a 400, so they cannot silently return the unfiltered fleet." }
         - { name: pageId, in: query, schema: { type: string }, description: "Meta only: Facebook Page ID. Prunes the tree to ads whose creative is backed by this Page: campaigns and ad sets with no ad on the Page drop out, and rolled-up metrics cover only the Page's ads. Mirrors the same filter on /v1/ads and /v1/ads/campaigns." }
@@ -93782,7 +94102,7 @@ paths:
       x-resource-group: "ads"
       operationId: listAdsByPerformance
       tags: ["Ad Campaigns"]
-      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit", "microsoft"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit", "microsoft", "amazon"]
       summary: Rank ads by performance
       description: |
         Returns an ads account's ads ranked by spend, impressions, clicks, results or ROAS over a date range, each with its creative (type, thumbnail, headline, body, link) and campaign.
@@ -93799,7 +94119,7 @@ paths:
         - { name: adAccountId, in: query, schema: { type: string }, description: "Optional platform-native ad account ID (e.g. Meta `act_…`) to rank one ad account only." }
         - { name: fromDate, in: query, required: true, schema: { type: string, format: date }, description: "Inclusive start of the range (YYYY-MM-DD)." }
         - { name: toDate, in: query, required: true, schema: { type: string, format: date }, description: "Inclusive end of the range (YYYY-MM-DD). Max 730-day range." }
-        - { name: platform, in: query, schema: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit, microsoft] }, description: Restrict to one platform. }
+        - { name: platform, in: query, schema: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit, microsoft, amazon] }, description: Restrict to one platform. }
         - { name: sortBy, in: query, schema: { type: string, enum: [spend, impressions, clicks, conversions, roas], default: spend }, description: "Metric the ads are ranked by, highest first." }
         - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 50 }, description: "How many ads to return." }
       responses:
@@ -93836,7 +94156,7 @@ paths:
       x-resource-group: "ads"
       operationId: getAdsTimeline
       tags: ["Ad Campaigns"]
-      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit", "microsoft"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit", "microsoft", "amazon"]
       summary: Get daily account metrics
       description: |
         Returns an ads account's spend, results and other metrics day by day, ready for a daily performance chart.
@@ -93866,7 +94186,7 @@ paths:
         - { name: adAccountId, in: query, schema: { type: string }, description: "Optional platform-native ad account ID (e.g. Meta `act_…`, TikTok advertiser ID). Use when the connection wraps multiple platform ad accounts and the chart should show one only. Note: rows ingested before 2026-05-13 don't carry this column; the recurring 7-day re-sync repopulates them naturally." }
         - { name: fromDate, in: query, schema: { type: string, format: date }, description: "Inclusive start of metrics range (YYYY-MM-DD). Defaults to 90 days ago." }
         - { name: toDate, in: query, schema: { type: string, format: date }, description: "Inclusive end of metrics range (YYYY-MM-DD). Defaults to today. Max 730-day range." }
-        - { name: platform, in: query, schema: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit, microsoft] }, description: Restrict to one platform. }
+        - { name: platform, in: query, schema: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit, microsoft, amazon] }, description: Restrict to one platform. }
         - { name: compare, in: query, schema: { type: string, enum: [previous] }, description: "Set to `previous` to also return `previousRows` for the period of the same length that ends the day before `fromDate`, with that period as `previousRange`. Needs a `fromDate` (sent or defaulted); `toDate` alone answers 400." }
       responses:
         '200':
@@ -93903,7 +94223,7 @@ paths:
       x-resource-group: "ads"
       operationId: getAd
       tags: ["Ad Campaigns"]
-      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit", "microsoft"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit", "microsoft", "amazon"]
       summary: Get ad details
       description: |
         Shows one ad with its creative, targeting, status and performance metrics.
@@ -94025,7 +94345,7 @@ paths:
       x-resource-group: "ads"
       operationId: updateAd
       tags: ["Ad Campaigns"]
-      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit", "microsoft"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit", "microsoft", "amazon"]
       summary: Update ad
       description: |
         Changes an ad's status, budget, targeting or creative and applies the change on the platform.
@@ -94450,7 +94770,7 @@ paths:
       x-resource-group: "ads"
       operationId: deleteAd
       tags: ["Ad Campaigns"]
-      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit", "microsoft"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit", "microsoft", "amazon"]
       summary: Cancel an ad
       description: |
         Deletes an ad on the platform while keeping its history, and removes empty parents only when they were created through this API.
@@ -94459,6 +94779,8 @@ paths:
 
         - OpenAI Ads has no delete API: the ad is archived instead (a terminal state, the closest equivalent).
         - Reddit Ads has no delete either: the ad is archived (`configured_status` ARCHIVED).
+
+        - Amazon Ads archives the ad (state ARCHIVED). Archiving is permanent.
 
         To delete a whole campaign on purpose use `DELETE /v1/ads/campaigns/{campaignId}`.
 
@@ -94516,7 +94838,7 @@ paths:
       x-resource-group: "ads"
       operationId: updateAdStatus
       tags: ["Ad Campaigns"]
-      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit", "microsoft"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit", "microsoft", "amazon"]
       summary: Pause or resume a single ad
       description: |
         Pauses or resumes a single ad without touching its ad set, campaign or sibling ads.
@@ -95456,7 +95778,7 @@ paths:
       x-resource-group: "ads"
       operationId: getCampaignAnalytics
       tags: ["Ad Insights"]
-      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit", "microsoft"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit", "microsoft", "amazon"]
       summary: Get campaign analytics
       description: |
         Returns a campaign's performance summary and daily timeline, with optional breakdowns by age, gender and other audience dimensions.
@@ -96338,7 +96660,7 @@ paths:
       x-resource-group: "ads"
       operationId: getAdAnalytics
       tags: ["Ad Insights"]
-      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit", "microsoft"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit", "microsoft", "amazon"]
       summary: Get ad analytics
       description: |
         Returns one ad's performance summary and daily timeline, with optional audience breakdowns on Meta, TikTok and LinkedIn.
@@ -102495,7 +102817,7 @@ paths:
       x-resource-group: "ads"
       operationId: listAdAccounts
       tags: ["Ad Accounts"]
-      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit", "microsoft"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit", "microsoft", "amazon"]
       summary: List ad accounts
       description: |
         Lists the ad accounts a connection can manage, such as Meta ad accounts, TikTok advertisers or Google Ads customers.
@@ -103835,12 +104157,12 @@ paths:
       x-resource-group: "ads"
       operationId: createStandaloneAd
       tags: ["Ad Campaigns"]
-      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "openai", "reddit", "microsoft"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "openai", "reddit", "microsoft", "amazon"]
       summary: Create standalone ad
       description: |
         Creates a paid ad with your own creative, building the campaign and ad set it needs or adding it to existing ones.
 
-        Works across Meta, Google Ads, Pinterest, TikTok, X, LinkedIn, OpenAI Ads (ChatGPT Ads), Reddit Ads and Microsoft Ads. Per-platform required fields, budget minimums, and video-ad rules are documented on each property below.
+        Works across Meta, Google Ads, Pinterest, TikTok, X, LinkedIn, OpenAI Ads (ChatGPT Ads), Reddit Ads, Microsoft Ads and Amazon Ads (Sponsored Products, Sponsored Brands and Sponsored Display, see `AmazonAdsPlatformData`). Per-platform required fields, budget minimums, and video-ad rules are documented on each property below.
 
         ### Request shapes
 
@@ -104883,9 +105205,9 @@ paths:
                     listingType: { type: string, enum: [vehicles], description: "Set to `vehicles` for vehicle listings. Omitted, the campaign is a retail Performance Max campaign. Vehicle ads require Google to allowlist the ad account; otherwise Google rejects the create." }
                 demandGen:
                   $ref: '#/components/schemas/GoogleDemandGenInput'
-                keywords: { type: array, maxItems: 1000, items: { $ref: '#/components/schemas/KeywordEntry' }, description: "Google Search only. Keywords on the new ad group; entries are strings (BROAD) or { text, matchType }. Editable later via PUT /v1/ads/{adId} targeting.keywords." }
-                negativeKeywords: { type: array, maxItems: 1000, items: { $ref: '#/components/schemas/KeywordEntry' }, description: "Google Search only; other platforms return 400. Ad-group-level negative keywords on the new ad group. Editable later via PUT /v1/ads/{adId} targeting.negativeKeywords." }
-                campaignNegativeKeywords: { type: array, maxItems: 1000, items: { $ref: '#/components/schemas/KeywordEntry' }, description: "Google Search only; other platforms return 400. Campaign-level negative keywords (campaign_criterion.negative), created alongside the ad group. Editable later via PUT /v1/ads/campaigns/{campaignId}/negative-keywords." }
+                keywords: { type: array, maxItems: 1000, items: { $ref: '#/components/schemas/KeywordEntry' }, description: "Google Search, Microsoft Ads, and Amazon Sponsored Products (MANUAL campaigns) and Sponsored Brands. Keywords on the new ad group; entries are strings (BROAD) or { text, matchType }. Editable later via PUT /v1/ads/{adId} targeting.keywords." }
+                negativeKeywords: { type: array, maxItems: 1000, items: { $ref: '#/components/schemas/KeywordEntry' }, description: "Google Search and Amazon Sponsored Products and Sponsored Brands (EXACT or PHRASE only); other platforms return 400. Ad-group-level negative keywords on the new ad group. Editable later via PUT /v1/ads/{adId} targeting.negativeKeywords." }
+                campaignNegativeKeywords: { type: array, maxItems: 1000, items: { $ref: '#/components/schemas/KeywordEntry' }, description: "Google Search and Amazon Sponsored Products; other platforms return 400. Campaign-level negative keywords (campaign_criterion.negative on Google), created alongside the ad group. Editable later via PUT /v1/ads/campaigns/{campaignId}/negative-keywords." }
                 additionalHeadlines:
                   type: array
                   items:
@@ -105068,7 +105390,9 @@ paths:
                     `PUT /v1/ads/ad-sets/{adSetId}`.
                 platformSpecificData:
                   description: |
-                    Platform-specific options. The platform is derived from `accountId`; options for a different platform return a 400. LinkedIn (campaign bidding and delivery controls) and Meta (the bid trio) have options today.
+                    Platform-specific options. The platform is derived from `accountId`; options for a different platform return a 400. LinkedIn (campaign bidding and delivery controls), Meta (the bid trio) and Amazon Ads (required: the ad product, products, creative and targeting) have options today.
+
+                    **Amazon Ads**: see `AmazonAdsPlatformData`. Amazon has no dry run, so `validateOnly` returns a 501.
 
                     **Meta**
 
@@ -105078,6 +105402,7 @@ paths:
                   oneOf:
                     - $ref: '#/components/schemas/LinkedInAdsPlatformData'
                     - $ref: '#/components/schemas/MetaAdsPlatformData'
+                    - $ref: '#/components/schemas/AmazonAdsPlatformData'
                 dsaBeneficiary:
                   type: string
                   maxLength: 100
@@ -105170,6 +105495,61 @@ paths:
                 promotedObject:
                   $ref: '#/components/schemas/AdPromotedObject'
             examples:
+              amazonSponsoredProductsManual:
+                summary: Amazon Sponsored Products manual campaign for a vendor, with keywords and a negative.
+                value:
+                  accountId: 69ce75d483e990e1c01ccfe4
+                  adAccountId: '888888888'
+                  name: Trail shoes
+                  goal: conversions
+                  budgetAmount: 50
+                  budgetType: daily
+                  keywords: [trail running shoes, { text: running shoes, matchType: exact }]
+                  negativeKeywords: [{ text: cheap, matchType: phrase }]
+                  platformSpecificData:
+                    adProduct: SPONSORED_PRODUCTS
+                    targetingType: MANUAL
+                    biddingStrategy: AUTO_FOR_SALES
+                    placementBidding: [{ placement: PLACEMENT_TOP, percentage: 50 }]
+                    defaultBid: 0.75
+                    asins: [B0C1234567]
+              amazonSponsoredBrandsCollection:
+                summary: Amazon Sponsored Brands manual collection ad on keywords.
+                value:
+                  accountId: 69ce75d483e990e1c01ccfe4
+                  adAccountId: '888888888'
+                  name: Running collection
+                  goal: traffic
+                  budgetAmount: 30
+                  budgetType: daily
+                  keywords: [{ text: trail running shoes, matchType: phrase }]
+                  platformSpecificData:
+                    adProduct: SPONSORED_BRANDS
+                    brandEntityId: ENTITY1A2B3C4D5E6F
+                    defaultBid: 1.25
+                    ad:
+                      format: manualCollection
+                      brandName: Brand X
+                      brandLogoAssetId: amzn1.assetlibrary.asset1.abc123
+                      title: Run further
+                      asins: [B0C1234567, B0C1234568, B0C1234569]
+                      landingPage: { pageType: PRODUCT_LIST }
+              amazonSponsoredDisplayRemarketing:
+                summary: Amazon Sponsored Display remarketing to shoppers who viewed similar products.
+                value:
+                  accountId: 69ce75d483e990e1c01ccfe4
+                  adAccountId: '888888888'
+                  name: Shoe remarketing
+                  goal: conversions
+                  budgetAmount: 40
+                  budgetType: daily
+                  platformSpecificData:
+                    adProduct: SPONSORED_DISPLAY
+                    tactic: T00030
+                    defaultBid: 0.9
+                    asins: [B0BLJ3LHCH]
+                    targets:
+                      - expression: [{ type: views, value: [{ type: similarProduct }, { type: lookback, value: '30' }] }]
               googleSearchPresenceOnly:
                 summary: "Google Search campaign that reaches only people located in Lyon."
                 value:
