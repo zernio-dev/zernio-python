@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.796.0"
+  version: "1.796.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -86785,10 +86785,10 @@ paths:
                         startedAt: { type: string, format: date-time }
                         completedAt: { type: string, format: date-time }
                         recipientCount: { type: integer }
-                        sentCount: { type: integer }
-                        deliveredCount: { type: integer }
-                        readCount: { type: integer }
-                        failedCount: { type: integer }
+                        sentCount: { type: integer, description: 'Recipients whose latest status is `sent`: the platform accepted the message and has not confirmed delivery yet. Each recipient counts once, under its latest status, so everyone the broadcast went out to is sentCount + deliveredCount + readCount.' }
+                        deliveredCount: { type: integer, description: 'Recipients whose latest status is `delivered`, not read yet. Everyone it was delivered to is deliveredCount + readCount.' }
+                        readCount: { type: integer, description: 'Recipients whose latest status is `read`.' }
+                        failedCount: { type: integer, description: 'Recipients whose send failed.' }
                         createdAt: { type: string, format: date-time }
                   pagination:
                     type: object
@@ -86915,10 +86915,10 @@ paths:
                       startedAt: { type: string, format: date-time }
                       completedAt: { type: string, format: date-time }
                       recipientCount: { type: integer }
-                      sentCount: { type: integer }
-                      deliveredCount: { type: integer }
-                      readCount: { type: integer }
-                      failedCount: { type: integer }
+                      sentCount: { type: integer, description: 'Recipients whose latest status is `sent`: the platform accepted the message and has not confirmed delivery yet. Each recipient counts once, under its latest status, so everyone the broadcast went out to is sentCount + deliveredCount + readCount.' }
+                      deliveredCount: { type: integer, description: 'Recipients whose latest status is `delivered`, not read yet. Everyone it was delivered to is deliveredCount + readCount.' }
+                      readCount: { type: integer, description: 'Recipients whose latest status is `read`.' }
+                      failedCount: { type: integer, description: 'Recipients whose send failed.' }
                       createdAt: { type: string, format: date-time }
                       updatedAt: { type: string, format: date-time }
         '401': { $ref: '#/components/responses/Unauthorized' }
@@ -87147,7 +87147,7 @@ paths:
                       hasMore: { type: boolean }
                   summary:
                     type: object
-                    description: Delivery totals across all recipients in the broadcast, independent of pagination and status filtering.
+                    description: 'Delivery totals across all recipients in the broadcast, independent of pagination and status filtering. Each recipient counts once, under its latest status, so `sent + delivered + read` is everyone the broadcast went out to.'
                     properties:
                       total: { type: integer }
                       pending: { type: integer }
