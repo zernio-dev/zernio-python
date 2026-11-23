@@ -774,6 +774,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `automations.list_automation_actions()` | List automation actions |
 | `automations.list_automation_approvals()` | List an automation's approval requests |
 | `automations.list_automation_checks()` | List an automation's checks |
+| `automations.list_automation_runs()` | List an automation's runs |
 | `automations.list_automation_templates()` | List automation templates |
 | `automations.list_automations()` | List automations |
 | `automations.create_automation()` | Create an automation |
@@ -782,6 +783,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `automations.get_automation_approval()` | Get an approval request |
 | `automations.get_automation_catalog()` | Get the automations catalog |
 | `automations.get_automation_controls()` | Get automation controls |
+| `automations.get_automation_run()` | Get one run of an automation |
 | `automations.get_automation_template()` | Get an automation template |
 | `automations.get_shared_automation_template()` | Get a shared automation template |
 | `automations.get_zernio_automation_template()` | Get a Zernio automation template |

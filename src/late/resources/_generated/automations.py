@@ -176,6 +176,30 @@ class AutomationsResource:
             f"/v1/automations/{automation_id}/checks", params=params
         )
 
+    def list_automation_runs(
+        self,
+        automation_id: str,
+        *,
+        status: str | None = None,
+        since: datetime | str | None = None,
+        limit: int | None = 20,
+        cursor: str | None = None,
+    ) -> dict[str, Any]:
+        """List an automation's runs"""
+        params = self._build_query(
+            {
+                "status": status,
+                "since": since,
+                "limit": limit,
+                "cursor": cursor,
+            }
+        )
+        return self._client._get(f"/v1/automations/{automation_id}/runs", params=params)
+
+    def get_automation_run(self, automation_id: str, run_id: str) -> dict[str, Any]:
+        """Get one run of an automation"""
+        return self._client._get(f"/v1/automations/{automation_id}/runs/{run_id}")
+
     def preview_automation_draft(
         self, body: dict[str, Any], *, limit: int | None = 100
     ) -> dict[str, Any]:
@@ -590,6 +614,36 @@ class AutomationsResource:
         )
         return await self._client._aget(
             f"/v1/automations/{automation_id}/checks", params=params
+        )
+
+    async def alist_automation_runs(
+        self,
+        automation_id: str,
+        *,
+        status: str | None = None,
+        since: datetime | str | None = None,
+        limit: int | None = 20,
+        cursor: str | None = None,
+    ) -> dict[str, Any]:
+        """List an automation's runs (async)"""
+        params = self._build_query(
+            {
+                "status": status,
+                "since": since,
+                "limit": limit,
+                "cursor": cursor,
+            }
+        )
+        return await self._client._aget(
+            f"/v1/automations/{automation_id}/runs", params=params
+        )
+
+    async def aget_automation_run(
+        self, automation_id: str, run_id: str
+    ) -> dict[str, Any]:
+        """Get one run of an automation (async)"""
+        return await self._client._aget(
+            f"/v1/automations/{automation_id}/runs/{run_id}"
         )
 
     async def apreview_automation_draft(

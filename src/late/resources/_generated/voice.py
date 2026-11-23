@@ -180,11 +180,14 @@ class VoiceResource:
         )
         return self._client._get(f"/v1/voice/calls/{id}/recording", params=params)
 
-    def transfer_voice_call(self, id: str, to: str) -> dict[str, Any]:
+    def transfer_voice_call(
+        self, id: str, to: str, *, caller_id: str | None = "business"
+    ) -> dict[str, Any]:
         """Blind-transfer a live call"""
         payload = self._build_body(
             {
                 "to": to,
+                "callerId": caller_id,
             }
         )
         return self._client._post(f"/v1/voice/calls/{id}/transfer", data=payload)
@@ -426,11 +429,14 @@ class VoiceResource:
             f"/v1/voice/calls/{id}/recording", params=params
         )
 
-    async def atransfer_voice_call(self, id: str, to: str) -> dict[str, Any]:
+    async def atransfer_voice_call(
+        self, id: str, to: str, *, caller_id: str | None = "business"
+    ) -> dict[str, Any]:
         """Blind-transfer a live call (async)"""
         payload = self._build_body(
             {
                 "to": to,
+                "callerId": caller_id,
             }
         )
         return await self._client._apost(f"/v1/voice/calls/{id}/transfer", data=payload)

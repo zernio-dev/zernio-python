@@ -9862,7 +9862,7 @@ def register_generated_tools(mcp, _get_client):
             status
             budget: Object with keys: amount (number) - Minimum varies by platform: TikTok=$20, Pinterest=$5, others=$1; type (one of: daily, lifetime) - OpenAI Ads accepts both and sets the campaign's single spend cap, replacing the previous daily or lifetime cap. A daily cap cannot go back to lifetime (422).
             targeting: Targeting update. - Meta + TikTok: demographics/interests. - Google: keyword and device bid adjustment edits only. - LinkedIn: locations, B2B facets, audiences. - Pinterest / X: return 501. **Partial update** on Meta, TikTok and LinkedIn: every targeting setting you do not send is preserved. - Meta: Advantage+ audience, placements, custom audiences, exclusions, interests, languages. - TikTok: languages, interest keywords, devices, behaviours. - LinkedIn: skills, member traits, interface locales, and any facet set in Campaign Manager. A field you send replaces its platform counterpart, and an empty or null value (for example `audienceInclude: []`, `industries: []` or `gender: "all"`) clears only that field. Any location field (countries, regions, cities, zips, ...) replaces the whole included location set; an update with no location keeps the current locations. Object with keys: keywords (list of any) - Google only. The FULL desired set of positive keywords for the entire ad group. Omit to leave positives unchanged; [] removes all positives. Negatives are ...; negativeKeywords (list of any) - Google only. The FULL desired set of negative keywords for the entire ad group, independent of positives. - Omit to leave negatives unchanged; [] removes all ...; devices (list of any) - Google only. The FULL new set of device bid modifiers for the campaign. Entries are a device name alone (targeted, bid modifier reset to 1) or { device, ...; ageMin (integer); ageMax (integer); countries (list of string) - ISO 3166-1 alpha-2 codes. On Google this is the FULL new country set for the campaign (same contract as `locations`); on LinkedIn it replaces the campaign's ...; locations (any) - Google and LinkedIn. The FULL new location set for the campaign. Bare country-code array, or an object with countries/regions/cities/zips/metros key lists ...; languages (list of string) - Google only. The FULL new language set for the campaign, as Google language codes (ISO 639-1, plus variants such as `zh_CN`). An unknown code returns 400.; interests (list of objects with keys id, name) - Interest objects from /v1/ads/interests. Each must include id and name.; advantage_audience (one of: 0, 1) - Meta only. Omit to preserve the existing setting on update. 0 = disabled, 1 = enabled.
-            creative: Replace or patch the ad's creative. Meta, TikTok, and LinkedIn. **Meta**: patch-style. - Pass any subset: omitted fields are preserved from the live creative, including media (`image_hash`/`video_id` reused, no re-upload) and `url_tags`. Sending the full set (`headline`, `body`, `callToAction`, `linkUrl`, `imageUrl`) rebuilds the creative from scratch. - On lead ads, the instant form is kept through every edit, and `linkUrl` is ignored: Meta requires a lead ad's links to stay on its instant-form link. An edit that changes only `linkUrl` leaves the ad's creative as it is. - Partial patching reads the live `object_story_spec`, which Meta strips on SHARE / page-post / dark post creatives; those return 422 asking for the full set. A `videoUrl`/`videoId` on an image creative is a type change and also needs the full set. - Creatives with an `asset_feed_spec` (several text options, placement or language rules) take text, link, tracking and enhancement edits in place. The new creative is built from the live asset feed with the edited text, and every video, image, label and rule is kept. - On those, `body`, `headline` and `description` replace the one option of that kind. When the feed has several, send `bodies`, `headlines` or `descriptions` with one text per option, in order. `linkUrl` replaces the feed's only destination link. - Image, video and call-to-action changes on asset_feed creatives apply to the story spec (Multiple Text Options creatives). They return 422 when the feed itself holds the images, videos or call-to-action options. - The live creative's deprecated `standard_enhancements` setting (Meta subcode 3858504) is never sent back; every other enhancement setting is kept. - `existingCreativeId` repoints the ad at a creative from GET /v1/ads/creatives and ignores every other field. - `leadGenFormId` moves a lead ad to another instant form. `caption` sets the display link of a link ad. - In a dynamic creative ad set (`is_dynamic_creative`), only asset feed creatives run: a full rebuild, or `existingCreativeId` pointing at a creative without an asset feed, returns 422. Text edits update the feed. - Meta creatives are immutable: any change creates a new creative and repoints the ad. The old creative stays on the ad account for historical reporting. - `creativeFeatures` is Meta-only. Omitted settings are preserved from the live creative, including on full rebuilds; a supplied creativeFeatures map overrides individual existing keys. - A `creative` object with no recognised field (`promotion` alone does not count) is a 400 `missing_required_field` when it is the only update, and is ignored (no creative rebuild) next to another updatable field. **TikTok**: patch-style. Pass any subset. - `headline` is ignored (no headline slot). - `body` becomes the in-feed `ad_text`; `linkUrl` becomes `landing_page_url`; `videoUrl` triggers a fresh upload. - `description`, `videoId` and `existingCreativeId` are Meta-only and return 400. **LinkedIn**: requires new media (image via `imageUrl` or video via `videoUrl`); a text-only update returns 400. - Uploads the media, creates a new inline media creative on the same campaign, and removes the old creative. `platformAdId` and `creative.creativeId` move to the new one. - The new creative keeps the old one's state. A `DRAFT` or `PAUSED` creative is re-created `DRAFT`, because LinkedIn refuses `PAUSED` before review is `APPROVED`. - If the old creative cannot be removed, the new one is deleted and the LinkedIn error is returned. - `videoId` and `existingCreativeId` are Meta-only and return 400. Object with keys: promotion (object) - Not supported. Send null or omit the field, and set the Promotion on the ad in Ads Manager. Any object is rejected with 400 invalid_field_value. Meta ...; creativeFeatures (object); catalogFormat (one of: single_image, carousel_images_multi_items, carousel_images_single_item, carousel_slideshows) - Meta catalog template ads only. Rebuilds the creative with this `template_data.format_option` (same mapping as on create) and repoints the ad at the new ...; headline (string) - Meta and LinkedIn (TikTok has no headline slot); longHeadline (string) - Google Display only. Replaces the responsive display ad's long headline.; businessName (string) - Google Display only. Replaces the responsive display ad's business name.; squareImageUrl (string) - Google Display only. Uploaded as a new square (1:1) marketing image asset that replaces the current one.; body (string) - Primary text. On a Meta asset_feed creative it replaces the feed's only body option and the story text (422 when it has several: send `bodies`). Sent with ...; bodies (list of string) - Meta only. The primary text options of an asset_feed creative, one text per option in the order GET /v1/ads/{adId} returns them. Each replaces the option in ...; headlines (list of string) - Meta only. Same as `bodies`, for the headline options (Meta `asset_feed_spec.titles`). Add `headline` to set the story's fallback title. Not the top-level ...; description (string) - Link description slot (Meta `link_data.description` / `video_data.link_description`, LinkedIn creative description).; descriptions (list of string) - Meta only. Same as `bodies`, for the description options. Add `description` to set the story's fallback description. Not the top-level Google `descriptions`.; callToAction (string); linkUrl (string); imageUrl (string); videoUrl (string); videoId (string) - Meta only. Reuse an already-uploaded ad video (from POST /v1/ads/videos or GET /v1/ads/videos) instead of re-uploading via videoUrl.; existingCreativeId (string) - Meta only. Repoint the ad at an existing library creative (from GET /v1/ads/creatives); all other creative fields are ignored.; leadGenFormId (string) - Meta only. Moves a lead ad to another instant form (from GET /v1/ads/lead-forms), keeping the rest of the creative. Returns 422 on an ad that does not open an ...; caption (string) - Meta only. The display link shown on link (image) ads, Meta link_data.caption. Returns 422 on video creatives and on asset feeds without a link.
+            creative: Replace or patch the ad's creative. Meta, TikTok, and LinkedIn. **Meta**: patch-style. - Pass any subset: omitted fields are preserved from the live creative, including media (`image_hash`/`video_id` reused, no re-upload) and `url_tags`. Sending the full set (`headline`, `body`, `callToAction`, `linkUrl`, `imageUrl`) rebuilds the creative from scratch. - On lead ads, the instant form is kept through every edit, and `linkUrl` is ignored: Meta requires a lead ad's links to stay on its instant-form link. An edit that changes only `linkUrl` leaves the ad's creative as it is. - Partial patching reads the live `object_story_spec`, which Meta strips on SHARE / page-post / dark post creatives; those return 422 asking for the full set. A `videoUrl`/`videoId` on an image creative is a type change and also needs the full set. - Creatives with an `asset_feed_spec` (several text options, placement or language rules) take text, link, tracking and enhancement edits in place. The new creative is built from the live asset feed with the edited text, and every video, image, label and rule is kept. - On those, `body`, `headline` and `description` replace the one option of that kind. When the feed has several, send `bodies`, `headlines` or `descriptions` with one text per option, in order. `linkUrl` replaces the feed's only destination link. - Image, video and call-to-action changes on asset_feed creatives apply to the story spec (Multiple Text Options creatives). They return 422 when the feed itself holds the images, videos or call-to-action options. - The live creative's deprecated `standard_enhancements` setting (Meta subcode 3858504) is never sent back; every other enhancement setting is kept. - `existingCreativeId` repoints the ad at a creative from GET /v1/ads/creatives and ignores every other field. - `leadGenFormId` moves a lead ad to another instant form. `caption` sets the display link of a link ad. - In a dynamic creative ad set (`is_dynamic_creative`), only asset feed creatives run: a full rebuild, or `existingCreativeId` pointing at a creative without an asset feed, returns 422. Text edits update the feed. - Meta creatives are immutable: any change creates a new creative and repoints the ad. The old creative stays on the ad account for historical reporting. - `creativeFeatures` is Meta-only. Omitted settings are preserved from the live creative, including on full rebuilds; a supplied creativeFeatures map overrides individual existing keys. - A `creative` object with no recognised field (`promotion` alone does not count) is a 400 `missing_required_field` when it is the only update, and is ignored (no creative rebuild) next to another updatable field. **TikTok**: patch-style. Pass any subset. - `headline` is ignored (no headline slot). - `body` becomes the in-feed `ad_text`; `linkUrl` becomes `landing_page_url`; `videoUrl` triggers a fresh upload. - `description`, `videoId` and `existingCreativeId` are Meta-only and return 400. **LinkedIn**: requires new media (image via `imageUrl` or video via `videoUrl`); a text-only update returns 400. - Uploads the media, creates a new inline media creative on the same campaign, and removes the old creative. `platformAdId` and `creative.creativeId` move to the new one. - The new creative keeps the old one's state. A `DRAFT` or `PAUSED` creative is re-created `DRAFT`, because LinkedIn refuses `PAUSED` before review is `APPROVED`. - If the old creative cannot be removed, the new one is deleted and the LinkedIn error is returned. - `videoId` and `existingCreativeId` are Meta-only and return 400. Object with keys: promotion (object) - Not supported. Send null or omit the field, and set the Promotion on the ad in Ads Manager. Any object is rejected with 400 invalid_field_value. Meta ...; creativeFeatures (object); catalogFormat (one of: single_image, carousel_images_multi_items, carousel_images_single_item, carousel_slideshows) - Meta catalog template ads only. Rebuilds the creative with this `template_data.format_option` (same mapping as on create) and repoints the ad at the new ...; headline (string) - Meta and LinkedIn (TikTok has no headline slot); longHeadline (string) - Google Display only. Replaces the responsive display ad's long headline.; businessName (string) - Google Display only. Replaces the responsive display ad's business name.; squareImageUrl (string) - Google Display only. Uploaded as a new square (1:1) marketing image asset that replaces the current one.; body (string) - Primary text. On a Meta asset_feed creative it replaces the feed's only body option and the story text (422 when it has several: send `bodies`). Sent with ...; bodies (list of string) - Meta only. The primary text options of an asset_feed creative, one text per option in the order GET /v1/ads/{adId} returns them. Each replaces the option in ...; headlines (list of string) - Meta only. Same as `bodies`, for the headline options (Meta `asset_feed_spec.titles`). Add `headline` to set the story's fallback title. Not the top-level ...; description (string) - Link description slot (Meta `link_data.description` / `video_data.link_description`, LinkedIn creative description).; descriptions (list of string) - Meta only. Same as `bodies`, for the description options. Add `description` to set the story's fallback description. Not the top-level Google `descriptions`.; callToAction (string); linkUrl (string); imageUrl (string); videoUrl (string); videoId (string) - Meta only. Reuse an already-uploaded ad video (from POST /v1/ads/videos or GET /v1/ads/videos) instead of re-uploading via videoUrl.; existingCreativeId (string) - Meta only. Repoint the ad at an existing library creative (from GET /v1/ads/creatives); all other creative fields are ignored.; leadGenFormId (string) - Meta only. Moves a lead ad to another instant form (from GET /v1/ads/lead-forms), keeping the rest of the creative. Returns 422 on an ad that does not open an ...; caption (string) - Meta only. The display link shown on link (image) ads, Meta link_data.caption. Returns 422 on video creatives and on asset feeds without a link.; callToActionLink (string) - Meta only. The map location the `GET_DIRECTIONS` button opens, while the ad link stays as it is. Send it with `callToAction: GET_DIRECTIONS`. - 400 with any ...
             name: Rename the ad. Now propagated to Meta (POST /{ad-id}); non-Meta platforms return 501."""
         client = _get_client()
         try:
@@ -10937,6 +10937,10 @@ def register_generated_tools(mcp, _get_client):
         and `INSTAGRAM_MESSAGE`. VIEW_INSTAGRAM_PROFILE requires linkUrl;
         the messaging CTAs select their destination automatically.
 
+        **Meta** `GET_DIRECTIONS` is a 400: Meta opens that button on a map location,
+        and a boost's only button link is `linkUrl`, a website. Create the ad
+        with POST /v1/ads/create and `callToActionLink` instead.
+
         **TikTok**: pass-through to `call_to_action` on the Spark Ad creative; the
         platform validates the value. See TikTok's "Enumeration - Call-to-Action".
                 spark_auth_code: TikTok-only. Spark Code (the creator's `auth_code`) authorizing cross-creator Spark Ads: the advertiser can boost a video owned by a DIFFERENT TikTok account. Maps to `auth_code` on the creative entry of /v2/ad/create/.
@@ -11614,6 +11618,7 @@ def register_generated_tools(mcp, _get_client):
         ]
         | None = None,
         link_url: str | None = None,
+        call_to_action_link: str | None = None,
         lead_gen_form_id: str | None = None,
         image_url: str | None = None,
         images: dict[str, Any] | None = None,
@@ -11991,6 +11996,11 @@ def register_generated_tools(mcp, _get_client):
         - **LinkedIn:** required for `traffic` ads, optional for `engagement` / `awareness`. `imageUrl` + `linkUrl` publishes an ARTICLE-content creative (LinkedIn's article ad format), with the image as thumbnail and `longHeadline` as description.
         - **OpenAI Ads:** required (the chat card's target_url).
         - **Reddit:** required on image and video ads (the post's destination and the ad's click URL), the fallback for carousel cards without their own, and refused with 400 on text ads.
+                call_to_action_link: Meta only. The map location a `GET_DIRECTIONS` button opens, while `linkUrl` stays the ad's website link.
+
+        - Single image ads, with or without `bodies` / `headlines`, also on the adSetId attach shape and with `validateOnly`. Required on a `GET_DIRECTIONS` image ad (400 without it).
+        - 400 with any other `callToAction`, with `video`, `carouselCards`, `creatives[]`, `dynamicCreative`, `placementAssets`, `translations`, catalog ads, `leadGenFormId`, goal `page_likes` or `existingCreativeId`, and on other networks.
+        - Stored on the ad and returned as `creative.callToActionLink`.
                 lead_gen_form_id: Lead Gen form ID to attach to the ad's creative. REQUIRED when `goal` is `lead_generation`. Create one via POST /v1/ads/lead-forms.
 
         - Meta (facebook/instagram): the leadgen_forms ID. The ad set's promoted_object.page_id, LEAD_GENERATION optimization and destination_type ON_AD are derived automatically from the goal.
@@ -12289,7 +12299,11 @@ def register_generated_tools(mcp, _get_client):
         `dsaBeneficiary`: required for EU targeting unless the ad account has
         a default payor.
                 brand_identity: TikTok only; non-TikTok platforms ignore this field. Synthetic Brand Identity used when the ad attributes to a CUSTOMIZED_USER (instead of a real TT_USER @username). Required on the FIRST CUSTOMIZED_USER ad on a `tiktokads` SocialAccount with no cached identity. Omit it on later ads: the identity is cached on the account after first creation. Alternative: configure once via `PATCH /v1/connect/tiktok-ads`, then create ads without this field. Object with keys: displayName (string, required) - Brand name shown above the ad on TikTok.; imageUrl (string, required) - Public URL of a square brand image (≥98×98 px, JPG/PNG). Used as the brand avatar on the ad.
-                identity_id: TikTok: the identity the ad runs as, from GET /v1/ads/tiktok-identities. Overrides the connected account's own identity; must be authorized on the advertiser.
+                identity_id: The profile the ad runs as.
+
+        - TikTok: the identity from GET /v1/ads/tiktok-identities. Overrides the connected account's own identity; must be authorized on the advertiser.
+        - Snapchat: the Public Profile ID (a UUID), required on most organizations. Without it the create answers 422 on identityId and uploads nothing.
+        - To find a Snapchat Public Profile ID: in Snapchat Business Manager, open Public Profiles, select the profile and copy its ID.
                 identity_type: TikTok only. Forces the identity attribution on the ad:
 
           - `TT_USER`: the posting account's open_id (real @username
@@ -12363,6 +12377,7 @@ def register_generated_tools(mcp, _get_client):
             "descriptions": descriptions,
             "call_to_action": call_to_action,
             "link_url": link_url,
+            "call_to_action_link": call_to_action_link,
             "lead_gen_form_id": lead_gen_form_id,
             "image_url": image_url,
             "images": images,
@@ -12489,6 +12504,7 @@ def register_generated_tools(mcp, _get_client):
                 descriptions=descriptions,
                 call_to_action=call_to_action,
                 link_url=link_url,
+                call_to_action_link=call_to_action_link,
                 lead_gen_form_id=lead_gen_form_id,
                 image_url=image_url,
                 images=images,
@@ -12909,6 +12925,7 @@ def register_generated_tools(mcp, _get_client):
         link_url: str,
         description: str | None = None,
         call_to_action: str = "LEARN_MORE",
+        call_to_action_link: str | None = None,
         image_url: str | None = None,
         image_hash: str | None = None,
         carousel_cards: list[dict[str, Any]] | None = None,
@@ -12950,6 +12967,7 @@ def register_generated_tools(mcp, _get_client):
                 description: Link description below the headline; omitted = Meta scrapes the destination's OG description.
                 call_to_action: CTA type (same whitelist as POST /v1/ads/create).
                 link_url: (required)
+                call_to_action_link: The map location a `GET_DIRECTIONS` button opens, while `linkUrl` stays the creative's website link. Requires `callToAction: GET_DIRECTIONS` and an image creative (`imageUrl` or `imageHash`), 400 otherwise; a `GET_DIRECTIONS` image creative without it is a 400 too.
                 image_url: Publicly reachable image; uploaded to the account's library server-side.
                 image_hash: Existing library image hash (POST /v1/ads/images or GET /v1/ads/images).
                 carousel_cards: Each item is an object with keys: imageUrl (string, required); linkUrl (string, required); headline (string); description (string); callToAction (string)
@@ -12985,6 +13003,7 @@ def register_generated_tools(mcp, _get_client):
                 description=description,
                 call_to_action=call_to_action,
                 link_url=link_url,
+                call_to_action_link=call_to_action_link,
                 image_url=image_url,
                 image_hash=image_hash,
                 carousel_cards=carousel_cards,
@@ -17742,6 +17761,70 @@ def register_generated_tools(mcp, _get_client):
         try:
             response = client.automations.list_automation_checks(
                 automation_id=automation_id, limit=limit, cursor=cursor
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List an automation's runs",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def automations_list_automation_runs(
+        automation_id: str,
+        status: Literal["live", "paused", "completed", "exited", "failed"]
+        | None = None,
+        since: str | None = None,
+        limit: int = 20,
+        cursor: str | None = None,
+    ) -> str:
+        """List an automation's runs
+
+        Every run of any kind of automation, newest first, in one shape. Flows read both their run stores, comment to DM reads its engine runs and its older trigger logs, and ad rules, event and scheduled automations list their checks that acted or tried to (`/checks` lists every check).
+
+        Args:
+            automation_id: (required)
+            status
+            since: Only runs started at or after this time.
+            limit
+            cursor: `nextCursor` from the previous page."""
+        client = _get_client()
+        try:
+            response = client.automations.list_automation_runs(
+                automation_id=automation_id,
+                status=status,
+                since=since,
+                limit=limit,
+                cursor=cursor,
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get one run of an automation",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def automations_get_automation_run(automation_id: str, run_id: str) -> str:
+        """Get one run of an automation
+
+        The run with each step it took, where its store keeps them: a flow run's nodes, a comment to DM log's DM and public reply, an ad rule, event or scheduled check's actions.
+
+        Args:
+            automation_id: (required)
+            run_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.automations.get_automation_run(
+                automation_id=automation_id, run_id=run_id
             )
             return _format_response(response)
         except Exception as e:
@@ -32090,26 +32173,25 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Adjust uploaded conversions
 
-        Retracts, restates the value of, or enhances conversions you already sent to Google Ads or Impact, for refunds or late customer data. To change Zernio's stored event too, and every platform at once, use `PATCH` or `DELETE /v1/events/{eventId}`.
+        Retracts, restates the value of, or enhances conversions you already sent to Google Ads, Impact or a Microsoft Ads offline conversion goal, for refunds or late customer data. To change Zernio's stored event too, and every platform at once, use `PATCH` or `DELETE /v1/events/{eventId}`.
 
         It adjusts conversions previously uploaded via `POST /v1/ads/conversions`: retract them, restate their value, or enhance them with first-party data. Requires the Ads add-on.
 
-        ### Google Ads and Impact only
+        ### Google Ads, Impact and Microsoft Ads only
 
         Google handles adjustments through the classic Google Ads API (`ConversionAdjustmentUploadService`). The Data Manager `ingestEvents` path used for sending conversions is ingest-only.
 
         On Impact, the partner's commission follows the refund:
 
         - `RETRACTION` reverses the action and `RESTATEMENT` sets its sale amount. Impact has no `ENHANCEMENT`.
-        - The action is found by the `destinationId` event type and `orderId`: the `platformData.order_id` the conversion was sent with, or its `eventId` when it had none.
-        - Impact applies changes ...
+        - The action is found by the `destinationId` event type and `orderId`: the `platformData.order_id` the conversion was sent with, or its ...
 
-        Platforms: google, impact
+        Platforms: google, impact, microsoft
 
         Args:
-            account_id: SocialAccount ID. Must be a `googleads` or `impact` account. (required)
-            destination_id: Conversion action resource name on Google, e.g. `customers/1234567890/conversionActions/987654321`; `<program id>:<event type id>` on Impact. (required)
-            adjustments: Each item is an object with keys: adjustmentType (one of: RETRACTION, RESTATEMENT, ENHANCEMENT; required); adjustmentTime (number, required) - When the adjustment occurred, unix seconds.; orderId (string) - Transaction ID of the original conversion (the `eventId` you sent). Recommended; required for ENHANCEMENT.; gclid (string) - Alternative key. The original click ID. Pair with `conversionTime`. Not valid for ENHANCEMENT.; conversionTime (number) - The original conversion's time, unix seconds. Required when identifying by `gclid`.; restatementValue (number) - RESTATEMENT only. The corrected TOTAL conversion value.; currency (string) - RESTATEMENT only. ISO 4217 currency for `restatementValue`.; user (object with keys email, phone) - ENHANCEMENT only. First-party identifiers (hashed server-side). At least one of email/phone required.; userAgent (string) - ENHANCEMENT only. The original conversion's user agent (improves match quality). (required)"""
+            account_id: SocialAccount ID. Must be a `googleads`, `impact` or `microsoftads` account. (required)
+            destination_id: Conversion action resource name on Google, e.g. `customers/1234567890/conversionActions/987654321`; `<program id>:<event type id>` on Impact; `accounts/{adAccountId}/conversionGoals/{goalId}` on Microsoft Ads. (required)
+            adjustments: Each item is an object with keys: adjustmentType (one of: RETRACTION, RESTATEMENT, ENHANCEMENT; required); adjustmentTime (number, required) - When the adjustment occurred, unix seconds.; orderId (string) - Transaction ID of the original conversion (the `eventId` you sent). Recommended; required for ENHANCEMENT.; gclid (string) - Alternative key. The original click ID. Pair with `conversionTime`. Not valid for ENHANCEMENT.; conversionTime (number) - The original conversion's time, unix seconds. Required when identifying by `gclid` or `msclkid`.; msclkid (string) - Microsoft Ads only, and required there. The click ID the conversion was sent with. Pair with `conversionTime`.; restatementValue (number) - RESTATEMENT only. The corrected TOTAL conversion value.; currency (string) - RESTATEMENT only. ISO 4217 currency for `restatementValue`.; user (object with keys email, phone) - ENHANCEMENT only. First-party identifiers (hashed server-side). At least one of email/phone required.; userAgent (string) - ENHANCEMENT only. The original conversion's user agent (improves match quality). (required)"""
         client = _get_client()
         try:
             response = client.conversions.adjust_conversions(
@@ -51751,7 +51833,7 @@ def register_generated_tools(mcp, _get_client):
         Args:
             ad_id: (required)
             url_tags: Meta only. Click-URL params appended to a freshly-rebuilt creative. Meta dynamic macros ({{ad.id}}, {{campaign.id}}, {{placement}}, ...) are sent through unescaped so Meta expands them; every other character is percent-encoded. Each item is an object with keys: key (string, required); value (string, required)
-            creative: Meta only. OPTIONAL: omit to preserve the existing creative verbatim (default). Provide it only to rebuild the creative explicitly, or for creatives whose object_story_spec Meta strips. Object with keys: headline (string, required); body (string, required); callToAction (string, required); linkUrl (string, required); imageUrl (string, required); videoUrl (string)
+            creative: Meta only. OPTIONAL: omit to preserve the existing creative verbatim (default). Provide it only to rebuild the creative explicitly, or for creatives whose object_story_spec Meta strips. Object with keys: headline (string, required); body (string, required); callToAction (string, required); linkUrl (string, required); imageUrl (string, required); videoUrl (string); callToActionLink (string) - The Get Directions button location, required to rebuild a `GET_DIRECTIONS` image creative (400 without it). Only with `callToAction: GET_DIRECTIONS`.
             tracking_url_template: Google only. Full tracking template (must contain {lpurl}).
             final_url_suffix: Google only. Parse-only key=value params.
             dynamic_value_parameters: LinkedIn only. key -> dynamic value enum (CAMPAIGN_ID, CAMPAIGN_NAME, CREATIVE_ID, ...).
@@ -54537,19 +54619,24 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=True,
         )
     )
-    def voice_transfer_voice_call(id: str, to: str) -> str:
+    def voice_transfer_voice_call(
+        id: str, to: str, caller_id: Literal["business", "caller"] = "business"
+    ) -> str:
         """Blind-transfer a live call
 
         Moves the call's current leg to a new destination (a phone number or a SIP endpoint).
 
-        This is a BLIND transfer: control of the leg is handed off and the call ends normally when the transferred leg hangs up. The caller ID presented on the transfer leg is always your own number.
+        This is a BLIND transfer: control of the leg is handed off and the call ends normally when the transferred leg hangs up. The caller ID presented on the transfer leg is your own number unless you pass `callerId: \"caller\"` on an inbound call, which presents the original caller's number.
 
         Args:
             id: (required)
-            to: +E164 phone number (tel: prefix optional) or a sip: URI. wss:// is not a valid transfer target. (required)"""
+            to: +E164 phone number (tel: prefix optional) or a sip: URI. wss:// is not a valid transfer target. (required)
+            caller_id: Caller ID shown on the transfer leg. `business` is your own number. `caller` is the original caller's number, for inbound calls only. The carrier may refuse `caller` on some routes: you get a 422, then retry with `business`."""
         client = _get_client()
         try:
-            response = client.voice.transfer_voice_call(id=id, to=to)
+            response = client.voice.transfer_voice_call(
+                id=id, to=to, caller_id=caller_id
+            )
             return _format_response(response)
         except Exception as e:
             raise ToolError(f"Error: {e}") from e
