@@ -61301,6 +61301,10 @@ TOOL_OAUTH_SCOPES: dict[str, tuple[str, ...]] = {
         "ads:read",
         "ads:write",
     ),
+    "automations_get_automation_run": (
+        "ads:read",
+        "ads:write",
+    ),
     "automations_get_automation_template": (
         "ads:read",
         "ads:write",
@@ -61325,6 +61329,10 @@ TOOL_OAUTH_SCOPES: dict[str, tuple[str, ...]] = {
         "ads:write",
     ),
     "automations_list_automation_checks": (
+        "ads:read",
+        "ads:write",
+    ),
+    "automations_list_automation_runs": (
         "ads:read",
         "ads:write",
     ),
@@ -62356,9 +62364,6 @@ TOOL_OAUTH_SCOPES: dict[str, tuple[str, ...]] = {
     "creator_campaigns_ship_campaign_sample": ("campaigns:write",),
     "creator_campaigns_suspend_campaign_participant": ("campaigns:write",),
     "creator_campaigns_update_creator_campaign": ("campaigns:write",),
-    "creator_portal_get_creator_payout_statement": ("money:write",),
-    "creator_portal_get_creator_payouts": ("money:write",),
-    "creator_portal_get_creator_portal": ("money:write",),
     "crm_create_crm_activity": ("automations:write",),
     "crm_create_crm_contact": ("automations:write",),
     "crm_get_crm_contact": (
