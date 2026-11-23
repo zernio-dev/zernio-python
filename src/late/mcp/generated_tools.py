@@ -61252,7 +61252,10 @@ TOOL_OAUTH_SCOPES: dict[str, tuple[str, ...]] = {
     "analytics_get_linked_in_post_analytics": ("analytics:read",),
     "analytics_get_linked_in_post_reactions": ("analytics:read",),
     "analytics_get_pinterest_account_insights": ("analytics:read",),
-    "analytics_get_post_authenticity": ("analytics:read",),
+    "analytics_get_post_authenticity": (
+        "posts:read",
+        "posts:write",
+    ),
     "analytics_get_post_samples": ("analytics:read",),
     "analytics_get_post_timeline": ("analytics:read",),
     "analytics_get_posting_frequency": ("analytics:read",),
@@ -61808,6 +61811,10 @@ TOOL_OAUTH_SCOPES: dict[str, tuple[str, ...]] = {
         "accounts:write",
     ),
     "connect_get_connect_welcome_screen": (
+        "accounts:read",
+        "accounts:write",
+    ),
+    "connect_get_email_connect_url": (
         "accounts:read",
         "accounts:write",
     ),
@@ -63188,10 +63195,6 @@ TOOL_OAUTH_SCOPES: dict[str, tuple[str, ...]] = {
         "accounts:read",
         "accounts:write",
     ),
-    "users_remove_user": (
-        "accounts:write",
-        "accounts:read",
-    ),
     "validate_media": (
         "posts:read",
         "posts:write",
@@ -63308,10 +63311,7 @@ TOOL_OAUTH_SCOPES: dict[str, tuple[str, ...]] = {
         "accounts:write",
         "accounts:read",
     ),
-    "whatsapp_delete_whats_app_conversational_automation": (
-        "accounts:write",
-        "accounts:read",
-    ),
+    "whatsapp_delete_whats_app_conversational_automation": ("messaging:write",),
     "whatsapp_delete_whats_app_group_chat": ("messaging:write",),
     "whatsapp_delete_whats_app_template": (
         "accounts:write",
@@ -63399,8 +63399,8 @@ TOOL_OAUTH_SCOPES: dict[str, tuple[str, ...]] = {
         "messaging:write",
     ),
     "whatsapp_get_whats_app_conversational_automation": (
-        "accounts:read",
-        "accounts:write",
+        "messaging:read",
+        "messaging:write",
     ),
     "whatsapp_get_whats_app_dataset": (
         "accounts:read",
@@ -63519,10 +63519,7 @@ TOOL_OAUTH_SCOPES: dict[str, tuple[str, ...]] = {
         "messaging:write",
     ),
     "whatsapp_send_whats_app_conversion": ("ads:write",),
-    "whatsapp_set_whats_app_conversational_automation": (
-        "accounts:write",
-        "accounts:read",
-    ),
+    "whatsapp_set_whats_app_conversational_automation": ("messaging:write",),
     "whatsapp_set_whatsapp_business_username": (
         "accounts:write",
         "accounts:read",

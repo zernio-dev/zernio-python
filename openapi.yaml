@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.793.0"
+  version: "1.793.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -36249,7 +36249,7 @@ paths:
   # ============================================
   /v1/metrics/catalog:
     get:
-      x-resource-group: analytics
+      x-resource-group: "analytics"
       x-oauth-scopes: ["analytics:read"]
       operationId: getMetricsCatalog
       tags:
@@ -36398,7 +36398,7 @@ paths:
           $ref: '#/components/responses/AnalyticsRateLimited'
   /v1/metrics/posts:
     get:
-      x-resource-group: analytics
+      x-resource-group: "analytics"
       x-oauth-scopes: ["analytics:read"]
       operationId: getPostMetrics
       tags:
@@ -36849,7 +36849,7 @@ paths:
           $ref: '#/components/responses/TemporarilyUnavailable'
   /v1/metrics/accounts:
     get:
-      x-resource-group: analytics
+      x-resource-group: "analytics"
       x-oauth-scopes: ["analytics:read"]
       operationId: getAccountMetrics
       tags:
@@ -37044,7 +37044,7 @@ paths:
           $ref: '#/components/responses/TemporarilyUnavailable'
   /v1/metrics/insights:
     get:
-      x-resource-group: analytics
+      x-resource-group: "analytics"
       x-oauth-scopes: ["analytics:read"]
       operationId: getInsightMetrics
       tags:
@@ -37369,7 +37369,7 @@ paths:
           $ref: '#/components/responses/TemporarilyUnavailable'
   /v1/metrics/inbox:
     get:
-      x-resource-group: analytics
+      x-resource-group: "analytics"
       x-oauth-scopes: ["analytics:read"]
       operationId: getInboxMetrics
       tags:
@@ -37567,7 +37567,7 @@ paths:
           $ref: '#/components/responses/TemporarilyUnavailable'
   /v1/metrics/ads:
     get:
-      x-resource-group: ads
+      x-resource-group: "ads"
       x-oauth-scopes: ["ads:write", "ads:read"]
       operationId: getAdMetrics
       tags:
@@ -37719,7 +37719,7 @@ paths:
           $ref: '#/components/responses/TemporarilyUnavailable'
   /v1/metrics/campaigns:
     get:
-      x-resource-group: ads
+      x-resource-group: "ads"
       x-oauth-scopes: ["ads:write", "ads:read"]
       operationId: getCampaignMetrics
       tags:
@@ -37817,7 +37817,7 @@ paths:
           $ref: '#/components/responses/TemporarilyUnavailable'
   /v1/metrics/ad-sets:
     get:
-      x-resource-group: ads
+      x-resource-group: "ads"
       x-oauth-scopes: ["ads:write", "ads:read"]
       operationId: getAdSetMetrics
       tags:
@@ -37907,7 +37907,7 @@ paths:
           $ref: '#/components/responses/TemporarilyUnavailable'
   /v1/metrics/ad-accounts:
     get:
-      x-resource-group: ads
+      x-resource-group: "ads"
       x-oauth-scopes: ["ads:write", "ads:read"]
       operationId: getAdAccountMetrics
       tags:
@@ -37964,7 +37964,7 @@ paths:
           $ref: '#/components/responses/TemporarilyUnavailable'
   /v1/metrics/platform-queries/meta-ads:
     post:
-      x-resource-group: ads
+      x-resource-group: "ads"
       x-oauth-scopes: ["ads:write"]
       operationId: queryMetaAds
       tags:
@@ -38039,7 +38039,7 @@ paths:
           $ref: '#/components/responses/TemporarilyUnavailable'
   /v1/metrics/platform-queries/google-ads:
     post:
-      x-resource-group: ads
+      x-resource-group: "ads"
       x-oauth-scopes: ["ads:write"]
       operationId: queryGoogleAds
       tags:
@@ -38113,7 +38113,7 @@ paths:
           $ref: '#/components/responses/TemporarilyUnavailable'
   /v1/metrics/platform-queries/tiktok-ads:
     post:
-      x-resource-group: ads
+      x-resource-group: "ads"
       x-oauth-scopes: ["ads:write"]
       operationId: queryTikTokAds
       tags:
@@ -38194,7 +38194,7 @@ paths:
           $ref: '#/components/responses/TemporarilyUnavailable'
   /v1/metrics/platform-queries/google-analytics:
     post:
-      x-resource-group: analytics
+      x-resource-group: "analytics"
       x-oauth-scopes: ["analytics:read"]
       operationId: queryGoogleAnalytics
       tags:
@@ -43700,8 +43700,8 @@ paths:
         '429': { $ref: '#/components/responses/AnalyticsRateLimited' }
   /v1/posts/{postId}/authenticity:
     get:
-      x-resource-group: "analytics"
-      x-oauth-scopes: ["analytics:read"]
+      x-resource-group: "publishing"
+      x-oauth-scopes: ["posts:read", "posts:write"]
       operationId: getPostAuthenticity
       tags: [Analytics]
       x-platforms: [instagram, facebook, tiktok, youtube, twitter, threads, pinterest, reddit, bluesky, googlebusiness, linkedin]
@@ -48306,8 +48306,7 @@ paths:
           description: Forbidden
         '404': { $ref: '#/components/responses/NotFound' }
     delete:
-      x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-resource-group: "admin-plane"
       operationId: removeUser
       tags: [Users]
       summary: Remove member
@@ -50933,7 +50932,7 @@ paths:
 
   /v1/content-retention:
     get:
-      x-resource-group: accounts
+      x-resource-group: "accounts"
       x-oauth-scopes: ["accounts:read", "accounts:write"]
       operationId: getContentRetention
       tags: [Content Retention]
@@ -50950,7 +50949,7 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { $ref: '#/components/responses/ResourceGroupForbidden' }
     put:
-      x-resource-group: accounts
+      x-resource-group: "accounts"
       x-oauth-scopes: ["accounts:read", "accounts:write"]
       operationId: updateContentRetention
       tags: [Content Retention]
@@ -52280,7 +52279,7 @@ paths:
 
   /v1/connect/googleanalytics:
     get:
-      x-resource-group: accounts
+      x-resource-group: "accounts"
       x-oauth-scopes: ["accounts:read", "accounts:write"]
       operationId: getGoogleAnalyticsConnectUrl
       tags:
@@ -52389,7 +52388,7 @@ paths:
           description: Google Analytics OAuth is not configured.
   /v1/connect/googleanalytics/properties:
     get:
-      x-resource-group: accounts
+      x-resource-group: "accounts"
       x-oauth-scopes: ["accounts:read", "accounts:write"]
       operationId: listGoogleAnalyticsProperties
       tags:
@@ -52447,7 +52446,7 @@ paths:
           description: The pending sign-in expired or was already used. Start the connect again.
   /v1/connect/googleanalytics/select-property:
     post:
-      x-resource-group: accounts
+      x-resource-group: "accounts"
       x-oauth-scopes: ["accounts:read", "accounts:write"]
       operationId: selectGoogleAnalyticsProperty
       tags:
@@ -52503,7 +52502,7 @@ paths:
           description: Google or Zernio failed while saving. The pendingDataToken stays usable; retry.
   /v1/connect/googlesearchconsole:
     get:
-      x-resource-group: accounts
+      x-resource-group: "accounts"
       x-oauth-scopes: ["accounts:read", "accounts:write"]
       operationId: getGoogleSearchConsoleConnectUrl
       tags:
@@ -52614,7 +52613,7 @@ paths:
           description: Google Search Console OAuth is not configured.
   /v1/connect/googlesearchconsole/sites:
     get:
-      x-resource-group: accounts
+      x-resource-group: "accounts"
       x-oauth-scopes: ["accounts:read", "accounts:write"]
       operationId: listGoogleSearchConsoleSites
       tags:
@@ -52671,7 +52670,7 @@ paths:
           description: The pending sign-in expired or was already used. Start the connect again.
   /v1/connect/googlesearchconsole/select-site:
     post:
-      x-resource-group: accounts
+      x-resource-group: "accounts"
       x-oauth-scopes: ["accounts:read", "accounts:write"]
       operationId: selectGoogleSearchConsoleSite
       tags:
@@ -52729,7 +52728,7 @@ paths:
 
   /v1/connect/campaignmanager360:
     get:
-      x-resource-group: accounts
+      x-resource-group: "accounts"
       x-oauth-scopes: ["accounts:read", "accounts:write"]
       operationId: getCampaignManagerConnectUrl
       tags:
@@ -52819,7 +52818,7 @@ paths:
           description: Campaign Manager 360 OAuth is not configured.
   /v1/connect/campaignmanager360/profiles:
     get:
-      x-resource-group: accounts
+      x-resource-group: "accounts"
       x-oauth-scopes: ["accounts:read", "accounts:write"]
       operationId: listCampaignManagerProfiles
       tags:
@@ -52869,7 +52868,7 @@ paths:
           description: The pending sign-in expired or was already used. Start the connect again.
   /v1/connect/campaignmanager360/select-profile:
     post:
-      x-resource-group: accounts
+      x-resource-group: "accounts"
       x-oauth-scopes: ["accounts:read", "accounts:write"]
       operationId: selectCampaignManagerProfile
       tags:
@@ -52921,7 +52920,7 @@ paths:
           description: Google or Zernio failed while saving. The pendingDataToken stays usable; retry.
   /v1/connect/amazonads:
     get:
-      x-resource-group: accounts
+      x-resource-group: "accounts"
       x-oauth-scopes: ["accounts:read", "accounts:write"]
       operationId: getAmazonAdsConnectUrl
       tags:
@@ -52989,7 +52988,7 @@ paths:
 
   /v1/connect/hubspot:
     get:
-      x-resource-group: accounts
+      x-resource-group: "accounts"
       x-oauth-scopes: ["accounts:read", "accounts:write"]
       operationId: getHubSpotConnectUrl
       tags:
@@ -53066,7 +53065,7 @@ paths:
           description: HubSpot OAuth is not configured.
   /v1/connect/gohighlevel:
     get:
-      x-resource-group: accounts
+      x-resource-group: "accounts"
       x-oauth-scopes: ["accounts:read", "accounts:write"]
       operationId: getGohighlevelConnectUrl
       tags:
@@ -53137,7 +53136,7 @@ paths:
           description: HighLevel OAuth is not configured.
   /v1/connect/salesforce:
     get:
-      x-resource-group: accounts
+      x-resource-group: "accounts"
       x-oauth-scopes: ["accounts:read", "accounts:write"]
       operationId: getSalesforceConnectUrl
       tags:
@@ -53223,7 +53222,7 @@ paths:
           description: Salesforce OAuth is not configured.
   /v1/connect/stripe:
     get:
-      x-resource-group: accounts
+      x-resource-group: "accounts"
       x-oauth-scopes: ["accounts:read", "accounts:write"]
       operationId: getStripeConnectUrl
       tags:
@@ -53531,6 +53530,8 @@ paths:
 
   /v1/connect/email:
     get:
+      x-resource-group: "accounts"
+      x-oauth-scopes: ["accounts:read", "accounts:write"]
       x-platforms: [google, microsoft, imap]
       operationId: getEmailConnectUrl
       tags: [Connect]
@@ -56683,7 +56684,7 @@ paths:
 
   /v1/connect/handoffs/{handoffId}:
     get:
-      x-resource-group: accounts
+      x-resource-group: "accounts"
       x-oauth-scopes: ["accounts:read", "accounts:write"]
       operationId: getConnectHandoff
       tags: [Connect]
@@ -56732,7 +56733,7 @@ paths:
           description: The handoff expired, does not exist, or belongs to another workspace (code RESOURCE_NOT_FOUND).
   /v1/connect/welcome-screen:
     get:
-      x-resource-group: accounts
+      x-resource-group: "accounts"
       x-oauth-scopes: ["accounts:read", "accounts:write"]
       operationId: getConnectWelcomeScreen
       tags: [Connect]
@@ -56750,7 +56751,7 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
     put:
-      x-resource-group: accounts
+      x-resource-group: "accounts"
       x-oauth-scopes: ["accounts:read", "accounts:write"]
       operationId: updateConnectWelcomeScreen
       tags: [Connect]
@@ -56790,7 +56791,7 @@ paths:
           description: The caller cannot change workspace settings (code INSUFFICIENT_PERMISSIONS).
   /v1/connect/oauth-apps:
     get:
-      x-resource-group: accounts
+      x-resource-group: "accounts"
       x-oauth-scopes: ["accounts:read", "accounts:write"]
       operationId: listOAuthApps
       tags: [Connect]
@@ -56836,7 +56837,7 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
     post:
-      x-resource-group: accounts
+      x-resource-group: "accounts"
       x-oauth-scopes: ["accounts:read", "accounts:write"]
       operationId: createOAuthApp
       tags: [Connect]
@@ -56905,7 +56906,7 @@ paths:
         required: true
         schema: { type: string }
     get:
-      x-resource-group: accounts
+      x-resource-group: "accounts"
       x-oauth-scopes: ["accounts:read", "accounts:write"]
       operationId: getOAuthApp
       tags: [Connect]
@@ -56929,7 +56930,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
     patch:
-      x-resource-group: accounts
+      x-resource-group: "accounts"
       x-oauth-scopes: ["accounts:read", "accounts:write"]
       operationId: updateOAuthApp
       tags: [Connect]
@@ -56978,7 +56979,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
     delete:
-      x-resource-group: accounts
+      x-resource-group: "accounts"
       x-oauth-scopes: ["accounts:read", "accounts:write"]
       operationId: deleteOAuthApp
       tags: [Connect]
@@ -57012,7 +57013,7 @@ paths:
           description: Accounts are still connected through the app (OAUTH_APP_IN_USE); resend with confirm=true.
   /v1/connect/oauth-apps/{appId}/test:
     post:
-      x-resource-group: accounts
+      x-resource-group: "accounts"
       x-oauth-scopes: ["accounts:read", "accounts:write"]
       operationId: testOAuthApp
       tags: [Connect]
@@ -58367,7 +58368,7 @@ paths:
 
   /v1/connect/tradedesk-ads/partner:
     post:
-      x-resource-group: accounts
+      x-resource-group: "accounts"
       x-oauth-scopes: ["accounts:read", "accounts:write"]
       operationId: connectTradeDeskAdsPartner
       x-platforms:
@@ -59207,7 +59208,7 @@ paths:
 
   /v1/connect/line/credentials:
     post:
-      x-resource-group: accounts
+      x-resource-group: "accounts"
       x-oauth-scopes: ["accounts:read", "accounts:write"]
       operationId: connectLineCredentials
       tags:
@@ -59339,7 +59340,7 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
   /v1/connect/wechat/credentials:
     post:
-      x-resource-group: accounts
+      x-resource-group: "accounts"
       x-oauth-scopes: ["accounts:read", "accounts:write"]
       operationId: connectWechatCredentials
       tags:
@@ -59474,7 +59475,7 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
   /v1/connect/wechat/ip-whitelist:
     get:
-      x-resource-group: accounts
+      x-resource-group: "accounts"
       x-oauth-scopes: ["accounts:read", "accounts:write"]
       operationId: getWechatIpWhitelist
       tags:
@@ -61204,7 +61205,7 @@ paths:
 
   /v1/accounts/{accountId}/instagram/media/{mediaId}/collaborators:
     get:
-      x-resource-group: publishing
+      x-resource-group: "publishing"
       x-oauth-scopes: ["posts:read", "posts:write"]
       operationId: listInstagramMediaCollaborators
       tags:
@@ -61270,7 +61271,7 @@ paths:
           $ref: '#/components/responses/AccountConnectionRequired'
   /v1/accounts/{accountId}/instagram/live-media:
     get:
-      x-resource-group: analytics
+      x-resource-group: "analytics"
       x-oauth-scopes: ["analytics:read"]
       operationId: listInstagramLiveMedia
       tags: [Instagram]
@@ -61329,7 +61330,7 @@ paths:
           $ref: '#/components/responses/AccountConnectionRequired'
   /v1/accounts/{accountId}/instagram/tags:
     get:
-      x-resource-group: analytics
+      x-resource-group: "analytics"
       x-oauth-scopes: ["analytics:read"]
       operationId: listInstagramTaggedMedia
       tags: [Instagram]
@@ -63076,7 +63077,7 @@ paths:
 
   /v1/accounts/{accountId}/hubspot-settings:
     get:
-      x-resource-group: accounts
+      x-resource-group: "accounts"
       x-oauth-scopes: ["accounts:read", "accounts:write"]
       operationId: getHubSpotSettings
       tags:
@@ -63107,7 +63108,7 @@ paths:
         '404':
           description: Account not found
     patch:
-      x-resource-group: accounts
+      x-resource-group: "accounts"
       x-oauth-scopes: ["accounts:read", "accounts:write"]
       operationId: updateHubSpotSettings
       tags:
@@ -63210,7 +63211,7 @@ paths:
           description: Account not found
   /v1/accounts/{accountId}/hubspot-settings/contact-properties:
     get:
-      x-resource-group: accounts
+      x-resource-group: "accounts"
       x-oauth-scopes: ["accounts:read", "accounts:write"]
       operationId: listHubSpotContactProperties
       tags:
@@ -63246,7 +63247,7 @@ paths:
           description: Account not found
   /v1/accounts/{accountId}/gohighlevel-settings:
     get:
-      x-resource-group: accounts
+      x-resource-group: "accounts"
       x-oauth-scopes: ["accounts:read", "accounts:write"]
       operationId: getGohighlevelSettings
       tags:
@@ -63277,7 +63278,7 @@ paths:
         '404':
           description: Account not found
     patch:
-      x-resource-group: accounts
+      x-resource-group: "accounts"
       x-oauth-scopes: ["accounts:read", "accounts:write"]
       operationId: updateGohighlevelSettings
       tags:
@@ -63345,7 +63346,7 @@ paths:
           description: Account not found
   /v1/accounts/{accountId}/gohighlevel-audiences:
     get:
-      x-resource-group: ads
+      x-resource-group: "ads"
       x-oauth-scopes: ["ads:write", "ads:read"]
       operationId: listGohighlevelAudienceSyncs
       tags:
@@ -63377,7 +63378,7 @@ paths:
         '404':
           description: Account not found
     post:
-      x-resource-group: ads
+      x-resource-group: "ads"
       x-oauth-scopes: ["ads:write"]
       operationId: startGohighlevelAudienceSync
       tags:
@@ -63460,7 +63461,7 @@ paths:
           description: The tag is being set up or synced right now, or is already synced. Retry later, or stop the existing sync first.
   /v1/accounts/{accountId}/gohighlevel-audiences/{syncId}:
     delete:
-      x-resource-group: ads
+      x-resource-group: "ads"
       x-oauth-scopes: ["ads:write"]
       operationId: stopGohighlevelAudienceSync
       tags:
@@ -63505,7 +63506,7 @@ paths:
           description: The tag is being set up or synced right now, or is already synced. Retry later, or stop the existing sync first.
   /v1/accounts/{accountId}/gohighlevel-funnel-tracking:
     get:
-      x-resource-group: ads
+      x-resource-group: "ads"
       x-oauth-scopes: ["ads:write", "ads:read"]
       operationId: getGohighlevelFunnelTracking
       tags:
@@ -63538,7 +63539,7 @@ paths:
           description: Account not found
   /v1/accounts/{accountId}/gohighlevel-funnel-tracking/verify:
     post:
-      x-resource-group: ads
+      x-resource-group: "ads"
       x-oauth-scopes: ["ads:write"]
       operationId: verifyGohighlevelFunnelTracking
       tags:
@@ -63588,7 +63589,7 @@ paths:
           description: Account not found
   /v1/accounts/{accountId}/gohighlevel-won-deals-backfill:
     post:
-      x-resource-group: ads
+      x-resource-group: "ads"
       x-oauth-scopes: ["ads:write"]
       operationId: sendGohighlevelPastWonDeals
       tags:
@@ -63641,7 +63642,7 @@ paths:
           description: Another call is sending this sub-account's past won deals. Retry when it ends.
   /v1/accounts/{accountId}/salesforce-settings:
     get:
-      x-resource-group: accounts
+      x-resource-group: "accounts"
       x-oauth-scopes: ["accounts:read", "accounts:write"]
       operationId: getSalesforceSettings
       tags:
@@ -63672,7 +63673,7 @@ paths:
         '404':
           description: Account not found
     patch:
-      x-resource-group: accounts
+      x-resource-group: "accounts"
       x-oauth-scopes: ["accounts:read", "accounts:write"]
       operationId: updateSalesforceSettings
       tags:
@@ -63745,7 +63746,7 @@ paths:
           description: Account not found
   /v1/crm/{accountId}/contacts/search:
     get:
-      x-resource-group: contacts
+      x-resource-group: "contacts"
       x-oauth-scopes: ["automations:write", "contacts:read"]
       operationId: searchCrmContacts
       tags:
@@ -63824,7 +63825,7 @@ paths:
           $ref: '#/components/responses/UpstreamFailure'
   /v1/crm/{accountId}/contacts:
     post:
-      x-resource-group: contacts
+      x-resource-group: "contacts"
       x-oauth-scopes: ["automations:write"]
       operationId: createCrmContact
       tags:
@@ -63890,7 +63891,7 @@ paths:
           $ref: '#/components/responses/UpstreamFailure'
   /v1/crm/{accountId}/contacts/{contactId}:
     get:
-      x-resource-group: contacts
+      x-resource-group: "contacts"
       x-oauth-scopes: ["automations:write", "contacts:read"]
       operationId: getCrmContact
       tags:
@@ -63928,7 +63929,7 @@ paths:
         '502':
           $ref: '#/components/responses/UpstreamFailure'
     patch:
-      x-resource-group: contacts
+      x-resource-group: "contacts"
       x-oauth-scopes: ["automations:write"]
       operationId: updateCrmContact
       tags:
@@ -63979,7 +63980,7 @@ paths:
           $ref: '#/components/responses/UpstreamFailure'
   /v1/crm/{accountId}/contacts/{contactId}/activities:
     post:
-      x-resource-group: contacts
+      x-resource-group: "contacts"
       x-oauth-scopes: ["automations:write"]
       operationId: createCrmActivity
       tags:
@@ -64058,7 +64059,7 @@ paths:
           $ref: '#/components/responses/UpstreamFailure'
   /v1/crm/{accountId}/deals:
     get:
-      x-resource-group: contacts
+      x-resource-group: "contacts"
       x-oauth-scopes: ["automations:write", "contacts:read"]
       operationId: listCrmDeals
       tags:
@@ -64114,7 +64115,7 @@ paths:
           $ref: '#/components/responses/UpstreamFailure'
   /v1/crm/{accountId}/deals/{dealId}:
     get:
-      x-resource-group: contacts
+      x-resource-group: "contacts"
       x-oauth-scopes: ["automations:write", "contacts:read"]
       operationId: getCrmDeal
       tags:
@@ -64152,7 +64153,7 @@ paths:
         '502':
           $ref: '#/components/responses/UpstreamFailure'
     patch:
-      x-resource-group: contacts
+      x-resource-group: "contacts"
       x-oauth-scopes: ["automations:write"]
       operationId: updateCrmDeal
       tags:
@@ -64228,7 +64229,7 @@ paths:
           $ref: '#/components/responses/UpstreamFailure'
   /v1/crm/{accountId}/owners:
     get:
-      x-resource-group: contacts
+      x-resource-group: "contacts"
       x-oauth-scopes: ["automations:write", "contacts:read"]
       operationId: listCrmOwners
       tags:
@@ -64275,7 +64276,7 @@ paths:
           $ref: '#/components/responses/UpstreamFailure'
   /v1/accounts/{accountId}/stripe-settings:
     get:
-      x-resource-group: accounts
+      x-resource-group: "accounts"
       x-oauth-scopes: ["accounts:read", "accounts:write"]
       operationId: getStripeSettings
       tags:
@@ -64305,7 +64306,7 @@ paths:
         '404':
           description: Account not found
     patch:
-      x-resource-group: accounts
+      x-resource-group: "accounts"
       x-oauth-scopes: ["accounts:read", "accounts:write"]
       operationId: updateStripeSettings
       tags:
@@ -71788,7 +71789,7 @@ paths:
 
   /v1/inbox/labels:
     get:
-      x-resource-group: messages
+      x-resource-group: "messages"
       x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-platforms: [facebook]
       operationId: listInboxLabels
@@ -71833,7 +71834,7 @@ paths:
         '422':
           description: No Facebook Page is selected on this account (linked_account_required); reconnect it and select the Page
     post:
-      x-resource-group: messages
+      x-resource-group: "messages"
       x-oauth-scopes: ["messaging:write"]
       x-platforms: [facebook]
       operationId: createInboxLabel
@@ -71885,7 +71886,7 @@ paths:
 
   /v1/inbox/labels/{labelId}:
     delete:
-      x-resource-group: messages
+      x-resource-group: "messages"
       x-oauth-scopes: ["messaging:write"]
       x-platforms: [facebook]
       operationId: deleteInboxLabel
@@ -71932,7 +71933,7 @@ paths:
 
   /v1/inbox/conversations/{conversationId}/labels:
     get:
-      x-resource-group: messages
+      x-resource-group: "messages"
       x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-platforms: [facebook]
       operationId: listConversationLabels
@@ -71982,7 +71983,7 @@ paths:
         '422':
           description: No Facebook Page is selected on this account (linked_account_required); reconnect it and select the Page
     post:
-      x-resource-group: messages
+      x-resource-group: "messages"
       x-oauth-scopes: ["messaging:write"]
       x-platforms: [facebook]
       operationId: addConversationLabel
@@ -72037,7 +72038,7 @@ paths:
 
   /v1/inbox/conversations/{conversationId}/labels/{labelId}:
     delete:
-      x-resource-group: messages
+      x-resource-group: "messages"
       x-oauth-scopes: ["messaging:write"]
       x-platforms: [facebook]
       operationId: removeConversationLabel
@@ -79986,8 +79987,8 @@ paths:
         '404': { $ref: '#/components/responses/AccountUnavailable' }
   /v1/whatsapp/conversational-automation:
     get:
-      x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-resource-group: "messages"
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       operationId: getWhatsAppConversationalAutomation
       tags: [WhatsApp]
       summary: Get ice breakers and commands
@@ -80012,8 +80013,8 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
     post:
-      x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-resource-group: "messages"
+      x-oauth-scopes: ["messaging:write"]
       operationId: setWhatsAppConversationalAutomation
       tags: [WhatsApp]
       summary: Set ice breakers and commands
@@ -80049,8 +80050,8 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
     delete:
-      x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-resource-group: "messages"
+      x-oauth-scopes: ["messaging:write"]
       operationId: deleteWhatsAppConversationalAutomation
       tags: [WhatsApp]
       summary: Clear ice breakers and commands
@@ -89879,7 +89880,7 @@ paths:
         '404': { $ref: '#/components/responses/AccountUnavailable' }
   /v1/automations:
     get:
-      x-resource-group: ads
+      x-resource-group: "ads"
       x-oauth-scopes: ["ads:write", "ads:read"]
       operationId: listAutomations
       tags: [Automations]
@@ -89935,7 +89936,7 @@ paths:
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
     post:
-      x-resource-group: ads
+      x-resource-group: "ads"
       x-oauth-scopes: ["ads:write"]
       operationId: createAutomation
       tags: [Automations]
@@ -90011,7 +90012,7 @@ paths:
         '422': { $ref: '#/components/responses/IdempotencyKeyReused' }
   /v1/automations/catalog:
     get:
-      x-resource-group: ads
+      x-resource-group: "ads"
       x-oauth-scopes: ["ads:write", "ads:read"]
       operationId: getAutomationCatalog
       tags: [Automations]
@@ -90082,7 +90083,7 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
   /v1/automations/actions:
     get:
-      x-resource-group: ads
+      x-resource-group: "ads"
       x-oauth-scopes: ["ads:write", "ads:read"]
       operationId: listAutomationActions
       tags: [Automations]
@@ -90131,7 +90132,7 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
   /v1/automations/{automationId}/checks:
     get:
-      x-resource-group: ads
+      x-resource-group: "ads"
       x-oauth-scopes: ["ads:write", "ads:read"]
       operationId: listAutomationChecks
       tags: [Automations]
@@ -90168,7 +90169,7 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
   /v1/automations/{automationId}/runs:
     get:
-      x-resource-group: ads
+      x-resource-group: "ads"
       x-oauth-scopes: ["ads:write", "ads:read"]
       operationId: listAutomationRuns
       tags: [Automations]
@@ -90212,7 +90213,7 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
   /v1/automations/{automationId}/runs/{runId}:
     get:
-      x-resource-group: ads
+      x-resource-group: "ads"
       x-oauth-scopes: ["ads:write", "ads:read"]
       operationId: getAutomationRun
       tags: [Automations]
@@ -90245,7 +90246,7 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
   /v1/automations/preview:
     post:
-      x-resource-group: ads
+      x-resource-group: "ads"
       x-oauth-scopes: ["ads:write"]
       operationId: previewAutomationDraft
       tags: [Automations]
@@ -90287,7 +90288,7 @@ paths:
         required: true
         schema: { type: string }
     get:
-      x-resource-group: ads
+      x-resource-group: "ads"
       x-oauth-scopes: ["ads:write", "ads:read"]
       operationId: getAutomation
       tags: [Automations]
@@ -90309,7 +90310,7 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
     patch:
-      x-resource-group: ads
+      x-resource-group: "ads"
       x-oauth-scopes: ["ads:write"]
       operationId: updateAutomation
       tags: [Automations]
@@ -90383,7 +90384,7 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
     delete:
-      x-resource-group: ads
+      x-resource-group: "ads"
       x-oauth-scopes: ["ads:write"]
       operationId: deleteAutomation
       tags: [Automations]
@@ -90404,7 +90405,7 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
   /v1/automations/{automationId}/activate:
     post:
-      x-resource-group: ads
+      x-resource-group: "ads"
       x-oauth-scopes: ["ads:write"]
       operationId: activateAutomation
       tags: [Automations]
@@ -90433,7 +90434,7 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
   /v1/automations/{automationId}/pause:
     post:
-      x-resource-group: ads
+      x-resource-group: "ads"
       x-oauth-scopes: ["ads:write"]
       operationId: pauseAutomation
       tags: [Automations]
@@ -90461,7 +90462,7 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
   /v1/automations/{automationId}/take-over:
     post:
-      x-resource-group: ads
+      x-resource-group: "ads"
       x-oauth-scopes: ["ads:write"]
       operationId: takeOverAutomation
       tags: [Automations]
@@ -90497,7 +90498,7 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
   /v1/automations/{automationId}/preview:
     post:
-      x-resource-group: ads
+      x-resource-group: "ads"
       x-oauth-scopes: ["ads:write"]
       operationId: previewAutomation
       tags: [Automations]
@@ -90532,7 +90533,7 @@ paths:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
   /v1/automations/templates:
     get:
-      x-resource-group: ads
+      x-resource-group: "ads"
       x-oauth-scopes: ["ads:write", "ads:read"]
       operationId: listAutomationTemplates
       tags:
@@ -90566,7 +90567,7 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
     post:
-      x-resource-group: ads
+      x-resource-group: "ads"
       x-oauth-scopes: ["ads:write"]
       operationId: createAutomationTemplate
       tags:
@@ -90650,7 +90651,7 @@ paths:
           $ref: '#/components/responses/IdempotencyKeyReused'
   /v1/automations/templates/{templateId}:
     get:
-      x-resource-group: ads
+      x-resource-group: "ads"
       x-oauth-scopes: ["ads:write", "ads:read"]
       operationId: getAutomationTemplate
       tags:
@@ -90688,7 +90689,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
     patch:
-      x-resource-group: ads
+      x-resource-group: "ads"
       x-oauth-scopes: ["ads:write"]
       operationId: updateAutomationTemplate
       tags:
@@ -90749,7 +90750,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
     delete:
-      x-resource-group: ads
+      x-resource-group: "ads"
       x-oauth-scopes: ["ads:write"]
       operationId: deleteAutomationTemplate
       tags:
@@ -90787,7 +90788,7 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
   /v1/automations/templates/{templateId}/install:
     post:
-      x-resource-group: ads
+      x-resource-group: "ads"
       x-oauth-scopes: ["ads:write"]
       operationId: installAutomationTemplate
       tags:
@@ -90884,7 +90885,7 @@ paths:
           $ref: '#/components/responses/IdempotencyKeyReused'
   /v1/automations/templates/shared/{shareToken}:
     get:
-      x-resource-group: ads
+      x-resource-group: "ads"
       x-oauth-scopes: ["ads:write", "ads:read"]
       operationId: getSharedAutomationTemplate
       tags:
@@ -90924,7 +90925,7 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
   /v1/automations/templates/shared/{shareToken}/install:
     post:
-      x-resource-group: ads
+      x-resource-group: "ads"
       x-oauth-scopes: ["ads:write"]
       operationId: installSharedAutomationTemplate
       tags:
@@ -91020,7 +91021,7 @@ paths:
           $ref: '#/components/responses/IdempotencyKeyReused'
   /v1/automations/templates/zernio/{templateId}:
     get:
-      x-resource-group: ads
+      x-resource-group: "ads"
       x-oauth-scopes: ["ads:write", "ads:read"]
       operationId: getZernioAutomationTemplate
       tags:
@@ -91061,7 +91062,7 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
   /v1/automations/templates/zernio/{templateId}/install:
     post:
-      x-resource-group: ads
+      x-resource-group: "ads"
       x-oauth-scopes: ["ads:write"]
       operationId: installZernioAutomationTemplate
       tags:
@@ -91158,7 +91159,7 @@ paths:
           $ref: '#/components/responses/IdempotencyKeyReused'
   /v1/automations/controls:
     get:
-      x-resource-group: ads
+      x-resource-group: "ads"
       x-oauth-scopes: ["ads:write", "ads:read"]
       operationId: getAutomationControls
       tags:
@@ -91185,7 +91186,7 @@ paths:
         '403':
           $ref: '#/components/responses/AutomationsAdsRequired'
     patch:
-      x-resource-group: ads
+      x-resource-group: "ads"
       x-oauth-scopes: ["ads:write"]
       operationId: updateAutomationControls
       tags:
@@ -91234,7 +91235,7 @@ paths:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
   /v1/automations/controls/ad-accounts:
     patch:
-      x-resource-group: ads
+      x-resource-group: "ads"
       x-oauth-scopes: ["ads:write"]
       operationId: updateAutomationAdAccountControls
       tags:
@@ -91306,7 +91307,7 @@ paths:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
   /v1/automations/{automationId}/approvals:
     get:
-      x-resource-group: ads
+      x-resource-group: "ads"
       x-oauth-scopes: ["ads:write", "ads:read"]
       operationId: listAutomationApprovals
       tags:
@@ -91363,7 +91364,7 @@ paths:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
   /v1/automations/{automationId}/approvals/{approvalId}:
     get:
-      x-resource-group: ads
+      x-resource-group: "ads"
       x-oauth-scopes: ["ads:write", "ads:read"]
       operationId: getAutomationApproval
       tags:
@@ -91406,7 +91407,7 @@ paths:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
   /v1/automations/{automationId}/approvals/{approvalId}/approve:
     post:
-      x-resource-group: ads
+      x-resource-group: "ads"
       x-oauth-scopes: ["ads:write"]
       operationId: approveAutomationApproval
       tags:
@@ -91462,7 +91463,7 @@ paths:
           $ref: '#/components/responses/AutomationApprovalRefused'
   /v1/automations/{automationId}/approvals/{approvalId}/reject:
     post:
-      x-resource-group: ads
+      x-resource-group: "ads"
       x-oauth-scopes: ["ads:write"]
       operationId: rejectAutomationApproval
       tags:
@@ -91516,7 +91517,7 @@ paths:
           $ref: '#/components/responses/AutomationApprovalRefused'
   /v1/automations/backtest:
     post:
-      x-resource-group: ads
+      x-resource-group: "ads"
       x-oauth-scopes: ["ads:write"]
       operationId: backtestAutomationDraft
       tags:
@@ -91553,7 +91554,7 @@ paths:
           $ref: '#/components/responses/AutomationsAdsRequired'
   /v1/automations/{automationId}/backtest:
     post:
-      x-resource-group: ads
+      x-resource-group: "ads"
       x-oauth-scopes: ["ads:write"]
       operationId: backtestAutomation
       tags:
@@ -91591,7 +91592,7 @@ paths:
           $ref: '#/components/responses/NotFound'
   /v1/ads/rules:
     get:
-      x-resource-group: ads
+      x-resource-group: "ads"
       x-oauth-scopes: ["ads:write", "ads:read"]
       operationId: listAdRules
       tags: [Ad Rules]
@@ -91640,7 +91641,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
     post:
-      x-resource-group: ads
+      x-resource-group: "ads"
       x-oauth-scopes: ["ads:write"]
       operationId: createAdRule
       tags: [Ad Rules]
@@ -91740,7 +91741,7 @@ paths:
           $ref: '#/components/responses/AccountConnectionRequired'
   /v1/ads/rules/templates:
     get:
-      x-resource-group: ads
+      x-resource-group: "ads"
       x-oauth-scopes: ["ads:write", "ads:read"]
       operationId: listAdRuleTemplates
       tags: [Ad Rules]
@@ -91780,7 +91781,7 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
   /v1/ads/rules/hourly-windows:
     get:
-      x-resource-group: ads
+      x-resource-group: "ads"
       x-oauth-scopes: ["ads:write", "ads:read"]
       operationId: getAdRuleHourlyWindows
       tags: [Ad Rules]
@@ -91818,7 +91819,7 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
   /v1/ads/rules/activity:
     get:
-      x-resource-group: ads
+      x-resource-group: "ads"
       x-oauth-scopes: ["ads:write", "ads:read"]
       operationId: listAdRuleActivity
       tags: [Ad Rules]
@@ -91884,7 +91885,7 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
   /v1/ads/rules/activity/{activityId}/undo:
     post:
-      x-resource-group: ads
+      x-resource-group: "ads"
       x-oauth-scopes: ["ads:write"]
       operationId: undoAdRuleActivity
       tags: [Ad Rules]
@@ -91955,7 +91956,7 @@ paths:
         required: true
         schema: { type: string }
     get:
-      x-resource-group: ads
+      x-resource-group: "ads"
       x-oauth-scopes: ["ads:write", "ads:read"]
       operationId: getAdRule
       tags: [Ad Rules]
@@ -91989,7 +91990,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
     patch:
-      x-resource-group: ads
+      x-resource-group: "ads"
       x-oauth-scopes: ["ads:write"]
       operationId: updateAdRule
       tags: [Ad Rules]
@@ -92050,7 +92051,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
     delete:
-      x-resource-group: ads
+      x-resource-group: "ads"
       x-oauth-scopes: ["ads:write"]
       operationId: deleteAdRule
       tags: [Ad Rules]
@@ -92084,7 +92085,7 @@ paths:
           $ref: '#/components/responses/NotFound'
   /v1/ads/rules/{ruleId}/preview:
     post:
-      x-resource-group: ads
+      x-resource-group: "ads"
       x-oauth-scopes: ["ads:write"]
       operationId: previewAdRule
       tags: [Ad Rules]
@@ -92126,7 +92127,7 @@ paths:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
   /v1/ads/rules/alerts:
     get:
-      x-resource-group: ads
+      x-resource-group: "ads"
       x-oauth-scopes: ["ads:write", "ads:read"]
       operationId: listAdAccountRuleAlerts
       tags: [Ad Rules]
@@ -92188,7 +92189,7 @@ paths:
           $ref: '#/components/responses/Unauthorized'
   /v1/ads/rules/{ruleId}/alerts:
     get:
-      x-resource-group: ads
+      x-resource-group: "ads"
       x-oauth-scopes: ["ads:write", "ads:read"]
       operationId: listAdRuleAlerts
       tags: [Ad Rules]
@@ -92251,7 +92252,7 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
   /v1/ads/rules/{ruleId}/runs:
     get:
-      x-resource-group: ads
+      x-resource-group: "ads"
       x-oauth-scopes: ["ads:write", "ads:read"]
       operationId: listAdRuleRuns
       tags: [Ad Rules]
@@ -92301,7 +92302,7 @@ paths:
           $ref: '#/components/responses/NotFound'
   /v1/ads/campaign-results:
     post:
-      x-resource-group: ads
+      x-resource-group: "ads"
       x-oauth-scopes: ["ads:write"]
       operationId: uploadCampaignResults
       tags: ["Ad Campaign Results"]
@@ -92366,7 +92367,7 @@ paths:
         '422': { description: 'The `Idempotency-Key` was used with a different body.' }
         '429': { $ref: '#/components/responses/RateLimited' }
     get:
-      x-resource-group: ads
+      x-resource-group: "ads"
       x-oauth-scopes: ["ads:write", "ads:read"]
       operationId: listCampaignResults
       tags: ["Ad Campaign Results"]
@@ -92416,7 +92417,7 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
   /v1/ads/campaign-results/uploads/{uploadId}:
     get:
-      x-resource-group: ads
+      x-resource-group: "ads"
       x-oauth-scopes: ["ads:write", "ads:read"]
       operationId: getCampaignResultsUpload
       tags: ["Ad Campaign Results"]
@@ -92465,7 +92466,7 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
   /v1/ads/campaign-results/totals:
     get:
-      x-resource-group: ads
+      x-resource-group: "ads"
       x-oauth-scopes: ["ads:write", "ads:read"]
       operationId: getCampaignResultsTotals
       tags: ["Ad Campaign Results"]
@@ -92503,7 +92504,7 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
   /v1/ads/campaign-results/events:
     get:
-      x-resource-group: ads
+      x-resource-group: "ads"
       x-oauth-scopes: ["ads:write", "ads:read"]
       operationId: getCampaignResultEvents
       tags: ["Ad Campaign Results"]
@@ -92525,7 +92526,7 @@ paths:
                   eventNames: { type: array, items: { type: string }, example: [Purchase, Lead, CompleteRegistration] }
         '401': { $ref: '#/components/responses/Unauthorized' }
     put:
-      x-resource-group: ads
+      x-resource-group: "ads"
       x-oauth-scopes: ["ads:write"]
       operationId: setCampaignResultEvents
       tags: ["Ad Campaign Results"]
@@ -92566,7 +92567,7 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
   /v1/ads/campaign-results/tag-new-ads:
     get:
-      x-resource-group: ads
+      x-resource-group: "ads"
       x-oauth-scopes: ["ads:write", "ads:read"]
       operationId: getTagNewAds
       tags: ["Ad Campaign Results"]
@@ -92588,7 +92589,7 @@ paths:
                   enabled: { type: boolean, example: false }
         '401': { $ref: '#/components/responses/Unauthorized' }
     put:
-      x-resource-group: ads
+      x-resource-group: "ads"
       x-oauth-scopes: ["ads:write"]
       operationId: setTagNewAds
       tags: ["Ad Campaign Results"]
@@ -92623,7 +92624,7 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
   /v1/ads/campaign-results/profit:
     get:
-      x-resource-group: ads
+      x-resource-group: "ads"
       x-oauth-scopes: ["ads:write", "ads:read"]
       operationId: getCampaignResultProfit
       tags: ["Ad Campaign Results"]
@@ -92641,7 +92642,7 @@ paths:
               schema: { $ref: '#/components/schemas/CampaignResultProfit' }
         '401': { $ref: '#/components/responses/Unauthorized' }
     put:
-      x-resource-group: ads
+      x-resource-group: "ads"
       x-oauth-scopes: ["ads:write"]
       operationId: setCampaignResultProfit
       tags: ["Ad Campaign Results"]
@@ -92677,7 +92678,7 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
   /v1/ads/campaign-results/metrics:
     get:
-      x-resource-group: ads
+      x-resource-group: "ads"
       x-oauth-scopes: ["ads:write", "ads:read"]
       operationId: listCampaignResultMetrics
       tags: ["Ad Campaign Results"]
@@ -92704,7 +92705,7 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
   /v1/ads/campaign-results/metrics/{key}:
     put:
-      x-resource-group: ads
+      x-resource-group: "ads"
       x-oauth-scopes: ["ads:write"]
       operationId: setCampaignResultMetric
       tags: ["Ad Campaign Results"]
@@ -112857,7 +112858,7 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
   /v1/tracking-sites:
     get:
-      x-resource-group: ads
+      x-resource-group: "ads"
       x-oauth-scopes: ["ads:write", "ads:read"]
       operationId: listTrackingSites
       tags: [Conversions]
@@ -112894,7 +112895,7 @@ paths:
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
     post:
-      x-resource-group: ads
+      x-resource-group: "ads"
       x-oauth-scopes: ["ads:write"]
       operationId: createTrackingSite
       tags: [Conversions]
@@ -112964,7 +112965,7 @@ paths:
         required: true
         schema: { type: string }
     get:
-      x-resource-group: ads
+      x-resource-group: "ads"
       x-oauth-scopes: ["ads:write", "ads:read"]
       operationId: getTrackingSite
       tags: [Conversions]
@@ -112989,7 +112990,7 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
     patch:
-      x-resource-group: ads
+      x-resource-group: "ads"
       x-oauth-scopes: ["ads:write"]
       operationId: updateTrackingSite
       tags: [Conversions]
@@ -113080,7 +113081,7 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
     delete:
-      x-resource-group: ads
+      x-resource-group: "ads"
       x-oauth-scopes: ["ads:write"]
       operationId: deleteTrackingSite
       tags: [Conversions]
@@ -113096,7 +113097,7 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
   /v1/tracking-sites/{siteId}/rotate-key:
     post:
-      x-resource-group: ads
+      x-resource-group: "ads"
       x-oauth-scopes: ["ads:write"]
       operationId: rotateTrackingSiteKey
       tags: [Conversions]
@@ -113128,7 +113129,7 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
   /v1/tracking-sites/{siteId}/proxy-check:
     post:
-      x-resource-group: ads
+      x-resource-group: "ads"
       x-oauth-scopes: ["ads:write"]
       operationId: checkTrackingSiteProxy
       tags: [Conversions]
@@ -113155,7 +113156,7 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
   /v1/tracking-links:
     get:
-      x-resource-group: ads
+      x-resource-group: "ads"
       x-oauth-scopes: ["ads:write", "ads:read"]
       operationId: listTrackingLinks
       tags: [Tracking links]
@@ -113196,7 +113197,7 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
     post:
-      x-resource-group: ads
+      x-resource-group: "ads"
       x-oauth-scopes: ["ads:write"]
       operationId: createTrackingLink
       tags: [Tracking links]
@@ -113253,7 +113254,7 @@ paths:
         required: true
         schema: { type: string }
     get:
-      x-resource-group: ads
+      x-resource-group: "ads"
       x-oauth-scopes: ["ads:write", "ads:read"]
       operationId: getTrackingLink
       tags: [Tracking links]
@@ -113278,7 +113279,7 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
     patch:
-      x-resource-group: ads
+      x-resource-group: "ads"
       x-oauth-scopes: ["ads:write"]
       operationId: updateTrackingLink
       tags: [Tracking links]
@@ -113322,7 +113323,7 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
     delete:
-      x-resource-group: ads
+      x-resource-group: "ads"
       x-oauth-scopes: ["ads:write"]
       operationId: deleteTrackingLink
       tags: [Tracking links]
@@ -113338,7 +113339,7 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
   /v1/tracking-links/{linkId}/rotate-postback-token:
     post:
-      x-resource-group: ads
+      x-resource-group: "ads"
       x-oauth-scopes: ["ads:write"]
       operationId: rotateTrackingLinkPostbackToken
       tags: [Tracking links]
@@ -113370,7 +113371,7 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
   /v1/tracking-links/{linkId}/stats:
     get:
-      x-resource-group: ads
+      x-resource-group: "ads"
       x-oauth-scopes: ["ads:write", "ads:read"]
       operationId: getTrackingLinkStats
       tags: [Tracking links]
@@ -119371,7 +119372,7 @@ paths:
 
   /v1/commerce/orders:
     get:
-      x-resource-group: commerce
+      x-resource-group: "commerce"
       x-oauth-scopes: ["commerce:write"]
       operationId: listCommerceOrders
       tags:
@@ -119493,7 +119494,7 @@ paths:
           description: Rate limited, either by Zernio or by the platform. Retry later.
   /v1/commerce/orders/{orderId}:
     get:
-      x-resource-group: commerce
+      x-resource-group: "commerce"
       x-oauth-scopes: ["commerce:write"]
       operationId: getCommerceOrder
       tags:
@@ -119544,7 +119545,7 @@ paths:
           x-summary: "Zernio or the platform rate limited the request: retry later."
           description: Rate limited, either by Zernio or by the platform. Retry later.
     patch:
-      x-resource-group: commerce
+      x-resource-group: "commerce"
       x-oauth-scopes: ["commerce:write"]
       operationId: updateCommerceOrder
       tags:
@@ -119615,7 +119616,7 @@ paths:
           description: Rate limited, either by Zernio or by the platform. Retry later.
   /v1/commerce/orders/{orderId}/refunds:
     post:
-      x-resource-group: commerce
+      x-resource-group: "commerce"
       x-oauth-scopes: ["commerce:write"]
       operationId: createCommerceRefund
       tags:
@@ -119693,7 +119694,7 @@ paths:
           description: Rate limited, either by Zernio or by the platform. Retry later.
   /v1/commerce/orders/{orderId}/edits:
     post:
-      x-resource-group: commerce
+      x-resource-group: "commerce"
       x-oauth-scopes: ["commerce:write"]
       operationId: createCommerceOrderEdit
       tags:
@@ -119782,7 +119783,7 @@ paths:
           description: Rate limited, either by Zernio or by the platform. Retry later.
   /v1/commerce/orders/{orderId}/cancel:
     post:
-      x-resource-group: commerce
+      x-resource-group: "commerce"
       x-oauth-scopes: ["commerce:write"]
       operationId: cancelCommerceOrder
       tags:
@@ -119850,7 +119851,7 @@ paths:
           description: Rate limited, either by Zernio or by the platform. Retry later.
   /v1/commerce/draft-orders:
     post:
-      x-resource-group: commerce
+      x-resource-group: "commerce"
       x-oauth-scopes: ["commerce:write"]
       operationId: createCommerceDraftOrder
       tags:
@@ -119953,7 +119954,7 @@ paths:
           description: Rate limited, either by Zernio or by the platform. Retry later.
   /v1/commerce/draft-orders/{draftOrderId}:
     get:
-      x-resource-group: commerce
+      x-resource-group: "commerce"
       x-oauth-scopes: ["commerce:write"]
       operationId: getCommerceDraftOrder
       tags:
@@ -120001,7 +120002,7 @@ paths:
           description: Rate limited, either by Zernio or by the platform. Retry later.
   /v1/commerce/draft-orders/{draftOrderId}/invoice:
     post:
-      x-resource-group: commerce
+      x-resource-group: "commerce"
       x-oauth-scopes: ["commerce:write"]
       operationId: sendCommerceDraftOrderInvoice
       tags:
@@ -120055,7 +120056,7 @@ paths:
           description: Rate limited, either by Zernio or by the platform. Retry later.
   /v1/commerce/customers:
     get:
-      x-resource-group: commerce
+      x-resource-group: "commerce"
       x-oauth-scopes: ["commerce:write"]
       operationId: listCommerceCustomers
       tags:
@@ -120133,7 +120134,7 @@ paths:
           description: Rate limited, either by Zernio or by the platform. Retry later.
   /v1/commerce/customers/{customerId}:
     get:
-      x-resource-group: commerce
+      x-resource-group: "commerce"
       x-oauth-scopes: ["commerce:write"]
       operationId: getCommerceCustomer
       tags:
@@ -123642,7 +123643,7 @@ paths:
 
   /v1/conversion-audit/monitors:
     get:
-      x-resource-group: accounts
+      x-resource-group: "accounts"
       x-oauth-scopes: ["accounts:read", "accounts:write"]
       operationId: listConversionAuditMonitors
       tags:
@@ -123670,7 +123671,7 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { $ref: '#/components/responses/ResourceGroupForbidden' }
     post:
-      x-resource-group: accounts
+      x-resource-group: "accounts"
       x-oauth-scopes: ["accounts:read", "accounts:write"]
       operationId: createConversionAuditMonitor
       tags:
@@ -123729,7 +123730,7 @@ paths:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
   /v1/conversion-audit/monitors/{monitorId}:
     delete:
-      x-resource-group: accounts
+      x-resource-group: "accounts"
       x-oauth-scopes: ["accounts:read", "accounts:write"]
       operationId: deleteConversionAuditMonitor
       tags:
