@@ -200,6 +200,26 @@ class AutomationsResource:
         """Get one run of an automation"""
         return self._client._get(f"/v1/automations/{automation_id}/runs/{run_id}")
 
+    def test_automation(
+        self,
+        automation_id: str,
+        *,
+        event: dict[str, Any] | None = None,
+        subject_id: str | None = None,
+    ) -> dict[str, Any]:
+        """Test an automation on a sample event"""
+        payload = self._build_body(
+            {
+                "event": event,
+                "subjectId": subject_id,
+            }
+        )
+        return self._client._post(f"/v1/automations/{automation_id}/test", data=payload)
+
+    def get_automation_test_sample(self, automation_id: str) -> dict[str, Any]:
+        """Get a sample test body for an automation"""
+        return self._client._get(f"/v1/automations/{automation_id}/test/sample")
+
     def preview_automation_draft(
         self, body: dict[str, Any], *, limit: int | None = 100
     ) -> dict[str, Any]:
@@ -645,6 +665,28 @@ class AutomationsResource:
         return await self._client._aget(
             f"/v1/automations/{automation_id}/runs/{run_id}"
         )
+
+    async def atest_automation(
+        self,
+        automation_id: str,
+        *,
+        event: dict[str, Any] | None = None,
+        subject_id: str | None = None,
+    ) -> dict[str, Any]:
+        """Test an automation on a sample event (async)"""
+        payload = self._build_body(
+            {
+                "event": event,
+                "subjectId": subject_id,
+            }
+        )
+        return await self._client._apost(
+            f"/v1/automations/{automation_id}/test", data=payload
+        )
+
+    async def aget_automation_test_sample(self, automation_id: str) -> dict[str, Any]:
+        """Get a sample test body for an automation (async)"""
+        return await self._client._aget(f"/v1/automations/{automation_id}/test/sample")
 
     async def apreview_automation_draft(
         self, body: dict[str, Any], *, limit: int | None = 100

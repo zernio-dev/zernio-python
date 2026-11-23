@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.796.1"
+  version: "1.797.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -25195,6 +25195,37 @@ components:
         - $ref: '#/components/schemas/AdRuleAutomationCheck'
         - $ref: '#/components/schemas/EventAutomationCheck'
         - $ref: '#/components/schemas/ScheduledAutomationCheck'
+    AutomationTestDecision:
+      description: What the automation would do with the sample, decided by the code its live runs use.
+      type: object
+      required: [wouldRun, matched, plannedSteps]
+      properties:
+        wouldRun: { type: boolean }
+        reason:
+          type: string
+          description: 'Why it would not run: keyword_miss, keyword_excluded, other_post, trigger_miss, not_first_message, account_not_listened, filter_miss, no_match, subject_not_matched, post_not_matched, no_accounts, no_subscribed_channel, unsubscribed, already_enrolled, runs_paused, paused or draft.'
+        matched:
+          type: array
+          description: What the sample met, such as a keyword, a filter condition, the trigger, a post or an ad.
+          items:
+            type: object
+            required: [type, value]
+            properties:
+              type: { type: string }
+              value: { type: string }
+        plannedSteps:
+          type: array
+          description: The steps it would take, in order. A flow lists its first steps up to the first branch.
+          items:
+            type: object
+            required: [type, summary]
+            properties:
+              type: { type: string }
+              summary: { type: string }
+        nextRunAt:
+          type: [string, 'null']
+          format: date-time
+          description: A scheduled automation's next check.
     AutomationRun:
       description: 'One subject going through an automation, the same shape for every kind. A flow, sequence or comment to DM run is one conversation, contact or comment; an ad rule, event or scheduled automation run is one check that acted or tried to.'
       type: object
@@ -90276,6 +90307,96 @@ paths:
                 required: [run]
                 properties:
                   run: { $ref: '#/components/schemas/AutomationRunDetail' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /v1/automations/{automationId}/test:
+    post:
+      x-resource-group: "ads"
+      x-oauth-scopes: ["ads:write"]
+      operationId: testAutomation
+      tags: [Automations]
+      summary: Test an automation on a sample event
+      description: |
+        Runs one sample through the automation's own decision code and says whether it would run, what it matched and the steps it would take. Nothing is claimed, sent or written, whatever the automation does.
+
+        What each kind reads:
+
+        - Comment to DM: a comment (`event.text`, `event.platformPostId`).
+        - Flow: an inbound event (`event.trigger`, `event.text`, `event.firstMessage`).
+        - Event automation: the event's webhook payload, or the sample payload when `event` is left out.
+        - Ad rule: the ad account as it is now, like a preview. `subjectId` narrows to one object.
+        - Scheduled automation: the posts it would check now, and its next check. `subjectId` narrows to one post.
+        - Sequence: the contact in `subjectId`.
+
+        A paused or draft automation is tested as if it were live, and answers `wouldRun: false` with its status as `reason`. Cooldowns, daily caps and a conversation's live run read history and are left out. `GET /v1/automations/{automationId}/test/sample` returns a body to start from.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: automationId
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                event:
+                  type: object
+                  additionalProperties: true
+                  description: The sample event, shaped by the automation's kind.
+                subjectId:
+                  type: string
+                  description: A sequence's contact, a scheduled automation's post or an ad rule's object.
+      responses:
+        '200':
+          description: Decision
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [decision]
+                properties:
+                  decision: { $ref: '#/components/schemas/AutomationTestDecision' }
+        '400': { $ref: '#/components/responses/AutomationInvalid' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/AutomationsAdsRequired' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /v1/automations/{automationId}/test/sample:
+    get:
+      x-resource-group: "ads"
+      x-oauth-scopes: ["ads:write", "ads:read"]
+      operationId: getAutomationTestSample
+      tags: [Automations]
+      summary: Get a sample test body for an automation
+      description: |
+        A body `POST /v1/automations/{automationId}/test` accepts for this automation: a comment with its first keyword, an inbound event its flow's trigger takes, its event's webhook payload with sample values, or the contact a sequence enrolled last. Kinds that read live data instead take no event.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: automationId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Sample
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [kind, sample]
+                properties:
+                  kind: { type: string, enum: [ad_rule, event, scheduled, sequence, comment, workflow] }
+                  sample:
+                    type: object
+                    required: [description]
+                    properties:
+                      event: { type: object, additionalProperties: true }
+                      subjectId: { type: string }
+                      description: { type: string }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }

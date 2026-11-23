@@ -17832,6 +17832,71 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="Test an automation on a sample event",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def automations_test_automation(
+        automation_id: str,
+        event: dict[str, Any] | None = None,
+        subject_id: str | None = None,
+    ) -> str:
+        """Test an automation on a sample event
+
+        Runs one sample through the automation's own decision code and says whether it would run, what it matched and the steps it would take. Nothing is claimed, sent or written, whatever the automation does.
+
+        What each kind reads:
+
+        - Comment to DM: a comment (`event.text`, `event.platformPostId`).
+        - Flow: an inbound event (`event.trigger`, `event.text`, `event.firstMessage`).
+        - Event automation: the event's webhook payload, or the sample payload when `event` is left out.
+        - Ad rule: the ad account as it is now, like a preview. `subjectId` narrows to one object.
+        - Scheduled automation: the posts it would check now, and its next check. `subjectId` narrows to one post.
+        - Sequence: the contact in `subjectId`.
+
+        A paused or draft automation is tested as if it were live, and answers `wouldRun: false` with its status as `reason`. Cooldowns, daily caps and a conversation's live run read history and are left out. `GET /v1/automations/{automationId}/test/sample` returns a body to start from.
+
+        Args:
+            automation_id: (required)
+            event: The sample event, shaped by the automation's kind.
+            subject_id: A sequence's contact, a scheduled automation's post or an ad rule's object."""
+        client = _get_client()
+        try:
+            response = client.automations.test_automation(
+                automation_id=automation_id, event=event, subject_id=subject_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get a sample test body for an automation",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def automations_get_automation_test_sample(automation_id: str) -> str:
+        """Get a sample test body for an automation
+
+        A body `POST /v1/automations/{automationId}/test` accepts for this automation: a comment with its first keyword, an inbound event its flow's trigger takes, its event's webhook payload with sample values, or the contact a sequence enrolled last. Kinds that read live data instead take no event.
+
+        Args:
+            automation_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.automations.get_automation_test_sample(
+                automation_id=automation_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="Preview an unsaved automation",
             readOnlyHint=True,
             destructiveHint=False,
@@ -61317,6 +61382,10 @@ TOOL_OAUTH_SCOPES: dict[str, tuple[str, ...]] = {
         "ads:read",
         "ads:write",
     ),
+    "automations_get_automation_test_sample": (
+        "ads:read",
+        "ads:write",
+    ),
     "automations_get_shared_automation_template": (
         "ads:read",
         "ads:write",
@@ -61357,6 +61426,7 @@ TOOL_OAUTH_SCOPES: dict[str, tuple[str, ...]] = {
     "automations_preview_automation_draft": ("ads:write",),
     "automations_reject_automation_approval": ("ads:write",),
     "automations_take_over_automation": ("ads:write",),
+    "automations_test_automation": ("ads:write",),
     "automations_update_automation": ("ads:write",),
     "automations_update_automation_ad_account_controls": ("ads:write",),
     "automations_update_automation_controls": ("ads:write",),
