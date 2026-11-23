@@ -11614,6 +11614,7 @@ def register_generated_tools(mcp, _get_client):
         ]
         | None = None,
         link_url: str | None = None,
+        call_to_action_link: str | None = None,
         lead_gen_form_id: str | None = None,
         image_url: str | None = None,
         images: dict[str, Any] | None = None,
@@ -11991,6 +11992,11 @@ def register_generated_tools(mcp, _get_client):
         - **LinkedIn:** required for `traffic` ads, optional for `engagement` / `awareness`. `imageUrl` + `linkUrl` publishes an ARTICLE-content creative (LinkedIn's article ad format), with the image as thumbnail and `longHeadline` as description.
         - **OpenAI Ads:** required (the chat card's target_url).
         - **Reddit:** required on image and video ads (the post's destination and the ad's click URL), the fallback for carousel cards without their own, and refused with 400 on text ads.
+                call_to_action_link: Meta only. The map location a `GET_DIRECTIONS` button opens, while `linkUrl` stays the ad's website link.
+
+        - Single image ads, with or without `bodies` / `headlines`, also on the adSetId attach shape and with `validateOnly`. Required on a `GET_DIRECTIONS` image ad (400 without it).
+        - 400 with any other `callToAction`, with `video`, `carouselCards`, `creatives[]`, `dynamicCreative`, `placementAssets`, `translations`, catalog ads, `leadGenFormId`, goal `page_likes` or `existingCreativeId`, and on other networks.
+        - Stored on the ad and returned as `creative.callToActionLink`.
                 lead_gen_form_id: Lead Gen form ID to attach to the ad's creative. REQUIRED when `goal` is `lead_generation`. Create one via POST /v1/ads/lead-forms.
 
         - Meta (facebook/instagram): the leadgen_forms ID. The ad set's promoted_object.page_id, LEAD_GENERATION optimization and destination_type ON_AD are derived automatically from the goal.
@@ -12363,6 +12369,7 @@ def register_generated_tools(mcp, _get_client):
             "descriptions": descriptions,
             "call_to_action": call_to_action,
             "link_url": link_url,
+            "call_to_action_link": call_to_action_link,
             "lead_gen_form_id": lead_gen_form_id,
             "image_url": image_url,
             "images": images,
@@ -12489,6 +12496,7 @@ def register_generated_tools(mcp, _get_client):
                 descriptions=descriptions,
                 call_to_action=call_to_action,
                 link_url=link_url,
+                call_to_action_link=call_to_action_link,
                 lead_gen_form_id=lead_gen_form_id,
                 image_url=image_url,
                 images=images,
@@ -12909,6 +12917,7 @@ def register_generated_tools(mcp, _get_client):
         link_url: str,
         description: str | None = None,
         call_to_action: str = "LEARN_MORE",
+        call_to_action_link: str | None = None,
         image_url: str | None = None,
         image_hash: str | None = None,
         carousel_cards: list[dict[str, Any]] | None = None,
@@ -12950,6 +12959,7 @@ def register_generated_tools(mcp, _get_client):
                 description: Link description below the headline; omitted = Meta scrapes the destination's OG description.
                 call_to_action: CTA type (same whitelist as POST /v1/ads/create).
                 link_url: (required)
+                call_to_action_link: The map location a `GET_DIRECTIONS` button opens, while `linkUrl` stays the creative's website link. Requires `callToAction: GET_DIRECTIONS` and an image creative (`imageUrl` or `imageHash`), 400 otherwise; a `GET_DIRECTIONS` image creative without it is a 400 too.
                 image_url: Publicly reachable image; uploaded to the account's library server-side.
                 image_hash: Existing library image hash (POST /v1/ads/images or GET /v1/ads/images).
                 carousel_cards: Each item is an object with keys: imageUrl (string, required); linkUrl (string, required); headline (string); description (string); callToAction (string)
@@ -12985,6 +12995,7 @@ def register_generated_tools(mcp, _get_client):
                 description=description,
                 call_to_action=call_to_action,
                 link_url=link_url,
+                call_to_action_link=call_to_action_link,
                 image_url=image_url,
                 image_hash=image_hash,
                 carousel_cards=carousel_cards,
