@@ -35,7 +35,7 @@ from late.mcp.constants import (
     ENDPOINT_OAUTH_PROTECTED_RESOURCE,
     MCP_PUBLIC_URL,
 )
-from late.mcp.generated_tools import TOOL_OAUTH_SCOPE
+from late.mcp.generated_tools import TOOL_OAUTH_SCOPES
 from late.mcp.media_items import media_item
 from late.mcp.middleware import (
     MissingScopeChallengeMiddleware,
@@ -562,7 +562,7 @@ chatgpt_mcp.add_middleware(WellFormedOutputMiddleware())
 chatgpt_mcp.add_middleware(RateLimitGuidanceMiddleware())
 chatgpt_mcp.add_middleware(
     MissingScopeChallengeMiddleware(
-        scope_by_tool=TOOL_OAUTH_SCOPE,
+        scopes_by_tool=TOOL_OAUTH_SCOPES,
         resource_metadata_url=(
             f"{MCP_PUBLIC_URL}{ENDPOINT_OAUTH_PROTECTED_RESOURCE}{ENDPOINT_CHATGPT}"
         ),

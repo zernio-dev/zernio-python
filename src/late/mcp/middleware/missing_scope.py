@@ -5,7 +5,8 @@ it, and the API refuses that tool with 403 insufficient_permissions. ChatGPT
 shows its linking UI only for an error result carrying
 _meta["mcp/www_authenticate"], so the 403 is answered with that challenge
 instead of a plain error. A 403 the token's scope already covers (a team member
-with the group turned off) stays a plain error: re-linking cannot fix it.
+with the group turned off, or a write scope that includes the read) stays a
+plain error: re-linking cannot fix it.
 """
 
 from collections.abc import Mapping, Sequence
@@ -45,11 +46,11 @@ class MissingScopeChallengeMiddleware(Middleware):
     def __init__(
         self,
         *,
-        scope_by_tool: Mapping[str, str],
+        scopes_by_tool: Mapping[str, Sequence[str]],
         resource_metadata_url: str,
         scopes: Sequence[str],
     ) -> None:
-        self._scope_by_tool = scope_by_tool
+        self._scopes_by_tool = scopes_by_tool
         self._challenge = (
             f'Bearer resource_metadata="{resource_metadata_url}", '
             f'error="insufficient_scope", scope="{" ".join(scopes)}", '
@@ -64,15 +65,16 @@ class MissingScopeChallengeMiddleware(Middleware):
         try:
             return await call_next(context)
         except ToolError as exc:
-            needed = self._scope_by_tool.get(context.message.name)
+            reaching = self._scopes_by_tool.get(context.message.name)
             granted = _granted_scopes()
             if (
-                needed is None
+                not reaching
                 or granted is None
-                or needed in granted
+                or granted.intersection(reaching)
                 or not _refused_for_a_group(exc.__cause__)
             ):
                 raise
+            needed = reaching[0]
             return ToolResult(
                 content=[
                     TextContent(

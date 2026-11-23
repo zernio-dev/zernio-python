@@ -13,18 +13,18 @@ import inspect
 import re
 from typing import TYPE_CHECKING, Any
 
-from late.mcp.generated_tools import TOOL_OAUTH_SCOPE, register_generated_tools
+from late.mcp.generated_tools import TOOL_OAUTH_SCOPES, register_generated_tools
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterable
 
     from fastmcp import FastMCP
 
-# Ranked by 30-day use (REST requests plus /mcp tool calls), top first. Reads
-# only, from resource groups a link reaches with the scopes ChatGPT already
-# asks for plus messaging:write for the inbox: ads and contacts reads wait,
-# because their only scopes (ads:write, automations:write) also allow spending
-# and sending. Sends, deletes and spend are later waves.
+# Ranked by 30-day use (REST requests plus /mcp tool calls), top first: the 40
+# most used reads. Each declares its group's read scope (messaging:read,
+# ads:read, contacts:read where the group has one), so a link that only reads
+# never grants sending or spending. Sends, writes, deletes and spend are later
+# waves.
 WAVE_1 = (
     "messages_get_inbox_conversation_messages",
     "comments_get_inbox_post_comments",
@@ -40,39 +40,39 @@ WAVE_1 = (
     "profiles_list_profiles",
     "accounts_get_all_accounts_health",
     "ad_accounts_get_ad_comments",
+    "ad_insights_query_ad_insights",
+    "whatsapp_phone_numbers_get_whats_app_number_info",
+    "lead_gen_list_form_leads",
     "broadcasts_list_broadcast_recipients",
     "reviews_list_inbox_reviews",
+    "ad_campaigns_get_ad_tree",
+    "ad_campaigns_get_ad",
     "comment_automations_list_comment_automations",
     "instagram_get_instagram_story_insights",
+    "ad_campaigns_list_ads",
     "analytics_get_tik_tok_account_insights",
     "workflows_list_workflow_executions",
     "accounts_get_google_business_location_details",
+    "ad_insights_get_ad_analytics",
     "analytics_get_google_business_performance",
+    "ad_campaigns_list_ad_campaigns",
     "analytics_get_you_tube_daily_views",
+    "ad_accounts_list_ad_accounts",
     "analytics_get_post_timeline",
+    "ad_campaigns_get_ad_set_details",
     "accounts_get_instagram_follow_status",
     "accounts_get_follower_stats",
     "analytics_get_instagram_demographics",
     "whatsapp_get_whats_app_templates",
     "analytics_get_linked_in_post_analytics",
-    "broadcasts_get_broadcast",
-    "workflows_get_workflow",
-    "instagram_list_instagram_stories",
-    "analytics_get_facebook_page_insights",
-    "analytics_get_instagram_follower_history",
-    "profiles_get_profile",
-    "instagram_get_instagram_publishing_limit",
-    "analytics_get_you_tube_video_retention",
-    "mentions_list_inbox_mentions",
-    "accounts_get_tik_tok_creator_info",
-    "analytics_get_you_tube_channel_insights",
+    "contacts_list_contacts",
 )
 
 CHATGPT_GENERATED_TOOLS = WAVE_1
 
 
 _SUMMARY_MAX = 400
-_PARAM_MAX = 160
+_PARAM_MAX = 100
 _ARGS_HEADING = re.compile(r"\n[ \t]*Args:\n")
 _PARAM_LINE = re.compile(r"^([ \t]+)(\w+):\s*(.*)$")
 
@@ -113,7 +113,7 @@ def concise_description(doc: str) -> str:
 
 def oauth_scopes_of(tools: Iterable[str]) -> list[str]:
     """The scopes these generated tools declare, deduplicated in first-use order."""
-    return list(dict.fromkeys(TOOL_OAUTH_SCOPE[tool] for tool in tools))
+    return list(dict.fromkeys(TOOL_OAUTH_SCOPES[tool][0] for tool in tools))
 
 
 class _ListedToolsOnly:
@@ -128,7 +128,7 @@ class _ListedToolsOnly:
         def register(fn: Callable[..., Any]) -> Callable[..., Any]:
             if fn.__name__ not in self._listed:
                 return fn
-            scopes = [TOOL_OAUTH_SCOPE[fn.__name__]]
+            scopes = [TOOL_OAUTH_SCOPES[fn.__name__][0]]
             meta = {"securitySchemes": [{"type": "oauth2", "scopes": scopes}]}
             description = concise_description(fn.__doc__ or fn.__name__)
             self._server.tool(meta=meta, description=description, **kwargs)(fn)

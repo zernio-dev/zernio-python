@@ -37504,7 +37504,7 @@ paths:
           $ref: '#/components/responses/TemporarilyUnavailable'
   /v1/metrics/ads:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: ads
       operationId: getAdMetrics
       tags:
@@ -37656,7 +37656,7 @@ paths:
           $ref: '#/components/responses/TemporarilyUnavailable'
   /v1/metrics/campaigns:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: ads
       operationId: getCampaignMetrics
       tags:
@@ -37754,7 +37754,7 @@ paths:
           $ref: '#/components/responses/TemporarilyUnavailable'
   /v1/metrics/ad-sets:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: ads
       operationId: getAdSetMetrics
       tags:
@@ -37844,7 +37844,7 @@ paths:
           $ref: '#/components/responses/TemporarilyUnavailable'
   /v1/metrics/ad-accounts:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: ads
       operationId: getAdAccountMetrics
       tags:
@@ -44422,7 +44422,7 @@ paths:
 
   /v1/analytics/inbox/conversations:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "messages"
       operationId: listInboxConversationAnalytics
       tags: [Inbox Analytics]
@@ -44530,7 +44530,7 @@ paths:
 
   /v1/analytics/inbox/conversations/{conversationId}:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "messages"
       operationId: getInboxConversationAnalytics
       tags: [Inbox Analytics]
@@ -44881,7 +44881,7 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
   /v1/reddit/search:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "engagement"
       operationId: searchReddit
       tags: [Reddit Search]
@@ -44963,7 +44963,7 @@ paths:
         '503': { description: "Organic Reddit is temporarily unavailable while Reddit blocks third-party API access (`PLATFORM_DISABLED`)." }
   /v1/reddit/feed:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "engagement"
       operationId: getRedditFeed
       tags: [Reddit Search]
@@ -45057,7 +45057,7 @@ paths:
         '503': { description: "Organic Reddit is temporarily unavailable while Reddit blocks third-party API access (`PLATFORM_DISABLED`)." }
   /v1/reddit/comments/{postId}:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "engagement"
       operationId: getRedditPostComments
       tags: [Reddit Search]
@@ -54331,7 +54331,7 @@ paths:
 
   /v1/accounts/{accountId}/gmb-reviews:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "engagement"
       operationId: getGoogleBusinessReviews
       tags: [GMB Reviews]
@@ -56404,7 +56404,7 @@ paths:
 
   /v1/accounts/{accountId}/gmb-reviews/{reviewId}:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "engagement"
       operationId: getGoogleBusinessReview
       tags: [GMB Reviews]
@@ -61342,7 +61342,7 @@ paths:
           $ref: '#/components/responses/AccountConnectionRequired'
   /v1/accounts/{accountId}/instagram/mentions/media/{mediaId}:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "engagement"
       operationId: getInstagramMentionedMedia
       tags: [Instagram]
@@ -61398,7 +61398,7 @@ paths:
           $ref: '#/components/responses/AccountConnectionRequired'
   /v1/accounts/{accountId}/instagram/mentions/comments/{commentId}:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "engagement"
       operationId: getInstagramMentionedComment
       tags: [Instagram]
@@ -63284,7 +63284,7 @@ paths:
           description: Account not found
   /v1/accounts/{accountId}/gohighlevel-audiences:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: ads
       operationId: listGohighlevelAudienceSyncs
       tags:
@@ -63444,7 +63444,7 @@ paths:
           description: The tag is being set up or synced right now, or is already synced. Retry later, or stop the existing sync first.
   /v1/accounts/{accountId}/gohighlevel-funnel-tracking:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: ads
       operationId: getGohighlevelFunnelTracking
       tags:
@@ -63684,7 +63684,7 @@ paths:
           description: Account not found
   /v1/crm/{accountId}/contacts/search:
     get:
-      x-oauth-scopes: ["automations:write"]
+      x-oauth-scopes: ["automations:write", "contacts:read"]
       x-resource-group: contacts
       operationId: searchCrmContacts
       tags:
@@ -63829,7 +63829,7 @@ paths:
           $ref: '#/components/responses/UpstreamFailure'
   /v1/crm/{accountId}/contacts/{contactId}:
     get:
-      x-oauth-scopes: ["automations:write"]
+      x-oauth-scopes: ["automations:write", "contacts:read"]
       x-resource-group: contacts
       operationId: getCrmContact
       tags:
@@ -63997,7 +63997,7 @@ paths:
           $ref: '#/components/responses/UpstreamFailure'
   /v1/crm/{accountId}/deals:
     get:
-      x-oauth-scopes: ["automations:write"]
+      x-oauth-scopes: ["automations:write", "contacts:read"]
       x-resource-group: contacts
       operationId: listCrmDeals
       tags:
@@ -64053,7 +64053,7 @@ paths:
           $ref: '#/components/responses/UpstreamFailure'
   /v1/crm/{accountId}/deals/{dealId}:
     get:
-      x-oauth-scopes: ["automations:write"]
+      x-oauth-scopes: ["automations:write", "contacts:read"]
       x-resource-group: contacts
       operationId: getCrmDeal
       tags:
@@ -64167,7 +64167,7 @@ paths:
           $ref: '#/components/responses/UpstreamFailure'
   /v1/crm/{accountId}/owners:
     get:
-      x-oauth-scopes: ["automations:write"]
+      x-oauth-scopes: ["automations:write", "contacts:read"]
       x-resource-group: contacts
       operationId: listCrmOwners
       tags:
@@ -64587,7 +64587,7 @@ paths:
 
   /v1/accounts/{accountId}/slack-members:
     get:
-      x-oauth-scopes: ["automations:write"]
+      x-oauth-scopes: ["automations:write", "contacts:read"]
       x-resource-group: "contacts"
       operationId: listSlackMembers
       tags: [Slack]
@@ -64745,7 +64745,7 @@ paths:
 
   /v1/discord/guilds/{guildId}/roles:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "engagement"
       operationId: listDiscordGuildRoles
       tags: [Discord]
@@ -64922,7 +64922,7 @@ paths:
 
   /v1/discord/guilds/{guildId}/members:
     get:
-      x-oauth-scopes: ["automations:write"]
+      x-oauth-scopes: ["automations:write", "contacts:read"]
       x-resource-group: "contacts"
       operationId: listDiscordGuildMembers
       tags: [Discord]
@@ -64963,7 +64963,7 @@ paths:
 
   /v1/discord/guilds/{guildId}/members/search:
     get:
-      x-oauth-scopes: ["automations:write"]
+      x-oauth-scopes: ["automations:write", "contacts:read"]
       x-resource-group: "contacts"
       operationId: searchDiscordGuildMembers
       tags: [Discord]
@@ -64996,7 +64996,7 @@ paths:
 
   /v1/discord/guilds/{guildId}/members/{userId}:
     get:
-      x-oauth-scopes: ["automations:write"]
+      x-oauth-scopes: ["automations:write", "contacts:read"]
       x-resource-group: "contacts"
       operationId: getDiscordGuildMember
       tags: [Discord]
@@ -65228,7 +65228,7 @@ paths:
 
   /v1/discord/channels/{channelId}/pins:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "engagement"
       operationId: listDiscordPinnedMessages
       tags: [Discord]
@@ -65339,7 +65339,7 @@ paths:
 
   /v1/discord/guilds/{guildId}/events:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "engagement"
       operationId: listDiscordScheduledEvents
       tags: [Discord]
@@ -65459,7 +65459,7 @@ paths:
 
   /v1/discord/guilds/{guildId}/events/{eventId}:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "engagement"
       operationId: getDiscordScheduledEvent
       tags: [Discord]
@@ -66923,7 +66923,7 @@ paths:
   # Unified Inbox Endpoints
   /v1/email/threads:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "messages"
       operationId: listEmailThreads
       tags: [Email]
@@ -66970,7 +66970,7 @@ paths:
         '429': { $ref: '#/components/responses/RateLimited' }
   /v1/email/threads/{threadId}:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "messages"
       operationId: getEmailThread
       tags: [Email]
@@ -67028,7 +67028,7 @@ paths:
         '412': { $ref: '#/components/responses/MailboxPreconditionFailed' }
   /v1/email/messages:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "messages"
       operationId: listEmailMessages
       tags: [Email]
@@ -67150,7 +67150,7 @@ paths:
         '429': { $ref: '#/components/responses/EmailSendRefused' }
   /v1/email/messages/scheduled:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "messages"
       operationId: listScheduledEmails
       tags: [Email]
@@ -67176,7 +67176,7 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
   /v1/email/messages/scheduled/{scheduleId}:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "messages"
       operationId: getScheduledEmail
       tags: [Email]
@@ -67223,7 +67223,7 @@ paths:
         '409': { description: 'The send already left, failed or was cancelled; the message names its status.' }
   /v1/email/messages/{messageId}:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "messages"
       operationId: getEmailMessage
       tags: [Email]
@@ -67394,7 +67394,7 @@ paths:
         '429': { $ref: '#/components/responses/EmailSendRefused' }
   /v1/email/drafts:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "messages"
       operationId: listEmailDrafts
       tags: [Email]
@@ -67453,7 +67453,7 @@ paths:
         '412': { $ref: '#/components/responses/MailboxPreconditionFailed' }
   /v1/email/drafts/{draftId}:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "messages"
       operationId: getEmailDraft
       tags: [Email]
@@ -67587,7 +67587,7 @@ paths:
         '429': { $ref: '#/components/responses/EmailSendRefused' }
   /v1/email/folders:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "messages"
       operationId: listEmailFolders
       tags: [Email]
@@ -67723,7 +67723,7 @@ paths:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
   /v1/email/labels:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "messages"
       operationId: listEmailLabels
       tags: [Email]
@@ -67791,7 +67791,7 @@ paths:
         '412': { $ref: '#/components/responses/MailboxPreconditionFailed' }
   /v1/email/send-as:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "messages"
       operationId: listEmailSendAs
       tags: [Email]
@@ -67887,7 +67887,7 @@ paths:
         '412': { $ref: '#/components/responses/MailboxPreconditionFailed' }
   /v1/email/shared-mailboxes:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "messages"
       operationId: listEmailSharedMailboxes
       tags: [Email]
@@ -67961,7 +67961,7 @@ paths:
         '412': { $ref: '#/components/responses/MailboxPreconditionFailed' }
   /v1/email/signatures:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "messages"
       operationId: listEmailSignatures
       tags: [Email]
@@ -68038,7 +68038,7 @@ paths:
         '412': { $ref: '#/components/responses/MailboxPreconditionFailed' }
   /v1/email/signatures/{signatureId}:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "messages"
       operationId: getEmailSignature
       tags: [Email]
@@ -68145,7 +68145,7 @@ paths:
         '412': { $ref: '#/components/responses/MailboxPreconditionFailed' }
   /v1/email/attachments/{attachmentId}:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "messages"
       operationId: downloadEmailAttachment
       tags: [Email]
@@ -69258,7 +69258,7 @@ paths:
         '409': { $ref: '#/components/responses/OrgGrantIncomplete' }
   /v1/inbox/conversations:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "messages"
       operationId: listInboxConversations
       summary: List conversations
@@ -69946,7 +69946,7 @@ paths:
               schema: { $ref: '#/components/schemas/WhatsAppTemplateLookupError' }
   /v1/inbox/conversations/search:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "messages"
       operationId: searchInboxConversations
       summary: Search conversations
@@ -70084,7 +70084,7 @@ paths:
           description: Inbox addon required
   /v1/inbox/conversations/{conversationId}:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "messages"
       operationId: getInboxConversation
       summary: Get conversation
@@ -70278,7 +70278,7 @@ paths:
 
   /v1/inbox/conversations/{conversationId}/messages:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "messages"
       operationId: getInboxConversationMessages
       summary: List messages
@@ -71345,7 +71345,7 @@ paths:
 
   /v1/whatsapp/media/{mediaId}:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "messages"
       operationId: getWhatsAppMedia
       tags: [WhatsApp]
@@ -71725,7 +71725,7 @@ paths:
 
   /v1/inbox/labels:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: messages
       x-platforms: [facebook]
       operationId: listInboxLabels
@@ -71869,7 +71869,7 @@ paths:
 
   /v1/inbox/conversations/{conversationId}/labels:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: messages
       x-platforms: [facebook]
       operationId: listConversationLabels
@@ -72852,7 +72852,7 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
   /v1/inbox/conversations/{conversationId}/messages/{messageId}/attachments/{index}:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "messages"
       operationId: getMessageAttachment
       summary: Resolve message attachment
@@ -72936,7 +72936,7 @@ paths:
 
   /v1/inbox/comments:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "engagement"
       operationId: listInboxComments
       summary: List commented posts
@@ -73095,7 +73095,7 @@ paths:
 
   /v1/inbox/comments/{postId}:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "engagement"
       operationId: getInboxPostComments
       summary: Get post comments
@@ -74585,7 +74585,7 @@ paths:
 
   /v1/twitter/search:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "engagement"
       operationId: searchTweets
       summary: Search recent tweets
@@ -74699,7 +74699,7 @@ paths:
 
   /v1/twitter/tweet:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "engagement"
       operationId: getTweet
       summary: Look up a tweet
@@ -74771,7 +74771,7 @@ paths:
 
   /v1/inbox/mentions:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "engagement"
       operationId: listInboxMentions
       summary: List mentions
@@ -74966,7 +74966,7 @@ paths:
 
   /v1/inbox/reviews:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "engagement"
       operationId: listInboxReviews
       summary: List reviews
@@ -76101,7 +76101,7 @@ paths:
 
   /v1/whatsapp/call-permissions:
     get:
-      x-oauth-scopes: ["automations:write"]
+      x-oauth-scopes: ["automations:write", "contacts:read"]
       x-resource-group: "contacts"
       operationId: getWhatsAppCallPermissions
       tags: [WhatsApp Calling]
@@ -76224,7 +76224,7 @@ paths:
         '422': { description: "Calling not enabled, BIC country blocked, or missing Meta SIP credentials" }
         '502': { description: Telnyx-side originate failed; the Call doc has been marked failed. }
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "messages"
       operationId: listWhatsAppCalls
       tags: [WhatsApp Calling]
@@ -76284,7 +76284,7 @@ paths:
 
   /v1/whatsapp/calls/{id}:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "messages"
       operationId: getWhatsAppCall
       tags: [WhatsApp Calling]
@@ -76309,7 +76309,7 @@ paths:
 
   /v1/whatsapp/calls/{id}/recording:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "messages"
       operationId: getWhatsAppCallRecording
       tags: [WhatsApp Calling]
@@ -76344,7 +76344,7 @@ paths:
 
   /v1/whatsapp/calls/estimate:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "messages"
       operationId: getWhatsAppCallEstimate
       tags: [WhatsApp Calling]
@@ -76383,7 +76383,7 @@ paths:
 
   /v1/calls:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "messages"
       operationId: listCalls
       tags: [Calls]
@@ -76433,7 +76433,7 @@ paths:
 
   /v1/calls/{id}:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "messages"
       operationId: getCall
       tags: [Calls]
@@ -76468,7 +76468,7 @@ paths:
 
   /v1/calls/{id}/recording:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "messages"
       operationId: getCallRecording
       tags: [Calls]
@@ -76578,7 +76578,7 @@ paths:
         '429': { description: 'A team or profile call limit was reached (`call_limit_reached`). `details.limit` names it: `team_concurrent_calls`, `team_daily_cost`, `profile_outbound_calls_per_hour`, `profile_daily_call_spend`, or `outbound_paused`.' }
         '502': { description: Carrier-side originate failed; the call has been marked failed. }
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "messages"
       operationId: listVoiceCalls
       tags: [Voice]
@@ -76624,7 +76624,7 @@ paths:
 
   /v1/voice/calls/{id}:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "messages"
       operationId: getVoiceCall
       tags: [Voice]
@@ -76690,7 +76690,7 @@ paths:
 
   /v1/voice/calls/{id}/recording:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "messages"
       operationId: getVoiceCallRecording
       tags: [Voice]
@@ -76761,7 +76761,7 @@ paths:
 
   /v1/voice/calls/estimate:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "messages"
       operationId: getVoiceCallEstimate
       tags: [Voice]
@@ -77735,7 +77735,7 @@ paths:
 
   /v1/rcs/brands:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "messages"
       operationId: listRcsBrands
       tags: [RCS]
@@ -77757,7 +77757,7 @@ paths:
 
   /v1/rcs/agents:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "messages"
       operationId: listRcsAgents
       tags: [RCS]
@@ -77830,7 +77830,7 @@ paths:
 
   /v1/rcs/agents/{agentId}:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "messages"
       operationId: getRcsAgent
       tags: [RCS]
@@ -77959,7 +77959,7 @@ paths:
 
   /v1/rcs/agents/{agentId}/test-devices:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "messages"
       operationId: listRcsTestDevices
       tags: [RCS]
@@ -78146,7 +78146,7 @@ paths:
 
   /v1/rcs/capabilities:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "messages"
       operationId: getRcsCapabilities
       tags: [RCS]
@@ -78207,7 +78207,7 @@ paths:
 
   /v1/sms/opt-outs:
     get:
-      x-oauth-scopes: ["automations:write"]
+      x-oauth-scopes: ["automations:write", "contacts:read"]
       x-resource-group: "contacts"
       operationId: listSmsOptOuts
       tags: [SMS]
@@ -78380,7 +78380,7 @@ paths:
         '409': { description: 'Billing setup is incomplete for this team (code `billing_setup_incomplete`); contact support.' }
         '422': { description: 'Sender ID rejected: it appears to impersonate a protected brand or institution.' }
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "telephony"
       operationId: listSmsSenderIds
       tags: [SMS]
@@ -78535,7 +78535,7 @@ paths:
         '409': { $ref: '#/components/responses/IdempotencyKeyInFlight' }
         '422': { x-summary: "The business is not registered in the US or Canada, or the Idempotency-Key was reused with a different body: fix the request.", description: 'The business is not registered in the US or Canada (code feature_not_available), or the Idempotency-Key was reused with a different body (code idempotency_key_reused).' }
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "telephony"
       operationId: listBrandedCallingEnterprises
       tags: [Branded Calling]
@@ -78556,7 +78556,7 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
   /v1/branded-calling/enterprises/{id}:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "telephony"
       operationId: getBrandedCallingEnterprise
       tags: [Branded Calling]
@@ -78646,7 +78646,7 @@ paths:
         '404': { description: 'Business or identity not found, or the identity is not in review' }
   /v1/branded-calling/call-reasons:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "telephony"
       operationId: listBrandedCallingCallReasons
       tags: [Branded Calling]
@@ -78733,7 +78733,7 @@ paths:
         '409': { $ref: '#/components/responses/IdempotencyKeyInFlight' }
         '422': { description: 'The logo could not be downloaded or is not an image, or the Idempotency-Key was reused with a different body (code idempotency_key_reused).' }
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "telephony"
       operationId: listBrandedCallingIdentities
       tags: [Branded Calling]
@@ -78813,7 +78813,7 @@ paths:
         '404': { description: Business not found }
   /v1/branded-calling/identities/{id}:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "telephony"
       operationId: getBrandedCallingIdentity
       tags: [Branded Calling]
@@ -78970,7 +78970,7 @@ paths:
         '409': { description: 'The identity is not waiting for a code (code invalid_resource_state).' }
   /v1/branded-calling/identities/{id}/numbers:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "telephony"
       operationId: listBrandedCallingIdentityNumbers
       tags: [Branded Calling]
@@ -79222,7 +79222,7 @@ paths:
         '422': { description: Carrier registry rejected a field; `param` names it when known. }
         '409': { x-summary: "The brand already exists at the carrier and failed identity verification: reply to fix it, because a new registration would bill again.", description: 'The brand already exists at the carrier and failed identity verification (a rejected registration of yours with the same EIN or legal name); the fix is applied to that brand on reply, a new registration would file and bill a second one.' }
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "telephony"
       operationId: listSmsRegistrations
       tags: [SMS]
@@ -79372,7 +79372,7 @@ paths:
         '403': { description: 'The caller is a team member limited to specific profiles; registrations cover the whole account.' }
         '404': { description: Registration not found }
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "telephony"
       operationId: getSmsRegistration
       tags: [SMS]
@@ -79767,7 +79767,7 @@ paths:
 
   /v1/whatsapp/catalogs:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "messages"
       operationId: listWhatsAppCatalogs
       tags: [WhatsApp]
@@ -79861,7 +79861,7 @@ paths:
         '404': { $ref: '#/components/responses/AccountUnavailable' }
   /v1/whatsapp/commerce-settings:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "messages"
       operationId: getWhatsAppCommerceSettings
       tags: [WhatsApp]
@@ -80475,7 +80475,7 @@ paths:
 
   /v1/whatsapp/number-info:
     get:
-      x-oauth-scopes: ["automations:write"]
+      x-oauth-scopes: ["automations:write", "contacts:read"]
       x-resource-group: "contacts"
       operationId: getWhatsAppNumberInfo
       tags: [WhatsApp Phone Numbers]
@@ -80649,7 +80649,7 @@ paths:
           $ref: '#/components/responses/NotFound'
   /v1/whatsapp/block-users/status:
     get:
-      x-oauth-scopes: ["automations:write"]
+      x-oauth-scopes: ["automations:write", "contacts:read"]
       x-resource-group: "contacts"
       operationId: getWhatsAppBlockStatus
       tags: [WhatsApp]
@@ -80679,7 +80679,7 @@ paths:
 
   /v1/whatsapp/block-users:
     get:
-      x-oauth-scopes: ["automations:write"]
+      x-oauth-scopes: ["automations:write", "contacts:read"]
       x-resource-group: "contacts"
       operationId: getWhatsAppBlockedUsers
       tags: [WhatsApp]
@@ -80826,7 +80826,7 @@ paths:
 
   /v1/whatsapp/account-events:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "messages"
       operationId: listWhatsAppAccountEvents
       tags: [WhatsApp]
@@ -80962,7 +80962,7 @@ paths:
 
   /v1/phone-numbers:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "telephony"
       operationId: listPhoneNumbers
       tags: [Phone Numbers]
@@ -81052,7 +81052,7 @@ paths:
 
   /v1/phone-numbers/{id}:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "telephony"
       operationId: getPhoneNumber
       tags: [Phone Numbers]
@@ -81376,7 +81376,7 @@ paths:
 
   /v1/phone-numbers/claims/{claimId}:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "telephony"
       operationId: getPhoneNumberClaim
       tags: [Phone Numbers]
@@ -81420,7 +81420,7 @@ paths:
 
   /v1/phone-numbers/countries:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "telephony"
       operationId: listPhoneNumberCountries
       tags: [Phone Numbers]
@@ -81486,7 +81486,7 @@ paths:
 
   /v1/phone-numbers/available:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "telephony"
       operationId: searchAvailablePhoneNumbers
       tags: [Phone Numbers]
@@ -81554,7 +81554,7 @@ paths:
 
   /v1/phone-numbers/availability:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "telephony"
       operationId: checkPhoneNumberAvailability
       tags: [Phone Numbers]
@@ -81672,7 +81672,7 @@ paths:
 
   /v1/whatsapp/phone-numbers:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "telephony"
       operationId: getWhatsAppPhoneNumbers
       deprecated: true
@@ -81925,7 +81925,7 @@ paths:
 
   /v1/whatsapp/phone-numbers/countries:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "telephony"
       operationId: listWhatsAppNumberCountries
       deprecated: true
@@ -81963,7 +81963,7 @@ paths:
 
   /v1/whatsapp/phone-numbers/available:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "telephony"
       operationId: searchAvailableWhatsAppNumbers
       deprecated: true
@@ -82010,7 +82010,7 @@ paths:
 
   /v1/whatsapp/phone-numbers/availability:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "telephony"
       operationId: checkWhatsAppNumberAvailability
       deprecated: true
@@ -82124,7 +82124,7 @@ paths:
 
   /v1/phone-numbers/kyc:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "telephony"
       operationId: getPhoneNumberKycForm
       tags: [Phone Numbers]
@@ -82314,7 +82314,7 @@ paths:
 
   /v1/phone-numbers/kyc/document/{documentId}:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "telephony"
       operationId: viewPhoneNumberKycDocument
       tags: [Phone Numbers]
@@ -82639,7 +82639,7 @@ paths:
         '409': { description: "A number is already provisioned, or already in an in-flight port" }
         '422': { description: "A number is not portable (reason included), numbers span multiple non-US/CA countries, or every split order failed to submit" }
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "telephony"
       operationId: listPhoneNumberPortIns
       tags: [Phone Numbers]
@@ -82756,7 +82756,7 @@ paths:
 
   /v1/phone-numbers/port-in/claims/{claimId}:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "telephony"
       operationId: getPhoneNumberPortClaim
       tags: [Phone Numbers]
@@ -82829,7 +82829,7 @@ paths:
 
   /v1/phone-numbers/port-in/requirements:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "telephony"
       operationId: getPhoneNumberPortInRequirements
       tags: [Phone Numbers]
@@ -82877,7 +82877,7 @@ paths:
 
   /v1/phone-numbers/port-in/{id}/requirements:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "telephony"
       operationId: getPhoneNumberPortInOrderRequirements
       tags: [Phone Numbers]
@@ -83006,7 +83006,7 @@ paths:
 
   /v1/phone-numbers/{id}/remediate:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "telephony"
       operationId: getPhoneNumberRemediation
       tags: [Phone Numbers]
@@ -83224,7 +83224,7 @@ paths:
 
   /v1/whatsapp/phone-numbers/kyc:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "telephony"
       operationId: getWhatsAppNumberKycForm
       deprecated: true
@@ -83667,7 +83667,7 @@ paths:
 
   /v1/whatsapp/phone-numbers/{id}/remediate:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "telephony"
       operationId: getWhatsAppNumberRemediation
       deprecated: true
@@ -83938,7 +83938,7 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '409': { x-summary: "The country or area is already in stock, so buy instead, or you reached the 20-watch limit.", description: 'The country (or the watched area) is in stock right now (buy instead of watching), or the 20-watch limit is reached (code invalid_resource_state).' }
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "telephony"
       operationId: listPhoneNumberStockWatches
       tags: [Phone Numbers]
@@ -84044,7 +84044,7 @@ paths:
         '409': { description: 'The team trunk limit was reached (code invalid_resource_state).' }
         '422': { x-summary: "The host cannot be a trunk destination, for example a Zernio or carrier host: use a different host.", description: 'The host cannot be used as a trunk destination (e.g. a Zernio or carrier host).' }
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "telephony"
       operationId: listSipTrunks
       tags: [Voice]
@@ -84082,7 +84082,7 @@ paths:
 
   /v1/phone-numbers/sip-trunks/{id}:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "telephony"
       operationId: getSipTrunk
       tags: [Voice]
@@ -84443,7 +84443,7 @@ paths:
 
   /v1/phone-numbers/{id}/whatsapp/calling:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "telephony"
       operationId: getWhatsAppCalling
       tags: [WhatsApp Calling]
@@ -84686,7 +84686,7 @@ paths:
 
   /v1/whatsapp/phone-numbers/{phoneNumberId}:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "telephony"
       operationId: getWhatsAppPhoneNumber
       deprecated: true
@@ -84801,7 +84801,7 @@ paths:
 
   /v1/whatsapp/sandbox/sessions:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "messages"
       operationId: listWhatsAppSandboxSessions
       tags: [WhatsApp Sandbox]
@@ -84925,7 +84925,7 @@ paths:
 
   /v1/whatsapp/wa-groups:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "messages"
       operationId: listWhatsAppGroupChats
       tags: [WhatsApp]
@@ -85013,7 +85013,7 @@ paths:
 
   /v1/whatsapp/wa-groups/{groupId}:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "messages"
       operationId: getWhatsAppGroupChat
       tags: [WhatsApp]
@@ -85236,7 +85236,7 @@ paths:
 
   /v1/whatsapp/wa-groups/{groupId}/join-requests:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "messages"
       operationId: listWhatsAppGroupJoinRequests
       tags: [WhatsApp]
@@ -85986,7 +85986,7 @@ paths:
 
   /v1/whatsapp/flow-responses:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "messages"
       operationId: listWhatsAppFlowResponses
       tags: [WhatsApp Flows]
@@ -86032,7 +86032,7 @@ paths:
 
   /v1/contacts:
     get:
-      x-oauth-scopes: ["automations:write"]
+      x-oauth-scopes: ["automations:write", "contacts:read"]
       x-resource-group: "contacts"
       operationId: listContacts
       summary: List contacts
@@ -86157,7 +86157,7 @@ paths:
 
   /v1/contacts/groups:
     get:
-      x-oauth-scopes: ["automations:write"]
+      x-oauth-scopes: ["automations:write", "contacts:read"]
       x-resource-group: "contacts"
       operationId: listContactGroups
       summary: List contact groups
@@ -86201,7 +86201,7 @@ paths:
         '412': { description: The account was connected without the contacts area }
   /v1/contacts/autocomplete:
     get:
-      x-oauth-scopes: ["automations:write"]
+      x-oauth-scopes: ["automations:write", "contacts:read"]
       x-resource-group: "contacts"
       operationId: autocompleteContacts
       summary: Search people
@@ -86258,7 +86258,7 @@ paths:
         '412': { description: 'The account was connected without the contacts or directory area' }
   /v1/contacts/{contactId}:
     get:
-      x-oauth-scopes: ["automations:write"]
+      x-oauth-scopes: ["automations:write", "contacts:read"]
       x-resource-group: "contacts"
       operationId: getContact
       summary: Get contact
@@ -86377,7 +86377,7 @@ paths:
 
   /v1/contacts/{contactId}/channels:
     get:
-      x-oauth-scopes: ["automations:write"]
+      x-oauth-scopes: ["automations:write", "contacts:read"]
       x-resource-group: "contacts"
       operationId: getContactChannels
       summary: List channels for a contact
@@ -86644,7 +86644,7 @@ paths:
 
   /v1/broadcasts:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "messages"
       x-platforms: [instagram, facebook, telegram, twitter, bluesky, reddit, whatsapp, sms, slack, imessage, line]
       operationId: listBroadcasts
@@ -86779,7 +86779,7 @@ paths:
 
   /v1/broadcasts/{broadcastId}:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "messages"
       x-platforms: [instagram, facebook, telegram, twitter, bluesky, reddit, whatsapp, sms, slack, imessage, line]
       operationId: getBroadcast
@@ -86996,7 +86996,7 @@ paths:
 
   /v1/broadcasts/{broadcastId}/recipients:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "messages"
       x-platforms: [instagram, facebook, telegram, twitter, bluesky, reddit, whatsapp, sms, slack, imessage, line]
       operationId: listBroadcastRecipients
@@ -87560,7 +87560,7 @@ paths:
 
   /v1/workflows/{workflowId}/executions:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "messages"
       operationId: listWorkflowExecutions
       summary: List workflow runs
@@ -87708,7 +87708,7 @@ paths:
 
   /v1/workflows/{workflowId}/executions/{executionId}/events:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "messages"
       operationId: listWorkflowExecutionEvents
       summary: Get an execution's timeline
@@ -87905,7 +87905,7 @@ paths:
 
   /v1/sequences:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "messages"
       x-platforms: [instagram, facebook, telegram, twitter, bluesky, reddit, whatsapp, slack, imessage, line, wechat]
       operationId: listSequences
@@ -88024,7 +88024,7 @@ paths:
 
   /v1/sequences/{sequenceId}:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "messages"
       x-platforms: [instagram, facebook, telegram, twitter, bluesky, reddit, whatsapp, slack, imessage, line, wechat]
       operationId: getSequence
@@ -88278,7 +88278,7 @@ paths:
 
   /v1/sequences/{sequenceId}/enrollments:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "messages"
       x-platforms: [instagram, facebook, telegram, twitter, bluesky, reddit, whatsapp, slack, imessage, line, wechat]
       operationId: listSequenceEnrollments
@@ -88333,7 +88333,7 @@ paths:
 
   /v1/comment-automations:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "messages"
       operationId: listCommentAutomations
       tags: [Comment Automations]
@@ -88622,7 +88622,7 @@ paths:
 
   /v1/comment-automations/{automationId}:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "messages"
       operationId: getCommentAutomation
       tags: [Comment Automations]
@@ -88826,7 +88826,7 @@ paths:
 
   /v1/comment-automations/{automationId}/logs:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "messages"
       operationId: listCommentAutomationLogs
       tags: [Comment Automations]
@@ -88882,7 +88882,7 @@ paths:
 
   /v1/ads:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: listAds
       tags: ["Ad Campaigns"]
@@ -88959,7 +88959,7 @@ paths:
 
   /v1/ads/search-terms:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: getAdsSearchTerms
       tags: ["Ad Insights"]
@@ -89031,7 +89031,7 @@ paths:
 
   /v1/ads/recommendations:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: listGoogleRecommendations
       summary: List Google Ads recommendations
@@ -89198,7 +89198,7 @@ paths:
         '501': { description: "accountId is not a Google Ads connection." }
   /v1/ads/bid-strategies:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: listBidStrategies
       tags: ["Ad Campaigns"]
@@ -89366,7 +89366,7 @@ paths:
 
   /v1/ads/shared-budgets:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: listSharedBudgets
       tags: ["Ad Campaigns"]
@@ -89463,7 +89463,7 @@ paths:
 
   /v1/ads/local-services/leads:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: listLocalServicesLeads
       tags: ["Ad Insights"]
@@ -89535,7 +89535,7 @@ paths:
 
   /v1/ads/local-services/leads/{leadId}/conversations:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: listLocalServicesLeadConversations
       tags: ["Ad Insights"]
@@ -89601,7 +89601,7 @@ paths:
 
   /v1/ads/keywords:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: listAdKeywords
       tags: ["Ad Campaigns"]
@@ -89813,7 +89813,7 @@ paths:
         '404': { $ref: '#/components/responses/AccountUnavailable' }
   /v1/automations:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: ads
       operationId: listAutomations
       tags: [Automations]
@@ -89945,7 +89945,7 @@ paths:
         '422': { $ref: '#/components/responses/IdempotencyKeyReused' }
   /v1/automations/catalog:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: ads
       operationId: getAutomationCatalog
       tags: [Automations]
@@ -90016,7 +90016,7 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
   /v1/automations/actions:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: ads
       operationId: listAutomationActions
       tags: [Automations]
@@ -90065,7 +90065,7 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
   /v1/automations/{automationId}/checks:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: ads
       operationId: listAutomationChecks
       tags: [Automations]
@@ -90144,7 +90144,7 @@ paths:
         required: true
         schema: { type: string }
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: ads
       operationId: getAutomation
       tags: [Automations]
@@ -90389,7 +90389,7 @@ paths:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
   /v1/automations/templates:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: ads
       operationId: listAutomationTemplates
       tags:
@@ -90507,7 +90507,7 @@ paths:
           $ref: '#/components/responses/IdempotencyKeyReused'
   /v1/automations/templates/{templateId}:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: ads
       operationId: getAutomationTemplate
       tags:
@@ -90741,7 +90741,7 @@ paths:
           $ref: '#/components/responses/IdempotencyKeyReused'
   /v1/automations/templates/shared/{shareToken}:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: ads
       operationId: getSharedAutomationTemplate
       tags:
@@ -90877,7 +90877,7 @@ paths:
           $ref: '#/components/responses/IdempotencyKeyReused'
   /v1/automations/templates/zernio/{templateId}:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: ads
       operationId: getZernioAutomationTemplate
       tags:
@@ -91015,7 +91015,7 @@ paths:
           $ref: '#/components/responses/IdempotencyKeyReused'
   /v1/automations/controls:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: ads
       operationId: getAutomationControls
       tags:
@@ -91163,7 +91163,7 @@ paths:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
   /v1/automations/{automationId}/approvals:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: ads
       operationId: listAutomationApprovals
       tags:
@@ -91220,7 +91220,7 @@ paths:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
   /v1/automations/{automationId}/approvals/{approvalId}:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: ads
       operationId: getAutomationApproval
       tags:
@@ -91448,7 +91448,7 @@ paths:
           $ref: '#/components/responses/NotFound'
   /v1/ads/rules:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: ads
       operationId: listAdRules
       tags: [Ad Rules]
@@ -91597,7 +91597,7 @@ paths:
           $ref: '#/components/responses/AccountConnectionRequired'
   /v1/ads/rules/templates:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: ads
       operationId: listAdRuleTemplates
       tags: [Ad Rules]
@@ -91637,7 +91637,7 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
   /v1/ads/rules/hourly-windows:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: ads
       operationId: getAdRuleHourlyWindows
       tags: [Ad Rules]
@@ -91675,7 +91675,7 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
   /v1/ads/rules/activity:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: ads
       operationId: listAdRuleActivity
       tags: [Ad Rules]
@@ -91812,7 +91812,7 @@ paths:
         required: true
         schema: { type: string }
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: ads
       operationId: getAdRule
       tags: [Ad Rules]
@@ -91983,7 +91983,7 @@ paths:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
   /v1/ads/rules/alerts:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: ads
       operationId: listAdAccountRuleAlerts
       tags: [Ad Rules]
@@ -92045,7 +92045,7 @@ paths:
           $ref: '#/components/responses/Unauthorized'
   /v1/ads/rules/{ruleId}/alerts:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: ads
       operationId: listAdRuleAlerts
       tags: [Ad Rules]
@@ -92108,7 +92108,7 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
   /v1/ads/rules/{ruleId}/runs:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: ads
       operationId: listAdRuleRuns
       tags: [Ad Rules]
@@ -92223,7 +92223,7 @@ paths:
         '422': { description: 'The `Idempotency-Key` was used with a different body.' }
         '429': { $ref: '#/components/responses/RateLimited' }
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: ads
       operationId: listCampaignResults
       tags: ["Ad Campaign Results"]
@@ -92273,7 +92273,7 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
   /v1/ads/campaign-results/uploads/{uploadId}:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: ads
       operationId: getCampaignResultsUpload
       tags: ["Ad Campaign Results"]
@@ -92322,7 +92322,7 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
   /v1/ads/campaign-results/totals:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: ads
       operationId: getCampaignResultsTotals
       tags: ["Ad Campaign Results"]
@@ -92360,7 +92360,7 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
   /v1/ads/campaign-results/events:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: ads
       operationId: getCampaignResultEvents
       tags: ["Ad Campaign Results"]
@@ -92423,7 +92423,7 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
   /v1/ads/campaign-results/tag-new-ads:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: ads
       operationId: getTagNewAds
       tags: ["Ad Campaign Results"]
@@ -92480,7 +92480,7 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
   /v1/ads/campaign-results/profit:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: ads
       operationId: getCampaignResultProfit
       tags: ["Ad Campaign Results"]
@@ -92534,7 +92534,7 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
   /v1/ads/campaign-results/metrics:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: ads
       operationId: listCampaignResultMetrics
       tags: ["Ad Campaign Results"]
@@ -92603,7 +92603,7 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
   /v1/ads/campaigns:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: listAdCampaigns
       tags: ["Ad Campaigns"]
@@ -92976,7 +92976,7 @@ paths:
 
   /v1/ads/campaigns/{campaignId}/ad-schedule:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: getCampaignAdSchedule
       tags: ["Ad Campaigns"]
@@ -93157,7 +93157,7 @@ paths:
 
   /v1/ads/campaigns/{campaignId}/bidding:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: getCampaignBidding
       tags: ["Ad Campaigns"]
@@ -93222,7 +93222,7 @@ paths:
 
   /v1/ads/campaigns/{campaignId}:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: getAdCampaignDetails
       tags: ["Ad Campaigns"]
@@ -93562,7 +93562,7 @@ paths:
 
   /v1/ads/campaigns/{campaignId}/negative-keywords:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: listCampaignNegativeKeywords
       tags: ["Ad Campaigns"]
@@ -93993,7 +93993,7 @@ paths:
 
   /v1/ads/campaigns/{campaignId}/targeting:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: getCampaignTargeting
       tags: ["Ad Campaigns"]
@@ -94276,7 +94276,7 @@ paths:
 
   /v1/ads/ad-sets:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: listAdSets
       tags: ["Ad Campaigns"]
@@ -94752,7 +94752,7 @@ paths:
 
   /v1/ads/ad-sets/{adSetId}:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: getAdSetDetails
       tags: ["Ad Campaigns"]
@@ -95213,7 +95213,7 @@ paths:
 
   /v1/ads/ad-sets/{adSetId}/targeting:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: getAdSetTargeting
       tags: ["Ad Campaigns"]
@@ -95344,7 +95344,7 @@ paths:
 
   /v1/ads/tree:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: getAdTree
       tags: ["Ad Campaigns"]
@@ -95435,7 +95435,7 @@ paths:
 
   /v1/ads/performance:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: listAdsByPerformance
       tags: ["Ad Campaigns"]
@@ -95490,7 +95490,7 @@ paths:
         '429': { $ref: '#/components/responses/AnalyticsRateLimited' }
   /v1/ads/timeline:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: getAdsTimeline
       tags: ["Ad Campaigns"]
@@ -95559,7 +95559,7 @@ paths:
 
   /v1/ads/{adId}:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: getAd
       tags: ["Ad Campaigns"]
@@ -96273,7 +96273,7 @@ paths:
 
   /v1/ads/campaigns/{campaignId}/assets:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: listCampaignAssets
       summary: List campaign assets
@@ -96700,7 +96700,7 @@ paths:
 
   /v1/ads/ad-sets/{adSetId}/assets:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: listAdGroupAssets
       summary: List ad-group assets
@@ -97127,7 +97127,7 @@ paths:
 
   /v1/ads/campaigns/{campaignId}/analytics:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: getCampaignAnalytics
       tags: ["Ad Insights"]
@@ -97303,7 +97303,7 @@ paths:
 
   /v1/ads/{adId}/preview:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: getAdPreviews
       tags: ["Ad Creatives"]
@@ -97350,7 +97350,7 @@ paths:
 
   /v1/ads/{adId}/review:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: getAdReview
       tags: ["Ad Campaigns"]
@@ -97509,7 +97509,7 @@ paths:
 
   /v1/ads/{adId}/tiktok-smart-plus-review:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: getTikTokSmartPlusAdReview
       tags: ["Ad Campaigns"]
@@ -97582,7 +97582,7 @@ paths:
 
   /v1/ads/{adId}/media:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: getAdMedia
       tags: ["Ad Creatives"]
@@ -97766,7 +97766,7 @@ paths:
 
   /v1/ads/insights:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: queryAdInsights
       tags: ["Ad Insights"]
@@ -97971,7 +97971,7 @@ paths:
 
   /v1/ads/insights/reports/{reportRunId}:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: getAdInsightsReport
       tags: ["Ad Insights"]
@@ -98020,7 +98020,7 @@ paths:
 
   /v1/ads/{adId}/analytics:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: getAdAnalytics
       tags: ["Ad Insights"]
@@ -98102,7 +98102,7 @@ paths:
 
   /v1/ads/{adId}/tracking-tags:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: getAdTrackingTags
       tags: ["Tracking Tags"]
@@ -98241,7 +98241,7 @@ paths:
         '502': { x-summary: "Meta accepted the request but failed to produce the image, for example from an upload or processing timeout.", description: "Meta accepted the request then failed to produce the media (upload session, chunk transfer, processing timeout, or a response with no image hash). Inspect `platformError.reason`." }
   /v1/ads/{adId}/comments:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "engagement"
       operationId: getAdComments
       tags: ["Ad Accounts"]
@@ -98644,7 +98644,7 @@ paths:
 
   /v1/ads/business-centers:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: listAdsBusinessCenters
       tags: ["Ad Accounts"]
@@ -98680,7 +98680,7 @@ paths:
 
   /v1/ads/alerts:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: listAdsAlerts
       tags: ["Ad Campaigns"]
@@ -98767,7 +98767,7 @@ paths:
 
   /v1/ads/activity:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: getAdsActivityLog
       tags: ["Ad Accounts"]
@@ -98911,7 +98911,7 @@ paths:
 
   /v1/ads/rf-predictions/{predictionId}:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: getRfPrediction
       tags: ["Reach and Frequency"]
@@ -99016,7 +99016,7 @@ paths:
 
   /v1/ads/studies:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: listAdStudies
       tags: ["Ad Accounts"]
@@ -99061,7 +99061,7 @@ paths:
 
   /v1/ads/tiktok-identities:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: listAdsTikTokIdentities
       tags: ["Ad Creatives"]
@@ -99106,7 +99106,7 @@ paths:
         '409': { $ref: '#/components/responses/AccountConnectionRequired' }
   /v1/ads/tiktok-smart-plus-materials:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: getTikTokSmartPlusMaterialReport
       tags: ["Ad Insights"]
@@ -99209,7 +99209,7 @@ paths:
         '502': { x-summary: "TikTok returned incomplete Smart+ data: retry later, and pass smartPlusAdIds or adGroupIds for advertisers with over 2,000 Smart+ ads.", description: "Retry later. Returned when:\n\n- more rows than the tolerance (2, or 1% of the rows) were missing from TikTok's material report after a retry (`details` carries `totalNumber`, `distinctRows` and `missingRows`); or\n- TikTok's Smart+ ad listing returned fewer ads than it declared (`details` carries `declaredAds`, `listedAds` and `listingTruncated`).\n\nWith `listingTruncated`, the advertiser has more than 2,000 Smart+ ads, so pass `smartPlusAdIds` or `adGroupIds`." }
   /v1/ads/tiktok-smart-plus-reviews:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: listTikTokSmartPlusReviews
       tags: ["Ad Campaigns"]
@@ -99405,7 +99405,7 @@ paths:
         '429': { description: "TikTok's general rate limit hit while listing the Smart+ ads (`Retry-After: 10`).", $ref: '#/components/responses/RateLimited' }
   /v1/ads/instagram-accounts:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: listAdsInstagramAccounts
       summary: List Instagram ad identities
@@ -99476,7 +99476,7 @@ paths:
 
   /v1/ads/instagram-posts:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: listAdsInstagramPosts
       summary: List Instagram posts to boost
@@ -99553,7 +99553,7 @@ paths:
 
   /v1/ads/advertisable-applications:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: listAdvertisableApplications
       summary: List advertisable apps
@@ -99609,7 +99609,7 @@ paths:
 
   /v1/ads/ios-fourteen-campaign-limits:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: getIosFourteenCampaignLimits
       summary: Get iOS 14 campaign limits
@@ -99655,7 +99655,7 @@ paths:
 
   /v1/ads/businesses:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: listMetaBusinesses
       tags: ["Ad Accounts"]
@@ -99697,7 +99697,7 @@ paths:
 
   /v1/ads/businesses/users:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: listMetaBusinessUsers
       tags: ["Ad Accounts"]
@@ -99739,7 +99739,7 @@ paths:
 
   /v1/ads/page-users:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: listPageUsers
       tags: ["Ad Accounts"]
@@ -99872,7 +99872,7 @@ paths:
 
   /v1/ads/labels:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: listAdLabels
       tags: ["Ad Accounts"]
@@ -100150,7 +100150,7 @@ paths:
 
   /v1/ads/high-demand-periods:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: listHighDemandPeriods
       tags: ["Ad Accounts"]
@@ -100248,7 +100248,7 @@ paths:
 
   /v1/ads/creatives:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: listAdCreatives
       tags: ["Ad Creatives"]
@@ -100422,7 +100422,7 @@ paths:
 
   /v1/ads/creatives/{creativeId}:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: getAdCreative
       tags: ["Ad Creatives"]
@@ -100536,7 +100536,7 @@ paths:
 
   /v1/ads/value-rule-sets:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: listValueRuleSets
       tags: ["Ad Accounts"]
@@ -100676,7 +100676,7 @@ paths:
 
   /v1/ads/value-rule-sets/{valueRuleSetId}:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: getValueRuleSet
       tags: ["Ad Accounts"]
@@ -100815,7 +100815,7 @@ paths:
 
   /v1/ads/accounts/negative-keyword-lists:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: "listAdNegativeKeywordLists"
       tags:
@@ -101051,7 +101051,7 @@ paths:
           description: "Available only on Google Ads."
   /v1/ads/accounts/negative-keyword-lists/{listId}:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: "getAdNegativeKeywordList"
       tags:
@@ -101654,7 +101654,7 @@ paths:
           description: "Available only on Google Ads."
   /v1/ads/campaigns/{campaignId}/negative-keyword-lists:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: "listCampaignNegativeKeywordLists"
       tags:
@@ -101965,7 +101965,7 @@ paths:
 
   /v1/ads/accounts/callouts:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: listAccountCallouts
       summary: List account callouts
@@ -102286,7 +102286,7 @@ paths:
 
   /v1/ads/accounts/sitelinks:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: listAccountSitelinks
       summary: List account sitelinks
@@ -102648,7 +102648,7 @@ paths:
 
   /v1/ads/accounts/structured-snippets:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: listAccountStructuredSnippets
       summary: List account snippets
@@ -102998,7 +102998,7 @@ paths:
 
   /v1/ads/accounts/hierarchy:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: getAdAccountHierarchy
       tags: ["Ad Accounts"]
@@ -103200,7 +103200,7 @@ paths:
 
   /v1/ads/accounts/billing:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: getAdAccountBilling
       tags: ["Ad Accounts"]
@@ -103396,7 +103396,7 @@ paths:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
   /v1/ads/accounts/user-invitations:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: listAdAccountUserInvitations
       tags: ["Ad Accounts"]
@@ -103544,7 +103544,7 @@ paths:
 
   /v1/ads/accounts/user-invitations/pending-approvals:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: listAdAccountUserInvitationApprovals
       tags: ["Ad Accounts"]
@@ -103628,7 +103628,7 @@ paths:
 
   /v1/ads/accounts/users:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: listAdAccountUsers
       tags: ["Ad Accounts"]
@@ -103756,7 +103756,7 @@ paths:
 
   /v1/ads/accounts/finance:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: getAdAccountFinance
       tags: ["Ad Accounts"]
@@ -103800,7 +103800,7 @@ paths:
 
   /v1/ads/accounts/health:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: getAdAccountHealth
       tags: ["Ad Accounts"]
@@ -103902,7 +103902,7 @@ paths:
 
   /v1/ads/accounts/live:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: getAdAccountLiveEntities
       tags: ["Ad Accounts"]
@@ -104262,7 +104262,7 @@ paths:
                 platform: "meta"
                 details: { creationStatus: "unknown" }
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: listAdAccounts
       tags: ["Ad Accounts"]
@@ -104494,7 +104494,7 @@ paths:
         '429': { $ref: '#/components/responses/RateLimited' }
   /v1/ads/dsa-defaults:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: getDsaDefaults
       tags: ["Ad Accounts"]
@@ -104532,7 +104532,7 @@ paths:
         '404': { $ref: '#/components/responses/AccountUnavailable' }
   /v1/ads/dsa-recommendations:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: getDsaRecommendations
       tags: ["Ad Accounts"]
@@ -105250,7 +105250,7 @@ paths:
 
   /v1/ads/campaigns/{campaignId}/asset-groups:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: listGoogleAssetGroups
       summary: List Performance Max asset groups
@@ -105392,7 +105392,7 @@ paths:
         '501': { description: "Campaign is not on Google Ads." }
   /v1/ads/campaigns/{campaignId}/asset-groups/{assetGroupId}:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: getGoogleAssetGroup
       summary: Get a Performance Max asset group
@@ -107328,7 +107328,7 @@ paths:
 
   /v1/ads/leads:
     get:
-      x-oauth-scopes: ["automations:write"]
+      x-oauth-scopes: ["automations:write", "contacts:read"]
       x-resource-group: "contacts"
       operationId: listLeads
       tags: ["Lead Gen"]
@@ -107402,7 +107402,7 @@ paths:
 
   /v1/ads/leads/counts:
     get:
-      x-oauth-scopes: ["automations:write"]
+      x-oauth-scopes: ["automations:write", "contacts:read"]
       x-resource-group: "contacts"
       operationId: countLeads
       tags: ["Lead Gen"]
@@ -107557,7 +107557,7 @@ paths:
 
   /v1/ads/lead-forms:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: listLeadForms
       tags: ["Lead Gen"]
@@ -107778,7 +107778,7 @@ paths:
 
   /v1/ads/lead-forms/{formId}:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: getLeadForm
       tags: ["Lead Gen"]
@@ -107850,7 +107850,7 @@ paths:
 
   /v1/ads/lead-forms/{formId}/leads:
     get:
-      x-oauth-scopes: ["automations:write"]
+      x-oauth-scopes: ["automations:write", "contacts:read"]
       x-resource-group: "contacts"
       operationId: listFormLeads
       tags: ["Lead Gen"]
@@ -108043,7 +108043,7 @@ paths:
         '502': { x-summary: "Meta accepted the request but failed to produce the image, for example from an upload or processing timeout.", description: "Meta accepted the request then failed to produce the media (upload session, chunk transfer, processing timeout, or a response with no image hash). Inspect `platformError.reason`." }
 
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: listAdImages
       tags: ["Ad Creatives"]
@@ -108178,7 +108178,7 @@ paths:
         '502': { x-summary: "Meta accepted the upload but failed to produce the video, such as from a chunk transfer or processing timeout.", description: "Meta accepted the request then failed to produce the media (upload session, chunk transfer, processing timeout, or a response with no video id). Inspect `platformError.reason`." }
 
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: listAdVideos
       tags: ["Ad Creatives"]
@@ -108239,7 +108239,7 @@ paths:
 
   /v1/ads/videos/{videoId}:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: getAdVideoStatus
       tags: ["Ad Creatives"]
@@ -108328,7 +108328,7 @@ paths:
 
   /v1/ads/interests:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: searchAdInterests
       deprecated: true
@@ -108371,7 +108371,7 @@ paths:
 
   /v1/ads/targeting/search:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: searchAdTargeting
       tags: ["Ad Targeting"]
@@ -108590,7 +108590,7 @@ paths:
         '404': { $ref: '#/components/responses/AccountUnavailable' }
   /v1/ads/targeting/browse:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: browseAdTargeting
       tags: ["Ad Targeting"]
@@ -108686,7 +108686,7 @@ paths:
         '501': { description: "accountId is not a Meta connection (platform_not_supported)." }
   /v1/ads/library:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: searchAdLibrary
       tags: ["Ad Library"]
@@ -109077,7 +109077,7 @@ paths:
         '404': { $ref: '#/components/responses/AccountUnavailable' }
   /v1/ads/catalogs:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: listAdCatalogs
       tags: ["Product Catalogs"]
@@ -109173,7 +109173,7 @@ paths:
         '409': { $ref: '#/components/responses/AccountConnectionRequired' }
   /v1/ads/catalogs/{catalogId}:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: getAdCatalog
       tags: ["Product Catalogs"]
@@ -109229,7 +109229,7 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
   /v1/ads/catalogs/{catalogId}/products:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: listAdCatalogProducts
       tags: ["Product Catalogs"]
@@ -109361,7 +109361,7 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
   /v1/ads/catalogs/{catalogId}/batches/{handle}:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: getAdCatalogBatch
       tags: ["Product Catalogs"]
@@ -109403,7 +109403,7 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
   /v1/ads/catalogs/{catalogId}/products/{productId}:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: getAdCatalogProduct
       tags: ["Product Catalogs"]
@@ -109499,7 +109499,7 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
   /v1/ads/catalogs/{catalogId}/feeds:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: listAdCatalogFeeds
       tags: ["Product Catalogs"]
@@ -109577,7 +109577,7 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
   /v1/ads/catalogs/{catalogId}/feeds/{feedId}/uploads:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: listAdCatalogFeedUploads
       tags: ["Product Catalogs"]
@@ -109649,7 +109649,7 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
   /v1/ads/catalogs/{catalogId}/product-sets:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: listAdCatalogProductSets
       tags: ["Product Catalogs"]
@@ -109793,7 +109793,7 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
   /v1/ads/audiences:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: listAdAudiences
       tags: ["Ad Audiences"]
@@ -110102,7 +110102,7 @@ paths:
 
   /v1/ads/audiences/{audienceId}:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: getAdAudience
       tags: ["Ad Audiences"]
@@ -110477,7 +110477,7 @@ paths:
 
   /v1/ads/conversions/quality:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: getConversionsQuality
       tags: [Conversions]
@@ -110961,7 +110961,7 @@ paths:
 
   /v1/ads/conversions/actions:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: listConversionActions
       tags: [Conversions]
@@ -111118,7 +111118,7 @@ paths:
 
   /v1/ads/conversions/goals:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: listAdConversionGoals
       tags: [Conversions]
@@ -111288,7 +111288,7 @@ paths:
 
   /v1/ads/conversions/custom-goals:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: listCustomConversionGoals
       tags: [Conversions]
@@ -111452,7 +111452,7 @@ paths:
 
   /v1/events:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       x-platforms: [meta, google, tiktok, linkedin, microsoft, x, pinterest, reddit, openai, applovinads, snapchatads, taboolaads, klaviyo, attentive, impact, awin, campaignmanager360, tradedeskads, amazonads, googleanalytics, stripe, hubspot, salesforce, gohighlevel]
       operationId: listEvents
@@ -111697,7 +111697,7 @@ paths:
         '422': { $ref: '#/components/responses/IdempotencyKeyReused' }
   /v1/events/paths:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: getConversionPaths
       tags: [Conversions]
@@ -111738,7 +111738,7 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
   /v1/events/survey:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: getSurveyAnswers
       tags: [Conversions]
@@ -111789,7 +111789,7 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
   /v1/events/ltv:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: getLtvCohorts
       tags: [Conversions]
@@ -111837,7 +111837,7 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
   /v1/events/accuracy:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: getEventsAccuracy
       tags: [Conversions]
@@ -111921,7 +111921,7 @@ paths:
         '403': { description: 'No ads access on the account (`ads_addon_required`).' }
   /v1/events/overview:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: getEventsOverview
       tags: [Conversions]
@@ -112045,7 +112045,7 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
   /v1/events/overview/daily:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: getEventsOverviewDaily
       tags: [Conversions]
@@ -112198,7 +112198,7 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
   /v1/events/names:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: listEventNames
       tags: [Conversions]
@@ -112236,7 +112236,7 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
   /v1/events/{eventId}:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: getEvent
       tags: [Conversions]
@@ -112403,7 +112403,7 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
   /v1/events/destinations:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: listEventDestinations
       tags: [Conversions]
@@ -112505,7 +112505,7 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
   /v1/events/forwarding-rules:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: listForwardingRules
       tags: [Conversions]
@@ -112674,7 +112674,7 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
   /v1/tracking-sites:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: ads
       operationId: listTrackingSites
       tags: [Conversions]
@@ -112781,7 +112781,7 @@ paths:
         required: true
         schema: { type: string }
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: ads
       operationId: getTrackingSite
       tags: [Conversions]
@@ -112972,7 +112972,7 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
   /v1/tracking-links:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: ads
       operationId: listTrackingLinks
       tags: [Tracking links]
@@ -113070,7 +113070,7 @@ paths:
         required: true
         schema: { type: string }
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: ads
       operationId: getTrackingLink
       tags: [Tracking links]
@@ -113187,7 +113187,7 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
   /v1/tracking-links/{linkId}/stats:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: ads
       operationId: getTrackingLinkStats
       tags: [Tracking links]
@@ -113224,7 +113224,7 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
   /v1/ads/campaigns/{campaignId}/conversion-goals:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: getCampaignConversionGoals
       tags: ["Ad Campaigns"]
@@ -113315,7 +113315,7 @@ paths:
 
   /v1/ads/conversions/destinations:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: listAdConversionDestinations
       tags: [Conversions]
@@ -113594,7 +113594,7 @@ paths:
 
   /v1/ads/conversions/destinations/{destinationId}:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: getAdConversionDestination
       tags: [Conversions]
@@ -113756,7 +113756,7 @@ paths:
 
   /v1/ads/conversions/destinations/{destinationId}/associations:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: listAdConversionAssociations
       tags: [Conversions]
@@ -113931,7 +113931,7 @@ paths:
 
   /v1/ads/conversions/destinations/{destinationId}/metrics:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: getAdConversionMetrics
       tags: [Conversions]
@@ -113998,7 +113998,7 @@ paths:
 
   /v1/ads/conversions/custom-conversions:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: listAdCustomConversions
       tags: [Conversions]
@@ -114086,7 +114086,7 @@ paths:
 
   /v1/accounts/{accountId}/conversion-destinations:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: listConversionDestinations
       deprecated: true
@@ -114324,7 +114324,7 @@ paths:
 
   /v1/accounts/{accountId}/conversion-destinations/{destinationId}:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: getConversionDestination
       deprecated: true
@@ -114473,7 +114473,7 @@ paths:
 
   /v1/accounts/{accountId}/conversion-destinations/{destinationId}/associations:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: listConversionAssociations
       deprecated: true
@@ -114641,7 +114641,7 @@ paths:
 
   /v1/accounts/{accountId}/conversion-destinations/{destinationId}/metrics:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: getConversionMetrics
       deprecated: true
@@ -114696,7 +114696,7 @@ paths:
 
   /v1/whatsapp/conversions:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: listWhatsAppConversions
       tags: [WhatsApp]
@@ -115505,7 +115505,7 @@ paths:
 
   /v1/accounts/{accountId}/business-agent:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "messages"
       operationId: getBusinessAgentStatus
       tags: [Business Agent]
@@ -115578,7 +115578,7 @@ paths:
         '409': { description: 'Meta rejected the state change (code business_agent_conflict).' }
   /v1/accounts/{accountId}/business-agent/settings:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "messages"
       operationId: listBusinessAgentSettings
       tags: [Business Agent]
@@ -115664,7 +115664,7 @@ paths:
         '404': { $ref: '#/components/responses/BusinessAgentNotFound' }
   /v1/accounts/{accountId}/business-agent/allowlist:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "messages"
       operationId: listBusinessAgentAllowlist
       tags: [Business Agent]
@@ -115737,7 +115737,7 @@ paths:
         '404': { $ref: '#/components/responses/BusinessAgentNotFound' }
   /v1/accounts/{accountId}/business-agent/business-information:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "messages"
       operationId: getBusinessAgentBusinessInformation
       tags: [Business Agent]
@@ -115798,7 +115798,7 @@ paths:
         '404': { $ref: '#/components/responses/BusinessAgentNotFound' }
   /v1/accounts/{accountId}/business-agent/faqs:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "messages"
       operationId: listBusinessAgentFaqs
       tags: [Business Agent]
@@ -115850,7 +115850,7 @@ paths:
         '409': { description: 'Meta rejected the entry (code business_agent_conflict).' }
   /v1/accounts/{accountId}/business-agent/faqs/{faqId}:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "messages"
       operationId: getBusinessAgentFaq
       tags: [Business Agent]
@@ -115912,7 +115912,7 @@ paths:
         '404': { $ref: '#/components/responses/BusinessAgentNotFound' }
   /v1/accounts/{accountId}/business-agent/websites:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "messages"
       operationId: listBusinessAgentWebsites
       tags: [Business Agent]
@@ -115963,7 +115963,7 @@ paths:
         '404': { $ref: '#/components/responses/BusinessAgentNotFound' }
   /v1/accounts/{accountId}/business-agent/websites/{websiteId}:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "messages"
       operationId: getBusinessAgentWebsite
       tags: [Business Agent]
@@ -116025,7 +116025,7 @@ paths:
         '404': { $ref: '#/components/responses/BusinessAgentNotFound' }
   /v1/accounts/{accountId}/business-agent/files:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "messages"
       operationId: listBusinessAgentFiles
       tags: [Business Agent]
@@ -116097,7 +116097,7 @@ paths:
         '413': { x-summary: "The file is larger than 100 MB: upload a smaller file.", description: 'File larger than 100 MB (code payload_too_large). A multipart body above the request limit is rejected by the host before the route runs.' }
   /v1/accounts/{accountId}/business-agent/files/{fileId}:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "messages"
       operationId: getBusinessAgentFile
       tags: [Business Agent]
@@ -116134,7 +116134,7 @@ paths:
         '404': { $ref: '#/components/responses/BusinessAgentNotFound' }
   /v1/accounts/{accountId}/business-agent/skills:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "messages"
       operationId: listBusinessAgentSkills
       tags: [Business Agent]
@@ -116185,7 +116185,7 @@ paths:
         '404': { $ref: '#/components/responses/BusinessAgentNotFound' }
   /v1/accounts/{accountId}/business-agent/skills/{skillId}:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "messages"
       operationId: getBusinessAgentSkill
       tags: [Business Agent]
@@ -116247,7 +116247,7 @@ paths:
         '404': { $ref: '#/components/responses/BusinessAgentNotFound' }
   /v1/accounts/{accountId}/business-agent/ui-skills:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "messages"
       operationId: listBusinessAgentUiSkills
       tags: [Business Agent]
@@ -116303,7 +116303,7 @@ paths:
         '404': { $ref: '#/components/responses/BusinessAgentNotFound' }
   /v1/accounts/{accountId}/business-agent/ui-skills/{uiSkillId}:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "messages"
       operationId: getBusinessAgentUiSkill
       tags: [Business Agent]
@@ -116365,7 +116365,7 @@ paths:
         '404': { $ref: '#/components/responses/BusinessAgentNotFound' }
   /v1/accounts/{accountId}/business-agent/connectors:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "messages"
       operationId: listBusinessAgentConnectors
       tags: [Business Agent]
@@ -116418,7 +116418,7 @@ paths:
         '409': { description: 'A connector with that name already exists (code business_agent_conflict).' }
   /v1/accounts/{accountId}/business-agent/connectors/{connectorId}:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "messages"
       operationId: getBusinessAgentConnector
       tags: [Business Agent]
@@ -116550,7 +116550,7 @@ paths:
         '404': { $ref: '#/components/responses/BusinessAgentNotFound' }
   /v1/accounts/{accountId}/business-agent/connectors/{connectorId}/logs:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "messages"
       operationId: getBusinessAgentConnectorLogs
       tags: [Business Agent]
@@ -116583,7 +116583,7 @@ paths:
         '404': { $ref: '#/components/responses/BusinessAgentNotFound' }
   /v1/accounts/{accountId}/business-agent/connectors/{connectorId}/tools:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "messages"
       operationId: listBusinessAgentConnectorTools
       tags: [Business Agent]
@@ -116636,7 +116636,7 @@ paths:
         '404': { $ref: '#/components/responses/BusinessAgentNotFound' }
   /v1/accounts/{accountId}/business-agent/connectors/{connectorId}/tools/{toolId}:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "messages"
       operationId: getBusinessAgentConnectorTool
       tags: [Business Agent]
@@ -116737,7 +116737,7 @@ paths:
         '404': { $ref: '#/components/responses/BusinessAgentNotFound' }
   /v1/accounts/{accountId}/business-agent/budget:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "messages"
       operationId: getBusinessAgentBudget
       tags: [Business Agent]
@@ -116871,7 +116871,7 @@ paths:
         '404': { $ref: '#/components/responses/BusinessAgentNotFound' }
   /v1/accounts/{accountId}/business-agent/events/{eventId}:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "messages"
       operationId: getBusinessAgentEvent
       tags: [Business Agent]
@@ -116892,7 +116892,7 @@ paths:
         '404': { $ref: '#/components/responses/BusinessAgentNotFound' }
   /v1/accounts/{accountId}/business-agent/evals:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "messages"
       operationId: readBusinessAgentEvals
       tags: [Business Agent]
@@ -116953,7 +116953,7 @@ paths:
         '404': { $ref: '#/components/responses/BusinessAgentNotFound' }
   /v1/accounts/{accountId}/tracking-tags:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: listTrackingTags
       tags: ["Tracking Tags"]
@@ -117156,7 +117156,7 @@ paths:
 
   /v1/accounts/{accountId}/tracking-tags/{tagId}:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: getTrackingTag
       tags: ["Tracking Tags"]
@@ -117344,7 +117344,7 @@ paths:
 
   /v1/accounts/{accountId}/tracking-tags/{tagId}/shared-accounts:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: listTrackingTagSharedAccounts
       tags: ["Tracking Tags"]
@@ -117678,7 +117678,7 @@ paths:
                       reason: { $ref: '#/components/schemas/TrackingTagInstallBlockedReason' }
         '502': { x-summary: "The platform was unreachable or returned an unclassified error: on WordPress, check the site with a GET before retrying.", description: 'Meta, Shopify or the WordPress site was unreachable or returned an unclassified error. On WordPress a write may have completed; call GET before retrying.' }
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: getTrackingTagStoreInstall
       tags: ["Tracking Tags"]
@@ -117796,7 +117796,7 @@ paths:
 
   /v1/accounts/{accountId}/tracking-tags/{tagId}/events:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: listTrackingTagEvents
       tags: ["Tracking Tags"]
@@ -118133,7 +118133,7 @@ paths:
 
   /v1/accounts/{accountId}/tracking-tags/{tagId}/users:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: listTrackingTagUsers
       tags: ["Tracking Tags"]
@@ -118260,7 +118260,7 @@ paths:
         '501': { description: 'The platform cannot remove tag users through its API (code `platform_not_supported`); the message says where to do it.' }
   /v1/accounts/{accountId}/tracking-tags/{tagId}/partners:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: listTrackingTagPartners
       tags: ["Tracking Tags"]
@@ -118300,7 +118300,7 @@ paths:
         '501': { description: 'The platform has no partner sharing (code `platform_not_supported`).' }
   /v1/accounts/{accountId}/tracking-tags/{tagId}/diagnostics:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: getTrackingTagDiagnostics
       tags: ["Tracking Tags"]
@@ -118340,7 +118340,7 @@ paths:
 
   /v1/accounts/{accountId}/tracking-tags/{tagId}/stats:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: getTrackingTagStats
       tags: ["Tracking Tags"]
@@ -122836,7 +122836,7 @@ paths:
 
   /v1/verify/verifications/{verificationId}:
     get:
-      x-oauth-scopes: ["messaging:write"]
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       x-resource-group: "telephony"
       operationId: getVerification
       tags: [Verify]
@@ -122904,7 +122904,7 @@ paths:
 
   /v1/ads/pixels:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: 'listTikTokAdPixels'
       summary: 'List TikTok ad pixels'
@@ -122996,7 +122996,7 @@ paths:
           description: 'Pixel Management permission is missing (code reconnect_required). Reconnect TikTok Ads to grant it.'
   /v1/ads/partnership-content:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: 'listPartnershipAdContent'
       summary: 'List partnership ad content'
@@ -123072,7 +123072,7 @@ paths:
           description: 'The advertiser Instagram Business Account could not be resolved.'
   /v1/ads/partnership-permissions:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: 'listPartnershipAdPermissions'
       summary: 'List partnership permissions'
@@ -123374,7 +123374,7 @@ paths:
 
   /v1/conversion-audit/meta-audit:
     get:
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       x-resource-group: "ads"
       operationId: getMetaConversionAudit
       tags: [Conversion Audit]

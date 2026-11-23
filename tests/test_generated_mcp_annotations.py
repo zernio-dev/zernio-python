@@ -13,7 +13,7 @@ from pathlib import Path
 import pytest
 from fastmcp import FastMCP
 
-from late.mcp.generated_tools import TOOL_OAUTH_SCOPE, register_generated_tools
+from late.mcp.generated_tools import TOOL_OAUTH_SCOPES, register_generated_tools
 
 
 @pytest.fixture(scope="module")
@@ -37,12 +37,10 @@ def tools():
 def test_a_read_declares_the_read_scope_and_a_write_the_write_scope(generator):
     both = ["posts:read", "posts:write"]
 
-    assert generator.declared_oauth_scope(both, True) == "posts:read"
-    assert generator.declared_oauth_scope(both, False) == "posts:write"
-    assert (
-        generator.declared_oauth_scope(["messaging:write"], True) == "messaging:write"
-    )
-    assert generator.declared_oauth_scope([], True) is None
+    assert generator.declared_oauth_scopes(both, True) == ["posts:read", "posts:write"]
+    assert generator.declared_oauth_scopes(both, False) == ["posts:write", "posts:read"]
+    assert generator.declared_oauth_scopes(["ads:write"], True) == ["ads:write"]
+    assert generator.declared_oauth_scopes([], True) == []
 
 
 def test_a_post_that_only_queries_is_read_only(tools):
@@ -76,6 +74,11 @@ def test_every_tool_sets_all_three_hints(tools):
         assert isinstance(hints.openWorldHint, bool), name
 
 
-def test_the_inbox_needs_the_messaging_scope():
-    assert TOOL_OAUTH_SCOPE["messages_list_inbox_conversations"] == "messaging:write"
-    assert TOOL_OAUTH_SCOPE["accounts_get_account_health"] == "accounts:read"
+def test_reads_declare_the_read_scope_and_sends_the_write_scope():
+    assert TOOL_OAUTH_SCOPES["messages_list_inbox_conversations"] == (
+        "messaging:read",
+        "messaging:write",
+    )
+    assert TOOL_OAUTH_SCOPES["messages_send_inbox_message"] == ("messaging:write",)
+    assert TOOL_OAUTH_SCOPES["ad_campaigns_list_ads"][0] == "ads:read"
+    assert TOOL_OAUTH_SCOPES["accounts_get_account_health"][0] == "accounts:read"

@@ -839,24 +839,26 @@ def generate_tool_handler(
     return "\n".join(lines)
 
 
-def declared_oauth_scope(scopes: list[str], read_only: bool) -> str | None:
-    """The one scope a tool declares, out of the spec's x-oauth-scopes (any of which reaches it).
+def declared_oauth_scopes(scopes: list[str], read_only: bool) -> list[str]:
+    """The spec's x-oauth-scopes (any one of which reaches the operation), the one to declare first.
 
-    A read prefers a :read scope and a write a :write one, so ChatGPT asks for
+    A read declares a :read scope and a write a :write one, so ChatGPT asks for
     the narrowest permission the operation needs.
     """
     preferred = ":read" if read_only else ":write"
-    return next((s for s in scopes if s.endswith(preferred)), scopes[0] if scopes else None)
+    declared = next((s for s in scopes if s.endswith(preferred)), scopes[0] if scopes else None)
+    return [declared, *(s for s in scopes if s != declared)] if declared else []
 
 
 def oauth_scope_table(operations: list[dict[str, Any]]) -> list[str]:
-    scoped = sorted((op["tool_name"], op["oauth_scope"]) for op in operations if op["oauth_scope"])
+    scoped = sorted((op["tool_name"], op["oauth_scopes"]) for op in operations if op["oauth_scopes"])
     return [
         "",
         "",
-        "# The OAuth scope each tool declares (securitySchemes), from the spec's x-oauth-scopes.",
-        "TOOL_OAUTH_SCOPE: dict[str, str] = {",
-        *(f'    "{name}": "{scope}",' for name, scope in scoped),
+        "# The OAuth scopes any one of which reaches each tool, from the spec's x-oauth-scopes;",
+        "# the first is the one the tool declares (securitySchemes).",
+        "TOOL_OAUTH_SCOPES: dict[str, tuple[str, ...]] = {",
+        *(f'    "{name}": ({", ".join(repr(s) for s in scopes)},),' for name, scopes in scoped),
         "}",
     ]
 
@@ -921,7 +923,7 @@ def main() -> int:
                 "platforms": operation.get("x-platforms", []),
                 "read_only": read_only,
                 "open_world": not read_only or operation_id in OPEN_WORLD_READ_OPERATIONS,
-                "oauth_scope": declared_oauth_scope(operation.get("x-oauth-scopes") or [], read_only),
+                "oauth_scopes": declared_oauth_scopes(operation.get("x-oauth-scopes") or [], read_only),
                 # Human-readable title for the annotation. First line of the
                 # OpenAPI summary, capped so it stays a short label.
                 "title": summary.split("\n")[0].strip()[:80],

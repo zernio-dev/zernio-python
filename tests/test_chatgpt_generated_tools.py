@@ -18,7 +18,7 @@ from fastmcp import Client
 
 from late.mcp.chatgpt_server import CHATGPT_SCOPES, chatgpt_mcp
 from late.mcp.chatgpt_tools import CHATGPT_GENERATED_TOOLS, concise_description
-from late.mcp.generated_tools import TOOL_OAUTH_SCOPE
+from late.mcp.generated_tools import TOOL_OAUTH_SCOPES
 
 LIVE_TOOLS = json.loads(
     (Path(__file__).parent / "fixtures" / "chatgpt_live_tools.json").read_text()
@@ -71,7 +71,7 @@ async def test_every_generated_tool_has_explicit_hints_and_its_oauth_scope():
         assert hints["destructiveHint"] is False, name
         assert hints["openWorldHint"] is False, name
         assert listed[name]["_meta"]["securitySchemes"] == [
-            {"type": "oauth2", "scopes": [TOOL_OAUTH_SCOPE[name]]}
+            {"type": "oauth2", "scopes": [TOOL_OAUTH_SCOPES[name][0]]}
         ], name
 
 
@@ -83,7 +83,7 @@ async def test_generated_descriptions_stay_short():
 
 
 def test_advertises_exactly_the_scopes_the_listed_tools_need():
-    needed = {TOOL_OAUTH_SCOPE[name] for name in CHATGPT_GENERATED_TOOLS}
+    needed = {TOOL_OAUTH_SCOPES[name][0] for name in CHATGPT_GENERATED_TOOLS}
 
     assert CHATGPT_SCOPES[:4] == [
         "posts:read",
@@ -92,7 +92,13 @@ def test_advertises_exactly_the_scopes_the_listed_tools_need():
         "analytics:read",
     ]
     assert set(CHATGPT_SCOPES) == LINK_SCOPES | needed
-    assert not {"ads:write", "automations:write", "money:write"} & set(CHATGPT_SCOPES)
+    assert {"messaging:read", "ads:read", "contacts:read"} <= set(CHATGPT_SCOPES)
+    assert not {
+        "messaging:write",
+        "ads:write",
+        "automations:write",
+        "money:write",
+    } & set(CHATGPT_SCOPES)
 
 
 def test_a_description_keeps_its_first_paragraph_and_one_line_per_argument():
@@ -143,14 +149,16 @@ async def test_a_link_without_the_tools_scope_is_asked_to_relink(monkeypatch):
         'Bearer resource_metadata="https://mcp.zernio.com/.well-known/oauth-protected-resource/chatgpt"'
     )
     assert 'error="insufficient_scope"' in challenge
-    assert "messaging:write" in challenge
-    assert "messaging:write" in result.content[0].text
+    assert "messaging:read" in challenge
+    assert "messaging:read" in result.content[0].text
 
 
 @pytest.mark.parametrize(
     ("granted", "body"),
     [
         # The link holds the scope: a team member with the group off, which re-linking cannot fix.
+        (LINK_SCOPES | {"messaging:read"}, GROUP_DENIED),
+        # A write scope reaches the read too.
         (LINK_SCOPES | {"messaging:write"}, GROUP_DENIED),
         # An API key: no OAuth link to redo.
         (None, GROUP_DENIED),
