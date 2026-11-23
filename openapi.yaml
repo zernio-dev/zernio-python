@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.794.0"
+  version: "1.795.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -49740,14 +49740,18 @@ paths:
                         description: 'Top-level `can_send_message` from the phone number''s Meta health_status: `AVAILABLE`, `LIMITED` or `BLOCKED`. `BLOCKED` adds an issue and raises `status` to at least `warning`. `null` when Meta did not report it.'
                       messagingBlockers:
                         type: [array, "null"]
-                        description: 'The health_status entities that are not `AVAILABLE`, one item per Meta error, with calling-only signals (138024, 138025) removed. `null` when the read failed.'
+                        description: |
+                          The reasons on health_status entities that are not `AVAILABLE`. `null` when the read failed.
+
+                          - One item per Meta error, with calling-only signals (138024, 138025) removed.
+                          - A `LIMITED` entity also gets one item per line of its `additional_info`, where Meta writes most reasons for a limit (for example a quality warning). These have `code` null.
                         items:
                           type: object
                           properties:
-                            entityType: { type: [string, "null"], description: 'Meta entity the error is on (for example WABA, BUSINESS)' }
+                            entityType: { type: [string, "null"], description: 'Meta entity the reason is on (for example PHONE_NUMBER, WABA, BUSINESS)' }
                             canSendMessage: { type: string, description: 'That entity''s state (LIMITED or BLOCKED)' }
-                            code: { type: [integer, "null"], description: 'Meta error code' }
-                            description: { type: string, description: 'Meta''s error description' }
+                            code: { type: [integer, "null"], description: 'Meta error code. `null` for an `additional_info` line.' }
+                            description: { type: string, description: 'Meta''s error description, or the `additional_info` line as Meta wrote it' }
                             possibleSolution: { type: [string, "null"], description: 'Meta''s suggested fix, when it gives one' }
                   lineWebhook:
                     type: object
