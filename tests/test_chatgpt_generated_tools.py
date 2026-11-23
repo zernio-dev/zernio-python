@@ -27,6 +27,13 @@ LIVE_TOOLS = json.loads((FIXTURES / "chatgpt_live_tools.json").read_text())
 LIVE_INSTRUCTIONS = (FIXTURES / "chatgpt_live_instructions.txt").read_text()
 CONVERSATIONS = "https://api.test.com/v1/inbox/conversations"
 LINK_SCOPES = {"posts:read", "posts:write", "accounts:read", "analytics:read"}
+OPEN_WORLD_READS = {
+    "accounts_list_tik_tok_commercial_music",
+    "ad_library_search_ad_library",
+    "ad_targeting_search_ad_targeting",
+    "instagram_get_instagram_business_discovery",
+    "instagram_search_instagram_audio",
+}
 GROUP_DENIED = {
     "error": "This connector token has the 'messages' resource group disabled.",
     "code": "insufficient_permissions",
@@ -76,7 +83,8 @@ async def test_every_generated_tool_has_explicit_hints_and_its_oauth_scope():
         hints = listed[name]["annotations"]
         assert hints["readOnlyHint"] is True, name
         assert hints["destructiveHint"] is False, name
-        assert hints["openWorldHint"] is False, name
+        # Reads of public catalogs and other accounts' content are open-world.
+        assert hints["openWorldHint"] is (name in OPEN_WORLD_READS), name
         assert listed[name]["_meta"]["securitySchemes"] == [
             {"type": "oauth2", "scopes": [TOOL_OAUTH_SCOPES[name][0]]}
         ], name
@@ -169,7 +177,9 @@ async def test_a_link_without_the_tools_scope_is_asked_to_relink(monkeypatch):
     )
     assert 'error="insufficient_scope"' in challenge
     assert "messaging:read" in challenge
-    assert "messaging:read" in result.content[0].text
+    text = result.content[0].text
+    assert "read your inbox" in text
+    assert "Settings > Plugins" in text and "Reconnect" in text
 
 
 async def test_each_group_refusal_logs_whether_it_asked_to_relink(monkeypatch, caplog):

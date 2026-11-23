@@ -135,6 +135,10 @@ OPEN_WORLD_READ_OPERATIONS = {
     "getTweet",
     "getInstagramBusinessDiscovery",
     "searchAdLibrary",
+    "searchAdTargeting",
+    "searchAdInterests",
+    "searchInstagramAudio",
+    "listTikTokCommercialMusic",
 }
 
 # Operations to SKIP (not useful for MCP)
