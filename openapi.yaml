@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.778.1"
+  version: "1.779.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -110512,6 +110512,15 @@ paths:
                             externalId: { type: integer }
                             clickId: { type: integer }
                         matchRate: { type: [number, "null"], description: '`match.identified / match.events`. `null` with nothing sent.' }
+                        failureReasons:
+                          type: array
+                          description: 'Why the destination refused events in the period, by refusal code, most events first (at most 5). Empty when it refused none.'
+                          items:
+                            type: object
+                            properties:
+                              code: { type: string, description: 'The refusal code: the platform''s own, or Zernio''s (such as `INVALID_EVENT` or `INVALID_EVENT_TIME`).' }
+                              example: { type: string, description: 'One refusal message of this code, as the platform worded it.' }
+                              events: { type: integer, description: Events refused with this code. }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { description: 'No ads access on the account (`ads_addon_required`).' }
