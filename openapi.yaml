@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.783.0"
+  version: "1.784.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -72882,11 +72882,18 @@ paths:
                 attachmentUrl:
                   type: string
                   format: uri
-                  description: '(Facebook, Bluesky and LinkedIn) URL of an image to attach to the comment or reply. The URL must be publicly fetchable. Returns 400 for other platforms.'
+                  description: '(Facebook, Bluesky, LinkedIn and Threads) URL of an image to attach to the comment or reply. The URL must be publicly fetchable. Returns 400 for other platforms.'
                 attachmentType:
                   type: string
                   enum: [image, gif]
-                  description: '(Facebook only) How Facebook publishes `attachmentUrl`: `image` (default) as a photo comment, `gif` as an animated GIF comment. A GIF sent as `image` is stored as a still photo. Requires `attachmentUrl`. Returns 400 on other platforms.'
+                  description: |
+                    (Facebook and Threads, optional) How `attachmentUrl` is published. Requires `attachmentUrl`; returns 400 on other platforms.
+
+                    - Omitted: a GIF is detected and posted animated. Detection uses GIPHY links (page, media, embed, sticker; `gph.is` on Threads), `.gif` paths, and an `image/gif` response on Threads.
+                    - `image`: forces a still photo. Threads converts a GIF or WebP to JPEG or PNG.
+                    - `gif`: forces an animated GIF.
+                    - Threads GIFs must come from GIPHY, otherwise the request returns 400 `invalid_field_value`.
+                    - Facebook gets a GIPHY link as its direct GIF.
                 commentId: { type: string, description: Reply to specific comment (optional) }
                 mentionAuthor:
                   type: boolean
@@ -72915,9 +72922,11 @@ paths:
                       isReply: { type: boolean }
                       cid: { type: [string, "null"], description: Bluesky CID }
         '400':
-          x-summary: "The request is invalid, for example an attachment URL on a platform other than Facebook, Bluesky and LinkedIn or a LinkedIn mention that cannot be resolved."
+          x-summary: "The request is invalid, for example an attachment URL on a platform other than Facebook, Bluesky, LinkedIn and Threads or a LinkedIn mention that cannot be resolved."
           description: |
-            Invalid request (e.g. attachmentUrl on a platform other than Facebook, Bluesky and LinkedIn, or attachmentType on a platform other than Facebook, code PLATFORM_NOT_SUPPORTED).
+            Invalid request (e.g. attachmentUrl on a platform other than Facebook, Bluesky, LinkedIn and Threads, or attachmentType on a platform other than Facebook and Threads, code PLATFORM_NOT_SUPPORTED).
+
+            - A Threads GIF that is not from GIPHY returns code `invalid_field_value` with `param: attachmentUrl`.
 
             - LinkedIn: a profile or company URL mention that cannot be resolved returns `linkedin_mentions_invalid`, or `linkedin_mentions_limit_exceeded` for more than 10, with `details.mentions[]`.
             - `mentionAuthor` without `commentId`, or on a platform other than LinkedIn, is rejected.
