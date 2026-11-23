@@ -456,6 +456,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `connect.connect_klaviyo_credentials()` | Connect a Klaviyo account |
 | `connect.connect_line_credentials()` | Connect LINE Official Account |
 | `connect.connect_open_ai_ads_credentials()` | Connect an OpenAI Ads account |
+| `connect.connect_outbrain_ads_credentials()` | Connect an Outbrain marketer |
 | `connect.connect_shopify_with_token()` | Connect a Shopify store with a custom-app Admin token |
 | `connect.connect_slack_channel()` | Connect a Slack channel |
 | `connect.connect_snapchat_ads_credentials()` | Connect a Snapchat Ads pixel |

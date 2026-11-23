@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.798.0"
+  version: "1.799.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -19454,7 +19454,7 @@ components:
         _id: { type: string }
         platform:
           type: string
-          enum: [tiktok, instagram, facebook, youtube, linkedin, twitter, threads, pinterest, reddit, bluesky, googlebusiness, telegram, snapchat, discord, slack, whatsapp, shopify, wordpress, wix, linkedinads, metaads, pinterestads, tiktokads, xads, googleads, openaiads, redditads, sms, phone, rcs, whopads, applovinads, snapchatads, taboolaads, klaviyo, attentive, impact, awin, google, microsoft, imap, hubspot, salesforce, webflow, googleanalytics, imessage, tiktokshop, microsoftads, line, wechat, googletagmanager, stripe, googlesearchconsole, campaignmanager360, tradedeskads, tradedeskdsp, amazonads, gohighlevel]
+          enum: [tiktok, instagram, facebook, youtube, linkedin, twitter, threads, pinterest, reddit, bluesky, googlebusiness, telegram, snapchat, discord, slack, whatsapp, shopify, wordpress, wix, linkedinads, metaads, pinterestads, tiktokads, xads, googleads, openaiads, redditads, sms, phone, rcs, whopads, applovinads, snapchatads, taboolaads, outbrainads, klaviyo, attentive, impact, awin, google, microsoft, imap, hubspot, salesforce, webflow, googleanalytics, imessage, tiktokshop, microsoftads, line, wechat, googletagmanager, stripe, googlesearchconsole, campaignmanager360, tradedeskads, tradedeskdsp, amazonads, gohighlevel]
         profileId:
           oneOf:
             - type: string
@@ -26396,6 +26396,7 @@ components:
                 sccid: { type: string, description: "Snapchat click ID (the `ScCid` URL param Snap adds to ad clicks). Sent to Snapchat as `sc_click_id`, not hashed." }
                 scid: { type: string, description: "Snap Pixel browser id (the `_scid` cookie). Sent to Snapchat as `sc_cookie1`, not hashed." }
                 tblci: { type: string, description: "Taboola click ID (the `tblci` URL param Taboola adds to ad clicks with its `{click_id}` macro). Sent to Taboola as `click-id`, not hashed." }
+                ob_click_id: { type: string, description: "Outbrain click ID (the `ob_click_id` URL param, filled by the `{{ob_click_id}}` macro you add to the campaign's Track box). Sent to Outbrain as `ob_click_id`, not hashed." }
                 irclickid: { type: string, description: "Impact partner click id (the `irclickid` URL param Impact adds to partner links). Sent to Impact as `ClickId`." }
                 awc: { type: string, description: "Awin click id (the `awc` URL param Awin adds to publisher links). Sent to Awin as the order's `awc`." }
                 dclid: { type: string, description: "Campaign Manager 360 / Display & Video 360 click ID (the `dclid` URL param). Sent to Floodlight as is." }
@@ -49256,7 +49257,7 @@ paths:
           description: Filter by platform
           schema:
             type: string
-            enum: [facebook, instagram, linkedin, twitter, tiktok, youtube, threads, pinterest, reddit, bluesky, googlebusiness, telegram, snapchat, discord, slack, whatsapp, shopify, wordpress, wix, linkedinads, metaads, pinterestads, tiktokads, xads, googleads, openaiads, redditads, microsoftads, whopads, applovinads, snapchatads, taboolaads, klaviyo, attentive, impact, awin, hubspot, salesforce, gohighlevel, webflow, googleanalytics, line, wechat, googletagmanager, googlesearchconsole, stripe, campaignmanager360, tradedeskads, tradedeskdsp, amazonads]
+            enum: [facebook, instagram, linkedin, twitter, tiktok, youtube, threads, pinterest, reddit, bluesky, googlebusiness, telegram, snapchat, discord, slack, whatsapp, shopify, wordpress, wix, linkedinads, metaads, pinterestads, tiktokads, xads, googleads, openaiads, redditads, microsoftads, whopads, applovinads, snapchatads, taboolaads, outbrainads, klaviyo, attentive, impact, awin, hubspot, salesforce, gohighlevel, webflow, googleanalytics, line, wechat, googletagmanager, googlesearchconsole, stripe, campaignmanager360, tradedeskads, tradedeskdsp, amazonads]
         - name: status
           in: query
           description: Filter by health status
@@ -58600,6 +58601,72 @@ paths:
           description: Ads add-on required.
         '409':
           description: This profile already has another Taboola account connected (code profile_platform_conflict).
+
+  /v1/connect/outbrain-ads/credentials:
+    post:
+      x-resource-group: "accounts"
+      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      operationId: connectOutbrainAdsCredentials
+      tags: [Connect]
+      summary: Connect an Outbrain marketer
+      description: |
+        Connect an Outbrain marketer by its marketer id from Outbrain Amplify. Outbrain's server-to-server pixel takes no credential, so nothing secret is stored and nothing is checked with Outbrain.
+
+        The account then receives the conversion events you forward to it (`POST /v1/events`, forwarding rules). Each event needs the Outbrain click ID (`clickIds.ob_click_id`), which the campaign's Track box passes with `ob_click_id={{ob_click_id}}`.
+
+        Outbrain counts an event only when its name equals the name of an Event-Based Conversion in Amplify, case included. Rename events in the forwarding rule when they differ.
+
+        Requires the Ads add-on.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [outbrainMarketerId, profileId]
+              properties:
+                outbrainMarketerId:
+                  type: string
+                  description: 'Outbrain marketer id from Amplify, letters and digits.'
+                name:
+                  type: string
+                  maxLength: 100
+                  description: Optional display name for the marketer.
+                profileId:
+                  type: string
+                  description: Your Zernio profile ID
+                state:
+                  type: string
+                  description: Optional state passthrough for the connect flow.
+                redirect_url:
+                  type: string
+                  description: 'Optional URL to redirect to after a successful connection, echoed back as redirectUrl.'
+            example:
+              outbrainMarketerId: "00f4b02153ee75f3c9dc4fc128ab0419ab"
+              profileId: "6507a1b2c3d4e5f6a7b8c9d0"
+      responses:
+        '200':
+          description: Outbrain marketer connected
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  accountId: { type: string }
+                  outbrainMarketerId: { type: string }
+                  accountName: { type: string }
+                  redirectUrl: { type: string }
+              example:
+                accountId: "6507a1b2c3d4e5f6a7b8c9d0"
+                outbrainMarketerId: "00f4b02153ee75f3c9dc4fc128ab0419ab"
+                accountName: "Outbrain marketer 00f4b02153ee75f3c9dc4fc128ab0419ab"
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '402': { $ref: '#/components/responses/PaymentRequired' }
+        '403':
+          description: Ads add-on required.
+        '409':
+          description: This profile already has another Outbrain marketer connected (code profile_platform_conflict).
 
   /v1/connect/whop-ads/credentials:
     post:
@@ -110890,6 +110957,7 @@ paths:
         - X Ads (`xads`) via the X Conversion API (`POST /12/measurement/conversions/{pixelId}`)
         - Snapchat (`snapchatads`) via the Snapchat Conversions API (`POST https://tr.snapchat.com/v3/{pixelId}/events`)
         - Taboola (`taboolaads`) via its S2S postback (`GET https://trc.taboola.com/actions-handler/log/3/s2s-action`), one request per event
+        - Outbrain (`outbrainads`) via its S2S pixel (`GET https://tr.outbrain.com/unifiedPixel`), one request per event
         - Klaviyo (`klaviyo`) via the Events API (`POST https://a.klaviyo.com/api/events`)
         - Attentive (`attentive`) via the eCommerce and Custom Events APIs
         - Impact (`impact`) via the Conversions API (`POST /Advertisers/{AccountSID}/Conversions`)
@@ -110913,6 +110981,7 @@ paths:
         - X Ads: X Pixel event id, e.g. `tw-rbhhj-rcfms`. Each event needs `clickIds.twclid`, an `email`, a `phone`, or `ipAddress` plus `userAgent`; the event decides the type and `eventId` is sent as `conversion_id`.
         - Snapchat: the connection's Snap Pixel ID, e.g. `1a2b3c4d-5e6f-4a8b-9c0d-1e2f3a4b5c6d`. Each event needs an `email`, a `phone`, or `ipAddress` plus `userAgent`; website events also need `sourceUrl`. With `testCode`, events go to Snap's validate endpoint and are not recorded.
         - Taboola: the connection's numeric Taboola Account ID, e.g. `1234567`. Each event needs `clickIds.tblci`. `eventName` is sent as is and must equal the Event Name of a conversion rule in Realize (case-sensitive). Taboola has no test mode, so an event with `testCode` is not sent (code `TEST_MODE_UNSUPPORTED`).
+        - Outbrain: the connection's Outbrain marketer id, e.g. `00f4b02153ee75f3c9dc4fc128ab0419ab`. Each event needs `clickIds.ob_click_id`. `eventName` is sent as is and must equal the name of an Event-Based Conversion in Amplify (case-sensitive). Outbrain has no test mode, so an event with `testCode` is not sent (code `TEST_MODE_UNSUPPORTED`).
         - Klaviyo: the connection's Klaviyo account id. Each event needs an unhashed `email`, a `phone` with its country code, or an `externalId`; `eventId` is the `unique_id`. Klaviyo has no test mode, so an event with `testCode` is not sent (code `TEST_MODE_UNSUPPORTED`).
         - Klaviyo metrics: `Purchase` is `Placed Order`, `InitiateCheckout` `Started Checkout`, `ViewContent` `Viewed Product`, `AddToCart` `Added to Cart`; any other name is a metric of that name.
         - Attentive: the connection's Attentive company id. `Purchase`, `AddToCart` and `ViewContent` with priced `items` go to the eCommerce endpoints; every other event goes out as a custom event named `eventName`. Each event needs an unhashed `email`, a `phone` with its country code, or an `externalId`. A `testCode` is refused.
@@ -111071,7 +111140,7 @@ paths:
               schema:
                 type: object
                 properties:
-                  platform: { type: string, enum: [metaads, googleads, linkedinads, tiktokads, openaiads, pinterestads, redditads, applovinads, microsoftads, xads, snapchatads, taboolaads, googleanalytics, klaviyo, attentive, impact, awin, campaignmanager360, tradedeskads, amazonads] }
+                  platform: { type: string, enum: [metaads, googleads, linkedinads, tiktokads, openaiads, pinterestads, redditads, applovinads, microsoftads, xads, snapchatads, taboolaads, outbrainads, googleanalytics, klaviyo, attentive, impact, awin, campaignmanager360, tradedeskads, amazonads] }
                   eventsReceived: { type: integer, description: Events accepted by the platform. }
                   eventsFailed: { type: integer, description: Events rejected (see failures). }
                   eventsDropped: { type: integer, description: 'Events not sent because the visitor did not consent (see `consent`).' }
@@ -111797,7 +111866,7 @@ paths:
     get:
       x-resource-group: "ads"
       x-oauth-scopes: ["ads:write", "ads:read"]
-      x-platforms: [meta, google, tiktok, linkedin, microsoft, x, pinterest, reddit, openai, applovinads, snapchatads, taboolaads, klaviyo, attentive, impact, awin, campaignmanager360, tradedeskads, amazonads, googleanalytics, stripe, hubspot, salesforce, gohighlevel]
+      x-platforms: [meta, google, tiktok, linkedin, microsoft, x, pinterest, reddit, openai, applovinads, snapchatads, taboolaads, outbrainads, klaviyo, attentive, impact, awin, campaignmanager360, tradedeskads, amazonads, googleanalytics, stripe, hubspot, salesforce, gohighlevel]
       operationId: listEvents
       tags: [Conversions]
       summary: List stored events
@@ -111900,7 +111969,7 @@ paths:
       x-oauth-scopes: ["ads:write"]
       operationId: sendEvents
       tags: [Conversions]
-      x-platforms: [meta, google, tiktok, linkedin, microsoft, x, pinterest, reddit, openai, applovinads, snapchatads, taboolaads, klaviyo, attentive, impact, awin, campaignmanager360, tradedeskads, amazonads, googleanalytics, gohighlevel]
+      x-platforms: [meta, google, tiktok, linkedin, microsoft, x, pinterest, reddit, openai, applovinads, snapchatads, taboolaads, outbrainads, klaviyo, attentive, impact, awin, campaignmanager360, tradedeskads, amazonads, googleanalytics, gohighlevel]
       summary: Send events to every destination
       description: |
         The recommended way to send conversions. Sends conversion events once and forwards them to every ad platform destination saved for the profile (see `POST /v1/events/destinations`), or to the `destinations` given in the request. Requires the Ads add-on.
@@ -111996,7 +112065,7 @@ paths:
                       properties:
                         accountId: { type: string }
                         destinationId: { type: string }
-                        platform: { type: string, enum: [metaads, googleads, linkedinads, tiktokads, openaiads, pinterestads, redditads, applovinads, microsoftads, xads, snapchatads, taboolaads, googleanalytics, klaviyo, attentive, impact, awin, campaignmanager360, tradedeskads, amazonads] }
+                        platform: { type: string, enum: [metaads, googleads, linkedinads, tiktokads, openaiads, pinterestads, redditads, applovinads, microsoftads, xads, snapchatads, taboolaads, outbrainads, googleanalytics, klaviyo, attentive, impact, awin, campaignmanager360, tradedeskads, amazonads] }
                         eventsSent: { type: integer, description: Events the platform accepted. }
                         eventsFailed: { type: integer }
                         eventsDropped: { type: integer, description: 'Events this destination did not get because the visitor did not consent (see Consent above).' }
@@ -112615,7 +112684,7 @@ paths:
                       properties:
                         accountId: { type: string }
                         destinationId: { type: string }
-                        platform: { type: [string, "null"], enum: [metaads, googleads, linkedinads, tiktokads, openaiads, pinterestads, redditads, applovinads, microsoftads, xads, snapchatads, taboolaads, googleanalytics, klaviyo, attentive, impact, awin, campaignmanager360, tradedeskads, amazonads, null] }
+                        platform: { type: [string, "null"], enum: [metaads, googleads, linkedinads, tiktokads, openaiads, pinterestads, redditads, applovinads, microsoftads, xads, snapchatads, taboolaads, outbrainads, googleanalytics, klaviyo, attentive, impact, awin, campaignmanager360, tradedeskads, amazonads, null] }
                         status: { type: string, enum: [sent, retrying, failed, dropped], description: '`dropped`: not sent because the visitor did not consent; `errorCode` says why (`consent_denied` or `consent_missing`).' }
                         attempt: { type: integer, description: 'Send attempt (1 = the first).' }
                         error: { type: [string, "null"] }
@@ -112879,7 +112948,7 @@ paths:
       x-resource-group: "ads"
       x-oauth-scopes: ["ads:write"]
       operationId: createForwardingRule
-      x-platforms: [meta, google, tiktok, linkedin, microsoft, x, pinterest, reddit, openai, applovinads, snapchatads, taboolaads, klaviyo, attentive, impact, awin, campaignmanager360, tradedeskads, amazonads, googleanalytics, hubspot, salesforce, gohighlevel]
+      x-platforms: [meta, google, tiktok, linkedin, microsoft, x, pinterest, reddit, openai, applovinads, snapchatads, taboolaads, outbrainads, klaviyo, attentive, impact, awin, campaignmanager360, tradedeskads, amazonads, googleanalytics, hubspot, salesforce, gohighlevel]
       tags: [Conversions]
       summary: Add a forwarding rule
       description: |
@@ -113702,7 +113771,7 @@ paths:
               schema:
                 type: object
                 properties:
-                  platform: { type: string, enum: [metaads, googleads, linkedinads, tiktokads, openaiads, pinterestads, redditads, applovinads, microsoftads, xads, snapchatads, taboolaads, googleanalytics, klaviyo, attentive, impact, awin, campaignmanager360, tradedeskads, amazonads] }
+                  platform: { type: string, enum: [metaads, googleads, linkedinads, tiktokads, openaiads, pinterestads, redditads, applovinads, microsoftads, xads, snapchatads, taboolaads, outbrainads, googleanalytics, klaviyo, attentive, impact, awin, campaignmanager360, tradedeskads, amazonads] }
                   destinations:
                     type: array
                     items:
@@ -113719,7 +113788,7 @@ paths:
                             or `accounts/{id}/uetTags/{id}`.
                             X Ads: pixel event id (`tw-...`). Snapchat:
                             Snap Pixel ID (a UUID). Taboola: numeric
-                            Account ID.
+                            Account ID. Outbrain: marketer id.
                         name: { type: string }
                         type:
                           type: string
@@ -114456,7 +114525,7 @@ paths:
               schema:
                 type: object
                 properties:
-                  platform: { type: string, enum: [metaads, googleads, linkedinads, tiktokads, openaiads, pinterestads, redditads, applovinads, microsoftads, xads, snapchatads, taboolaads, googleanalytics, klaviyo, attentive, impact, awin, campaignmanager360, tradedeskads, amazonads] }
+                  platform: { type: string, enum: [metaads, googleads, linkedinads, tiktokads, openaiads, pinterestads, redditads, applovinads, microsoftads, xads, snapchatads, taboolaads, outbrainads, googleanalytics, klaviyo, attentive, impact, awin, campaignmanager360, tradedeskads, amazonads] }
                   destinations:
                     type: array
                     items:
@@ -114473,7 +114542,7 @@ paths:
                             or `accounts/{id}/uetTags/{id}`.
                             X Ads: pixel event id (`tw-...`). Snapchat:
                             Snap Pixel ID (a UUID). Taboola: numeric
-                            Account ID.
+                            Account ID. Outbrain: marketer id.
                         name: { type: string }
                         type:
                           type: string

@@ -1127,6 +1127,7 @@ def register_generated_tools(mcp, _get_client):
             "applovinads",
             "snapchatads",
             "taboolaads",
+            "outbrainads",
             "klaviyo",
             "attentive",
             "impact",
@@ -29713,6 +29714,50 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="Connect an Outbrain marketer",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def connect_outbrain_ads_credentials(
+        outbrain_marketer_id: str,
+        profile_id: str,
+        name: str | None = None,
+        state: str | None = None,
+        redirect_url: str | None = None,
+    ) -> str:
+        """Connect an Outbrain marketer
+
+        Connect an Outbrain marketer by its marketer id from Outbrain Amplify. Outbrain's server-to-server pixel takes no credential, so nothing secret is stored and nothing is checked with Outbrain.
+
+        The account then receives the conversion events you forward to it (`POST /v1/events`, forwarding rules). Each event needs the Outbrain click ID (`clickIds.ob_click_id`), which the campaign's Track box passes with `ob_click_id={{ob_click_id}}`.
+
+        Outbrain counts an event only when its name equals the name of an Event-Based Conversion in Amplify, case included. Rename events in the forwarding rule when they differ.
+
+        Requires the Ads add-on.
+
+        Args:
+            outbrain_marketer_id: Outbrain marketer id from Amplify, letters and digits. (required)
+            name: Optional display name for the marketer.
+            profile_id: Your Zernio profile ID (required)
+            state: Optional state passthrough for the connect flow.
+            redirect_url: Optional URL to redirect to after a successful connection, echoed back as redirectUrl."""
+        client = _get_client()
+        try:
+            response = client.connect.connect_outbrain_ads_credentials(
+                outbrain_marketer_id=outbrain_marketer_id,
+                name=name,
+                profile_id=profile_id,
+                state=state,
+                redirect_url=redirect_url,
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="Connect a Whop account",
             readOnlyHint=False,
             destructiveHint=True,
@@ -32814,7 +32859,7 @@ def register_generated_tools(mcp, _get_client):
 
         Paginate with `cursor`: pass the `nextCursor` of the previous page until it comes back `null`.
 
-        Platforms: meta, google, tiktok, linkedin, microsoft, x, pinterest, reddit, openai, applovinads, snapchatads, taboolaads, klaviyo, attentive, impact, awin, campaignmanager360, tradedeskads, amazonads, googleanalytics, stripe, hubspot, salesforce, gohighlevel
+        Platforms: meta, google, tiktok, linkedin, microsoft, x, pinterest, reddit, openai, applovinads, snapchatads, taboolaads, outbrainads, klaviyo, attentive, impact, awin, campaignmanager360, tradedeskads, amazonads, googleanalytics, stripe, hubspot, salesforce, gohighlevel
 
         Args:
             profile_id: The profile to list. Omit to cover every profile you can access.
@@ -32879,7 +32924,7 @@ def register_generated_tools(mcp, _get_client):
 
         - A signal left out counts as `DENIED`. Zernio has no ...
 
-        Platforms: meta, google, tiktok, linkedin, microsoft, x, pinterest, reddit, openai, applovinads, snapchatads, taboolaads, klaviyo, attentive, impact, awin, campaignmanager360, tradedeskads, amazonads, googleanalytics, gohighlevel
+        Platforms: meta, google, tiktok, linkedin, microsoft, x, pinterest, reddit, openai, applovinads, snapchatads, taboolaads, outbrainads, klaviyo, attentive, impact, awin, campaignmanager360, tradedeskads, amazonads, googleanalytics, gohighlevel
 
         Args:
             profile_id: Profile the events belong to. Its saved destinations receive the events. (required)
@@ -33351,7 +33396,7 @@ def register_generated_tools(mcp, _get_client):
 
         Each applies to this rule only: the event is stored, and sent to other rules, as received.
 
-        Platforms: meta, google, tiktok, linkedin, microsoft, x, pinterest, reddit, openai, applovinads, snapchatads, taboolaads, klaviyo, attentive, impact, awin, campaignmanager360, tradedeskads, amazonads, googleanalytics, hubspot, salesforce, gohighlevel
+        Platforms: meta, google, tiktok, linkedin, microsoft, x, pinterest, reddit, openai, applovinads, snapchatads, taboolaads, outbrainads, klaviyo, attentive, impact, awin, campaignmanager360, tradedeskads, amazonads, googleanalytics, hubspot, salesforce, gohighlevel
 
         Args:
             profile_id: (required)
@@ -62073,6 +62118,10 @@ TOOL_OAUTH_SCOPES: dict[str, tuple[str, ...]] = {
         "accounts:write",
     ),
     "connect_open_ai_ads_credentials": (
+        "accounts:write",
+        "accounts:read",
+    ),
+    "connect_outbrain_ads_credentials": (
         "accounts:write",
         "accounts:read",
     ),
