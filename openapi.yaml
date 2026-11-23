@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.778.0"
+  version: "1.778.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -27,18 +27,18 @@ info:
   x-logo:
     url: https://zernio.com/icon.png?v=3
   x-long-description: |
-    Zernio is the social media API that replaces 32 integrations. Schedule posts, retrieve analytics,
+    Zernio is the social media API that replaces 33 integrations. Schedule posts, retrieve analytics,
     manage DMs, comments, and reviews across X, Instagram, WhatsApp, TikTok, LinkedIn,
     Facebook, YouTube, Threads, Pinterest, Bluesky, Telegram, Google Business Profile, Snapchat,
     Discord, Slack, iMessage, LINE, and WeChat, all from a single REST API. Run paid ads on Meta (Facebook + Instagram), Google,
-    TikTok, LinkedIn, Pinterest, X, OpenAI, Reddit, Microsoft, and Amazon from the same account.
+    TikTok, LinkedIn, Pinterest, X, OpenAI, Reddit, Microsoft, Amazon, and The Trade Desk from the same account.
 
     Connect Shopify, WordPress and Wix as blog accounts to list sites and manage
     articles, drafts, featured images, tags, authors, and native scheduling.
 
-    Key features: Unified posting and messaging across 18 platforms, ads management on 10 ad networks (via /v1/ads), aggregated analytics, unified inbox (DMs, comments, reviews), webhooks, OAuth connect, queue scheduling, and white-label support for agencies managing unlimited accounts.
+    Key features: Unified posting and messaging across 18 platforms, ads management on 11 ad networks (via /v1/ads), aggregated analytics, unified inbox (DMs, comments, reviews), webhooks, OAuth connect, queue scheduling, and white-label support for agencies managing unlimited accounts.
 
-    Supported posting platforms: X, Instagram, WhatsApp, Facebook, LinkedIn, TikTok, YouTube, Pinterest, Bluesky, Threads, Google Business Profile, Telegram, Snapchat, Discord, Slack. Supported ad platforms: Meta Ads, Google Ads, TikTok Ads, LinkedIn Ads, Pinterest Ads, X Ads, OpenAI Ads, Reddit Ads, Microsoft Ads, Amazon Ads. Snapchat is a closed beta with no public release date: connections are gated behind approval and return 403 `PLATFORM_BETA_RESTRICTED` until then. Organic Reddit is temporarily unavailable: Reddit has blocked third-party apps from its API, so Reddit posting, messages, analytics and the Reddit endpoints return 503 `PLATFORM_DISABLED` until Reddit restores access. Your Reddit accounts stay connected. Reddit Ads is not affected.
+    Supported posting platforms: X, Instagram, WhatsApp, Facebook, LinkedIn, TikTok, YouTube, Pinterest, Bluesky, Threads, Google Business Profile, Telegram, Snapchat, Discord, Slack. Supported ad platforms: Meta Ads, Google Ads, TikTok Ads, LinkedIn Ads, Pinterest Ads, X Ads, OpenAI Ads, Reddit Ads, Microsoft Ads, Amazon Ads, The Trade Desk. Snapchat is a closed beta with no public release date: connections are gated behind approval and return 403 `PLATFORM_BETA_RESTRICTED` until then. Organic Reddit is temporarily unavailable: Reddit has blocked third-party apps from its API, so Reddit posting, messages, analytics and the Reddit endpoints return 503 `PLATFORM_DISABLED` until Reddit restores access. Your Reddit accounts stay connected. Reddit Ads is not affected.
   x-category: Social
   x-website: https://zernio.com
   x-thumbnail: https://rapidapi-prod-apis.s3.amazonaws.com/b24d3df5-563c-4a50-9e1e-1ad3eb1fce69.png
@@ -70,7 +70,7 @@ x-documentation:
   readme: |
     # Zernio API
 
-    The social media API that replaces 32 integrations. Build social media and blog publishing features into your app in minutes, not months.
+    The social media API that replaces 33 integrations. Build social media and blog publishing features into your app in minutes, not months.
 
     ## Quick Start
 
