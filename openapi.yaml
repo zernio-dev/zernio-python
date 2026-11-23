@@ -21154,6 +21154,7 @@ components:
             properties:
               date: { type: string, format: date }
               currency: { type: [string, "null"], description: "ISO 4217 currency of every money field in this row (spend, cpc, cpm, costPerConversion, purchaseValue, actionValues). Null when the currency of the row's ad accounts is unknown. Added 2026-10-23.\n\nAn account whose ad accounts bill in different currencies gets one row per currency for that day, never a sum across currencies." }
+              adAccountId: { type: [string, "null"], description: "Only with `breakdown=adAccount`. The platform ad account of this row (e.g. Meta `act_…`); null for rows ingested before 2026-05-13. Added 2026-11-23." }
               spend: { type: number, description: "Native currency units (matches /ads/tree convention), in `currency`." }
               impressions: { type: integer }
               reach: { type: integer, description: "Reach summed across the account's ads for this single day. A person seen by two ads the same day counts twice, and reach is de-duplicated per day only: do NOT sum it across days (people reached on multiple days would be double-counted)." }
@@ -94640,6 +94641,7 @@ paths:
         - { name: fromDate, in: query, schema: { type: string, format: date }, description: "Inclusive start of metrics range (YYYY-MM-DD). Defaults to 90 days ago." }
         - { name: toDate, in: query, schema: { type: string, format: date }, description: "Inclusive end of metrics range (YYYY-MM-DD). Defaults to today. Max 730-day range." }
         - { name: platform, in: query, schema: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit, microsoft, amazon] }, description: Restrict to one platform. }
+        - { name: breakdown, in: query, schema: { type: string, enum: [adAccount] }, description: "Set to `adAccount` to keep one row per day and platform ad account, each carrying its `adAccountId`, instead of one row per day and currency. Two connections that reach the same ad account both return it: add their timelines per `adAccountId` to count it once." }
         - { name: compare, in: query, schema: { type: string, enum: [previous] }, description: "Set to `previous` to also return `previousRows` for the period of the same length that ends the day before `fromDate`, with that period as `previousRange`. Needs a `fromDate` (sent or defaulted); `toDate` alone answers 400." }
       responses:
         '200':

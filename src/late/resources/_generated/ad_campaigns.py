@@ -1130,6 +1130,7 @@ class AdCampaignsResource:
         from_date: str | None = None,
         to_date: str | None = None,
         platform: str | None = None,
+        breakdown: str | None = None,
         compare: str | None = None,
     ) -> dict[str, Any]:
         """Get daily account metrics"""
@@ -1140,6 +1141,7 @@ class AdCampaignsResource:
                 "fromDate": from_date,
                 "toDate": to_date,
                 "platform": platform,
+                "breakdown": breakdown,
                 "compare": compare,
             }
         )
@@ -3104,6 +3106,7 @@ class AdCampaignsResource:
         from_date: str | None = None,
         to_date: str | None = None,
         platform: str | None = None,
+        breakdown: str | None = None,
         compare: str | None = None,
     ) -> dict[str, Any]:
         """Get daily account metrics (async)"""
@@ -3114,6 +3117,7 @@ class AdCampaignsResource:
                 "fromDate": from_date,
                 "toDate": to_date,
                 "platform": platform,
+                "breakdown": breakdown,
                 "compare": compare,
             }
         )

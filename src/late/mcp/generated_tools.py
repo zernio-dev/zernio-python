@@ -9680,6 +9680,7 @@ def register_generated_tools(mcp, _get_client):
             "amazon",
         ]
         | None = None,
+        breakdown: Literal["adAccount"] | None = None,
         compare: Literal["previous"] | None = None,
     ) -> str:
         """Get daily account metrics
@@ -9705,6 +9706,7 @@ def register_generated_tools(mcp, _get_client):
             from_date: Inclusive start of metrics range (YYYY-MM-DD). Defaults to 90 days ago.
             to_date: Inclusive end of metrics range (YYYY-MM-DD). Defaults to today. Max 730-day range.
             platform: Restrict to one platform.
+            breakdown: Set to `adAccount` to keep one row per day and platform ad account, each carrying its `adAccountId`, instead of one row per day and currency. Two connections that reach the same ad account both return it: add their timelines per `adAccountId` to count it once.
             compare: Set to `previous` to also return `previousRows` for the period of the same length that ends the day before `fromDate`, with that period as `previousRange`. Needs a `fromDate` (sent or defaulted); `toDate` alone answers 400."""
         client = _get_client()
         try:
@@ -9714,6 +9716,7 @@ def register_generated_tools(mcp, _get_client):
                 from_date=from_date,
                 to_date=to_date,
                 platform=platform,
+                breakdown=breakdown,
                 compare=compare,
             )
             return _format_response(response)
