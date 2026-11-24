@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.819.1"
+  version: "1.820.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -75549,7 +75549,7 @@ paths:
         Fetch reviews from all connected Facebook Pages and Google Business Profile accounts. Aggregates data with filtering and sorting options.
         Supported platforms: Facebook, Google Business Profile.
 
-        Each account's reviews are read from the platform page by page within a 20-second budget per request, so very large accounts can come back truncated. Each account's listing is cached for up to 60 seconds.
+        Each account's reviews are read from the platform page by page within a 20-second budget per request, so very large accounts can come back truncated; those accounts are listed in meta.truncatedAccounts. Each account's listing is cached for up to 60 seconds.
       tags: [Reviews]
       security: [{ bearerAuth: [] }]
       parameters:
@@ -75584,7 +75584,7 @@ paths:
         - name: accountId
           in: query
           schema: { type: string }
-          description: Filter by specific account ID
+          description: One account id, or several comma-separated.
       responses:
         '200':
           description: Aggregated reviews
@@ -75669,11 +75669,20 @@ paths:
                           properties:
                             accountId: { type: string }
                             platform: { type: string }
+                      truncatedAccounts:
+                        type: array
+                        description: 'Accounts whose listing hit the read budget with pages left: their reviews in data, and the Google Business Profile summary, are partial. Empty when every account was read in full.'
+                        items:
+                          type: object
+                          properties:
+                            accountId: { type: string }
+                            platform: { type: string }
                   summary:
                     type: object
                     properties:
                       totalReviews: { type: integer }
                       averageRating: { type: [number, "null"] }
+        '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
           description: Inbox addon required

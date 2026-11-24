@@ -50571,7 +50571,7 @@ def register_generated_tools(mcp, _get_client):
         Fetch reviews from all connected Facebook Pages and Google Business Profile accounts. Aggregates data with filtering and sorting options.
         Supported platforms: Facebook, Google Business Profile.
 
-        Each account's reviews are read from the platform page by page within a 20-second budget per request, so very large accounts can come back truncated. Each account's listing is cached for up to 60 seconds.
+        Each account's reviews are read from the platform page by page within a 20-second budget per request, so very large accounts can come back truncated; those accounts are listed in meta.truncatedAccounts. Each account's listing is cached for up to 60 seconds.
 
         Args:
             profile_id
@@ -50583,7 +50583,7 @@ def register_generated_tools(mcp, _get_client):
             sort_order
             limit
             cursor
-            account_id: Filter by specific account ID"""
+            account_id: One account id, or several comma-separated."""
         client = _get_client()
         try:
             response = client.reviews.list_inbox_reviews(
