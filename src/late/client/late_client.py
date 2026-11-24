@@ -20,6 +20,7 @@ from ..resources import (
     AdAudiencesResource,
     AdCampaignResultsResource,
     AdCampaignsResource,
+    AdChangesResource,
     AdCreativesResource,
     AdInsightsResource,
     AdLibraryResource,
@@ -196,6 +197,7 @@ class Zernio(BaseClient):
         self.ad_audiences = AdAudiencesResource(self)
         self.ad_campaign_results = AdCampaignResultsResource(self)
         self.ad_campaigns = AdCampaignsResource(self)
+        self.ad_changes = AdChangesResource(self)
         self.ad_creatives = AdCreativesResource(self)
         self.ad_insights = AdInsightsResource(self)
         self.ad_library = AdLibraryResource(self)

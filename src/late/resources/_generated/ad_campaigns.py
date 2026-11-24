@@ -508,12 +508,14 @@ class AdCampaignsResource:
         platform: str,
         *,
         idempotency_key: str | None = None,
+        stage: bool | None = None,
     ) -> dict[str, Any]:
         """Pause or resume a campaign"""
         payload = self._build_body(
             {
                 "status": status,
                 "platform": platform,
+                "stage": stage,
             }
         )
         return self._client._put(
@@ -1030,12 +1032,14 @@ class AdCampaignsResource:
         platform: str,
         *,
         idempotency_key: str | None = None,
+        stage: bool | None = None,
     ) -> dict[str, Any]:
         """Pause or resume a single ad set"""
         payload = self._build_body(
             {
                 "status": status,
                 "platform": platform,
+                "stage": stage,
             }
         )
         return self._client._put(f"/v1/ads/ad-sets/{ad_set_id}/status", data=payload)
@@ -1201,12 +1205,18 @@ class AdCampaignsResource:
         return self._client._delete(f"/v1/ads/{ad_id}")
 
     def update_ad_status(
-        self, ad_id: str, status: str, *, idempotency_key: str | None = None
+        self,
+        ad_id: str,
+        status: str,
+        *,
+        idempotency_key: str | None = None,
+        stage: bool | None = None,
     ) -> dict[str, Any]:
         """Pause or resume a single ad"""
         payload = self._build_body(
             {
                 "status": status,
+                "stage": stage,
             }
         )
         return self._client._put(f"/v1/ads/{ad_id}/status", data=payload)
@@ -2476,12 +2486,14 @@ class AdCampaignsResource:
         platform: str,
         *,
         idempotency_key: str | None = None,
+        stage: bool | None = None,
     ) -> dict[str, Any]:
         """Pause or resume a campaign (async)"""
         payload = self._build_body(
             {
                 "status": status,
                 "platform": platform,
+                "stage": stage,
             }
         )
         return await self._client._aput(
@@ -3006,12 +3018,14 @@ class AdCampaignsResource:
         platform: str,
         *,
         idempotency_key: str | None = None,
+        stage: bool | None = None,
     ) -> dict[str, Any]:
         """Pause or resume a single ad set (async)"""
         payload = self._build_body(
             {
                 "status": status,
                 "platform": platform,
+                "stage": stage,
             }
         )
         return await self._client._aput(
@@ -3179,12 +3193,18 @@ class AdCampaignsResource:
         return await self._client._adelete(f"/v1/ads/{ad_id}")
 
     async def aupdate_ad_status(
-        self, ad_id: str, status: str, *, idempotency_key: str | None = None
+        self,
+        ad_id: str,
+        status: str,
+        *,
+        idempotency_key: str | None = None,
+        stage: bool | None = None,
     ) -> dict[str, Any]:
         """Pause or resume a single ad (async)"""
         payload = self._build_body(
             {
                 "status": status,
+                "stage": stage,
             }
         )
         return await self._client._aput(f"/v1/ads/{ad_id}/status", data=payload)

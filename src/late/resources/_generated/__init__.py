@@ -9,6 +9,7 @@ from .ad_accounts import AdAccountsResource
 from .ad_audiences import AdAudiencesResource
 from .ad_campaign_results import AdCampaignResultsResource
 from .ad_campaigns import AdCampaignsResource
+from .ad_changes import AdChangesResource
 from .ad_creatives import AdCreativesResource
 from .ad_insights import AdInsightsResource
 from .ad_library import AdLibraryResource
@@ -96,6 +97,7 @@ __all__ = [
     "AdAudiencesResource",
     "AdCampaignResultsResource",
     "AdCampaignsResource",
+    "AdChangesResource",
     "AdCreativesResource",
     "AdInsightsResource",
     "AdLibraryResource",

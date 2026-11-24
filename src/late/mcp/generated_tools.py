@@ -7913,6 +7913,7 @@ def register_generated_tools(mcp, _get_client):
             "tradedesk",
             "snapchat",
         ],
+        stage: bool | None = None,
     ) -> str:
         """Pause or resume a campaign
 
@@ -7940,11 +7941,12 @@ def register_generated_tools(mcp, _get_client):
         Args:
             campaign_id: Platform campaign ID (required)
             status: (required)
-            platform: (required)"""
+            platform: (required)
+            stage: Send true to stage this change instead of applying it. Nothing is written to the ad network; the response is `202` with the staged change and its diff. Apply it with POST /v1/ads/changes/{changeId}/confirm. Meta and Google only; cannot be combined with `validateOnly` or `dryRun`."""
         client = _get_client()
         try:
             response = client.ad_campaigns.update_ad_campaign_status(
-                campaign_id=campaign_id, status=status, platform=platform
+                campaign_id=campaign_id, status=status, platform=platform, stage=stage
             )
             return _format_response(response)
         except Exception as e:
@@ -9383,6 +9385,7 @@ def register_generated_tools(mcp, _get_client):
             "tradedesk",
             "snapchat",
         ],
+        stage: bool | None = None,
     ) -> str:
         """Pause or resume a single ad set
 
@@ -9418,11 +9421,12 @@ def register_generated_tools(mcp, _get_client):
         Args:
             ad_set_id: Platform ad set ID (required)
             status: (required)
-            platform: (required)"""
+            platform: (required)
+            stage: Send true to stage this change instead of applying it. Nothing is written to the ad network; the response is `202` with the staged change and its diff. Apply it with POST /v1/ads/changes/{changeId}/confirm. Meta and Google only; cannot be combined with `validateOnly` or `dryRun`."""
         client = _get_client()
         try:
             response = client.ad_campaigns.update_ad_set_status(
-                ad_set_id=ad_set_id, status=status, platform=platform
+                ad_set_id=ad_set_id, status=status, platform=platform, stage=stage
             )
             return _format_response(response)
         except Exception as e:
@@ -9939,7 +9943,7 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def ad_campaigns_update_ad_status(
-        ad_id: str, status: Literal["active", "paused"]
+        ad_id: str, status: Literal["active", "paused"], stage: bool | None = None
     ) -> str:
         """Pause or resume a single ad
 
@@ -9973,10 +9977,13 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             ad_id: Zernio `_id` (hex), Meta `platformAdId` (numeric), or one of the creative's effective story/media IDs. (required)
-            status: (required)"""
+            status: (required)
+            stage: Send true to stage this change instead of applying it. Nothing is written to the ad network; the response is `202` with the staged change and its diff. Apply it with POST /v1/ads/changes/{changeId}/confirm. Meta and Google only; cannot be combined with `validateOnly` or `dryRun`."""
         client = _get_client()
         try:
-            response = client.ad_campaigns.update_ad_status(ad_id=ad_id, status=status)
+            response = client.ad_campaigns.update_ad_status(
+                ad_id=ad_id, status=status, stage=stage
+            )
             return _format_response(response)
         except Exception as e:
             raise ToolError(f"Error: {e}") from e
@@ -12674,6 +12681,96 @@ def register_generated_tools(mcp, _get_client):
                 goal_config_level=goal_config_level,
                 custom_conversion_goal_id=custom_conversion_goal_id,
             )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    # AD_CHANGES
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get a staged ad change",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def ad_changes_get_ad_change(change_id: str) -> str:
+        """Get a staged ad change
+
+        Returns one ad change with its before/after diff. A change is created by sending a supported ad write with `stage: true`.
+
+        A staged change does not expire. A confirmed or failed change stays readable for 7 days.
+
+        Platforms: meta, google
+
+        Args:
+            change_id: The id of the staged change. (required)"""
+        client = _get_client()
+        try:
+            response = client.ad_changes.get_ad_change(change_id=change_id)
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Discard a staged ad change",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def ad_changes_discard_ad_change(change_id: str) -> str:
+        """Discard a staged ad change
+
+        Deletes a change that is still staged. Nothing was written to the ad network, so there is nothing to undo.
+
+        A change that was already confirmed or has failed cannot be discarded.
+
+        Platforms: meta, google
+
+        Args:
+            change_id: The id of the staged change. (required)"""
+        client = _get_client()
+        try:
+            response = client.ad_changes.discard_ad_change(change_id=change_id)
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Confirm a staged ad change",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def ad_changes_confirm_ad_change(change_id: str) -> str:
+        """Confirm a staged ad change
+
+        Applies a staged change and returns what the direct write returns: the response body of the route the change was staged on.
+
+        The caller needs the same access to the object as for the direct write, and the checks of that write run here, including the live ads allowance.
+
+        ### Changed since staging
+
+        Before writing, the object is read from the ad network again and compared with what it held when the change was staged.
+
+        If it changed in between, nothing is written, the change ends as `failed` and the answer is `409` `change_target_changed` with the current values in `details.current`. Stage the change again from those values.
+
+        ### Retrying
+
+        A change is applied at most once. Confirming a change that is already `confirmed` returns its stored result again. A change that failed answers `409` `change_not_staged`: stage a new one.
+
+        Platforms: meta, google
+
+        Args:
+            change_id: The id of the staged change. (required)"""
+        client = _get_client()
+        try:
+            response = client.ad_changes.confirm_ad_change(change_id=change_id)
             return _format_response(response)
         except Exception as e:
             raise ToolError(f"Error: {e}") from e
@@ -61131,6 +61228,12 @@ TOOL_OAUTH_SCOPES: dict[str, tuple[str, ...]] = {
     "ad_campaigns_update_campaign_conversion_goals": ("ads:write",),
     "ad_campaigns_update_campaign_targeting": ("ads:write",),
     "ad_campaigns_update_google_asset_group": ("ads:write",),
+    "ad_changes_confirm_ad_change": ("ads:write",),
+    "ad_changes_discard_ad_change": ("ads:write",),
+    "ad_changes_get_ad_change": (
+        "ads:read",
+        "ads:write",
+    ),
     "ad_creatives_create_ad_creative": ("ads:write",),
     "ad_creatives_delete_ad_creative": ("ads:write",),
     "ad_creatives_delete_ad_video": ("ads:write",),

@@ -700,6 +700,13 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `ad_campaigns.replace_campaign_negative_keywords()` | Replace campaign-level negative keywords |
 | `ad_campaigns.replace_google_listing_group_filters()` | Replace an asset group's listing-group tree |
 
+### Ad Changes
+| Method | Description |
+|--------|-------------|
+| `ad_changes.get_ad_change()` | Get a staged ad change |
+| `ad_changes.confirm_ad_change()` | Confirm a staged ad change |
+| `ad_changes.discard_ad_change()` | Discard a staged ad change |
+
 ### Ad Creatives
 | Method | Description |
 |--------|-------------|
