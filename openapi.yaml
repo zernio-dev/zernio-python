@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.803.0"
+  version: "1.803.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -29522,7 +29522,7 @@ webhooks:
 
         ### Intentional
 
-        Removed on purpose, such as `DELETE /v1/accounts/{id}` or a switch to the Free plan. Kept 1 hour (`gracePeriodEndsAt`), then deleted with no further event. Reconnecting within the hour restores the same `accountId`.
+        Removed on purpose, such as `DELETE /v1/accounts/{id}` or a switch to the Free plan. Kept 1 hour (`gracePeriodEndsAt`), or 7 days for a WhatsApp Business app number that Meta had already disconnected, then deleted with no further event. Reconnecting within that time restores the same `accountId`.
 
         ### Unintentional
 
@@ -49279,9 +49279,11 @@ paths:
       description: |-
         Disconnects and removes a connected account, and fires account.disconnected with disconnectionType intentional.
 
-        The account is kept for a 1h grace window. Reconnecting the same account within it restores it with the same accountId and its scheduled posts. After that it is deleted permanently.
+        The account is kept for a 1h grace window, 7 days for a WhatsApp Business app number that Meta had already disconnected (after a phone move, for example). After that it is deleted permanently and its remaining scheduled posts are cancelled.
 
-        Repeating the call for an account already disconnected returns 404, the account stays in its 1h grace window and the disconnect is not re-run.
+        Reconnecting the same account within the grace window restores it with the same accountId and its scheduled posts. Posts that came due in the meantime then publish late, if their scheduled time is less than 7 days past.
+
+        Repeating the call for an account already disconnected returns 404, the account stays in its grace window and the disconnect is not re-run.
       parameters:
         - name: accountId
           in: path
