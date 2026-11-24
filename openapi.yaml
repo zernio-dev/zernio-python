@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.823.0"
+  version: "1.824.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -25928,8 +25928,8 @@ components:
         id: { type: string, description: 'The change id, used in /v1/ads/changes/{changeId}.' }
         type:
           type: string
-          enum: [campaign_status, ad_set_status, ad_status, campaign_update, ad_set_update, ad_update, ad_create, campaign_create, ad_set_create]
-          description: 'Which write was staged: a status route, the update route of a campaign, an ad set or an ad, or one of the create routes (POST /v1/ads/create, POST /v1/ads/campaigns, POST /v1/ads/ad-sets).'
+          enum: [campaign_status, ad_set_status, ad_status, campaign_update, ad_set_update, ad_update, campaign_targeting, ad_create, campaign_create, ad_set_create]
+          description: 'Which write was staged: a status route, the update route of a campaign, an ad set or an ad, the campaign targeting route, or one of the create routes (POST /v1/ads/create, POST /v1/ads/campaigns, POST /v1/ads/ad-sets).'
         platform: { type: string, description: 'The ad platform of the object, as the write route names it.', example: facebook }
         accountId: { type: string, description: The connected account the write goes through. }
         adAccountId: { type: string, description: The ad account id on the platform. }
@@ -26007,7 +26007,7 @@ components:
         id: { type: string, description: 'The change id, used in /v1/ads/changes/{changeId}.' }
         type:
           type: string
-          enum: [campaign_status, ad_set_status, ad_status, campaign_update, ad_set_update, ad_update, ad_create, campaign_create, ad_set_create]
+          enum: [campaign_status, ad_set_status, ad_status, campaign_update, ad_set_update, ad_update, campaign_targeting, ad_create, campaign_create, ad_set_create]
           description: Which write was staged.
         platform: { type: string, description: 'The ad platform of the object, as the write route names it.', example: facebook }
         accountId: { type: string, description: The connected account the write goes through. }
@@ -95169,6 +95169,16 @@ paths:
         - Campaigns migrated from Discovery that still target on the campaign keep being written there.
         - `devices` and `locationTargetingType` stay campaign-level.
         - `excludedLocations` is not available on Demand Gen yet and returns 400.
+
+        ### Staging
+
+        Send `stage: true` to store the edit as an ad change of type `campaign_targeting` instead of applying it. The answer is `202` with the change.
+
+        Its diff has one entry per value under `targeting`. `before` comes from the campaign's devices, locations, excluded locations, languages and location targeting type, read live from Google.
+
+        Confirm reads them again and answers `409` if any of them changed.
+
+        A Demand Gen campaign's targeting cannot be staged yet: its locations and languages live on its ad groups, which that read does not cover. `stage: true` on one returns `400` with code `staging_not_supported` before anything is stored.
       security:
         - bearerAuth: []
       parameters:
@@ -95181,6 +95191,7 @@ paths:
               type: object
               required: [platform, targeting]
               properties:
+                stage: { type: boolean, description: 'Send true to stage this change instead of applying it. Nothing is written to the ad network; the response is `202` with the staged change and its diff. Apply it with POST /v1/ads/changes/{changeId}/confirm. Cannot be combined with `validateOnly` or `dryRun`.' }
                 platform: { type: string, enum: [google] }
                 targeting:
                   type: object
@@ -95234,6 +95245,15 @@ paths:
                             metros: { type: array, items: { oneOf: [{ type: string, description: 'The geo target constant id alone.' }, { type: object, required: [key], properties: { key: { type: string }, name: { type: string } } }] } }
                     locationTargetingType: { $ref: '#/components/schemas/GoogleLocationTargetingType' }
       responses:
+        '202':
+          description: 'Sent with `stage: true`. The change was validated and stored, and nothing was written to the ad network.'
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [change]
+                properties:
+                  change: { $ref: '#/components/schemas/StagedAdChange' }
         '200':
           description: Targeting updated
           content:

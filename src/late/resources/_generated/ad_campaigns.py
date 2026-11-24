@@ -784,11 +784,17 @@ class AdCampaignsResource:
         )
 
     def update_campaign_targeting(
-        self, campaign_id: str, platform: str, targeting: dict[str, Any]
+        self,
+        campaign_id: str,
+        platform: str,
+        targeting: dict[str, Any],
+        *,
+        stage: bool | None = None,
     ) -> dict[str, Any]:
         """Edit a Google campaign's device, location, excluded location, or language targeting"""
         payload = self._build_body(
             {
+                "stage": stage,
                 "platform": platform,
                 "targeting": targeting,
             }
@@ -2780,11 +2786,17 @@ class AdCampaignsResource:
         )
 
     async def aupdate_campaign_targeting(
-        self, campaign_id: str, platform: str, targeting: dict[str, Any]
+        self,
+        campaign_id: str,
+        platform: str,
+        targeting: dict[str, Any],
+        *,
+        stage: bool | None = None,
     ) -> dict[str, Any]:
         """Edit a Google campaign's device, location, excluded location, or language targeting (async)"""
         payload = self._build_body(
             {
+                "stage": stage,
                 "platform": platform,
                 "targeting": targeting,
             }

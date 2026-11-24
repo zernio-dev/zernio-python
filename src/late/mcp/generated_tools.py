@@ -8688,7 +8688,10 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def ad_campaigns_update_campaign_targeting(
-        campaign_id: str, platform: Literal["google"], targeting: dict[str, Any] | None
+        campaign_id: str,
+        platform: Literal["google"],
+        targeting: dict[str, Any] | None,
+        stage: bool | None = None,
     ) -> str:
         """Edit a Google campaign's device, location, excluded location, or language targeting
 
@@ -8710,12 +8713,16 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             campaign_id: Google platform campaign ID (required)
+            stage: Send true to stage this change instead of applying it. Nothing is written to the ad network; the response is `202` with the staged change and its diff. Apply it with POST /v1/ads/changes/{changeId}/confirm. Cannot be combined with `validateOnly` or `dryRun`.
             platform: (required)
             targeting: Object with keys: devices (list of any) - Devices to include. Devices not listed become excluded (negative) criteria, same contract as the existing devices-only edit.; locations (any) - Bare country-code array, or the nested creation-time shape (countries/regions/cities/zips/metros).; languages (list of string) - Google's language codes (ISO 639-1, plus variants such as `zh_CN`), e.g. [\"en\", \"de\"].; excludedLocations (any) - Locations the campaign never serves in, as a bare country-code array or the nested countries/regions/cities/zips/metros shape. Replaces the excluded set; [] ...; locationTargetingType (one of: presence, presence_or_interest) (required)"""
         client = _get_client()
         try:
             response = client.ad_campaigns.update_campaign_targeting(
-                campaign_id=campaign_id, platform=platform, targeting=targeting
+                campaign_id=campaign_id,
+                stage=stage,
+                platform=platform,
+                targeting=targeting,
             )
             return _format_response(response)
         except Exception as e:
