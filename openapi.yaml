@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.822.0"
+  version: "1.823.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -112826,6 +112826,14 @@ paths:
                         eventsFailed: { type: integer }
                         eventsDropped: { type: integer, description: 'Events this destination did not get because the visitor did not consent (see Consent above).' }
                         drops: { type: array, items: { $ref: '#/components/schemas/ConsentDrop' } }
+                        eventsSkipped: { type: integer, description: 'Events not sent again because this destination already accepted them (same eventId and eventName within 48 hours), another request is sending them right now, or an earlier event in this request has the same eventId and eventName.' }
+                        skipped:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              eventIndex: { type: integer, description: 'Position of the event in the request''s `events` array, counted from 0.' }
+                              eventId: { type: string }
                         failures:
                           type: array
                           items:
