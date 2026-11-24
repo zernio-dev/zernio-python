@@ -599,6 +599,7 @@ class AdCampaignsResource:
         platform: str,
         *,
         idempotency_key: str | None = None,
+        stage: bool | None = None,
         account_id: str | None = None,
         bid_strategy: Any | None = None,
         bid_amount: float | None = None,
@@ -618,6 +619,7 @@ class AdCampaignsResource:
         """Update a campaign"""
         payload = self._build_body(
             {
+                "stage": stage,
                 "platform": platform,
                 "accountId": account_id,
                 "bidStrategy": bid_strategy,
@@ -963,6 +965,7 @@ class AdCampaignsResource:
         platform: str,
         *,
         idempotency_key: str | None = None,
+        stage: bool | None = None,
         budget: dict[str, Any] | None = None,
         status: str | None = None,
         name: str | None = None,
@@ -985,6 +988,7 @@ class AdCampaignsResource:
         """Update an ad set"""
         payload = self._build_body(
             {
+                "stage": stage,
                 "platform": platform,
                 "budget": budget,
                 "status": status,
@@ -1168,6 +1172,7 @@ class AdCampaignsResource:
         ad_id: str,
         *,
         idempotency_key: str | None = None,
+        stage: bool | None = None,
         headlines: list[Any] | None = None,
         descriptions: list[Any] | None = None,
         final_urls: list[str] | None = None,
@@ -1184,6 +1189,7 @@ class AdCampaignsResource:
         """Update ad"""
         payload = self._build_body(
             {
+                "stage": stage,
                 "headlines": headlines,
                 "descriptions": descriptions,
                 "finalUrls": final_urls,
@@ -2579,6 +2585,7 @@ class AdCampaignsResource:
         platform: str,
         *,
         idempotency_key: str | None = None,
+        stage: bool | None = None,
         account_id: str | None = None,
         bid_strategy: Any | None = None,
         bid_amount: float | None = None,
@@ -2598,6 +2605,7 @@ class AdCampaignsResource:
         """Update a campaign (async)"""
         payload = self._build_body(
             {
+                "stage": stage,
                 "platform": platform,
                 "accountId": account_id,
                 "bidStrategy": bid_strategy,
@@ -2949,6 +2957,7 @@ class AdCampaignsResource:
         platform: str,
         *,
         idempotency_key: str | None = None,
+        stage: bool | None = None,
         budget: dict[str, Any] | None = None,
         status: str | None = None,
         name: str | None = None,
@@ -2971,6 +2980,7 @@ class AdCampaignsResource:
         """Update an ad set (async)"""
         payload = self._build_body(
             {
+                "stage": stage,
                 "platform": platform,
                 "budget": budget,
                 "status": status,
@@ -3156,6 +3166,7 @@ class AdCampaignsResource:
         ad_id: str,
         *,
         idempotency_key: str | None = None,
+        stage: bool | None = None,
         headlines: list[Any] | None = None,
         descriptions: list[Any] | None = None,
         final_urls: list[str] | None = None,
@@ -3172,6 +3183,7 @@ class AdCampaignsResource:
         """Update ad (async)"""
         payload = self._build_body(
             {
+                "stage": stage,
                 "headlines": headlines,
                 "descriptions": descriptions,
                 "finalUrls": final_urls,
