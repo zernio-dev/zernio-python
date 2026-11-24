@@ -5,6 +5,7 @@ import time
 
 import httpx
 import pytest
+from starlette.authentication import AuthenticationError
 
 from late.mcp import auth, server
 from late.mcp.auth import ZernioTokenVerifier
@@ -207,3 +208,93 @@ async def test_an_api_key_grant_has_no_scope_claim():
 
     assert granted is not None
     assert "scope" not in granted.claims
+
+
+class CountingUpstream:
+    def __init__(self, response: httpx.Response | Exception) -> None:
+        self.calls = 0
+        self.response = response
+
+    def __call__(self, _request: httpx.Request) -> httpx.Response:
+        self.calls += 1
+        if isinstance(self.response, Exception):
+            raise self.response
+        return self.response
+
+
+def _verifier_counting(
+    response: httpx.Response | Exception,
+) -> tuple[ZernioTokenVerifier, CountingUpstream]:
+    upstream = CountingUpstream(response)
+    client = httpx.AsyncClient(transport=httpx.MockTransport(upstream))
+    return ZernioTokenVerifier(client=client), upstream
+
+
+def _verified_seconds_ago(token: str, seconds: float) -> None:
+    auth._VERIFIED_AT[auth.token_cache_key(token)] = time.monotonic() - seconds
+
+
+async def test_an_oauth_token_verified_under_a_minute_ago_is_served_from_cache():
+    verifier, upstream = _verifier_counting(httpx.Response(200))
+    _verified_seconds_ago("late_at_live", 50)
+
+    granted = await verifier.verify_token("late_at_live")
+
+    assert granted is not None
+    assert granted.claims["resolved_by"] == "cache"
+    assert upstream.calls == 0
+
+
+async def test_an_oauth_token_is_asked_about_again_after_a_minute():
+    verifier, upstream = _verifier_counting(httpx.Response(200))
+    _verified_seconds_ago("late_at_live", 61)
+
+    granted = await verifier.verify_token("late_at_live")
+
+    assert granted is not None
+    assert granted.claims["resolved_by"] == "upstream"
+    assert upstream.calls == 1
+
+
+async def test_an_api_key_keeps_its_ten_minute_cache():
+    verifier, upstream = _verifier_counting(httpx.Response(200))
+    _verified_seconds_ago("sk_live", 61)
+
+    assert (await verifier.verify_token("sk_live")).claims["resolved_by"] == "cache"
+    assert upstream.calls == 0
+
+    _verified_seconds_ago("sk_live", 601)
+
+    assert (await verifier.verify_token("sk_live")).claims["resolved_by"] == "upstream"
+    assert upstream.calls == 1
+
+
+async def test_a_revoked_oauth_token_is_refused_on_the_first_call_after_its_minute():
+    verifier, upstream = _verifier_counting(httpx.Response(401))
+    _verified_seconds_ago("late_at_revoked", 61)
+
+    assert await verifier.verify_token("late_at_revoked") is None
+    assert upstream.calls == 1
+    assert auth.token_cache_key("late_at_revoked") not in auth._VERIFIED_AT
+
+
+@pytest.mark.parametrize(
+    "response", [httpx.ConnectTimeout("verify timed out"), httpx.Response(503)]
+)
+async def test_an_oauth_token_past_its_minute_keeps_the_outage_grace(response):
+    verifier, upstream = _verifier_counting(response)
+    _verified_seconds_ago("late_at_live", 1800)
+
+    granted = await verifier.verify_token("late_at_live")
+
+    assert granted is not None
+    assert granted.claims["resolved_by"] == "grace"
+    assert upstream.calls == 1
+
+
+async def test_an_oauth_token_past_the_outage_grace_is_not_granted():
+    verifier, _ = _verifier_counting(httpx.Response(503))
+    _verified_seconds_ago("late_at_live", 3601)
+
+    with pytest.raises(AuthenticationError):
+        await verifier.verify_token("late_at_live")

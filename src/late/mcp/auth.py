@@ -93,7 +93,17 @@ _VERIFIED_CACHE_MAX = 10_000
 # user id and, for an OAuth token, its granted scope. Kept so a grant served
 # from cache still says whose token it is and what it may reach.
 _IDENTITY_BY_TOKEN: OrderedDict[str, dict[str, str]] = OrderedDict()
+# How long a confirmed answer stands before the next request asks upstream
+# again. An API key is revoked by hand in the dashboard and an MCP session
+# re-presents it for hours, so 10 minutes of reuse is the right trade. An
+# OAuth access token can be revoked by the client (RFC 7009, /api/oauth/revoke)
+# and the user expects that to land at once, so it is re-asked every minute:
+# a revoked token keeps working here for at most this long.
 _FRESH_TTL_SECONDS = 600.0
+_OAUTH_FRESH_TTL_SECONDS = 60.0
+# Prefix the Zernio authorization server gives every OAuth access token
+# (Schedule-Posts-API app/api/oauth/token/route.ts generateToken("late_at_")).
+_OAUTH_ACCESS_TOKEN_PREFIX = "late_at_"
 _VERIFY_KEEPALIVE_SECONDS = 60.0
 _IN_FLIGHT: dict[str, "asyncio.Task[Verification]"] = {}
 # Only used when upstream could not answer. Blast radius is bounded to
@@ -136,6 +146,12 @@ def _classify(status_code: int) -> Verification:
     if status_code in (402, 429):
         return Verification.VALID
     return Verification.UNKNOWN
+
+
+def _fresh_ttl(token: str) -> float:
+    if token.startswith(_OAUTH_ACCESS_TOKEN_PREFIX):
+        return _OAUTH_FRESH_TTL_SECONDS
+    return _FRESH_TTL_SECONDS
 
 
 def token_cache_key(token: str) -> str:
@@ -263,7 +279,7 @@ class ZernioTokenVerifier(TokenVerifier):
         now = time.monotonic()
         verified_at = _VERIFIED_AT.get(token_key)
 
-        if verified_at is not None and now - verified_at < _FRESH_TTL_SECONDS:
+        if verified_at is not None and now - verified_at < _fresh_ttl(token):
             _touch(token_key)
             return self._grant(token, resolved_by="cache")
 
