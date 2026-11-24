@@ -8960,8 +8960,7 @@ def register_generated_tools(mcp, _get_client):
             - So an ad set with any number of ads copies: Meta refuses a single deep copy of 3 or more objects.
             - `statusOption` applies to the ad set and every ad.
             - If an ad copy fails, the partial ad set copy is deleted and the request fails with Meta's error.
-            - A sync discovery starts automatically and runs after the response (`syncAfter: false` to skip). The copy is readable through Zernio once it finishes, usually within a few minutes. Until then, calls that take a copied id return 404, so retry them.
-            - ...
+            - The copy keeps the source's placements. Meta refuses a source whose `instagram_positions` include `explore_home` without `explore`, and its copy takes no placements. That is a 400 with nothing copied: edit the source's `targeting.placements` with PUT ...
 
             Platforms (the platform parameter takes): facebook, instagram, tiktok
 
