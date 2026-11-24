@@ -28890,6 +28890,146 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="List the workspace's custom domains",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def connect_list_connect_custom_domains() -> str:
+        """List the workspace's custom domains
+
+        The custom domains of the workspace the request acts in. A custom domain puts the hosted connect screens (the welcome screen and the result screen) on your own subdomain, such as `connect.yourbrand.com`, instead of zernio.com.
+
+        A workspace has at most one today; the list leaves room for more. Guide: [Use your own domain for connect](https://docs.zernio.com/guides/custom-domains)."""
+        client = _get_client()
+        try:
+            response = client.connect.list_connect_custom_domains()
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Add a custom domain",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def connect_create_connect_custom_domain(hostname: str) -> str:
+        """Add a custom domain
+
+        Adds a subdomain you control. The answer lists the two DNS records to add at your DNS provider: a CNAME that points the subdomain at Zernio and a TXT record that proves it is yours.
+
+        Nothing is registered until the TXT record is found; then the certificate is issued and `status` turns `active`, usually within minutes.
+
+        Connect links only move to the domain once it is active and `connectEnabled` is true. Requires the workspace settings permission (owner or admin).
+
+        Args:
+            hostname: A subdomain, never the domain itself: `connect.yourbrand.com`. (required)"""
+        client = _get_client()
+        try:
+            response = client.connect.create_connect_custom_domain(hostname=hostname)
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get a custom domain",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def connect_get_connect_custom_domain(domain_id: str) -> str:
+        """Get a custom domain
+
+        The custom domain with its status and DNS records.
+
+        Args:
+            domain_id: The custom domain's id. (required)"""
+        client = _get_client()
+        try:
+            response = client.connect.get_connect_custom_domain(domain_id=domain_id)
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Turn a custom domain on or off for connect",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def connect_update_connect_custom_domain(
+        domain_id: str, connect_enabled: bool
+    ) -> str:
+        """Turn a custom domain on or off for connect
+
+        With `connectEnabled` true, new connect links open on the domain once it is active; with false they open on zernio.com again. Links already sent keep working. Requires the workspace settings permission (owner or admin).
+
+        Args:
+            domain_id: The custom domain's id. (required)
+            connect_enabled: (required)"""
+        client = _get_client()
+        try:
+            response = client.connect.update_connect_custom_domain(
+                domain_id=domain_id, connect_enabled=connect_enabled
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Remove a custom domain",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def connect_delete_connect_custom_domain(domain_id: str) -> str:
+        """Remove a custom domain
+
+        Removes the domain and its certificate. New connect links open on zernio.com again and links already sent on the domain stop working; you can then delete both DNS records. Requires the workspace settings permission (owner or admin).
+
+        Args:
+            domain_id: The custom domain's id. (required)"""
+        client = _get_client()
+        try:
+            response = client.connect.delete_connect_custom_domain(domain_id=domain_id)
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Check a custom domain's DNS records now",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def connect_verify_connect_custom_domain(domain_id: str) -> str:
+        """Check a custom domain's DNS records now
+
+        Looks for the DNS records right away instead of waiting for the hourly check, and asks the certificate authority to validate again. Calls within 30 seconds of the last check answer that check.
+
+        Args:
+            domain_id: The custom domain's id. (required)"""
+        client = _get_client()
+        try:
+            response = client.connect.verify_connect_custom_domain(domain_id=domain_id)
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="List your OAuth apps",
             readOnlyHint=True,
             destructiveHint=False,
@@ -61936,6 +62076,7 @@ TOOL_OAUTH_SCOPES: dict[str, tuple[str, ...]] = {
     "connect_complete_telegram_connect": ("accounts:write",),
     "connect_complete_whats_app_phone_selection": ("accounts:write",),
     "connect_configure_tik_tok_ads_brand_identity": ("accounts:write",),
+    "connect_create_connect_custom_domain": ("accounts:write",),
     "connect_create_google_business_location": ("accounts:write",),
     "connect_create_google_org_connection": ("accounts:write",),
     "connect_create_microsoft_org_connection": ("accounts:write",),
@@ -61943,6 +62084,7 @@ TOOL_OAUTH_SCOPES: dict[str, tuple[str, ...]] = {
     "connect_create_pinterest_board": ("accounts:write",),
     "connect_create_platform_invite": ("accounts:write",),
     "connect_create_youtube_playlist": ("accounts:write",),
+    "connect_delete_connect_custom_domain": ("accounts:write",),
     "connect_delete_o_auth_app": ("accounts:write",),
     "connect_delete_org_connection": ("accounts:write",),
     "connect_discord_channel": ("accounts:write",),
@@ -61951,6 +62093,10 @@ TOOL_OAUTH_SCOPES: dict[str, tuple[str, ...]] = {
         "accounts:write",
     ),
     "connect_get_campaign_manager_connect_url": (
+        "accounts:read",
+        "accounts:write",
+    ),
+    "connect_get_connect_custom_domain": (
         "accounts:read",
         "accounts:write",
     ),
@@ -62079,6 +62225,10 @@ TOOL_OAUTH_SCOPES: dict[str, tuple[str, ...]] = {
         "accounts:read",
         "accounts:write",
     ),
+    "connect_list_connect_custom_domains": (
+        "accounts:read",
+        "accounts:write",
+    ),
     "connect_list_facebook_pages": (
         "accounts:read",
         "accounts:write",
@@ -62156,6 +62306,7 @@ TOOL_OAUTH_SCOPES: dict[str, tuple[str, ...]] = {
     "connect_test_o_auth_app": ("accounts:write",),
     "connect_trade_desk_ads_credentials": ("accounts:write",),
     "connect_trade_desk_ads_partner": ("accounts:write",),
+    "connect_update_connect_custom_domain": ("accounts:write",),
     "connect_update_connect_welcome_screen": ("accounts:write",),
     "connect_update_facebook_page": ("accounts:write",),
     "connect_update_gmb_location": ("accounts:write",),
@@ -62165,6 +62316,7 @@ TOOL_OAUTH_SCOPES: dict[str, tuple[str, ...]] = {
     "connect_update_pinterest_boards": ("accounts:write",),
     "connect_update_reddit_subreddits": ("accounts:write",),
     "connect_update_youtube_default_playlist": ("accounts:write",),
+    "connect_verify_connect_custom_domain": ("accounts:write",),
     "connect_verify_org_connection": ("accounts:write",),
     "connect_vote_reddit_thing": ("messaging:write",),
     "connect_webflow_with_site_token": ("accounts:write",),

@@ -376,6 +376,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | Method | Description |
 |--------|-------------|
 | `connect.list_campaign_manager_profiles()` | List Campaign Manager 360 profiles for a pending connect |
+| `connect.list_connect_custom_domains()` | List the workspace's custom domains |
 | `connect.list_facebook_pages()` | List Facebook pages |
 | `connect.list_google_analytics_properties()` | List Google Analytics properties for a pending connect |
 | `connect.list_google_business_categories()` | List Google Business Profile categories |
@@ -390,6 +391,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `connect.list_slack_channels()` | List Slack channels for the channel picker |
 | `connect.list_snapchat_profiles()` | List Snapchat profiles |
 | `connect.list_whats_app_phone_numbers()` | List numbers for selection |
+| `connect.create_connect_custom_domain()` | Add a custom domain |
 | `connect.create_google_business_location()` | Create Google Business Profile location |
 | `connect.create_google_org_connection()` | Start a Google Workspace organization connection |
 | `connect.create_microsoft_org_connection()` | Start a Microsoft 365 organization connection |
@@ -399,6 +401,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `connect.create_youtube_playlist()` | Create YouTube playlist |
 | `connect.get_amazon_ads_connect_url()` | Get Amazon Ads OAuth connect URL |
 | `connect.get_campaign_manager_connect_url()` | Get Campaign Manager 360 OAuth connect URL |
+| `connect.get_connect_custom_domain()` | Get a custom domain |
 | `connect.get_connect_handoff()` | Get a phone handoff |
 | `connect.get_connect_url()` | Get OAuth connect URL |
 | `connect.get_connect_welcome_screen()` | Get the saved welcome screen |
@@ -429,6 +432,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `connect.get_word_press_auth_url()` | Get WordPress.com OAuth connect URL |
 | `connect.get_youtube_captions()` | Get a YouTube video transcript |
 | `connect.get_youtube_playlists()` | List YouTube playlists |
+| `connect.update_connect_custom_domain()` | Turn a custom domain on or off for connect |
 | `connect.update_connect_welcome_screen()` | Save the welcome screen |
 | `connect.update_facebook_page()` | Update Facebook page |
 | `connect.update_gmb_location()` | Update Google Business Profile location |
@@ -438,6 +442,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `connect.update_pinterest_boards()` | Set default Pinterest board |
 | `connect.update_reddit_subreddits()` | Set default subreddit |
 | `connect.update_youtube_default_playlist()` | Set default YouTube playlist |
+| `connect.delete_connect_custom_domain()` | Remove a custom domain |
 | `connect.delete_o_auth_app()` | Remove an OAuth app |
 | `connect.delete_org_connection()` | Delete an organization connection |
 | `connect.add_org_connection_mailbox()` | Add a mailbox from an organization connection |
@@ -485,6 +490,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `connect.set_reddit_post_flair()` | Set Reddit post flair |
 | `connect.start_microsoft_admin_consent()` | Admin-consent link for a Microsoft tenant |
 | `connect.test_o_auth_app()` | Check an OAuth app's keys |
+| `connect.verify_connect_custom_domain()` | Check a custom domain's DNS records now |
 | `connect.verify_org_connection()` | Verify an organization connection |
 | `connect.vote_reddit_thing()` | Vote on a Reddit post or comment |
 

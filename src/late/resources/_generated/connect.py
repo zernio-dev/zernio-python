@@ -808,6 +808,44 @@ class ConnectResource:
         )
         return self._client._put("/v1/connect/welcome-screen", data=payload)
 
+    def list_connect_custom_domains(self) -> dict[str, Any]:
+        """List the workspace's custom domains"""
+        return self._client._get("/v1/connect/custom-domains")
+
+    def create_connect_custom_domain(self, hostname: str) -> dict[str, Any]:
+        """Add a custom domain"""
+        payload = self._build_body(
+            {
+                "hostname": hostname,
+            }
+        )
+        return self._client._post("/v1/connect/custom-domains", data=payload)
+
+    def get_connect_custom_domain(self, domain_id: str) -> dict[str, Any]:
+        """Get a custom domain"""
+        return self._client._get(f"/v1/connect/custom-domains/{domain_id}")
+
+    def update_connect_custom_domain(
+        self, domain_id: str, connect_enabled: bool
+    ) -> dict[str, Any]:
+        """Turn a custom domain on or off for connect"""
+        payload = self._build_body(
+            {
+                "connectEnabled": connect_enabled,
+            }
+        )
+        return self._client._patch(
+            f"/v1/connect/custom-domains/{domain_id}", data=payload
+        )
+
+    def delete_connect_custom_domain(self, domain_id: str) -> dict[str, Any]:
+        """Remove a custom domain"""
+        return self._client._delete(f"/v1/connect/custom-domains/{domain_id}")
+
+    def verify_connect_custom_domain(self, domain_id: str) -> dict[str, Any]:
+        """Check a custom domain's DNS records now"""
+        return self._client._post(f"/v1/connect/custom-domains/{domain_id}/verify")
+
     def list_o_auth_apps(
         self, *, limit: int | None = 50, cursor: str | None = None
     ) -> dict[str, Any]:
@@ -2801,6 +2839,46 @@ class ConnectResource:
             }
         )
         return await self._client._aput("/v1/connect/welcome-screen", data=payload)
+
+    async def alist_connect_custom_domains(self) -> dict[str, Any]:
+        """List the workspace's custom domains (async)"""
+        return await self._client._aget("/v1/connect/custom-domains")
+
+    async def acreate_connect_custom_domain(self, hostname: str) -> dict[str, Any]:
+        """Add a custom domain (async)"""
+        payload = self._build_body(
+            {
+                "hostname": hostname,
+            }
+        )
+        return await self._client._apost("/v1/connect/custom-domains", data=payload)
+
+    async def aget_connect_custom_domain(self, domain_id: str) -> dict[str, Any]:
+        """Get a custom domain (async)"""
+        return await self._client._aget(f"/v1/connect/custom-domains/{domain_id}")
+
+    async def aupdate_connect_custom_domain(
+        self, domain_id: str, connect_enabled: bool
+    ) -> dict[str, Any]:
+        """Turn a custom domain on or off for connect (async)"""
+        payload = self._build_body(
+            {
+                "connectEnabled": connect_enabled,
+            }
+        )
+        return await self._client._apatch(
+            f"/v1/connect/custom-domains/{domain_id}", data=payload
+        )
+
+    async def adelete_connect_custom_domain(self, domain_id: str) -> dict[str, Any]:
+        """Remove a custom domain (async)"""
+        return await self._client._adelete(f"/v1/connect/custom-domains/{domain_id}")
+
+    async def averify_connect_custom_domain(self, domain_id: str) -> dict[str, Any]:
+        """Check a custom domain's DNS records now (async)"""
+        return await self._client._apost(
+            f"/v1/connect/custom-domains/{domain_id}/verify"
+        )
 
     async def alist_o_auth_apps(
         self, *, limit: int | None = 50, cursor: str | None = None

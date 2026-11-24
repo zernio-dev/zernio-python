@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.824.2"
+  version: "1.825.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -5347,6 +5347,85 @@ components:
             properties:
               area: { type: string, enum: [posting, analytics, comments, messaging] }
               scopes: { type: array, items: { type: string } }
+    ConnectCustomDomain:
+      type: object
+      required:
+        - id
+        - hostname
+        - zone
+        - status
+        - connectEnabled
+        - ownershipVerified
+        - records
+        - activatedAt
+        - createdAt
+      properties:
+        id:
+          type: string
+        hostname:
+          type: string
+          description: The subdomain, such as `connect.yourbrand.com`.
+        zone:
+          type: string
+          description: 'The registered domain the records live in, such as `yourbrand.com`.'
+        status:
+          type: string
+          enum: [pending, active, failed]
+          description: >-
+            `pending` until the TXT record is found and the certificate is issued, `active` once the domain serves the
+            connect screens, `failed` when it stopped pointing at Zernio (remove it and add it again).
+        connectEnabled:
+          type: boolean
+          description: Whether new connect links open on this domain while it is active.
+        ownershipVerified:
+          type: boolean
+          description: True once the TXT record was found.
+        records:
+          type: array
+          description: The DNS records to add at your DNS provider.
+          items:
+            type: object
+            required:
+              - type
+              - name
+              - host
+              - value
+            properties:
+              type:
+                type: string
+                enum: [CNAME, TXT]
+              name:
+                type: string
+                description: The full record name.
+              host:
+                type: string
+                description: 'The name relative to `zone`, what most DNS providers ask for.'
+              value:
+                type: string
+        activatedAt:
+          type: [string, "null"]
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+      example:
+        id: 6b00123b10b06d3a302cee8a
+        hostname: connect.yourbrand.com
+        zone: yourbrand.com
+        status: active
+        connectEnabled: true
+        ownershipVerified: true
+        records:
+          - type: CNAME
+            name: connect.yourbrand.com
+            host: connect
+            value: cname.zerniocdn.com
+          - type: TXT
+            name: _zernio-verify.connect.yourbrand.com
+            host: _zernio-verify.connect
+            value: zernio-verify=43966a9e-6484-4eab-9a2d-6a71c9662dd4
+        activatedAt: '2026-11-20T09:29:22.954Z'
+        createdAt: '2026-11-20T09:26:19.390Z'
     ConnectWelcomeScreen:
       type: object
       properties:
@@ -57237,6 +57316,239 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           description: The caller cannot change workspace settings (code INSUFFICIENT_PERMISSIONS).
+  /v1/connect/custom-domains:
+    get:
+      x-resource-group: "accounts"
+      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      operationId: listConnectCustomDomains
+      tags:
+        - Connect
+      summary: List the workspace's custom domains
+      description: |-
+        The custom domains of the workspace the request acts in. A custom domain puts the hosted connect screens (the welcome screen and the result screen) on your own subdomain, such as `connect.yourbrand.com`, instead of zernio.com.
+
+        A workspace has at most one today; the list leaves room for more. Guide: [Use your own domain for connect](https://docs.zernio.com/guides/custom-domains).
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          x-summary: The workspace's custom domains are returned, an empty list when it has none.
+          description: The workspace's custom domains.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - customDomains
+                properties:
+                  customDomains:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ConnectCustomDomain'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      x-resource-group: "accounts"
+      x-oauth-scopes: ["accounts:write"]
+      operationId: createConnectCustomDomain
+      tags:
+        - Connect
+      summary: Add a custom domain
+      description: |-
+        Adds a subdomain you control. The answer lists the two DNS records to add at your DNS provider: a CNAME that points the subdomain at Zernio and a TXT record that proves it is yours.
+
+        Nothing is registered until the TXT record is found; then the certificate is issued and `status` turns `active`, usually within minutes.
+
+        Connect links only move to the domain once it is active and `connectEnabled` is true. Requires the workspace settings permission (owner or admin).
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+                - hostname
+              properties:
+                hostname:
+                  type: string
+                  maxLength: 253
+                  description: 'A subdomain, never the domain itself: `connect.yourbrand.com`.'
+                  example: connect.yourbrand.com
+      responses:
+        '201':
+          x-summary: The custom domain is added, pending until its DNS records are found.
+          description: The domain, with the DNS records to add.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - customDomain
+                properties:
+                  customDomain:
+                    $ref: '#/components/schemas/ConnectCustomDomain'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: The caller cannot change workspace settings.
+        '409':
+          description: 'The workspace already has a custom domain, or another workspace verified this hostname (`custom_hostname_taken`).'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+  /v1/connect/custom-domains/{domainId}:
+    parameters:
+      - name: domainId
+        in: path
+        required: true
+        schema:
+          type: string
+        description: The custom domain's id.
+    get:
+      x-resource-group: "accounts"
+      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      operationId: getConnectCustomDomain
+      tags:
+        - Connect
+      summary: Get a custom domain
+      description: The custom domain with its status and DNS records.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          x-summary: The custom domain is returned.
+          description: The custom domain.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - customDomain
+                properties:
+                  customDomain:
+                    $ref: '#/components/schemas/ConnectCustomDomain'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      x-resource-group: "accounts"
+      x-oauth-scopes: ["accounts:write"]
+      operationId: updateConnectCustomDomain
+      tags:
+        - Connect
+      summary: Turn a custom domain on or off for connect
+      description: >-
+        With `connectEnabled` true, new connect links open on the domain once it is active; with false they open on
+        zernio.com again. Links already sent keep working. Requires the workspace settings permission (owner or admin).
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+                - connectEnabled
+              properties:
+                connectEnabled:
+                  type: boolean
+      responses:
+        '200':
+          x-summary: The custom domain is updated.
+          description: The updated custom domain.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - customDomain
+                properties:
+                  customDomain:
+                    $ref: '#/components/schemas/ConnectCustomDomain'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: The caller cannot change workspace settings.
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      x-resource-group: "accounts"
+      x-oauth-scopes: ["accounts:write"]
+      operationId: deleteConnectCustomDomain
+      tags:
+        - Connect
+      summary: Remove a custom domain
+      description: >-
+        Removes the domain and its certificate. New connect links open on zernio.com again and links already sent on
+        the domain stop working; you can then delete both DNS records. Requires the workspace settings permission
+        (owner or admin).
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: The custom domain was removed.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: The caller cannot change workspace settings.
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '503':
+          $ref: '#/components/responses/TemporarilyUnavailable'
+  /v1/connect/custom-domains/{domainId}/verify:
+    post:
+      x-resource-group: "accounts"
+      x-oauth-scopes: ["accounts:write"]
+      operationId: verifyConnectCustomDomain
+      tags:
+        - Connect
+      summary: Check a custom domain's DNS records now
+      description: >-
+        Looks for the DNS records right away instead of waiting for the hourly check, and asks the certificate
+        authority to validate again. Calls within 30 seconds of the last check answer that check.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: domainId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The custom domain's id.
+      responses:
+        '200':
+          x-summary: The custom domain is returned with its status after the check.
+          description: The custom domain after the check.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - customDomain
+                properties:
+                  customDomain:
+                    $ref: '#/components/schemas/ConnectCustomDomain'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '503':
+          $ref: '#/components/responses/TemporarilyUnavailable'
   /v1/connect/oauth-apps:
     get:
       x-resource-group: "accounts"
