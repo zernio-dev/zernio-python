@@ -369,7 +369,7 @@ async def test_a_write_refused_despite_its_scope_keeps_the_apis_own_error(
     result = await _create_profile(httpx.Response(403, json=ACCOUNTS_READ_ONLY))
 
     assert result.is_error
-    assert "Settings > Plugins" not in result.content[0].text
+    assert "Do not retry" not in result.content[0].text
     assert "can only read the 'accounts' resource group" in result.content[0].text
 
 
