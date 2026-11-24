@@ -4,6 +4,11 @@ the result's text from the model, so the user only heard "it failed" (tested in
 a live account on 2026-11-24). A 403 the token's scope already covers (a team
 member with the group turned off, or a write scope that includes the read)
 stays the API's own error: re-linking cannot fix it.
+
+The steps key on the tool's first declared scope, not on all its x-oauth-scopes:
+the spec lists the :read scope on writes too, and the API now refuses a write
+to a token holding only the read, so a link with accounts:read but not
+accounts:write would otherwise get a bare error.
 """
 
 import json
@@ -28,6 +33,7 @@ _SCOPE_PURPOSE = {
     "contacts:read": "read your contacts and leads",
     "messaging:write": "send messages, replies and broadcasts for you",
     "ads:write": "create ads and pause or resume campaigns, which spends your ad budget",
+    "accounts:write": "create, change or remove your profiles and connected accounts",
 }
 
 
@@ -56,6 +62,13 @@ def _granted_scopes() -> set[str] | None:
     return set(scope.split()) if isinstance(scope, str) else None
 
 
+def _holds(granted: set[str], needed: str) -> bool:
+    """A :write scope includes its :read."""
+    return needed in granted or (
+        needed.endswith(":read") and f"{needed[: -len(':read')]}:write" in granted
+    )
+
+
 def _refused_for_a_group(cause: BaseException | None) -> bool:
     return (
         isinstance(cause, LateAPIError)
@@ -81,7 +94,7 @@ class MissingScopeMiddleware(Middleware):
             if not reaching or not _refused_for_a_group(exc.__cause__):
                 raise
             granted = _granted_scopes()
-            relink_helps = granted is not None and not granted.intersection(reaching)
+            relink_helps = granted is not None and not _holds(granted, reaching[0])
             _log_group_refusal(
                 tool=context.message.name,
                 needed=reaching[0],
