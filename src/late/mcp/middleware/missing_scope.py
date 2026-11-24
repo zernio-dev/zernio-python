@@ -27,6 +27,11 @@ from late.mcp.telemetry import tool_call_logger
 
 _INSUFFICIENT_PERMISSIONS = "insufficient_permissions"
 
+# The plugin's public page. ChatGPT documents no link that opens its Reconnect.
+_PLUGIN_URL = (
+    "https://chatgpt.com/plugins/plugin_asdk_app_6aad5ef1fadc81919260bddebb06a407"
+)
+
 _SCOPE_PURPOSE = {
     "messaging:read": "read your inbox, comments and messages",
     "ads:read": "read your ad accounts, campaigns and results",
@@ -41,10 +46,9 @@ def relink_instructions(needed: str) -> str:
     purpose = _SCOPE_PURPOSE.get(needed, f"use this ({needed})")
     return (
         f"Zernio needs one more permission to {purpose} ('{needed}'); this ChatGPT "
-        "connection was set up before Zernio asked for it. Nothing was sent or changed. "
-        "Tell the user, in these steps: open ChatGPT Settings > Plugins (Apps in some "
-        "versions) > Zernio, click ... next to the connected Zernio account, choose "
-        "Reconnect, approve the new permission, then ask again."
+        "connection was set up before Zernio asked for it. Do not retry. Nothing "
+        f"changed. Tell the user: open {_PLUGIN_URL}, Settings, ... by your account, "
+        "Reconnect, approve, ask again."
     )
 
 

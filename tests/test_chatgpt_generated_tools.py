@@ -249,6 +249,13 @@ async def _list_conversations(response: httpx.Response):
             )
 
 
+RELINK_STEPS = (
+    "Do not retry. Nothing changed. Tell the user: open "
+    "https://chatgpt.com/plugins/plugin_asdk_app_6aad5ef1fadc81919260bddebb06a407, "
+    "Settings, ... by your account, Reconnect, approve, ask again."
+)
+
+
 async def test_a_link_without_the_tools_scope_is_asked_to_relink(monkeypatch):
     monkeypatch.setattr(
         "late.mcp.middleware.missing_scope._granted_scopes", lambda: LINK_SCOPES
@@ -259,7 +266,7 @@ async def test_a_link_without_the_tools_scope_is_asked_to_relink(monkeypatch):
     assert result.is_error
     text = result.content[0].text
     assert "read your inbox" in text and "'messaging:read'" in text
-    assert "Settings > Plugins" in text and "Reconnect" in text
+    assert RELINK_STEPS in text
 
 
 async def test_the_relink_steps_carry_no_auth_challenge_chatgpt_would_hide_them_behind(
@@ -340,7 +347,7 @@ async def test_a_link_that_only_reads_accounts_is_asked_to_relink_before_a_write
     assert result.is_error
     text = result.content[0].text
     assert "'accounts:write'" in text
-    assert "Settings > Plugins" in text and "Reconnect" in text
+    assert RELINK_STEPS in text
 
 
 @pytest.mark.parametrize(
@@ -362,7 +369,7 @@ async def test_a_write_refused_despite_its_scope_keeps_the_apis_own_error(
     result = await _create_profile(httpx.Response(403, json=ACCOUNTS_READ_ONLY))
 
     assert result.is_error
-    assert "Settings > Plugins" not in result.content[0].text
+    assert "Do not retry" not in result.content[0].text
     assert "can only read the 'accounts' resource group" in result.content[0].text
 
 
