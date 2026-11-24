@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.824.1"
+  version: "1.824.2"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -75590,6 +75590,7 @@ paths:
           schema: { type: integer, minimum: 1, maximum: 50, default: 25 }
         - name: cursor
           in: query
+          description: 'Pass back pagination.nextCursor of the previous page unchanged, with the same sortBy and sortOrder.'
           schema: { type: string }
         - name: accountId
           in: query

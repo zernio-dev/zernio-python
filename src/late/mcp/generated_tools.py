@@ -50589,7 +50589,7 @@ def register_generated_tools(mcp, _get_client):
             sort_by: rating puts reviews without a star rating last in both orders.
             sort_order
             limit
-            cursor
+            cursor: Pass back pagination.nextCursor of the previous page unchanged, with the same sortBy and sortOrder.
             account_id: One account id, or several comma-separated."""
         client = _get_client()
         try:
