@@ -186,7 +186,9 @@ WAVE_3_EFFECTS = {
 WAVE_3 = tuple(WAVE_3_EFFECTS)
 
 # Spend and deletes, all destructive: creating an ad and pausing or resuming a
-# campaign move real ad budget, the rest remove or hide what is there.
+# campaign move real ad budget, disconnecting an account and hiding or deleting
+# a comment remove what is there, and the insights report is marked destructive
+# on the product owner's call. Its reader rides along so a report can be read.
 WAVE_4_EFFECTS = {
     "ad_campaigns_create_standalone_ad": _OVERWRITES_IN_PUBLIC,
     "ad_campaigns_update_ad_campaign_status": _OVERWRITES_IN_PUBLIC,
@@ -195,7 +197,7 @@ WAVE_4_EFFECTS = {
     "comments_hide_inbox_comment": _OVERWRITES_IN_PUBLIC,
     "comments_delete_inbox_comment": _OVERWRITES_IN_PUBLIC,
 }
-WAVE_4 = tuple(WAVE_4_EFFECTS)
+WAVE_4 = (*WAVE_4_EFFECTS, "ad_insights_get_ad_insights_report")
 
 CHATGPT_GENERATED_TOOLS = WAVE_1 + WAVE_2 + WAVE_3 + WAVE_4
 WRITE_EFFECTS = WAVE_3_EFFECTS | WAVE_4_EFFECTS
@@ -222,19 +224,23 @@ DESCRIPTION_LEADS = {
         "so confirm with the user before calling."
     ),
     "ad_campaigns_create_standalone_ad": (
-        "Spends the user's ad budget: unless status is PAUSED the ad goes live and "
-        "starts spending. Confirm the ad account, budget, schedule, targeting and "
-        "creative with the user before calling; validate_only checks it first "
-        "without creating anything."
+        "Spends the user's ad budget: anything the call does not create PAUSED "
+        "(status, or campaign_status / ad_set_status / ad_status) goes live and "
+        "starts spending once the platform approves it. Confirm the ad account, "
+        "budget, schedule, targeting and creative with the user before calling; "
+        "validate_only (Meta, TikTok, ChatGPT ads, Google Performance Max and "
+        "Demand Gen) checks it first without creating anything."
     ),
     "ad_campaigns_update_ad_campaign_status": (
         "Resuming restarts spending the user's ad budget and pausing stops "
-        "delivery. Confirm the campaign and the new status with the user before "
-        "calling."
+        "delivery (Trade Desk: pause only). Confirm the campaign and the new "
+        "status with the user before calling."
     ),
     "accounts_delete_account": (
-        "Disconnects and removes the social account from Zernio; it cannot be "
-        "undone from ChatGPT. Confirm the account with the user before calling."
+        "Disconnects the social account: its analytics history is deleted at once, "
+        "and after a 1-hour grace window the account and its scheduled posts are "
+        "removed for good (reconnecting it at zernio.com within that hour restores "
+        "them). Confirm the account with the user before calling."
     ),
 }
 
@@ -263,7 +269,7 @@ def _argument_lines(args: str) -> list[str]:
         return []
     indent = matches[0][1]
     return [
-        f"    {m[2]}: {_clip(_with_source(m[2], m[3] or ''), _PARAM_MAX)}".rstrip(": ")
+        f"    {m[2]}: {_with_source(m[2], _clip(m[3] or '', _PARAM_MAX))}".rstrip(": ")
         for m in matches
         if m[1] == indent
     ]

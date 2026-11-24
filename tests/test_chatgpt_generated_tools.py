@@ -24,8 +24,6 @@ from late.mcp.chatgpt_tools import (
     DESCRIPTION_LEADS,
     WAVE_1,
     WAVE_2,
-    WAVE_3,
-    WAVE_4,
     WRITE_EFFECTS,
     _hints_for,
     concise_description,
@@ -139,7 +137,7 @@ async def test_every_listed_write_has_its_effects_spelled_out():
         if not listed[name]["annotations"]["readOnlyHint"]
     }
 
-    assert writes == set(WAVE_3 + WAVE_4)
+    assert writes == set(WRITE_EFFECTS)
     for name in writes:
         hints = listed[name]["annotations"]
         effects = WRITE_EFFECTS[name]
