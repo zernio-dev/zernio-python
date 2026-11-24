@@ -44083,6 +44083,7 @@ def register_generated_tools(mcp, _get_client):
         destination: Literal["whatsapp", "messenger", "instagram_direct"] | None = None,
         destinations: list[Literal["whatsapp", "messenger", "instagram_direct"]]
         | None = None,
+        optimization_goal: Literal["CONVERSATIONS", "LEAD_GENERATION"] | None = None,
         placement_assets: dict[str, Any] | None = None,
         workflow_id: str | None = None,
         validate_only: bool | None = None,
@@ -44101,7 +44102,7 @@ def register_generated_tools(mcp, _get_client):
 
             `destinations` puts two or three of them on one ad set and lets Meta pick the app per viewer.
 
-            The ad set is created with the matching destination_type and CONVERSATIONS optimization. The campaign objective defaults to OUTCOME_ENGAGEMENT.
+            The ad set is created with the matching destination_type and CONVERSATIONS optimization by default (see `optimizationGoal` for LEAD_GENERATION). The campaign objective defaults to OUTCOME_ENGAGEMENT (OUTCOME_LEADS with LEAD_GENERATION).
 
             This endpoint supersedes POST /v1/ads/ctwa (deprecated, equivalent to `destination: whatsapp`).
 
@@ -44110,7 +44111,7 @@ def register_generated_tools(mcp, _get_client):
             Supports single-creative and multi-creative shapes.
 
             - Existing posts and reels are supported through `platformPostId` (alias `existingPostId`) or `objectStoryId`, either per creative or at the top level. Omit fresh media and copy for that creative.
-            - Optional `whatsappPhoneNumber` selects a number already paired with the Page (WhatsApp ...
+            - ...
 
             Platforms: meta
 
@@ -44244,7 +44245,10 @@ def register_generated_tools(mcp, _get_client):
         targeting strict; `1` lets Meta expand beyond the supplied
         targeting when its delivery system finds better matches.
         Always sent on CREATE (Meta requires it).
-                objective: Defaults to `OUTCOME_ENGAGEMENT`. `OUTCOME_SALES` and `OUTCOME_LEADS` require
+                objective: Defaults to `OUTCOME_ENGAGEMENT` on POST /v1/ads/ctwa and POST /v1/ads/messaging,
+        and to `OUTCOME_LEADS` on POST /v1/ads/call and on POST /v1/ads/messaging with
+        `optimizationGoal: LEAD_GENERATION` (which accepts only `OUTCOME_LEADS`).
+        `OUTCOME_SALES` and `OUTCOME_LEADS` require
         additional account configuration (Dataset linked to the WABA
         for sales) and may be rejected by Meta if missing.
                 status: Defaults to `ACTIVE`. `PAUSED` pauses only the top-most object this
@@ -44269,8 +44273,9 @@ def register_generated_tools(mcp, _get_client):
         `LOWEST_COST_WITHOUT_CAP` (auto-bid) when omitted.
         `LOWEST_COST_WITH_BID_CAP` and `COST_CAP` require
         `bidAmount`. `LOWEST_COST_WITH_MIN_ROAS` requires
-        `roasAverageFloor`. CTWA's `optimization_goal` is fixed to
-        `CONVERSATIONS`, but the bid strategy is independent.
+        `roasAverageFloor`. The ad set `optimization_goal` comes from the endpoint
+        (`CONVERSATIONS` on POST /v1/ads/ctwa, `QUALITY_CALL` on POST /v1/ads/call, the
+        `optimizationGoal` field on POST /v1/ads/messaging); the bid strategy is independent.
                 bid_amount: Whole currency units (e.g. `5` = $5.00 on a USD account).
         Required when `bidStrategy` is `LOWEST_COST_WITH_BID_CAP`
         or `COST_CAP`; rejected otherwise.
@@ -44312,6 +44317,11 @@ def register_generated_tools(mcp, _get_client):
 
         - WhatsApp in the list still needs the Page paired with a WhatsApp Business number.
         - With `adSetId`, the existing ad set must already use that combined destination_type.
+                optimization_goal: What the ad set optimizes for. Defaults to `CONVERSATIONS`. Cannot be combined with `adSetId` (the existing ad set owns its goal).
+
+        - `LEAD_GENERATION` needs a single `destination: whatsapp` (a 400 with `destinations` or another destination) and runs the campaign under `OUTCOME_LEADS`.
+        - `objective`, when sent with `LEAD_GENERATION`, must be `OUTCOME_LEADS`.
+        - With `existingCampaignId` the campaign must be `OUTCOME_LEADS` (a 400 otherwise).
                 placement_assets: A different image or video per placement on one messaging ad, e.g. a 4:5 image on Feed and a 9:16 image on Stories/Reels. Works on the single-creative shape and on attach (`adSetId`). Replaces top-level `imageUrl` / `video` (sending either alongside is a 400). `headline` and `body` stay required as the default copy. The CTA, `welcomeMessage` and `whatsappPhoneNumber` apply to every placement. Single `destination` only. Meta cannot combine per-placement media with `destinations`: it drops the placement rules from a multi-destination creative, or refuses more than one call to action per placement rule with error 1885878. So that combination is a 400. Also a 400 with `creatives[]`, `platformPostId`, `existingPostId` or `objectStoryId`, and on POST /v1/ads/call. Object with keys: defaultImageUrl (string) - Image mode. Catch-all image for any placement no rule matches. Required in image mode (Meta mandates a default rule).; defaultVideoUrl (string) - Video mode. Catch-all video for any placement no rule matches. Video mode requires this or `defaultVideoId`.; defaultVideoId (string) - Video mode. ID of a video already on the ad account, used as the catch-all instead of uploading `defaultVideoUrl`. Wins over `defaultVideoUrl`. A video still ...; defaultThumbnailUrl (string) - Video mode (optional). Poster image for the default video; Meta auto-generates one when omitted.; rules (list of objects with keys imageUrl, videoUrl, videoId, thumbnailUrl, headline, body, description, placements, required) - One entry per placement group you want to pin a specific asset to.
                 workflow_id: A workflow in the ad account's profile, stored on the ad. 404 when no such workflow exists in the profile.
 
@@ -44400,6 +44410,7 @@ def register_generated_tools(mcp, _get_client):
             "regional_regulation_identities": regional_regulation_identities,
             "destination": destination,
             "destinations": destinations,
+            "optimization_goal": optimization_goal,
             "placement_assets": placement_assets,
             "workflow_id": workflow_id,
             "validate_only": validate_only,
@@ -44482,6 +44493,7 @@ def register_generated_tools(mcp, _get_client):
                 regional_regulation_identities=regional_regulation_identities,
                 destination=destination,
                 destinations=destinations,
+                optimization_goal=optimization_goal,
                 placement_assets=placement_assets,
                 workflow_id=workflow_id,
                 validate_only=validate_only,
@@ -44771,7 +44783,10 @@ def register_generated_tools(mcp, _get_client):
         targeting strict; `1` lets Meta expand beyond the supplied
         targeting when its delivery system finds better matches.
         Always sent on CREATE (Meta requires it).
-                objective: Defaults to `OUTCOME_ENGAGEMENT`. `OUTCOME_SALES` and `OUTCOME_LEADS` require
+                objective: Defaults to `OUTCOME_ENGAGEMENT` on POST /v1/ads/ctwa and POST /v1/ads/messaging,
+        and to `OUTCOME_LEADS` on POST /v1/ads/call and on POST /v1/ads/messaging with
+        `optimizationGoal: LEAD_GENERATION` (which accepts only `OUTCOME_LEADS`).
+        `OUTCOME_SALES` and `OUTCOME_LEADS` require
         additional account configuration (Dataset linked to the WABA
         for sales) and may be rejected by Meta if missing.
                 status: Defaults to `ACTIVE`. `PAUSED` pauses only the top-most object this
@@ -44796,8 +44811,9 @@ def register_generated_tools(mcp, _get_client):
         `LOWEST_COST_WITHOUT_CAP` (auto-bid) when omitted.
         `LOWEST_COST_WITH_BID_CAP` and `COST_CAP` require
         `bidAmount`. `LOWEST_COST_WITH_MIN_ROAS` requires
-        `roasAverageFloor`. CTWA's `optimization_goal` is fixed to
-        `CONVERSATIONS`, but the bid strategy is independent.
+        `roasAverageFloor`. The ad set `optimization_goal` comes from the endpoint
+        (`CONVERSATIONS` on POST /v1/ads/ctwa, `QUALITY_CALL` on POST /v1/ads/call, the
+        `optimizationGoal` field on POST /v1/ads/messaging); the bid strategy is independent.
                 bid_amount: Whole currency units (e.g. `5` = $5.00 on a USD account).
         Required when `bidStrategy` is `LOWEST_COST_WITH_BID_CAP`
         or `COST_CAP`; rejected otherwise.
@@ -45271,7 +45287,10 @@ def register_generated_tools(mcp, _get_client):
         targeting strict; `1` lets Meta expand beyond the supplied
         targeting when its delivery system finds better matches.
         Always sent on CREATE (Meta requires it).
-                objective: Defaults to `OUTCOME_ENGAGEMENT`. `OUTCOME_SALES` and `OUTCOME_LEADS` require
+                objective: Defaults to `OUTCOME_ENGAGEMENT` on POST /v1/ads/ctwa and POST /v1/ads/messaging,
+        and to `OUTCOME_LEADS` on POST /v1/ads/call and on POST /v1/ads/messaging with
+        `optimizationGoal: LEAD_GENERATION` (which accepts only `OUTCOME_LEADS`).
+        `OUTCOME_SALES` and `OUTCOME_LEADS` require
         additional account configuration (Dataset linked to the WABA
         for sales) and may be rejected by Meta if missing.
                 status: Defaults to `ACTIVE`. `PAUSED` pauses only the top-most object this
@@ -45296,8 +45315,9 @@ def register_generated_tools(mcp, _get_client):
         `LOWEST_COST_WITHOUT_CAP` (auto-bid) when omitted.
         `LOWEST_COST_WITH_BID_CAP` and `COST_CAP` require
         `bidAmount`. `LOWEST_COST_WITH_MIN_ROAS` requires
-        `roasAverageFloor`. CTWA's `optimization_goal` is fixed to
-        `CONVERSATIONS`, but the bid strategy is independent.
+        `roasAverageFloor`. The ad set `optimization_goal` comes from the endpoint
+        (`CONVERSATIONS` on POST /v1/ads/ctwa, `QUALITY_CALL` on POST /v1/ads/call, the
+        `optimizationGoal` field on POST /v1/ads/messaging); the bid strategy is independent.
                 bid_amount: Whole currency units (e.g. `5` = $5.00 on a USD account).
         Required when `bidStrategy` is `LOWEST_COST_WITH_BID_CAP`
         or `COST_CAP`; rejected otherwise.
