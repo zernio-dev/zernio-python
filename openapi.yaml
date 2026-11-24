@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.807.0"
+  version: "1.808.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -26403,7 +26403,7 @@ components:
       type: object
       description: An event the destination did not get because the visitor did not consent.
       properties:
-        eventIndex: { type: integer, description: Index into the events sent to this destination. }
+        eventIndex: { type: integer, description: 'Position of the event in the request''s `events` array, counted from 0, also when repeats or events this destination does not take were left out.' }
         eventId: { type: string }
         reason:
           type: string
@@ -112221,7 +112221,7 @@ paths:
                           items:
                             type: object
                             properties:
-                              eventIndex: { type: integer, description: Index into the events sent to this destination. }
+                              eventIndex: { type: integer, description: 'Position of the event in the request''s `events` array, counted from 0, also when repeats or events this destination does not take were left out.' }
                               eventId: { type: string }
                               message: { type: string }
                               code: { oneOf: [{ type: string }, { type: integer }] }
