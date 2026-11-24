@@ -33387,6 +33387,7 @@ def register_generated_tools(mcp, _get_client):
         event_name_map: dict[str, Any] | None = None,
         value_override: dict[str, Any] | None = None,
         value_condition: dict[str, Any] | None = None,
+        event_values: dict[str, Any] | None = None,
         api_secret: str | None = None,
     ) -> str:
         """Add a forwarding rule
@@ -33398,6 +33399,7 @@ def register_generated_tools(mcp, _get_client):
         - `eventNameMap` renames events for this destination (send your `Lead` as its `Purchase`).
         - `valueOverride` changes the value it gets (a fixed amount or a percent of the event's value).
         - `valueCondition` forwards only events above, below or equal to a value.
+        - `eventValues` sets the value of each event name (a `Lead` worth 20 EUR, a `QualifiedLead` worth 150 EUR) and wins over `valueOverride` for the names it lists.
 
         Each applies to this rule only: the event is stored, and sent to other rules, as received.
 
@@ -33412,6 +33414,7 @@ def register_generated_tools(mcp, _get_client):
             event_name_map
             value_override: Object with keys: mode (one of: original, fixed, percent; required); amount (number) - Required for `fixed` and `percent` (at most 1000 for `percent`); null for `original`.
             value_condition: Object with keys: operator (one of: gt, lt, eq; required); amount (number, required)
+            event_values
             api_secret: Google Analytics streams only: the stream's Measurement Protocol API secret (GA4 Admin › Data streams). Optional when the connection has edit access, since Zernio then creates it. Checked against Google's validation server, stored encrypted, never returned. Change it with `PATCH /v1/events/forwarding-rules/{ruleId}`."""
         client = _get_client()
         try:
@@ -33424,6 +33427,7 @@ def register_generated_tools(mcp, _get_client):
                 event_name_map=event_name_map,
                 value_override=value_override,
                 value_condition=value_condition,
+                event_values=event_values,
                 api_secret=api_secret,
             )
             return _format_response(response)
@@ -33444,10 +33448,11 @@ def register_generated_tools(mcp, _get_client):
         event_name_map: dict[str, Any] | None = None,
         value_override: dict[str, Any] | None = None,
         value_condition: dict[str, Any] | None = None,
+        event_values: dict[str, Any] | None = None,
     ) -> str:
         """Update a forwarding rule
 
-        Changes the fields you send and keeps the others. Send `eventNameMap: null` to stop renaming, `valueOverride: { \"mode\": \"original\" }` to send the event's own value again, and `valueCondition: null` to forward whatever the value.
+        Changes the fields you send and keeps the others. Send `eventNameMap: null` to stop renaming, `valueOverride: { \"mode\": \"original\" }` to send the event's own value again, and `valueCondition: null` to forward whatever the value. `eventValues` replaces the whole map; `null` or `{}` clears it.
 
         `apiSecret` replaces the secret of a rule whose destination needs one, such as a Google Analytics data stream's Measurement Protocol API secret. Before saving, Zernio sends one hit to Google's validation server; Google does not confirm the secret itself, so check GA4 Realtime after the next events.
 
@@ -33456,7 +33461,8 @@ def register_generated_tools(mcp, _get_client):
             api_secret
             event_name_map
             value_override: Object with keys: mode (one of: original, fixed, percent; required); amount (number) - Required for `fixed` and `percent` (at most 1000 for `percent`); null for `original`.
-            value_condition: Object with keys: operator (one of: gt, lt, eq; required); amount (number, required)"""
+            value_condition: Object with keys: operator (one of: gt, lt, eq; required); amount (number, required)
+            event_values"""
         client = _get_client()
         try:
             response = client.conversions.update_forwarding_rule(
@@ -33465,6 +33471,7 @@ def register_generated_tools(mcp, _get_client):
                 event_name_map=event_name_map,
                 value_override=value_override,
                 value_condition=value_condition,
+                event_values=event_values,
             )
             return _format_response(response)
         except Exception as e:

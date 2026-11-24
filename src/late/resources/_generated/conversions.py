@@ -607,6 +607,7 @@ class ConversionsResource:
         event_name_map: Any | None = None,
         value_override: Any | None = None,
         value_condition: Any | None = None,
+        event_values: Any | None = None,
         api_secret: str | None = None,
     ) -> dict[str, Any]:
         """Add a forwarding rule"""
@@ -620,6 +621,7 @@ class ConversionsResource:
                 "eventNameMap": event_name_map,
                 "valueOverride": value_override,
                 "valueCondition": value_condition,
+                "eventValues": event_values,
                 "apiSecret": api_secret,
             }
         )
@@ -633,6 +635,7 @@ class ConversionsResource:
         event_name_map: Any | None = None,
         value_override: Any | None = None,
         value_condition: Any | None = None,
+        event_values: Any | None = None,
     ) -> dict[str, Any]:
         """Update a forwarding rule"""
         payload = self._build_body(
@@ -641,6 +644,7 @@ class ConversionsResource:
                 "eventNameMap": event_name_map,
                 "valueOverride": value_override,
                 "valueCondition": value_condition,
+                "eventValues": event_values,
             }
         )
         return self._client._patch(
@@ -1639,6 +1643,7 @@ class ConversionsResource:
         event_name_map: Any | None = None,
         value_override: Any | None = None,
         value_condition: Any | None = None,
+        event_values: Any | None = None,
         api_secret: str | None = None,
     ) -> dict[str, Any]:
         """Add a forwarding rule (async)"""
@@ -1652,6 +1657,7 @@ class ConversionsResource:
                 "eventNameMap": event_name_map,
                 "valueOverride": value_override,
                 "valueCondition": value_condition,
+                "eventValues": event_values,
                 "apiSecret": api_secret,
             }
         )
@@ -1665,6 +1671,7 @@ class ConversionsResource:
         event_name_map: Any | None = None,
         value_override: Any | None = None,
         value_condition: Any | None = None,
+        event_values: Any | None = None,
     ) -> dict[str, Any]:
         """Update a forwarding rule (async)"""
         payload = self._build_body(
@@ -1673,6 +1680,7 @@ class ConversionsResource:
                 "eventNameMap": event_name_map,
                 "valueOverride": value_override,
                 "valueCondition": value_condition,
+                "eventValues": event_values,
             }
         )
         return await self._client._apatch(

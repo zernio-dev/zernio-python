@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.805.0"
+  version: "1.807.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -26137,7 +26137,46 @@ components:
             - $ref: '#/components/schemas/ForwardingRuleValueCondition'
             - type: "null"
           description: 'Forwards only events whose value matches; null forwards whatever the value.'
+        eventValues:
+          oneOf:
+            - $ref: '#/components/schemas/ForwardingRuleEventValues'
+            - type: "null"
+          description: 'The value each listed event is sent with; null sends every event with the value `valueOverride` gives it.'
         createdAt: { type: string, format: date-time }
+    ForwardingRuleEventValues:
+      type: object
+      maxProperties: 50
+      additionalProperties: { $ref: '#/components/schemas/ForwardingRuleEventValue' }
+      description: |-
+        The value this destination gets for each event name, keyed by the name as received (before `eventNameMap` renames it), such as a `Lead` worth 20 EUR and a `QualifiedLead` worth 150 EUR. An event listed here ignores `valueOverride`; events not listed keep it.
+
+        The dashboard's Value sent section (Ads, Conversions, a destination) sets this map.
+      example: { Lead: { mode: fixed, amount: 20, currency: EUR }, QualifiedLead: { mode: fixed, amount: 150, currency: EUR }, Purchase: { mode: original } }
+    ForwardingRuleEventValue:
+      description: 'How one event is valued. `original` sends its own value. `fixed` sends `amount` in `currency`, even when the event came without a value. `percent` sends `amount` percent of its own value (10 sends 10%, rounded to cents) in its own currency, and leaves an event without a value without one.'
+      oneOf:
+        - type: object
+          title: Original
+          required: [mode]
+          additionalProperties: false
+          properties:
+            mode: { type: string, const: original }
+        - type: object
+          title: Fixed
+          required: [mode, amount, currency]
+          additionalProperties: false
+          properties:
+            mode: { type: string, const: fixed }
+            amount: { type: number, minimum: 0 }
+            currency: { type: string, pattern: '^[A-Za-z]{3}$', description: 'ISO 4217 code, saved in capitals.' }
+        - type: object
+          title: Percent
+          required: [mode, amount]
+          additionalProperties: false
+          properties:
+            mode: { type: string, const: percent }
+            amount: { type: number, minimum: 0, maximum: 1000 }
+      example: { mode: fixed, amount: 20, currency: EUR }
     ForwardingRuleEventNameMap:
       type: object
       maxProperties: 50
@@ -112797,6 +112836,8 @@ paths:
                         error: { type: [string, "null"] }
                         errorCode: { type: [string, "null"] }
                         sentAt: { type: string, format: date-time }
+                        valueSent: { type: [number, "null"], description: 'The value this destination got, after its forwarding rule''s `eventValues` or `valueOverride`. Null when it got none, and on sends before 2026-11-24.' }
+                        currencySent: { type: [string, "null"], description: 'The currency sent with `valueSent`.' }
                   touches:
                     type: array
                     description: 'The touches the event is split across, oldest first: website visits (an ad click, search, a tagged link), the first and latest visits HubSpot recorded for a deal, earlier lead forms or sales, and a Shopify buyer''s post-purchase survey answer. Empty when the event counts whole for its own campaign.'
@@ -113066,6 +113107,7 @@ paths:
         - `eventNameMap` renames events for this destination (send your `Lead` as its `Purchase`).
         - `valueOverride` changes the value it gets (a fixed amount or a percent of the event's value).
         - `valueCondition` forwards only events above, below or equal to a value.
+        - `eventValues` sets the value of each event name (a `Lead` worth 20 EUR, a `QualifiedLead` worth 150 EUR) and wins over `valueOverride` for the names it lists.
 
         Each applies to this rule only: the event is stored, and sent to other rules, as received.
       security:
@@ -113095,6 +113137,7 @@ paths:
                 eventNameMap: { $ref: '#/components/schemas/ForwardingRuleEventNameMap' }
                 valueOverride: { $ref: '#/components/schemas/ForwardingRuleValueOverride' }
                 valueCondition: { $ref: '#/components/schemas/ForwardingRuleValueCondition' }
+                eventValues: { $ref: '#/components/schemas/ForwardingRuleEventValues' }
                 apiSecret: { type: string, writeOnly: true, maxLength: 200, description: 'Google Analytics streams only: the stream''s Measurement Protocol API secret (GA4 Admin › Data streams). Optional when the connection has edit access, since Zernio then creates it. Checked against Google''s validation server, stored encrypted, never returned. Change it with `PATCH /v1/events/forwarding-rules/{ruleId}`.' }
       responses:
         '201':
@@ -113121,7 +113164,7 @@ paths:
       tags: [Conversions]
       summary: Update a forwarding rule
       description: |
-        Changes the fields you send and keeps the others. Send `eventNameMap: null` to stop renaming, `valueOverride: { "mode": "original" }` to send the event's own value again, and `valueCondition: null` to forward whatever the value.
+        Changes the fields you send and keeps the others. Send `eventNameMap: null` to stop renaming, `valueOverride: { "mode": "original" }` to send the event's own value again, and `valueCondition: null` to forward whatever the value. `eventValues` replaces the whole map; `null` or `{}` clears it.
 
         `apiSecret` replaces the secret of a rule whose destination needs one, such as a Google Analytics data stream's Measurement Protocol API secret. Before saving, Zernio sends one hit to Google's validation server; Google does not confirm the secret itself, so check GA4 Realtime after the next events.
       security:
@@ -113151,7 +113194,11 @@ paths:
                   oneOf:
                     - $ref: '#/components/schemas/ForwardingRuleValueCondition'
                     - type: "null"
-            example: { eventNameMap: { Lead: Purchase }, valueOverride: { mode: percent, amount: 30 }, valueCondition: { operator: gt, amount: 10 } }
+                eventValues:
+                  oneOf:
+                    - $ref: '#/components/schemas/ForwardingRuleEventValues'
+                    - type: "null"
+            example: { eventValues: { Lead: { mode: fixed, amount: 20, currency: EUR }, QualifiedLead: { mode: fixed, amount: 150, currency: EUR }, Purchase: { mode: original } } }
       responses:
         '200':
           description: Rule saved.
