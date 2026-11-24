@@ -428,7 +428,7 @@ def register_tools(mcp: FastMCP, app_uri: str) -> None:
         client = _server()._get_client()
         result = _api(
             lambda: client.messages.get_inbox_conversation_messages(
-                conversation_id, account_id, limit=30, sort_order="desc"
+                conversation_id, account_id=account_id, limit=30, sort_order="desc"
             )
         )
         keep = ("id", "message", "senderName", "direction", "createdAt", "platform", "isDeleted")
@@ -459,7 +459,11 @@ def register_tools(mcp: FastMCP, app_uri: str) -> None:
     )
     def show_post_comments(post_id: str, account_id: str) -> ToolResult:
         client = _server()._get_client()
-        result = _api(lambda: client.comments.get_inbox_post_comments(post_id, account_id, limit=25))
+        result = _api(
+            lambda: client.comments.get_inbox_post_comments(
+                post_id, account_id=account_id, limit=25
+            )
+        )
         keep = ("id", "message", "createdTime", "likeCount", "replyCount", "platform", "canReply", "isHidden")
         comments = [
             {**{k: c.get(k) for k in keep},
@@ -492,7 +496,9 @@ def register_tools(mcp: FastMCP, app_uri: str) -> None:
     def ui_send_message(conversation_id: str, account_id: str, message: str) -> dict[str, Any]:
         client = _server()._get_client()
         return _api(
-            lambda: client.messages.send_inbox_message(conversation_id, account_id, message=message)
+            lambda: client.messages.send_inbox_message(
+                conversation_id, account_id=account_id, message=message
+            )
         )
 
     @app_only(
@@ -505,7 +511,7 @@ def register_tools(mcp: FastMCP, app_uri: str) -> None:
         client = _server()._get_client()
         return _api(
             lambda: client.connect.get_connect_url(
-                platform, profile_id, reconnect_account_id=account_id
+                platform, profile_id=profile_id, reconnect_account_id=account_id
             )
         )
 
