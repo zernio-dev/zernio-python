@@ -16,6 +16,7 @@ import pytest
 import respx
 from fastmcp import Client
 from fastmcp.server.auth import AccessToken
+from mcp.types import ToolAnnotations
 
 from late.mcp.chatgpt_server import CHATGPT_SCOPES, chatgpt_mcp
 from late.mcp.chatgpt_tools import (
@@ -24,6 +25,7 @@ from late.mcp.chatgpt_tools import (
     WAVE_2,
     WAVE_3,
     WRITE_EFFECTS,
+    _hints_for,
     concise_description,
 )
 from late.mcp.generated_tools import TOOL_OAUTH_SCOPES
@@ -105,8 +107,9 @@ async def test_every_generated_tool_has_explicit_hints_and_its_oauth_scope():
         ("comments_reply_to_inbox_post", False, True),
         ("comment_automations_create_comment_automation", False, True),
         ("broadcasts_create_broadcast", False, False),
-        ("workflows_create_workflow", False, False),
-        ("contacts_update_contact", True, False),
+        ("profiles_create_profile", False, False),
+        ("comments_pin_inbox_comment", True, True),
+        ("workflows_trigger_api_call_workflow", True, True),
         ("posts_edit_post", True, True),
         ("accounts_reply_to_google_business_review", True, True),
     ],
@@ -157,10 +160,22 @@ def test_advertises_exactly_the_scopes_the_listed_tools_need():
     ]
     assert set(CHATGPT_SCOPES) == LINK_SCOPES | needed
     assert {"messaging:read", "ads:read", "contacts:read"} <= set(CHATGPT_SCOPES)
-    assert {"messaging:write", "accounts:write", "automations:write"} <= set(
-        CHATGPT_SCOPES
-    )
-    assert not {"ads:write", "money:write", "commerce:write"} & set(CHATGPT_SCOPES)
+    assert {"messaging:write", "accounts:write"} <= set(CHATGPT_SCOPES)
+    # automations:write also opens webhooks; ads:write and money:write spend.
+    assert not {"automations:write", "ads:write", "money:write"} & set(CHATGPT_SCOPES)
+
+
+def test_a_write_listed_without_its_effects_is_refused():
+    generated = ToolAnnotations(readOnlyHint=False, destructiveHint=True)
+
+    with pytest.raises(LookupError, match="WRITE_EFFECTS"):
+        _hints_for("workflows_create_workflow", generated)
+
+
+async def test_the_whole_listing_stays_within_budget():
+    listed = await _listed()
+
+    assert len(json.dumps(list(listed.values()))) < 300_000
 
 
 def test_a_description_keeps_its_first_paragraph_and_one_line_per_argument():

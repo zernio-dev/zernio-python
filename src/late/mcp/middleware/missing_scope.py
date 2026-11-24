@@ -30,8 +30,6 @@ _SCOPE_PURPOSE = {
     "ads:read": "read your ad accounts, campaigns and results",
     "contacts:read": "read your contacts and leads",
     "messaging:write": "send messages, replies and broadcasts for you",
-    "automations:write": "change your contacts and automations",
-    "accounts:write": "create workflows, profiles and WhatsApp templates",
 }
 
 
