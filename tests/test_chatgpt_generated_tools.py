@@ -18,7 +18,14 @@ from fastmcp import Client
 from fastmcp.server.auth import AccessToken
 
 from late.mcp.chatgpt_server import CHATGPT_SCOPES, chatgpt_mcp
-from late.mcp.chatgpt_tools import CHATGPT_GENERATED_TOOLS, concise_description
+from late.mcp.chatgpt_tools import (
+    CHATGPT_GENERATED_TOOLS,
+    WAVE_1,
+    WAVE_2,
+    WAVE_3,
+    WRITE_EFFECTS,
+    concise_description,
+)
 from late.mcp.generated_tools import TOOL_OAUTH_SCOPES
 from late.mcp.middleware.missing_scope import _granted_scopes
 
@@ -80,21 +87,63 @@ async def test_every_generated_tool_has_explicit_hints_and_its_oauth_scope():
     listed = await _listed()
 
     for name in CHATGPT_GENERATED_TOOLS:
+        assert listed[name]["_meta"]["securitySchemes"] == [
+            {"type": "oauth2", "scopes": [TOOL_OAUTH_SCOPES[name][0]]}
+        ], name
+    for name in WAVE_1 + WAVE_2:
         hints = listed[name]["annotations"]
         assert hints["readOnlyHint"] is True, name
         assert hints["destructiveHint"] is False, name
         # Reads of public catalogs and other accounts' content are open-world.
         assert hints["openWorldHint"] is (name in OPEN_WORLD_READS), name
-        assert listed[name]["_meta"]["securitySchemes"] == [
-            {"type": "oauth2", "scopes": [TOOL_OAUTH_SCOPES[name][0]]}
-        ], name
+
+
+@pytest.mark.parametrize(
+    ("name", "destructive", "open_world"),
+    [
+        ("messages_send_inbox_message", False, True),
+        ("comments_reply_to_inbox_post", False, True),
+        ("comment_automations_create_comment_automation", False, True),
+        ("broadcasts_create_broadcast", False, False),
+        ("workflows_create_workflow", False, False),
+        ("contacts_update_contact", True, False),
+        ("posts_edit_post", True, True),
+        ("accounts_reply_to_google_business_review", True, True),
+    ],
+)
+async def test_a_write_says_whether_it_overwrites_and_whether_it_reaches_out(
+    name, destructive, open_world
+):
+    hints = (await _listed())[name]["annotations"]
+
+    assert hints["readOnlyHint"] is False
+    assert hints["destructiveHint"] is destructive
+    assert hints["openWorldHint"] is open_world
+
+
+async def test_every_listed_write_has_its_effects_spelled_out():
+    listed = await _listed()
+
+    writes = {
+        name
+        for name in CHATGPT_GENERATED_TOOLS
+        if not listed[name]["annotations"]["readOnlyHint"]
+    }
+
+    assert writes == set(WAVE_3)
+    for name in writes:
+        hints = listed[name]["annotations"]
+        effects = WRITE_EFFECTS[name]
+        assert hints["destructiveHint"] is effects["destructive_hint"], name
+        assert hints["openWorldHint"] is effects["open_world_hint"], name
 
 
 async def test_generated_descriptions_stay_short():
     listed = await _listed()
 
     for name in CHATGPT_GENERATED_TOOLS:
-        assert len(listed[name]["description"]) < 2_500, name
+        arguments = len(listed[name]["inputSchema"].get("properties", {}))
+        assert len(listed[name]["description"]) < 1_000 + 110 * arguments, name
 
 
 def test_advertises_exactly_the_scopes_the_listed_tools_need():
@@ -108,12 +157,10 @@ def test_advertises_exactly_the_scopes_the_listed_tools_need():
     ]
     assert set(CHATGPT_SCOPES) == LINK_SCOPES | needed
     assert {"messaging:read", "ads:read", "contacts:read"} <= set(CHATGPT_SCOPES)
-    assert not {
-        "messaging:write",
-        "ads:write",
-        "automations:write",
-        "money:write",
-    } & set(CHATGPT_SCOPES)
+    assert {"messaging:write", "accounts:write", "automations:write"} <= set(
+        CHATGPT_SCOPES
+    )
+    assert not {"ads:write", "money:write", "commerce:write"} & set(CHATGPT_SCOPES)
 
 
 def test_a_description_keeps_its_first_paragraph_and_one_line_per_argument():
@@ -182,9 +229,50 @@ async def test_a_link_without_the_tools_scope_is_asked_to_relink(monkeypatch):
     assert "Settings > Plugins" in text and "Reconnect" in text
 
 
-async def test_each_group_refusal_logs_whether_it_asked_to_relink(monkeypatch, caplog):
+async def test_a_link_that_only_reads_messages_is_asked_to_relink_before_a_send(
+    monkeypatch,
+):
     monkeypatch.setattr(
-        "late.mcp.middleware.missing_scope._granted_scopes", lambda: LINK_SCOPES
+        "late.mcp.middleware.missing_scope._granted_scopes",
+        lambda: LINK_SCOPES | {"messaging:read"},
+    )
+    read_only = {
+        "error": "This connector token can only read the 'messages' resource group.",
+        "code": "insufficient_permissions",
+        "required_group": "messages",
+    }
+
+    with respx.mock:
+        respx.post(url__startswith="https://api.test.com/v1/broadcasts").mock(
+            return_value=httpx.Response(403, json=read_only)
+        )
+        async with Client(chatgpt_mcp) as client:
+            result = await client.call_tool(
+                "broadcasts_create_broadcast",
+                {
+                    "profile_id": "p1",
+                    "account_id": "a1",
+                    "platform": "telegram",
+                    "name": "Draft",
+                },
+                raise_on_error=False,
+            )
+
+    assert result.is_error
+    (challenge,) = result.meta["mcp/www_authenticate"]
+    assert "messaging:write" in challenge
+    assert "send messages" in result.content[0].text
+
+
+async def test_each_group_refusal_logs_whether_it_asked_to_relink(monkeypatch, caplog):
+    token = AccessToken(
+        token="t",
+        client_id="chatgpt",
+        scopes=[],
+        claims={"scope": " ".join(LINK_SCOPES), "user_id": "u1"},
+    )
+    monkeypatch.setattr(
+        "late.mcp.middleware.missing_scope.get_access_token", lambda: token
     )
 
     with caplog.at_level("INFO", logger="late.mcp.tools"):
@@ -199,6 +287,7 @@ async def test_each_group_refusal_logs_whether_it_asked_to_relink(monkeypatch, c
     assert line["needed_scope"] == "messaging:read"
     assert line["challenged"] is True
     assert "messaging:read" not in line["token_scope"]
+    assert line["user_id"] == "u1"
 
 
 @pytest.mark.parametrize(
