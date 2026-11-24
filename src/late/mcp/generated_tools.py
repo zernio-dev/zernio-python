@@ -50576,10 +50576,10 @@ def register_generated_tools(mcp, _get_client):
         Args:
             profile_id
             platform
-            min_rating
-            max_rating
+            min_rating: Reviews without a star rating (Facebook recommendations) never match.
+            max_rating: Reviews without a star rating (Facebook recommendations) never match.
             has_reply: Filter by reply status
-            sort_by
+            sort_by: rating puts reviews without a star rating last in both orders.
             sort_order
             limit
             cursor

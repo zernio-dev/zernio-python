@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.820.0"
+  version: "1.821.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -19503,6 +19503,7 @@ components:
             - **Instagram Login accounts:** the app-scoped user id (the professional account id is in `metadata.instagramScopedId`).
             - **Instagram via Facebook Login:** the professional account id (`17841...`).
             - **TikTok:** the open_id of Zernio's TikTok app, which differs from the open_id any other app sees for the same user.
+            - **Google Business Profile:** `<googleUserId>:location:<locationId>`, the Google user that connected it and the selected location. The location part is empty until a location is selected.
 
             Either value can be passed back as `expectedPlatformUserId` on GET /v1/connect/{platform}.
         scopeAreas:
@@ -75562,9 +75563,11 @@ paths:
         - name: minRating
           in: query
           schema: { type: integer, minimum: 1, maximum: 5 }
+          description: Reviews without a star rating (Facebook recommendations) never match.
         - name: maxRating
           in: query
           schema: { type: integer, minimum: 1, maximum: 5 }
+          description: Reviews without a star rating (Facebook recommendations) never match.
         - name: hasReply
           in: query
           schema: { type: boolean }
@@ -75572,6 +75575,7 @@ paths:
         - name: sortBy
           in: query
           schema: { type: string, enum: [date, rating], default: date }
+          description: rating puts reviews without a star rating last in both orders.
         - name: sortOrder
           in: query
           schema: { type: string, enum: [asc, desc], default: desc }
@@ -75611,7 +75615,7 @@ paths:
                             id: { type: [string, "null"] }
                             name: { type: string }
                             profileImage: { type: [string, "null"] }
-                        rating: { type: integer }
+                        rating: { type: [integer, "null"], description: 'Star rating the reviewer gave, 1 to 5. Null for a Facebook recommendation without stars (see recommendationType).' }
                         recommendationType:
                           type: [string, "null"]
                           enum: [positive, negative, null]
@@ -75633,11 +75637,12 @@ paths:
                             properties:
                               url: { type: string, format: uri }
                         reply:
-                          type: [object, "null"]
+                          type: object
+                          description: The reply from the Page or business. Absent when hasReply is false.
                           properties:
-                            id: { type: string }
-                            text: { type: string }
-                            created: { type: string, format: date-time }
+                            id: { type: string, description: Reply id. On Google Business Profile it is the review id. }
+                            text: { type: string, description: Reply text. }
+                            created: { type: string, format: date-time, description: 'When the reply was written (on Google Business Profile, last updated).' }
                         reviewUrl: { type: [string, "null"] }
                   pagination:
                     type: object
@@ -75679,9 +75684,10 @@ paths:
                             platform: { type: string }
                   summary:
                     type: object
+                    description: 'Computed over every review matching the filters, before pagination. A Facebook Page contributes the Page-wide count and average Facebook reports, which ignore the filters. Google Business Profile locations are computed over the reviews read, partial for accounts in meta.truncatedAccounts.'
                     properties:
-                      totalReviews: { type: integer }
-                      averageRating: { type: [number, "null"] }
+                      totalReviews: { type: integer, description: Includes reviews without a star rating. }
+                      averageRating: { type: [number, "null"], description: 'Mean star rating rounded to one decimal, leaving out reviews without a star rating. Null when none has one.' }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
