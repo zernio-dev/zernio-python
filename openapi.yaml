@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.800.2"
+  version: "1.800.3"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -20292,7 +20292,7 @@ components:
         isExternal: { type: boolean }
         syncStatus: { type: string, enum: [synced, pending, partial, unavailable], description: 'Overall sync state across all platforms' }
         message: { type: [string, "null"], description: 'Human-readable status message for pending, partial, or failed states' }
-        thumbnailUrl: { type: [string, "null"], format: uri, description: "Cover image URL. Facebook, Instagram and TikTok covers whose platform CDN link expired are re-read from the platform and served from Zernio storage, so that URL does not expire and can be cached." }
+        thumbnailUrl: { type: [string, "null"], format: uri, description: "Cover image URL. A Facebook, Instagram or TikTok cover whose signed CDN link is still valid is served as that link, which expires (Meta `oe=`, TikTok `x-expires=`): download the image rather than storing the link.\n\nOnce the link expires, Zernio re-reads the cover from the platform and serves it from Zernio storage, a URL that does not expire.\n\nNull while that re-read is pending (read again shortly) or when the platform no longer returns the post, never an expired link." }
         mediaType: { type: [string, "null"], enum: [image, video, carousel, text] }
         mediaItems:
           type: array
@@ -20301,6 +20301,7 @@ components:
 
             - Facebook and Instagram images and video covers whose Meta CDN links expired are re-read and served from Zernio storage (non-expiring).
             - Facebook and Instagram video file URLs, and LinkedIn media URLs, stay the platform's signed links and are refreshed on read once they lapse.
+            - A `url` or `thumbnail` whose platform link expired and could not be re-read yet is null, never the expired link.
           items:
             type: object
             properties:
@@ -20376,7 +20377,7 @@ components:
 
                   TikTok exposes no ad flag of its own. A video created by an uploaded-asset (non-Spark) TikTok ad is posted to the profile with a fresh organic id and cannot be detected, so those still report false.
               profileId: { type: [string, "null"] }
-              thumbnailUrl: { type: string, format: uri, description: "Cover image URL. Facebook, Instagram and TikTok covers whose platform CDN link expired are re-read from the platform and served from Zernio storage, so that URL does not expire and can be cached." }
+              thumbnailUrl: { type: [string, "null"], format: uri, description: "Cover image URL. A Facebook, Instagram or TikTok cover whose signed CDN link is still valid is served as that link, which expires (Meta `oe=`, TikTok `x-expires=`): download the image rather than storing the link.\n\nOnce the link expires, Zernio re-reads the cover from the platform and serves it from Zernio storage, a URL that does not expire.\n\nNull while that re-read is pending (read again shortly) or when the platform no longer returns the post, never an expired link." }
               mediaType: { type: string, enum: [image, video, gif, document, carousel, text] }
               mediaItems:
                 type: array
@@ -20385,12 +20386,13 @@ components:
 
                   - Facebook and Instagram images and video covers whose Meta CDN links expired are re-read and served from Zernio storage (non-expiring).
                   - Facebook and Instagram video file URLs, and LinkedIn media URLs, stay the platform's signed links and are refreshed on read once they lapse.
+                  - A `url` or `thumbnail` whose platform link expired and could not be re-read yet is null, never the expired link.
                 items:
                   type: object
                   properties:
                     type: { type: string, enum: [image, video] }
-                    url: { type: string, format: uri, description: Direct URL to the media }
-                    thumbnail: { type: string, format: uri, description: Thumbnail URL (same as url for images) }
+                    url: { type: [string, "null"], format: uri, description: Direct URL to the media }
+                    thumbnail: { type: [string, "null"], format: uri, description: Thumbnail URL (same as url for images) }
                     altText:
                       type: string
                       description: Accessibility alt text set on the media, when present.
