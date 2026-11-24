@@ -442,6 +442,7 @@ class AdCampaignsResource:
         goal: str,
         *,
         idempotency_key: str | None = None,
+        stage: bool | None = None,
         is_skadnetwork_attribution: bool | None = None,
         promoted_object: Any | None = None,
         buying_type: str | None = None,
@@ -468,6 +469,7 @@ class AdCampaignsResource:
         """Create a standalone campaign"""
         payload = self._build_body(
             {
+                "stage": stage,
                 "accountId": account_id,
                 "adAccountId": ad_account_id,
                 "name": name,
@@ -834,6 +836,7 @@ class AdCampaignsResource:
         name: str,
         *,
         idempotency_key: str | None = None,
+        stage: bool | None = None,
         status: str | None = "PAUSED",
         max_cpc: float | None = None,
         ad_account_id: str | None = None,
@@ -851,6 +854,7 @@ class AdCampaignsResource:
         """Create a standalone ad group"""
         payload = self._build_body(
             {
+                "stage": stage,
                 "accountId": account_id,
                 "platform": platform,
                 "campaignId": campaign_id,
@@ -1796,6 +1800,7 @@ class AdCampaignsResource:
         ad_account_id: str,
         *,
         idempotency_key: str | None = None,
+        stage: bool | None = None,
         name: str | None = None,
         campaign_name: str | None = None,
         ad_set_name: str | None = None,
@@ -1922,6 +1927,7 @@ class AdCampaignsResource:
         """Create standalone ad"""
         payload = self._build_body(
             {
+                "stage": stage,
                 "accountId": account_id,
                 "adAccountId": ad_account_id,
                 "name": name,
@@ -2424,6 +2430,7 @@ class AdCampaignsResource:
         goal: str,
         *,
         idempotency_key: str | None = None,
+        stage: bool | None = None,
         is_skadnetwork_attribution: bool | None = None,
         promoted_object: Any | None = None,
         buying_type: str | None = None,
@@ -2450,6 +2457,7 @@ class AdCampaignsResource:
         """Create a standalone campaign (async)"""
         payload = self._build_body(
             {
+                "stage": stage,
                 "accountId": account_id,
                 "adAccountId": ad_account_id,
                 "name": name,
@@ -2824,6 +2832,7 @@ class AdCampaignsResource:
         name: str,
         *,
         idempotency_key: str | None = None,
+        stage: bool | None = None,
         status: str | None = "PAUSED",
         max_cpc: float | None = None,
         ad_account_id: str | None = None,
@@ -2841,6 +2850,7 @@ class AdCampaignsResource:
         """Create a standalone ad group (async)"""
         payload = self._build_body(
             {
+                "stage": stage,
                 "accountId": account_id,
                 "platform": platform,
                 "campaignId": campaign_id,
@@ -3798,6 +3808,7 @@ class AdCampaignsResource:
         ad_account_id: str,
         *,
         idempotency_key: str | None = None,
+        stage: bool | None = None,
         name: str | None = None,
         campaign_name: str | None = None,
         ad_set_name: str | None = None,
@@ -3924,6 +3935,7 @@ class AdCampaignsResource:
         """Create standalone ad (async)"""
         payload = self._build_body(
             {
+                "stage": stage,
                 "accountId": account_id,
                 "adAccountId": ad_account_id,
                 "name": name,

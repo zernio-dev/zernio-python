@@ -7744,6 +7744,7 @@ def register_generated_tools(mcp, _get_client):
             "page_likes",
             "page_visits",
         ],
+        stage: bool | None = None,
         is_skadnetwork_attribution: bool | None = None,
         promoted_object: dict[str, Any] | None = None,
         buying_type: Literal["AUCTION", "RESERVED"] | None = None,
@@ -7794,21 +7795,18 @@ def register_generated_tools(mcp, _get_client):
 
             **Idempotency:** send an `Idempotency-Key` header to make retries safe.
 
+            **Staging:** send `stage: true` to store the create as an ad change instead of sending it. The response is `202`, and POST /v1/ads/changes/{changeId}/confirm creates the campaign later. Meta and Google only. The network is not called at staging and checks the campaign at confirm.
+
             ### Field support
 
             - `specialAdCategories`: Meta-only (400 elsewhere).
             - `bidStrategy`: Meta and Google (400 elsewhere). Google also accepts `portfolioBidStrategyId` instead.
-            - Budget: Google, X and OpenAI require one (422 without one). OpenAI accepts daily or lifetime, Google only `budgetType: daily`.
-
-            ### Platform notes
-
-            - Meta: a budget here is campaign-level (CBO) by definition. Omit it for ABO (each ad set carries its own budget).
-            - OpenAI: `goal` sets the campaign objective, and `conversions` needs an active standard conversion event on the account.
-            - Reddit: see below. ...
+            - Budget: Google, X and OpenAI require one (422 without one). OpenAI accepts daily or lifetime, Google only `budgetType: ...
 
             Platforms: meta, google, linkedin, tiktok, x, pinterest, openai, reddit, amazon, tradedesk, applovin, snapchat
 
             Args:
+                stage: Send true to stage this create instead of sending it. Nothing is created on the ad network; the response is `202` with the staged change. Create it with POST /v1/ads/changes/{changeId}/confirm. Meta and Google only; cannot be combined with `validateOnly`.
                 account_id: Zernio SocialAccount id (posting or ads variant); its platform decides where the campaign is created. (required)
                 ad_account_id: Platform ad account id (Meta act_<n>, Google customer id, LinkedIn account id, ...). (required)
                 name: (required)
@@ -7855,6 +7853,7 @@ def register_generated_tools(mcp, _get_client):
         client = _get_client()
         try:
             response = client.ad_campaigns.create_ad_campaign(
+                stage=stage,
                 account_id=account_id,
                 ad_account_id=ad_account_id,
                 name=name,
@@ -8847,6 +8846,7 @@ def register_generated_tools(mcp, _get_client):
         ],
         campaign_id: str,
         name: str,
+        stage: bool | None = None,
         status: Literal["ACTIVE", "PAUSED"] = "PAUSED",
         max_cpc: float | None = None,
         ad_account_id: str | None = None,
@@ -8880,6 +8880,7 @@ def register_generated_tools(mcp, _get_client):
         Platforms: google, reddit, snapchat
 
         Args:
+            stage: Send true to stage this create instead of sending it. Nothing is created on the ad network; the response is `202` with the staged change. Create it with POST /v1/ads/changes/{changeId}/confirm. Google only: `platform: reddit` or `snapchat` returns 400 `staging_not_supported`.
             account_id: Zernio SocialAccount id owning the Google Ads or Reddit Ads connection. (required)
             platform: "google", "reddit" and "snapchat" are implemented; every other value returns 501. (required)
             campaign_id: Platform campaign ID the ad group is created under (numeric on Google). (required)
@@ -8900,6 +8901,7 @@ def register_generated_tools(mcp, _get_client):
         client = _get_client()
         try:
             response = client.ad_campaigns.create_ad_set(
+                stage=stage,
                 account_id=account_id,
                 platform=platform,
                 campaign_id=campaign_id,
@@ -11453,6 +11455,7 @@ def register_generated_tools(mcp, _get_client):
     def ad_campaigns_create_standalone_ad(
         account_id: str,
         ad_account_id: str,
+        stage: bool | None = None,
         name: str | None = None,
         campaign_name: str | None = None,
         ad_set_name: str | None = None,
@@ -11785,6 +11788,7 @@ def register_generated_tools(mcp, _get_client):
             Safe to retry: an identical call within 24 hours returns the first result instead of creating a second one, and answers 409 while the first is still running. To create another on purpose, or if that 409 does not clear, change an argument such as the name.
 
             Args:
+                stage: Send true to stage this create instead of sending it. Nothing is created on the ad network; the response is `202` with the staged change. Create it with POST /v1/ads/changes/{changeId}/confirm. Meta and Google only; not with `validateOnly` or a presigned media URL.
                 account_id: (required)
                 ad_account_id: (required)
                 name: Omitted, the ad is named `Ad <YYYY-MM-DD HH:MM:SS>` (UTC) and the response reports it in `appliedDefaults.name`.
@@ -12364,6 +12368,7 @@ def register_generated_tools(mcp, _get_client):
                 promoted_object: Object with keys: pixelId (string) - Pixel ID. - **Meta:** Facebook Pixel ID, required for `goal: conversions`. Requires `customEventType` alongside it: Meta rejects any promoted_object carrying ...; customEventType (string) - The event the campaign/ad group optimises against. **Meta:** a standard event like `PURCHASE`, `LEAD`, `COMPLETE_REGISTRATION`, `ADD_TO_CART`. Uppercased ...; customEventStr (string) - Meta only. Pixel custom-event name to optimise against (Meta's `custom_event_str`), exactly as it appears in Events Manager and your CAPI payloads ...; pageId (string) - Facebook Page ID. Used by `goal: lead_generation`. Auto-filled from the connected Page when omitted.; applicationId (string) - App ID. Required for `goal: app_promotion`.; objectStoreUrl (string) - App Store / Play Store listing URL. Required for `goal: app_promotion`.; customConversionId (string) - Custom Conversion ID, when optimising against one instead of a standard event. Accepted alone by this API, without `pixelId` or `customEventType`. If ...; productCatalogId (string) - Optional catalog ID. If supplied with productSetId, the set must belong to this catalog (checked by Zernio when the Meta login carries catalog_management, by ...; productSetId (string) - Meta product SET ID, for example from GET /v1/ads/catalogs/{catalogId}/product-sets. Creating catalog ads needs only ads_management on the Meta login, not ...; offlineConversionDataSetId (string) - Meta only. Offline event set (dataset) to optimise toward. Post-merger these are datasets: the id is the dataset id (for pixel-backed datasets, the pixel id).; whatsappPhoneNumber (string) - Meta only. WhatsApp number on messaging-destination ad sets."""
         client = _get_client()
         same_arguments: dict[str, Any] = {
+            "stage": stage,
             "account_id": account_id,
             "ad_account_id": ad_account_id,
             "name": name,
@@ -12491,6 +12496,7 @@ def register_generated_tools(mcp, _get_client):
         }
         try:
             response = client.ad_campaigns.create_standalone_ad(
+                stage=stage,
                 account_id=account_id,
                 ad_account_id=ad_account_id,
                 name=name,

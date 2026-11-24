@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.814.1"
+  version: "1.815.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -25916,14 +25916,15 @@ components:
         id: { type: string, description: 'The change id, used in /v1/ads/changes/{changeId}.' }
         type:
           type: string
-          enum: [campaign_status, ad_set_status, ad_status, campaign_update, ad_set_update, ad_update]
-          description: 'Which write was staged: a status route, or the update route of a campaign, an ad set or an ad.'
+          enum: [campaign_status, ad_set_status, ad_status, campaign_update, ad_set_update, ad_update, ad_create, campaign_create, ad_set_create]
+          description: 'Which write was staged: a status route, the update route of a campaign, an ad set or an ad, or one of the create routes (POST /v1/ads/create, POST /v1/ads/campaigns, POST /v1/ads/ad-sets).'
         platform: { type: string, description: 'The ad platform of the object, as the write route names it.', example: facebook }
         accountId: { type: string, description: The connected account the write goes through. }
         adAccountId: { type: string, description: The ad account id on the platform. }
         targetId:
           type: [string, "null"]
-          description: 'The object the change applies to: the platform campaign id, the platform ad set id, or the Zernio ad id.'
+          description: 'The object the change applies to: the platform campaign id, the platform ad set id, or the Zernio ad id. Null for a create, whose object does not exist yet.'
+        creates: { type: boolean, description: 'Present and true when the change creates a new object. Every diff entry then has `before: null` and `beforeAvailable: false`.' }
         status:
           type: string
           enum: [staged, confirming, confirmed, failed]
@@ -25948,7 +25949,7 @@ components:
               field: { type: string, description: 'The dotted path of the value in the request body.', example: budget.amount }
               before: { description: 'The value on the ad network when the change was staged, in the units and shape of the request body. Null when `beforeAvailable` is false, and also when the object holds no value there.' }
               after: { description: 'The value the change will write. Null or an empty string clears the field where the write route allows that.' }
-              beforeAvailable: { type: boolean, description: 'False when the live read of the object does not return this field, so `before` is unknown. The field is still staged.' }
+              beforeAvailable: { type: boolean, description: 'False when `before` is unknown: the live read of the object does not return this field, or the change creates the object. The field is still staged.' }
               added:
                 type: array
                 items: {}
@@ -25970,6 +25971,7 @@ components:
           properties:
             code: { type: string, description: 'An error code, or `target_changed` when the object changed on the ad network after staging.' }
             message: { type: [string, "null"] }
+            details: { type: object, additionalProperties: true, description: 'Creates only. What the failed create reported, such as objects it had already made on the ad network.' }
       example:
         id: 6790a1b2c3d4e5f6a7b8c9d0
         type: ad_set_update
@@ -92612,6 +92614,10 @@ paths:
         A change is applied at most once. Confirming a change that is already `confirmed` returns its stored result again. A change that failed answers `409` `change_not_staged`: stage a new one.
 
         A refusal before anything is written leaves the change `staged`, so the confirm can be sent again: `403` `ads_allowance_exceeded`, or on a one-field change a `429` from Zernio's own limits. Any other failed write ends the change as `failed`.
+
+        ### Creates
+
+        A staged create is sent once. The ad network checks at confirm whatever it did not check at staging, and media is fetched here. A create that fails ends as `failed` and is not retried: `error.details` keeps what the create reported about objects it had already made.
       security:
         - bearerAuth: []
       parameters:
@@ -93568,6 +93574,8 @@ paths:
 
         **Idempotency:** send an `Idempotency-Key` header to make retries safe.
 
+        **Staging:** send `stage: true` to store the create as an ad change instead of sending it. The response is `202`, and POST /v1/ads/changes/{changeId}/confirm creates the campaign later. Meta and Google only. The network is not called at staging and checks the campaign at confirm.
+
         ### Field support
 
         - `specialAdCategories`: Meta-only (400 elsewhere).
@@ -93617,6 +93625,7 @@ paths:
               type: object
               required: [accountId, adAccountId, name, goal]
               properties:
+                stage: { type: boolean, description: 'Send true to stage this create instead of sending it. Nothing is created on the ad network; the response is `202` with the staged change. Create it with POST /v1/ads/changes/{changeId}/confirm. Meta and Google only; cannot be combined with `validateOnly`.' }
                 accountId: { type: string, description: "Zernio SocialAccount id (posting or ads variant); its platform decides where the campaign is created." }
                 adAccountId: { type: string, description: "Platform ad account id (Meta act_<n>, Google customer id, LinkedIn account id, ...)." }
                 name: { type: string, maxLength: 255 }
@@ -93704,6 +93713,15 @@ paths:
               status: PAUSED
               validateOnly: true
       responses:
+        '202':
+          description: 'Sent with `stage: true`. The create was validated and stored, and nothing was created on the ad network.'
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [change]
+                properties:
+                  change: { $ref: '#/components/schemas/StagedAdChange' }
         '403': { $ref: '#/components/responses/AdAccountNotSelected' }
         '409': { $ref: '#/components/responses/AccountConnectionRequired' }
         '404': { $ref: '#/components/responses/AccountUnavailable' }
@@ -95331,6 +95349,8 @@ paths:
         It can be read, edited and deleted through `/v1/ads/ad-sets/{adSetId}` right away (targeting, schedule, name, `status`, `budget` and bid fields). A budget on an ad group that spends its campaign budget returns 422.
 
         **Idempotency:** send an `Idempotency-Key` header to make retries safe.
+
+        **Staging:** send `stage: true` to store the create as an ad change instead of sending it. The response is `202`, and POST /v1/ads/changes/{changeId}/confirm creates the ad group later. Google only: Reddit and Snapchat return 400. Google checks the ad group at confirm.
       security:
         - bearerAuth: []
       parameters:
@@ -95354,6 +95374,7 @@ paths:
               type: object
               required: [accountId, platform, campaignId, name]
               properties:
+                stage: { type: boolean, description: 'Send true to stage this create instead of sending it. Nothing is created on the ad network; the response is `202` with the staged change. Create it with POST /v1/ads/changes/{changeId}/confirm. Google only: `platform: reddit` or `snapchat` returns 400 `staging_not_supported`.' }
                 accountId: { type: string, description: "Zernio SocialAccount id owning the Google Ads or Reddit Ads connection." }
                 platform: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit, snapchat], description: "\"google\", \"reddit\" and \"snapchat\" are implemented; every other value returns 501." }
                 campaignId: { type: string, description: "Platform campaign ID the ad group is created under (numeric on Google)." }
@@ -95379,6 +95400,15 @@ paths:
                 bidStrategy: { type: string, enum: [LOWEST_COST_WITHOUT_CAP, LOWEST_COST_WITH_BID_CAP, COST_CAP], description: "Reddit only. Defaults to LOWEST_COST_WITHOUT_CAP. Not accepted under campaign budget optimization." }
                 bidAmount: { type: number, exclusiveMinimum: 0, description: "Reddit only. Bid cap in currency units, sent with bidStrategy." }
       responses:
+        '202':
+          description: 'Sent with `stage: true`. The create was validated and stored, and nothing was created on the ad network.'
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [change]
+                properties:
+                  change: { $ref: '#/components/schemas/StagedAdChange' }
         '409': { $ref: '#/components/responses/AccountConnectionRequired' }
         '201':
           description: Ad group created
@@ -106715,6 +106745,14 @@ paths:
 
         Without `status`, every level is switched on: send `status: PAUSED` to create it paused. A failed step deletes what the call created.
 
+        ### Staging
+
+        Send `stage: true` to store the create as an ad change instead of sending it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm creates the ad later. Meta and Google only.
+
+        Google validates a staged Performance Max or Demand Gen create. Meta is not called at staging, and neither is Google for a search or display ad: the network checks those at confirm.
+
+        Media is fetched at confirm. An upload in Zernio's temporary storage is copied to permanent storage at staging, and the staged change points at the copy. A presigned URL returns 400 with `stage`.
+
         ### Idempotency
 
         This endpoint is not idempotent at the platform level: a blind retry creates a second campaign/ad set/ad. Send an `Idempotency-Key` header to make retries safe.
@@ -106737,6 +106775,7 @@ paths:
               type: object
               required: [accountId, adAccountId]
               properties:
+                stage: { type: boolean, description: 'Send true to stage this create instead of sending it. Nothing is created on the ad network; the response is `202` with the staged change. Create it with POST /v1/ads/changes/{changeId}/confirm. Meta and Google only; not with `validateOnly` or a presigned media URL.' }
                 accountId: { type: string }
                 adAccountId: { type: string }
                 name: { type: string, maxLength: 255, description: 'Omitted, the ad is named `Ad <YYYY-MM-DD HH:MM:SS>` (UTC) and the response reports it in `appliedDefaults.name`.' }
@@ -108155,6 +108194,15 @@ paths:
                   imageUrl: https://example.com/ad.jpg
                   creativeFeatures: { auto_promotion_tag: OPT_OUT }
       responses:
+        '202':
+          description: 'Sent with `stage: true`. The create was validated and stored, and nothing was created on the ad network.'
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [change]
+                properties:
+                  change: { $ref: '#/components/schemas/StagedAdChange' }
         '409': { $ref: '#/components/responses/AccountConnectionRequired' }
         '404': { $ref: '#/components/responses/AccountUnavailable' }
         '200':
