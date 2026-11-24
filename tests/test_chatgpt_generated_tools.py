@@ -308,6 +308,64 @@ async def test_a_link_that_only_reads_messages_is_asked_to_relink_before_a_send(
     assert "send messages" in text and "'messaging:write'" in text
 
 
+ACCOUNTS_READ_ONLY = {
+    "error": "This connector token can only read the 'accounts' resource group. "
+    "Reconnect the integration and grant it write access to use this endpoint.",
+    "code": "insufficient_permissions",
+    "required_group": "accounts",
+}
+
+
+async def _create_profile(response: httpx.Response):
+    with respx.mock:
+        respx.post(url__startswith="https://api.test.com/v1/profiles").mock(
+            return_value=response
+        )
+        async with Client(chatgpt_mcp) as client:
+            return await client.call_tool(
+                "profiles_create_profile", {"name": "Client A"}, raise_on_error=False
+            )
+
+
+async def test_a_link_that_only_reads_accounts_is_asked_to_relink_before_a_write(
+    monkeypatch,
+):
+    # The spec lists accounts:read on the write too, which the link holds.
+    monkeypatch.setattr(
+        "late.mcp.middleware.missing_scope._granted_scopes", lambda: LINK_SCOPES
+    )
+
+    result = await _create_profile(httpx.Response(403, json=ACCOUNTS_READ_ONLY))
+
+    assert result.is_error
+    text = result.content[0].text
+    assert "'accounts:write'" in text
+    assert "Settings > Plugins" in text and "Reconnect" in text
+
+
+@pytest.mark.parametrize(
+    "granted",
+    [
+        # The link holds the write scope: re-linking cannot fix it.
+        LINK_SCOPES | {"accounts:write"},
+        # An API key: no OAuth link to redo.
+        None,
+    ],
+)
+async def test_a_write_refused_despite_its_scope_keeps_the_apis_own_error(
+    monkeypatch, granted
+):
+    monkeypatch.setattr(
+        "late.mcp.middleware.missing_scope._granted_scopes", lambda: granted
+    )
+
+    result = await _create_profile(httpx.Response(403, json=ACCOUNTS_READ_ONLY))
+
+    assert result.is_error
+    assert "Settings > Plugins" not in result.content[0].text
+    assert "can only read the 'accounts' resource group" in result.content[0].text
+
+
 async def test_each_group_refusal_logs_whether_it_asked_to_relink(monkeypatch, caplog):
     token = AccessToken(
         token="t",
