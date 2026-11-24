@@ -1156,6 +1156,8 @@ def register_generated_tools(mcp, _get_client):
 
         Returns health status of all connected accounts including token validity, permissions, and issues needing attention. A failing or stalled analytics sync (see `analyticsSync`) raises a healthy account to at least warning.
 
+        An X account whose analytics is off has `analyticsOff` with the reason. It never changes `status`: `analyticsSync` then keeps the date of the last read.
+
         An account the platform has restricted or banned (for example a WhatsApp number Meta reports as BANNED) is `error`, with the platform's reason in `issues`. `needsReconnect` stays false, since reconnecting does not lift it.
 
         Args:
@@ -1186,6 +1188,8 @@ def register_generated_tools(mcp, _get_client):
 
         A failing or stalled analytics sync (see `analyticsSync`) raises a healthy account to at least `warning`.
 
+        An X account whose analytics is off has `analyticsOff` with the reason. It never changes `status`: `analyticsSync` then keeps the date of the last read.
+
         An account the platform has restricted or banned is `error`, with the platform's reason in `issues` and a recommendation that says reconnecting does not lift it.
 
         ### Facebook, Instagram and Threads
@@ -1194,11 +1198,7 @@ def register_generated_tools(mcp, _get_client):
 
         The exception: if an analytics sync succeeded with that token in the last six hours, the token stays `valid` and `issues` reports the probe as inconclusive, since Meta answers a transient 190 to live tokens now and then.
 
-        Neither verdict disconnects the account. That happens only when a real operation fails, and `account.disconnected` is sent.
-
-        ### WhatsApp
-
-        The response also includes `platformConnection`, a ...
+        Neither verdict disconnects the ...
 
         Args:
             account_id: The account ID to check (required)"""
@@ -54106,7 +54106,7 @@ def register_generated_tools(mcp, _get_client):
 
             ### With `range`, `granularity`, `from`, or `to`
 
-            Returns usage METERING: billed spend (USD) by product family over the window, at `day` / `month` / `total` granularity. Product families: `accounts`, `numbers`, `imessage`, `calls`, `sms`, `messages`, `verify`, `dlc`, `xApi`, `ads`, `credits`, `other`.
+            Returns usage METERING: billed spend (USD) by product family over the window, at `day` / `month` / `total` granularity. Product families: `accounts`, `numbers`, `imessage`, `rcs`, `calls`, `sms`, `messages`, `verify`, `dlc`, `xApi`, `ads`, `automations`, `websiteEvents`, `credits`, `other`.
 
             Data comes from the usage-based invoice breakdown (the CHARGE view, which always reconciles with what gets billed). Also served at `GET /v1/usage/daily`.
 
@@ -54114,7 +54114,7 @@ def register_generated_tools(mcp, _get_client):
 
             ### Attribution (metering mode)
 
-            `groupBy=profile|account` adds an `attribution` breakdown of the window's spend per profile or account. ...
+            `groupBy=profile|account` adds an `attribution` breakdown of the ...
 
             Args:
                 reconcile: Snapshot mode only. For Stripe subscription users, `true` forces a
@@ -54172,6 +54172,7 @@ def register_generated_tools(mcp, _get_client):
             ### Related endpoints
 
             - Billed spend by product: call `GET /v1/usage` with `range` / `granularity` params.
+            - Billed spend per profile, by your own `externalId`: `GET /v1/usage?range=cycle&groupBy=profile` ([what each customer costs you](/multi-tenant)).
             - The statement view (balance, credits, caps, payment status) lives at `GET /v1/billing`.
 
             ### Response shape
@@ -54181,7 +54182,7 @@ def register_generated_tools(mcp, _get_client):
             - Stripe users: per-period `usage.uploads` / `usage.profiles` counters.
             - Usage-based billing users: `usage.connectedAccounts`, `usage.xApiCallsByOperation` (per-operation X API call counts; resolve keys via `GET /v1/billing/x-pricing`), plus a `spend` block with `currentPeriodCents`, `xSpendCents`, and `xSpendLimitCents`.
 
-            The legacy `usage.xApiCalls` 3-tier aggregate is still emitted for back-compat. It excludes the $0.200 URL tier and any future tiers, so new clients should consume `xApiCallsByOperation` ...
+            The legacy `usage.xApiCalls` 3-tier ...
 
             Args:
                 reconcile: For Stripe subscription users, `true` forces a subscription

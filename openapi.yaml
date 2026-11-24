@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.813.1"
+  version: "1.814.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -3522,6 +3522,11 @@ components:
                   items:
                     type: string
                   description: 'On a list of posts: the accounts this read queued for a fresh sync, because they were never synced or their stored numbers are over 90 minutes old. The answer holds the stored numbers; the synced ones arrive within minutes.'
+                analyticsOff:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/AnalyticsOffAccount'
+                  description: 'The X accounts read whose analytics sync does not run: their stored numbers are not refreshed, and their posts without any stay pending. On a list, on the first page. Absent when there are none, and on the groupBy and changedSince reads other than groupBy=post.'
                 metricsSample:
                   description: 'With groupBy=format: how many of the newest posts the metrics sum, and the most it reads. Below limit, every post of the range is counted.'
                   type: object
@@ -19838,6 +19843,7 @@ components:
               accounts: { type: number }
               numbers: { type: number }
               imessage: { type: number, description: iMessage sender fees. }
+              rcs: { type: number, description: RCS agent and message fees. }
               calls: { type: number }
               sms: { type: number }
               messages: { type: number, description: Managed outbound message fees. }
@@ -19845,6 +19851,8 @@ components:
               dlc: { type: number, description: 10DLC registration (brand + campaign) fees. }
               xApi: { type: number }
               ads: { type: number, description: Managed ads fees. }
+              automations: { type: number, description: Automation run and ad automation fees. }
+              websiteEvents: { type: number, description: Website event fees. }
               credits: { type: number, description: Applied credits/discounts (negative). }
               other: { type: number }
         totals:
@@ -19854,6 +19862,7 @@ components:
             accounts: { type: number }
             numbers: { type: number }
             imessage: { type: number }
+            rcs: { type: number }
             calls: { type: number }
             sms: { type: number }
             messages: { type: number }
@@ -19861,6 +19870,8 @@ components:
             dlc: { type: number }
             xApi: { type: number }
             ads: { type: number }
+            automations: { type: number }
+            websiteEvents: { type: number }
             credits: { type: number }
             other: { type: number }
             total: { type: number }
@@ -19873,7 +19884,7 @@ components:
               name: { type: string }
               product:
                 type: string
-                enum: [accounts, numbers, imessage, calls, sms, messages, verify, dlc, xApi, ads, credits, other]
+                enum: [accounts, numbers, imessage, rcs, calls, sms, messages, verify, dlc, xApi, ads, automations, websiteEvents, credits, other]
               totalUsd: { type: number }
               quantity: { type: number }
               paidFrom:
@@ -19933,7 +19944,7 @@ components:
                 $ref: '#/components/schemas/UsageAttributionGroup'
             unattributed:
               $ref: '#/components/schemas/UsageAttributionSlice'
-              description: 'Spend no profile/account of your workspace can claim: credits, 10DLC fees, Verify, usage whose record no longer resolves to an account, and the share measured outside your workspace. Zero for a restricted principal.'
+              description: 'Spend no profile/account of your workspace can claim: credits, managed messages, RCS messages, ad automations, Verify, website events, 10DLC registrations that name no profile, usage whose record no longer resolves, and the share measured outside your workspace. Zero for a restricted principal.'
             totals:
               $ref: '#/components/schemas/UsageAttributionSlice'
               description: 'The window totals; for a restricted principal, the sum of the visible groups.'
@@ -19973,6 +19984,7 @@ components:
             accounts: { type: number }
             numbers: { type: number }
             imessage: { type: number }
+            rcs: { type: number }
             calls: { type: number }
             sms: { type: number }
             messages: { type: number }
@@ -19980,6 +19992,8 @@ components:
             dlc: { type: number }
             xApi: { type: number }
             ads: { type: number }
+            automations: { type: number }
+            websiteEvents: { type: number }
             credits: { type: number }
             other: { type: number }
         totalUsd: { type: number }
@@ -20279,6 +20293,28 @@ components:
         errorMessage: { type: [string, "null"], description: "Failure detail:\n\n- Failed entries: why the post failed to publish.\n- Unavailable entries: why analytics cannot be synced (e.g. Google Business Profile, a TikTok upload that never received a video id).\n- Pending entries: the most recent analytics sync error for the account (null while no sync has failed), cleared after the next successful sync." }
         errorCode: { type: [string, "null"], enum: [post_not_found, not_post_owner, permission_missing, null], description: "Stable machine-readable reason for errorMessage. New values may be added.\n\n- post_not_found: the post was deleted or is no longer visible to the account.\n- not_post_owner: the post is owned by another Page or user (collab or visitor post); its analytics cannot be read with this Page's token.\n- permission_missing: the last analytics sync of the Facebook account failed because the Page no longer grants pages_read_engagement (pending entries only).\n- null: no stable code; read errorMessage." }
         isOwner: { type: [boolean, "null"], description: 'Facebook: true when the connected Page authored the post, false when Facebook reports another author (a collab post). Pinterest: true when the account created the Pin, false when it saved it from another user. Null when unknown or for other platforms.' }
+    AnalyticsOff:
+      type: object
+      description: 'X only: why no analytics sync runs for the account, so its numbers stay as of the last read (one read is made when the account connects).'
+      required: [code, message]
+      properties:
+        code:
+          type: string
+          enum: [X_ANALYTICS_NOT_ENABLED, X_ANALYTICS_PAUSED, PAYMENT_REQUIRED]
+          description: |
+            - X_ANALYTICS_NOT_ENABLED: `xCapabilities.analytics` is off on the account. It is opt-in on usage-based billing. Turn it on with `PUT /v1/accounts/{accountId}`, or in the account's X settings in the dashboard.
+            - X_ANALYTICS_PAUSED: it was on, and the monthly X spend cap turned it off.
+            - PAYMENT_REQUIRED: X access is paused because billing on this account failed.
+
+            New values may be added.
+        message: { type: string }
+    AnalyticsOffAccount:
+      allOf:
+        - type: object
+          required: [accountId]
+          properties:
+            accountId: { type: string }
+        - $ref: '#/components/schemas/AnalyticsOff'
     AnalyticsOverview:
       type: object
       properties:
@@ -20312,6 +20348,11 @@ components:
         isExternal: { type: boolean }
         syncStatus: { type: string, enum: [synced, pending, partial, unavailable], description: 'Overall sync state across all platforms' }
         message: { type: [string, "null"], description: 'Human-readable status message for pending, partial, or failed states' }
+        analyticsOff:
+          type: array
+          items:
+            $ref: '#/components/schemas/AnalyticsOffAccount'
+          description: 'The X accounts of this post whose analytics sync does not run: synced numbers stay as of the last read, and a pending X entry stays pending. Absent when there are none.'
         thumbnailUrl: { type: [string, "null"], format: uri, description: "Cover image URL. A Facebook, Instagram or TikTok cover whose signed CDN link is still valid is served as that link, which expires (Meta `oe=`, TikTok `x-expires=`): download the image rather than storing the link.\n\nOnce the link expires, Zernio re-reads the cover from the platform and serves it from Zernio storage, a URL that does not expire.\n\nNull while that re-read is pending (read again shortly) or when the platform no longer returns the post, never an expired link." }
         mediaType: { type: [string, "null"], enum: [image, video, carousel, text] }
         mediaItems:
@@ -20442,6 +20483,11 @@ components:
         hasAnalyticsAccess:
           type: boolean
           description: Whether user has analytics add-on access
+        analyticsOff:
+          type: array
+          items:
+            $ref: '#/components/schemas/AnalyticsOffAccount'
+          description: 'The X accounts this list covers (after its platform, profile and account filters) whose analytics sync does not run: their numbers stay as of the last read. Also sent with `view=summary`. Absent when there are none.'
     AnalyticsDeltaEntry:
       type: object
       description: |
@@ -43155,6 +43201,11 @@ paths:
                         audienceCountries: { type: object, additionalProperties: { type: number }, description: "TikTok business lane: viewer-country shares on this date keyed by ISO-3166 alpha-2, fractions 0 to 1, top 20 with the tail in `other`; empty object elsewhere" }
                         replays: { type: integer, description: "Facebook Reels only: plays that were replays, as of this date; 0 elsewhere" }
                         retentionCurve: { type: object, additionalProperties: { type: number }, description: "Share of viewers still watching at each second of playback, as fractions 0 to 1. Filled for Facebook Reels and the TikTok business lane; empty object for other media and platforms. Values are as of this date.\n\n**Facebook Reels** (Meta post_video_retention_graph):\n\n- The base is a subset of plays that Meta selects and does not expose. On small Reels it can be far below views (6 of 51 measured), so a value is a share of that subset, not of all plays.\n- Keys are whole seconds from the start of a play (\"3\" is the share still watching at 3 s).\n- Loops count as continued playback, so a short Reels curve runs past its length (an 8 s Reel has keys \"0\" to \"12\").\n- Meta returns at most 41 points, so a long Reel covers only its first 40 s.\n\n**TikTok** accounts connected through the TikTok for Business app: from TikTok video_view_retention, at each whole second, at most 61 points, thinned evenly on videos longer than 60 s." }
+                  analyticsOff:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AnalyticsOffAccount'
+                    description: 'The X accounts of this post whose analytics sync does not run, so their rows stop at the last read. Absent when there are none.'
               examples:
                 single_platform:
                   summary: Single-platform post timeline
@@ -45653,7 +45704,7 @@ paths:
 
         ### With `range`, `granularity`, `from`, or `to`
 
-        Returns usage METERING: billed spend (USD) by product family over the window, at `day` / `month` / `total` granularity. Product families: `accounts`, `numbers`, `imessage`, `calls`, `sms`, `messages`, `verify`, `dlc`, `xApi`, `ads`, `credits`, `other`.
+        Returns usage METERING: billed spend (USD) by product family over the window, at `day` / `month` / `total` granularity. Product families: `accounts`, `numbers`, `imessage`, `rcs`, `calls`, `sms`, `messages`, `verify`, `dlc`, `xApi`, `ads`, `automations`, `websiteEvents`, `credits`, `other`.
 
         Data comes from the usage-based invoice breakdown (the CHARGE view, which always reconciles with what gets billed). Also served at `GET /v1/usage/daily`.
 
@@ -45672,7 +45723,13 @@ paths:
 
         With `groupBy=profile`, each group also carries `profileId` and `externalId`.
 
-        Profile-scoped API keys and members only see their profiles' groups (`attribution.restricted: true`, with `totals` summing the visible groups). Credits, 10DLC fees and Verify are always unattributed.
+        Profile-scoped API keys and members only see their profiles' groups (`attribution.restricted: true`, with `totals` summing the visible groups).
+
+        Credits, managed messages, RCS messages, ad automations, Verify and website events are always unattributed.
+
+        iMessage sender and RCS agent fees go to the profile of the sender or agent. Automation runs split each day's fee by that day's runs.
+
+        A 10DLC fee goes to a profile only when its registration names one. Registrations filed by API or dashboard belong to the owner and stay unattributed.
 
         A caller that sees the whole workspace gets `restricted: false` and the same `totals` as without `groupBy`. Shares are measured over everything the bill and its members carry, so `unattributed` can include spend outside the workspace, never named.
 
@@ -45788,6 +45845,7 @@ paths:
         ### Related endpoints
 
         - Billed spend by product: call `GET /v1/usage` with `range` / `granularity` params.
+        - Billed spend per profile, by your own `externalId`: `GET /v1/usage?range=cycle&groupBy=profile` ([what each customer costs you](/multi-tenant)).
         - The statement view (balance, credits, caps, payment status) lives at `GET /v1/billing`.
 
         ### Response shape
@@ -49471,6 +49529,8 @@ paths:
       description: |
         Returns health status of all connected accounts including token validity, permissions, and issues needing attention. A failing or stalled analytics sync (see `analyticsSync`) raises a healthy account to at least warning.
 
+        An X account whose analytics is off has `analyticsOff` with the reason. It never changes `status`: `analyticsSync` then keeps the date of the last read.
+
         An account the platform has restricted or banned (for example a WhatsApp number Meta reports as BANNED) is `error`, with the platform's reason in `issues`. `needsReconnect` stays false, since reconnecting does not lift it.
       parameters:
         - name: profileId
@@ -49547,6 +49607,8 @@ paths:
                           properties:
                             status: { type: string, enum: [ok, failing, stalled, never_synced] }
                             lastSyncedAt: { type: [string, "null"], format: date-time, description: 'Last successful sync. Null when never synced or the latest attempt failed.' }
+                        analyticsOff:
+                          $ref: '#/components/schemas/AnalyticsOff'
                         inboundActivity:
                           anyOf:
                             - $ref: '#/components/schemas/InboundActivity'
@@ -49812,6 +49874,8 @@ paths:
 
         A failing or stalled analytics sync (see `analyticsSync`) raises a healthy account to at least `warning`.
 
+        An X account whose analytics is off has `analyticsOff` with the reason. It never changes `status`: `analyticsSync` then keeps the date of the last read.
+
         An account the platform has restricted or banned is `error`, with the platform's reason in `issues` and a recommendation that says reconnecting does not lift it.
 
         ### Facebook, Instagram and Threads
@@ -49964,6 +50028,8 @@ paths:
                     properties:
                       status: { type: string, enum: [ok, failing, stalled, never_synced] }
                       lastSyncedAt: { type: [string, "null"], format: date-time, description: 'Last successful sync. Null when never synced or the latest attempt failed.' }
+                  analyticsOff:
+                    $ref: '#/components/schemas/AnalyticsOff'
                   inboundActivity:
                     anyOf:
                       - $ref: '#/components/schemas/InboundActivity'
