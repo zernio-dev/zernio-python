@@ -27,6 +27,7 @@ _SCOPE_PURPOSE = {
     "ads:read": "read your ad accounts, campaigns and results",
     "contacts:read": "read your contacts and leads",
     "messaging:write": "send messages, replies and broadcasts for you",
+    "ads:write": "create ads and pause or resume campaigns, which spends your ad budget",
 }
 
 
