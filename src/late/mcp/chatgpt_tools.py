@@ -203,9 +203,11 @@ DESCRIPTION_LEADS = {
         "with the user before calling."
     ),
     "workflows_trigger_api_call_workflow": (
-        "Runs one of the user's own active workflows once, for one existing "
-        "conversation, contact or WhatsApp number. Its steps may send messages, so "
-        "confirm with the user before calling."
+        "Runs one of the user's active workflows once, for one conversation or "
+        "contact on the workflow's account or, for a WhatsApp workflow, one phone "
+        "number (starting a conversation with it if there is none). Its steps may "
+        "message or call that person, or update the workflow's webhooks and CRM, "
+        "so confirm with the user before calling."
     ),
 }
 
@@ -258,7 +260,6 @@ def oauth_scopes_of(tools: Iterable[str]) -> list[str]:
 
 
 def _with_lead(name: str, description: str) -> str:
-    """The description with the tool's DESCRIPTION_LEADS entry after its title line."""
     lead = DESCRIPTION_LEADS.get(name)
     if not lead:
         return description

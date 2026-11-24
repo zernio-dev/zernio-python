@@ -21,6 +21,7 @@ from mcp.types import ToolAnnotations
 from late.mcp.chatgpt_server import CHATGPT_SCOPES, chatgpt_mcp
 from late.mcp.chatgpt_tools import (
     CHATGPT_GENERATED_TOOLS,
+    DESCRIPTION_LEADS,
     WAVE_1,
     WAVE_2,
     WAVE_3,
@@ -177,6 +178,7 @@ async def test_a_held_write_says_who_it_reaches_right_after_its_title():
 
     assert title == "Create broadcast draft"
     assert lead.startswith("Creates a draft only: nothing is sent")
+    assert DESCRIPTION_LEADS.keys() <= set(CHATGPT_GENERATED_TOOLS)
 
 
 def test_a_write_listed_without_its_effects_is_refused():
