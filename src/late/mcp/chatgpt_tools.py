@@ -72,8 +72,8 @@ WAVE_1 = (
 # asks for (so a link that re-linked for wave 1 needs nothing new). Left out
 # on review: X search (bills per tweet read), the Reddit feed (disabled
 # platform), deprecated aliases and legacy analytics replaced by metrics,
-# the raw request logs, a report reader whose creator is a write, and
-# LinkedIn reactors (third-party personal data).
+# the raw request logs, a report reader whose creator is a write (listed with
+# it in wave 4), and LinkedIn reactors (third-party personal data).
 WAVE_2 = (
     "lead_gen_list_leads",
     "broadcasts_get_broadcast",
