@@ -162,14 +162,19 @@ def test_advertises_exactly_the_scopes_the_listed_tools_need():
     assert {"messaging:read", "ads:read", "contacts:read"} <= set(CHATGPT_SCOPES)
     assert {"messaging:write", "accounts:write"} <= set(CHATGPT_SCOPES)
     # automations:write also opens webhooks; ads:write and money:write spend.
-    assert not {"automations:write", "ads:write", "money:write"} & set(CHATGPT_SCOPES)
+    assert not {
+        "automations:write",
+        "ads:write",
+        "money:write",
+        "commerce:write",
+    } & set(CHATGPT_SCOPES)
 
 
 def test_a_write_listed_without_its_effects_is_refused():
     generated = ToolAnnotations(readOnlyHint=False, destructiveHint=True)
 
     with pytest.raises(LookupError, match="WRITE_EFFECTS"):
-        _hints_for("workflows_create_workflow", generated)
+        _hints_for("fake_write", generated)
 
 
 async def test_the_whole_listing_stays_within_budget():
