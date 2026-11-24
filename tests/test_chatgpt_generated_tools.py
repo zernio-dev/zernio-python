@@ -170,6 +170,15 @@ def test_advertises_exactly_the_scopes_the_listed_tools_need():
     } & set(CHATGPT_SCOPES)
 
 
+async def test_a_held_write_says_who_it_reaches_right_after_its_title():
+    listed = await _listed()
+
+    title, lead, *_ = listed["broadcasts_create_broadcast"]["description"].split("\n\n")
+
+    assert title == "Create broadcast draft"
+    assert lead.startswith("Creates a draft only: nothing is sent")
+
+
 def test_a_write_listed_without_its_effects_is_refused():
     generated = ToolAnnotations(readOnlyHint=False, destructiveHint=True)
 
@@ -337,6 +346,7 @@ async def test_other_403s_keep_the_apis_own_error(monkeypatch, granted, body):
 
     assert result.is_error
     assert "Reconnect" not in result.content[0].text
+    assert body["error"] in result.content[0].text
 
 
 async def test_a_generated_tool_answers_from_the_api():
