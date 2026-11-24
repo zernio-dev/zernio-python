@@ -4646,6 +4646,8 @@ components:
         consented: { type: integer, description: 'Page views with ad storage consent, at most `visits`.' }
         purchases: { type: integer, description: Purchases recorded on the site. }
         recovered: { type: integer, description: 'Purchases with ad consent for which no browser pixel fired, so only the server reported them.' }
+        leads: { type: integer, description: Leads recorded on the site without bots. }
+        checkouts: { type: integer, description: Checkouts started on the site without bots. }
     SmsOptOutRequest:
       type: object
       required: [accountId, phone]
@@ -113141,6 +113143,9 @@ paths:
                             today: { $ref: '#/components/schemas/TrackingSitePeriodTotals' }
                             '7d': { $ref: '#/components/schemas/TrackingSitePeriodTotals' }
                             '30d': { $ref: '#/components/schemas/TrackingSitePeriodTotals' }
+                        sendsNowhere:
+                          type: boolean
+                          description: 'Whether no forwarding rule of the profile to an ad platform uses the site (its own events, or server events its visits complete) and its tag fires no ad pixel in the browser.'
                   eventNames:
                     type: array
                     description: 'Each event name stored in the 30 days before today and where it comes from. When a name comes from both the website tag and a server source, only the server copies count (in this overview, the daily overview and campaign results).'
