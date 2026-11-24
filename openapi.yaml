@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.809.0"
+  version: "1.809.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -44931,7 +44931,7 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
     post:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: createAccountGroup
       tags: [Account Groups]
       summary: Create group
@@ -44993,7 +44993,7 @@ paths:
   /v1/account-groups/{groupId}:
     put:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: updateAccountGroup
       tags: [Account Groups]
       summary: Update group
@@ -45046,7 +45046,7 @@ paths:
         '409': { description: Group name already exists }
     delete:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: deleteAccountGroup
       tags: [Account Groups]
       summary: Delete group
@@ -45073,7 +45073,7 @@ paths:
   /v1/media/presign:
     post:
       x-resource-group: "publishing"
-      x-oauth-scopes: ["posts:read", "posts:write"]
+      x-oauth-scopes: ["posts:write"]
       operationId: getMediaPresignedUrl
       tags: [Media]
       summary: Get upload URL
@@ -46168,7 +46168,7 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
     post:
       x-resource-group: "publishing"
-      x-oauth-scopes: ["posts:read", "posts:write"]
+      x-oauth-scopes: ["posts:write"]
       operationId: createPost
       x-selectedCodeSample: schedule
       x-docs:
@@ -47011,7 +47011,7 @@ paths:
   /v1/posts/sync-external:
     post:
       x-resource-group: "publishing"
-      x-oauth-scopes: ["posts:read", "posts:write"]
+      x-oauth-scopes: ["posts:write"]
       operationId: syncExternalPosts
       tags: [Analytics]
       x-platforms: [instagram, facebook, tiktok, youtube, twitter, threads, pinterest, reddit, bluesky, googlebusiness, linkedin]
@@ -47274,7 +47274,7 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
     put:
       x-resource-group: "publishing"
-      x-oauth-scopes: ["posts:read", "posts:write"]
+      x-oauth-scopes: ["posts:write"]
       operationId: updatePost
       tags: [Posts]
       summary: Update post
@@ -47441,7 +47441,7 @@ paths:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
     delete:
       x-resource-group: "publishing"
-      x-oauth-scopes: ["posts:read", "posts:write"]
+      x-oauth-scopes: ["posts:write"]
       operationId: deletePost
       tags: [Posts]
       summary: Delete post
@@ -47500,7 +47500,7 @@ paths:
   /v1/posts/bulk-upload:
     post:
       x-resource-group: "publishing"
-      x-oauth-scopes: ["posts:read", "posts:write"]
+      x-oauth-scopes: ["posts:write"]
       operationId: bulkUploadPosts
       tags: [Posts]
       summary: Bulk upload from CSV
@@ -47637,7 +47637,7 @@ paths:
   /v1/posts/{postId}/retry:
     post:
       x-resource-group: "publishing"
-      x-oauth-scopes: ["posts:read", "posts:write"]
+      x-oauth-scopes: ["posts:write"]
       operationId: retryPost
       tags: [Posts]
       summary: Retry failed post
@@ -47770,7 +47770,7 @@ paths:
   /v1/posts/{postId}/review:
     post:
       x-resource-group: "publishing"
-      x-oauth-scopes: ["posts:read", "posts:write"]
+      x-oauth-scopes: ["posts:write"]
       operationId: reviewPost
       tags: [Posts]
       summary: Approve or reject a post
@@ -47821,7 +47821,7 @@ paths:
   /v1/posts/{postId}/unpublish:
     post:
       x-resource-group: "publishing"
-      x-oauth-scopes: ["posts:read", "posts:write"]
+      x-oauth-scopes: ["posts:write"]
       x-platforms: [facebook, youtube, linkedin, twitter, threads, googlebusiness, pinterest, reddit, telegram, bluesky, discord, slack]
       operationId: unpublishPost
       tags: [Posts]
@@ -47897,7 +47897,7 @@ paths:
   /v1/posts/{postId}/pin:
     post:
       x-resource-group: "publishing"
-      x-oauth-scopes: ["posts:read", "posts:write"]
+      x-oauth-scopes: ["posts:write"]
       x-platforms: [facebook]
       operationId: pinPost
       tags: [Posts]
@@ -47961,7 +47961,7 @@ paths:
   /v1/posts/{postId}/unpin:
     post:
       x-resource-group: "publishing"
-      x-oauth-scopes: ["posts:read", "posts:write"]
+      x-oauth-scopes: ["posts:write"]
       x-platforms: [facebook]
       operationId: unpinPost
       tags: [Posts]
@@ -48025,7 +48025,7 @@ paths:
   /v1/posts/{postId}/edit:
     post:
       x-resource-group: "publishing"
-      x-oauth-scopes: ["posts:read", "posts:write"]
+      x-oauth-scopes: ["posts:write"]
       x-platforms: [twitter, discord, facebook, reddit, linkedin, telegram, pinterest, googlebusiness, youtube, slack]
       operationId: editPost
       tags: [Posts]
@@ -48174,7 +48174,7 @@ paths:
   /v1/posts/{postId}/update-metadata:
     post:
       x-resource-group: "publishing"
-      x-oauth-scopes: ["posts:read", "posts:write"]
+      x-oauth-scopes: ["posts:write"]
       x-platforms: [youtube, facebook]
       operationId: updatePostMetadata
       tags: [Posts]
@@ -48615,7 +48615,7 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
     post:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: createProfile
       tags: [Profiles]
       summary: Create profile
@@ -48715,7 +48715,7 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
     put:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: updateProfile
       tags: [Profiles]
       summary: Update profile
@@ -48774,7 +48774,7 @@ paths:
         '409': { description: "A profile with this name (code: profile_name_conflict) or this externalId (code: profile_external_id_conflict) already exists, or contentRetention cannot change now: the whole team uses zero content retention, or a Zernio number of this profile has a WhatsApp verification in progress." }
     delete:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: deleteProfile
       tags: [Profiles]
       summary: Delete profile
@@ -49170,7 +49170,7 @@ paths:
         '503': { $ref: '#/components/responses/TemporarilyUnavailable' }
     put:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: updateAccount
       tags: [Accounts]
       summary: Update account
@@ -49287,7 +49287,7 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
     patch:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: moveAccountToProfile
       tags: [Accounts]
       summary: Move account to another profile
@@ -49335,7 +49335,7 @@ paths:
         '404': { description: Account or target profile not found }
     delete:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: deleteAccount
       tags: [Accounts]
       summary: Disconnect account
@@ -49532,7 +49532,7 @@ paths:
   /v1/accounts/{accountId}/whatsapp/register:
     post:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: registerWhatsAppNumber
       tags: [WhatsApp]
       summary: Register a connected WhatsApp number on the Cloud API
@@ -49586,7 +49586,7 @@ paths:
   /v1/accounts/{accountId}/whatsapp/request-code:
     post:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: requestWhatsAppVerificationCode
       tags: [WhatsApp]
       summary: Request a Meta re-verification code for a BYO WhatsApp number
@@ -49660,7 +49660,7 @@ paths:
   /v1/accounts/{accountId}/whatsapp/verify-code:
     post:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: verifyWhatsAppNumber
       tags: [WhatsApp]
       summary: Verify the Meta re-verification code for a BYO WhatsApp number
@@ -50505,7 +50505,7 @@ paths:
   /v1/feedback:
     post:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: submitFeedback
       tags: [Feedback]
       summary: Submit feedback
@@ -51159,7 +51159,7 @@ paths:
         '403': { $ref: '#/components/responses/ResourceGroupForbidden' }
     put:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: updateContentRetention
       tags: [Content Retention]
       summary: Turn zero content retention on or off
@@ -51381,7 +51381,7 @@ paths:
   /v1/platform-invites:
     post:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: createPlatformInvite
       tags: [Connect]
       summary: Create a connect link
@@ -51866,7 +51866,7 @@ paths:
           description: Profile not found
     post:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       x-platforms: [instagram, twitter, threads, linkedin, youtube, tiktok, reddit, pinterest, google, microsoft]
       operationId: handleOAuthCallback
       tags: [Connect]
@@ -52432,7 +52432,7 @@ paths:
   /v1/connect/shopify/token:
     post:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: connectShopifyWithToken
       tags: [Connect]
       summary: Connect a Shopify store with a custom-app Admin token
@@ -52658,7 +52658,7 @@ paths:
   /v1/connect/googleanalytics/select-property:
     post:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: selectGoogleAnalyticsProperty
       tags:
         - Connect
@@ -52882,7 +52882,7 @@ paths:
   /v1/connect/googlesearchconsole/select-site:
     post:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: selectGoogleSearchConsoleSite
       tags:
         - Connect
@@ -53080,7 +53080,7 @@ paths:
   /v1/connect/campaignmanager360/select-profile:
     post:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: selectCampaignManagerProfile
       tags:
         - Connect
@@ -53684,7 +53684,7 @@ paths:
   /v1/connect/webflow/token:
     post:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: connectWebflowWithSiteToken
       tags: [Connect]
       summary: Connect Webflow with a site API token
@@ -53770,7 +53770,7 @@ paths:
   /v1/connect/wordpress/token:
     post:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: connectWordPressWithApplicationPassword
       tags: [Connect]
       summary: Connect self-hosted WordPress with an application password
@@ -53829,7 +53829,7 @@ paths:
   /v1/connect/tiktok-ads:
     patch:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: configureTikTokAdsBrandIdentity
       tags: [Connect]
       summary: Set TikTok brand identity
@@ -53990,7 +53990,7 @@ paths:
                   error: { type: string }
     post:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: selectFacebookPage
       tags: [Connect]
       x-platforms: [facebook, meta]
@@ -54246,7 +54246,7 @@ paths:
         '403': { description: User does not have access to the specified profile }
     post:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: selectInstagramAccount
       tags: [Connect]
       summary: Select the Page whose Instagram account to connect
@@ -54472,7 +54472,7 @@ paths:
   /v1/connect/googlebusiness/select-location:
     post:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: selectGoogleBusinessLocation
       tags: [Connect]
       summary: Select Google Business Profile location
@@ -54800,7 +54800,7 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
     post:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: startGoogleBusinessVerification
       tags: [GMB Verifications]
       summary: Start a verification
@@ -54873,7 +54873,7 @@ paths:
   /v1/accounts/{accountId}/gmb-verifications/options:
     post:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: fetchGoogleBusinessVerificationOptions
       tags: [GMB Verifications]
       summary: Fetch verification options
@@ -54939,7 +54939,7 @@ paths:
   /v1/accounts/{accountId}/gmb-verifications/{verificationId}/complete:
     post:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: completeGoogleBusinessVerification
       tags: [GMB Verifications]
       summary: Complete a verification
@@ -55093,7 +55093,7 @@ paths:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
     put:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: updateGoogleBusinessFoodMenus
       tags: [GMB Food Menus]
       summary: Update food menus
@@ -55372,7 +55372,7 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
     put:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: updateGoogleBusinessLocationDetails
       tags: [GMB Location Details]
       summary: Update location details
@@ -55712,7 +55712,7 @@ paths:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
     post:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: createGoogleBusinessMedia
       tags: [GMB Media]
       summary: Upload photo
@@ -55774,7 +55774,7 @@ paths:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
     delete:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: deleteGoogleBusinessMedia
       tags: [GMB Media]
       summary: Delete photo
@@ -56107,7 +56107,7 @@ paths:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
     put:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: updateGoogleBusinessAttributes
       tags: [GMB Attributes]
       summary: Update attributes
@@ -56264,7 +56264,7 @@ paths:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
     post:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: createGoogleBusinessPlaceAction
       tags: [GMB Place Actions]
       summary: Create action link
@@ -56323,7 +56323,7 @@ paths:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
     delete:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: deleteGoogleBusinessPlaceAction
       tags: [GMB Place Actions]
       summary: Delete action link
@@ -56367,7 +56367,7 @@ paths:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
     patch:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: updateGoogleBusinessPlaceAction
       tags: [GMB Place Actions]
       summary: Update action link
@@ -56499,7 +56499,7 @@ paths:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
     put:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: updateGoogleBusinessServices
       tags: [GMB Services]
       summary: Replace services
@@ -56963,7 +56963,7 @@ paths:
           $ref: '#/components/responses/Unauthorized'
     put:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: updateConnectWelcomeScreen
       tags: [Connect]
       summary: Save the welcome screen
@@ -57049,7 +57049,7 @@ paths:
           $ref: '#/components/responses/Unauthorized'
     post:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: createOAuthApp
       tags: [Connect]
       summary: Add an OAuth app
@@ -57142,7 +57142,7 @@ paths:
           $ref: '#/components/responses/NotFound'
     patch:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: updateOAuthApp
       tags: [Connect]
       summary: Update an OAuth app
@@ -57191,7 +57191,7 @@ paths:
           $ref: '#/components/responses/NotFound'
     delete:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: deleteOAuthApp
       tags: [Connect]
       summary: Remove an OAuth app
@@ -57225,7 +57225,7 @@ paths:
   /v1/connect/oauth-apps/{appId}/test:
     post:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: testOAuthApp
       tags: [Connect]
       summary: Check an OAuth app's keys
@@ -57433,7 +57433,7 @@ paths:
   /v1/connect/linkedin/select-organization:
     post:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: selectLinkedInOrganization
       tags: [Connect]
       summary: Select LinkedIn org
@@ -57649,7 +57649,7 @@ paths:
         '500': { description: Failed to fetch boards }
     post:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: selectPinterestBoard
       tags: [Connect]
       summary: Select Pinterest board
@@ -57816,7 +57816,7 @@ paths:
         '500': { description: Failed to fetch public profiles }
     post:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: selectSnapchatProfile
       tags: [Connect]
       summary: Select Snapchat profile
@@ -57953,7 +57953,7 @@ paths:
   /v1/connect/bluesky/credentials:
     post:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: connectBlueskyCredentials
       tags: [Connect]
       summary: Connect Bluesky account
@@ -58018,7 +58018,7 @@ paths:
   /v1/connect/openai-ads/credentials:
     post:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: connectOpenAIAdsCredentials
       tags: [Connect]
       summary: Connect an OpenAI Ads account
@@ -58087,7 +58087,7 @@ paths:
   /v1/connect/applovin-ads/credentials:
     post:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: connectAppLovinAdsCredentials
       tags: [Connect]
       summary: Connect an AppLovin account
@@ -58181,7 +58181,7 @@ paths:
   /v1/connect/snapchat-ads/credentials:
     post:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: connectSnapchatAdsCredentials
       tags: [Connect]
       summary: Connect a Snapchat Ads pixel
@@ -58250,7 +58250,7 @@ paths:
   /v1/connect/klaviyo/credentials:
     post:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: connectKlaviyoCredentials
       tags: [Connect]
       summary: Connect a Klaviyo account
@@ -58312,7 +58312,7 @@ paths:
   /v1/connect/attentive/credentials:
     post:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: connectAttentiveCredentials
       tags: [Connect]
       summary: Connect an Attentive company
@@ -58373,7 +58373,7 @@ paths:
   /v1/connect/impact/credentials:
     post:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: connectImpactCredentials
       tags: [Connect]
       summary: Connect an Impact program
@@ -58446,7 +58446,7 @@ paths:
   /v1/connect/awin/credentials:
     post:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: connectAwinCredentials
       tags: [Connect]
       summary: Connect an Awin advertiser
@@ -58511,7 +58511,7 @@ paths:
   /v1/connect/tradedesk-ads/credentials:
     post:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: connectTradeDeskAdsCredentials
       x-platforms: [tradedeskads]
       tags: [Connect]
@@ -58580,7 +58580,7 @@ paths:
   /v1/connect/tradedesk-ads/partner:
     post:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: connectTradeDeskAdsPartner
       x-platforms:
         - tradedeskdsp
@@ -58683,7 +58683,7 @@ paths:
   /v1/connect/taboola-ads/credentials:
     post:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: connectTaboolaAdsCredentials
       tags: [Connect]
       summary: Connect a Taboola account
@@ -58749,7 +58749,7 @@ paths:
   /v1/connect/outbrain-ads/credentials:
     post:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: connectOutbrainAdsCredentials
       tags: [Connect]
       summary: Connect an Outbrain marketer
@@ -58815,7 +58815,7 @@ paths:
   /v1/connect/whop-ads/credentials:
     post:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: connectWhopAdsCredentials
       tags: [Connect]
       summary: Connect a Whop account
@@ -58880,7 +58880,7 @@ paths:
   /v1/connect/whatsapp/credentials:
     post:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: connectWhatsAppCredentials
       tags: [Connect]
       summary: Connect WhatsApp via credentials
@@ -59086,7 +59086,7 @@ paths:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
     post:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: completeWhatsAppPhoneSelection
       tags: [Connect]
       summary: Complete number selection
@@ -59189,7 +59189,7 @@ paths:
   /v1/connect/whatsapp/embedded-signup:
     post:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: connectWhatsAppEmbeddedSignup
       tags: [Connect]
       summary: Connect WhatsApp from Embedded Signup
@@ -59296,7 +59296,7 @@ paths:
   /v1/connect/discord:
     post:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: connectDiscordChannel
       tags: [Connect]
       summary: Connect a Discord channel
@@ -59445,7 +59445,7 @@ paths:
         '404': { description: 'Profile not found (start-OAuth mode), or no active Slack account with that accountId for this user or their team (code: account_not_found)' }
     post:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: connectSlackChannel
       tags: [Connect]
       summary: Connect a Slack channel
@@ -59486,7 +59486,7 @@ paths:
   /v1/connect/line/credentials:
     post:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: connectLineCredentials
       tags:
         - Connect
@@ -59618,7 +59618,7 @@ paths:
   /v1/connect/wechat/credentials:
     post:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: connectWechatCredentials
       tags:
         - Connect
@@ -59851,7 +59851,7 @@ paths:
         '500': { description: Internal error }
     post:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: initiateTelegramConnect
       tags: [Connect]
       summary: Connect Telegram directly
@@ -59911,7 +59911,7 @@ paths:
         '500': { description: Internal error }
     patch:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: completeTelegramConnect
       tags: [Connect]
       summary: Check Telegram status
@@ -60030,7 +60030,7 @@ paths:
           description: The Facebook connection has no selected Page, or the Instagram account connected through Facebook Login, is disconnected, or has no access token
     post:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: resyncPageWebhookSubscription
       tags: [Connect]
       x-platforms: ["facebook", "instagram"]
@@ -60114,7 +60114,7 @@ paths:
         '429': { $ref: '#/components/responses/RateLimited' }
     post:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: grantBusinessPartner
       tags: [Accounts]
       x-platforms: ["facebook", "instagram"]
@@ -60194,7 +60194,7 @@ paths:
         '429': { $ref: '#/components/responses/RateLimited' }
     delete:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: revokeBusinessPartner
       tags: [Accounts]
       x-platforms: ["facebook", "instagram"]
@@ -60299,7 +60299,7 @@ paths:
         '404': { description: 'Account not found, or not a facebook or metaads account' }
     put:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: updateFacebookPage
       tags: [Connect]
       summary: Update Facebook page
@@ -60405,7 +60405,7 @@ paths:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
     patch:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: updateFacebookPageInfo
       tags: [Account Settings]
       summary: Update a Facebook Page's public info
@@ -60975,7 +60975,7 @@ paths:
   /v1/accounts/{accountId}/linkedin-organization:
     put:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: updateLinkedInOrganization
       tags: [Connect]
       summary: Switch LinkedIn account type
@@ -61917,7 +61917,7 @@ paths:
         '502': { description: 'Pinterest rejected or failed the request.' }
     put:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: updatePinterestBoards
       tags: [Connect]
       summary: Set default Pinterest board
@@ -61963,7 +61963,7 @@ paths:
         '404': { description: Account not found }
     post:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: createPinterestBoard
       tags: [Connect]
       summary: Create Pinterest board
@@ -62201,7 +62201,7 @@ paths:
         '404': { description: Account not found }
     post:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: createYoutubePlaylist
       tags: [Connect]
       summary: Create YouTube playlist
@@ -62277,7 +62277,7 @@ paths:
         '502': { x-summary: "The YouTube request failed: check existing playlists before retrying, because the playlist may already have been created.", description: "YouTube request failed. Check existing playlists before retrying, because the playlist may have been created." }
     put:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: updateYoutubeDefaultPlaylist
       tags: [Connect]
       summary: Set default YouTube playlist
@@ -62391,7 +62391,7 @@ paths:
         '404': { description: Account not found }
     put:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: updateGmbLocation
       tags: [Connect]
       summary: Update Google Business Profile location
@@ -62452,7 +62452,7 @@ paths:
 
     post:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: createGoogleBusinessLocation
       tags: [Connect]
       summary: Create Google Business Profile location
@@ -62588,7 +62588,7 @@ paths:
   /v1/accounts/{accountId}/gmb-locations/search:
     post:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: searchGoogleBusinessLocations
       tags: [Connect]
       summary: Search existing Google listings
@@ -62673,7 +62673,7 @@ paths:
   /v1/accounts/{accountId}/gmb-locations/assign:
     post:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: assignGoogleBusinessLocation
       tags: [Connect]
       summary: Assign Google Business Profile location to another profile
@@ -63078,7 +63078,7 @@ paths:
 
     put:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: updateRedditSubreddits
       tags: [Connect]
       summary: Set default subreddit
@@ -63299,7 +63299,7 @@ paths:
         '503': { description: "Organic Reddit is temporarily unavailable while Reddit blocks third-party API access (`PLATFORM_DISABLED`)." }
     post:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: setRedditPostFlair
       tags: [Connect]
       summary: Set Reddit post flair
@@ -63386,7 +63386,7 @@ paths:
           description: Account not found
     patch:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: updateHubSpotSettings
       tags:
         - Accounts
@@ -63556,7 +63556,7 @@ paths:
           description: Account not found
     patch:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: updateGohighlevelSettings
       tags:
         - Accounts
@@ -63951,7 +63951,7 @@ paths:
           description: Account not found
     patch:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: updateSalesforceSettings
       tags:
         - Accounts
@@ -64584,7 +64584,7 @@ paths:
           description: Account not found
     patch:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: updateStripeSettings
       tags:
         - Accounts
@@ -64670,7 +64670,7 @@ paths:
         '404': { description: Account not found }
     patch:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: updateSlackSettings
       tags: [Accounts]
       summary: Update Slack account settings
@@ -64727,7 +64727,7 @@ paths:
         '404': { description: Account not found }
     patch:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: updateBlueskySettings
       tags: [Accounts]
       summary: Update Bluesky account settings
@@ -64812,7 +64812,7 @@ paths:
 
     patch:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: updateDiscordSettings
       tags: [Discord]
       summary: Update Discord settings
@@ -65980,7 +65980,7 @@ paths:
         '404': { description: Profile not found }
     post:
       x-resource-group: "publishing"
-      x-oauth-scopes: ["posts:read", "posts:write"]
+      x-oauth-scopes: ["posts:write"]
       operationId: createQueueSlot
       tags: [Queue]
       summary: Create schedule
@@ -66034,7 +66034,7 @@ paths:
         '404': { description: Profile not found }
     put:
       x-resource-group: "publishing"
-      x-oauth-scopes: ["posts:read", "posts:write"]
+      x-oauth-scopes: ["posts:write"]
       operationId: updateQueueSlot
       tags: [Queue]
       summary: Update schedule
@@ -66108,7 +66108,7 @@ paths:
         '404': { description: Profile not found }
     delete:
       x-resource-group: "publishing"
-      x-oauth-scopes: ["posts:read", "posts:write"]
+      x-oauth-scopes: ["posts:write"]
       operationId: deleteQueueSlot
       tags: [Queue]
       summary: Delete schedule
@@ -69293,7 +69293,7 @@ paths:
   /v1/connect/google/org:
     post:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: createGoogleOrgConnection
       tags: [Connect]
       summary: Start a Google Workspace organization connection
@@ -69341,7 +69341,7 @@ paths:
   /v1/connect/microsoft/org:
     post:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: createMicrosoftOrgConnection
       tags: [Connect]
       summary: Start a Microsoft 365 organization connection
@@ -69429,7 +69429,7 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
     patch:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       x-platforms: [google, microsoft]
       operationId: updateOrgConnection
       tags: [Connect]
@@ -69462,7 +69462,7 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
     delete:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       x-platforms: [google, microsoft]
       operationId: deleteOrgConnection
       tags: [Connect]
@@ -69490,7 +69490,7 @@ paths:
   /v1/org-connections/{orgConnectionId}/verify:
     post:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       x-platforms: [google, microsoft]
       operationId: verifyOrgConnection
       tags: [Connect]
@@ -69565,7 +69565,7 @@ paths:
   /v1/org-connections/{orgConnectionId}/mailboxes:
     post:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       x-platforms: [google, microsoft]
       operationId: addOrgConnectionMailbox
       tags: [Connect]
@@ -72542,7 +72542,7 @@ paths:
   /v1/media/upload-direct:
     post:
       x-resource-group: "publishing"
-      x-oauth-scopes: ["posts:read", "posts:write"]
+      x-oauth-scopes: ["posts:write"]
       operationId: uploadMediaDirect
       summary: Upload media file
       description: |
@@ -72620,7 +72620,7 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
     put:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: setMessengerMenu
       summary: Set persistent menu
       description: |
@@ -72658,7 +72658,7 @@ paths:
           description: 'The page has no Get Started button. Set one with PUT /v1/accounts/{accountId}/messenger-get-started and retry.'
     delete:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: deleteMessengerMenu
       description: Removes the persistent menu from this Facebook Messenger or Instagram account.
       summary: Delete persistent menu
@@ -72706,7 +72706,7 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
     put:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: setMessengerGetStarted
       summary: Set FB Get Started button
       description: |
@@ -72751,7 +72751,7 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
     delete:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: deleteMessengerGetStarted
       summary: Delete FB Get Started button
       description: 'Remove the Get Started button. Meta refuses while a persistent menu is set, so delete the menu first.'
@@ -72808,7 +72808,7 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
     put:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: setMessengerGreeting
       summary: Set FB greeting text
       description: 'Set the greeting text on a Facebook page''s Messenger welcome screen (Meta''s `greeting` Messenger Profile field). One entry must use locale `default`; add more for other locales. Meta personalises `{{user_first_name}}`, `{{user_last_name}}` and `{{user_full_name}}`. Replaces every locale already set.'
@@ -72850,7 +72850,7 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
     delete:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: deleteMessengerGreeting
       summary: Delete FB greeting text
       description: Remove the greeting text from every locale.
@@ -72904,7 +72904,7 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
     put:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: setMessengerIceBreakers
       summary: Set FB ice breakers
       description: |
@@ -72953,7 +72953,7 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
     delete:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: deleteMessengerIceBreakers
       summary: Delete FB ice breakers
       description: Remove the ice breakers from every locale.
@@ -73005,7 +73005,7 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
     put:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: setInstagramIceBreakers
       summary: Set IG ice breakers
       description: Set ice breakers for an Instagram account. Max 4 ice breakers, question max 80 chars.
@@ -73042,7 +73042,7 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
     delete:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: deleteInstagramIceBreakers
       description: Removes the ice breaker questions from an Instagram account's Messenger experience.
       summary: Delete IG ice breakers
@@ -73093,7 +73093,7 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
     put:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: setTelegramCommands
       summary: Set TG bot commands
       description: Set bot commands for a Telegram account.
@@ -73129,7 +73129,7 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
     delete:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: deleteTelegramCommands
       description: Clears all bot commands configured for a Telegram bot account.
       summary: Delete TG bot commands
@@ -75665,7 +75665,7 @@ paths:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
     post:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: createWhatsAppTemplate
       tags: [WhatsApp]
       summary: Create template
@@ -75902,7 +75902,7 @@ paths:
         '502': { x-summary: "Meta rejected the request or was unreachable: retry later, and note that Meta 4xx statuses pass through unchanged.", description: Meta rejected the request or was unreachable. Meta 4xx statuses are forwarded as-is. }
     patch:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: updateWhatsAppTemplate
       tags: [WhatsApp]
       summary: Update template
@@ -76023,7 +76023,7 @@ paths:
         '502': { x-summary: "Meta rejected the update or was unreachable: retry later, and note that Meta 4xx statuses pass through unchanged.", description: Meta rejected the update or was unreachable. Meta 4xx statuses are forwarded as-is. }
     delete:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: deleteWhatsAppTemplate
       tags: [WhatsApp]
       summary: Delete template
@@ -76143,7 +76143,7 @@ paths:
         '502': { x-summary: "Meta rejected the request or was unreachable, including for an id the account cannot access: retry later or check the id.", description: 'Meta rejected the request (including an id the account cannot access) or was unreachable. Meta 4xx statuses are forwarded as-is.' }
     patch:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: updateWhatsAppTemplateById
       tags: [WhatsApp]
       summary: Update template by id
@@ -76228,7 +76228,7 @@ paths:
         '502': { x-summary: "Meta rejected the update or was unreachable, including for an id the account cannot access: retry later or check the id.", description: 'Meta rejected the update (including an id the account cannot access) or was unreachable. Meta 4xx statuses are forwarded as-is.' }
     delete:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: deleteWhatsAppTemplateById
       tags: [WhatsApp]
       summary: Delete template by id
@@ -80402,7 +80402,7 @@ paths:
         '404': { description: WhatsApp account not found }
     post:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: updateWhatsAppBusinessProfile
       tags: [WhatsApp]
       summary: Update business profile
@@ -80475,7 +80475,7 @@ paths:
   /v1/whatsapp/business-profile/photo:
     post:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: uploadWhatsAppProfilePhoto
       tags: [WhatsApp]
       summary: Upload profile picture
@@ -80574,7 +80574,7 @@ paths:
         '404': { description: WhatsApp account not found or accountId is not a valid ObjectId }
     post:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: updateWhatsAppDisplayName
       tags: [WhatsApp]
       summary: Request display name change
@@ -80664,7 +80664,7 @@ paths:
         '404': { description: WhatsApp account not found }
     post:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: setWhatsappBusinessUsername
       tags: [WhatsApp]
       summary: Set business username
@@ -80746,7 +80746,7 @@ paths:
         '404': { description: WhatsApp account not found }
     delete:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: deleteWhatsappBusinessUsername
       tags: [WhatsApp]
       summary: Delete business username
@@ -81248,7 +81248,7 @@ paths:
         '404': { description: WhatsApp account not found }
     post:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: createWhatsAppDataset
       tags: [WhatsApp]
       summary: Provision CTWA dataset
@@ -85744,7 +85744,7 @@ paths:
         '404': { description: WhatsApp account not found }
     post:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: createWhatsAppFlow
       tags: [WhatsApp Flows]
       summary: Create flow
@@ -85850,7 +85850,7 @@ paths:
         '404': { description: Flow or account not found }
     patch:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: updateWhatsAppFlow
       tags: [WhatsApp Flows]
       summary: Update flow
@@ -85891,7 +85891,7 @@ paths:
         '404': { description: WhatsApp account or flow not found }
     delete:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: deleteWhatsAppFlow
       tags: [WhatsApp Flows]
       summary: Delete flow
@@ -85950,7 +85950,7 @@ paths:
         '404': { description: WhatsApp account not found }
     put:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: uploadWhatsAppFlowJson
       tags: [WhatsApp Flows]
       summary: Upload flow JSON
@@ -86107,7 +86107,7 @@ paths:
   /v1/whatsapp/flows/{flowId}/publish:
     post:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: publishWhatsAppFlow
       tags: [WhatsApp Flows]
       summary: Publish flow
@@ -86144,7 +86144,7 @@ paths:
   /v1/whatsapp/flows/{flowId}/deprecate:
     post:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: deprecateWhatsAppFlow
       tags: [WhatsApp Flows]
       summary: Deprecate flow
@@ -86224,7 +86224,7 @@ paths:
         '502': { description: Meta rejected the request }
     post:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: setWhatsAppFlowsEncryptionKey
       tags: [WhatsApp Flows]
       summary: Register a Flows encryption key
@@ -86894,7 +86894,7 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
     post:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: createCustomField
       summary: Create custom field
       description: Create a new custom field definition. Supported types are text, number, date, boolean, and select.
@@ -86937,7 +86937,7 @@ paths:
   /v1/custom-fields/{fieldId}:
     patch:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: updateCustomField
       summary: Update custom field
       description: Update a custom field definition. The field type cannot be changed after creation.
@@ -86975,7 +86975,7 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
     delete:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: deleteCustomField
       summary: Delete custom field
       description: Delete a custom field definition and remove its values from all contacts.
@@ -87651,7 +87651,7 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
     post:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: createWorkflow
       x-platforms: [hubspot, salesforce, gohighlevel]
       summary: Create workflow
@@ -87740,7 +87740,7 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
     patch:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: updateWorkflow
       x-platforms: [hubspot, salesforce, gohighlevel]
       summary: Update workflow
@@ -87805,7 +87805,7 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
     delete:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: deleteWorkflow
       summary: Delete workflow
       description: Permanently delete a workflow and all of its executions.
@@ -87820,7 +87820,7 @@ paths:
   /v1/workflows/{workflowId}/activate:
     post:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: activateWorkflow
       summary: Activate workflow
       description: Validate the graph is runnable and set the workflow live. Once active, matching inbound messages start executions. Idempotent.
@@ -87849,7 +87849,7 @@ paths:
   /v1/workflows/{workflowId}/pause:
     post:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: pauseWorkflow
       summary: Pause workflow
       description: Stop matching new inbound messages. In-flight executions continue to completion. Idempotent.
@@ -87877,7 +87877,7 @@ paths:
   /v1/workflows/{workflowId}/take-over:
     post:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: takeOverWorkflow
       summary: Take over a workflow
       description: |
@@ -88095,7 +88095,7 @@ paths:
   /v1/workflows/{workflowId}/duplicate:
     post:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: duplicateWorkflow
       summary: Duplicate a workflow
       description: >
@@ -88214,7 +88214,7 @@ paths:
   /v1/workflows/{workflowId}/versions/{version}/restore:
     post:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: restoreWorkflowVersion
       summary: Restore a workflow version
       description: |
@@ -90618,7 +90618,7 @@ paths:
   /v1/automations/preview:
     post:
       x-resource-group: "ads"
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       operationId: previewAutomationDraft
       tags: [Automations]
       summary: Preview an unsaved automation
@@ -90870,7 +90870,7 @@ paths:
   /v1/automations/{automationId}/preview:
     post:
       x-resource-group: "ads"
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       operationId: previewAutomation
       tags: [Automations]
       summary: Preview a saved automation
@@ -91889,7 +91889,7 @@ paths:
   /v1/automations/backtest:
     post:
       x-resource-group: "ads"
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       operationId: backtestAutomationDraft
       tags:
         - Automations
@@ -91926,7 +91926,7 @@ paths:
   /v1/automations/{automationId}/backtest:
     post:
       x-resource-group: "ads"
-      x-oauth-scopes: ["ads:write"]
+      x-oauth-scopes: ["ads:write", "ads:read"]
       operationId: backtestAutomation
       tags:
         - Automations
@@ -116036,7 +116036,7 @@ paths:
         '403': { x-summary: "Ads access, a permission or the account selection is missing: enable access, grant it, or add the ad account to the selection.", description: "Ads access required, or the token lacks the ads permissions.\n\nAlso returned with code `ad_account_not_selected` when the connection has selected ad accounts and the targeted ad account is not among them. `details` carries `accountId`, `adAccountId` and `selectedAdAccountIds`.\n\nFix: add the ad account to the selection (GET /v1/connect/{platform}/ads with adAccountIds, which replaces the selection), or use a connection that has it selected." }
     post:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: createCustomConversion
       deprecated: true
       tags: ["Ad Accounts"]
@@ -119086,7 +119086,7 @@ paths:
 
     post:
       x-resource-group: "publishing"
-      x-oauth-scopes: ["posts:read", "posts:write"]
+      x-oauth-scopes: ["posts:write"]
       operationId: createBlog
       tags: ["Blogs"]
       x-platforms: ["shopify"]
@@ -119166,7 +119166,7 @@ paths:
 
     patch:
       x-resource-group: "publishing"
-      x-oauth-scopes: ["posts:read", "posts:write"]
+      x-oauth-scopes: ["posts:write"]
       operationId: updateBlog
       tags: ["Blogs"]
       x-platforms: ["shopify"]
@@ -119211,7 +119211,7 @@ paths:
 
     delete:
       x-resource-group: "publishing"
-      x-oauth-scopes: ["posts:read", "posts:write"]
+      x-oauth-scopes: ["posts:write"]
       operationId: deleteBlog
       tags: ["Blogs"]
       x-platforms: ["shopify"]
@@ -119293,7 +119293,7 @@ paths:
 
     post:
       x-resource-group: "publishing"
-      x-oauth-scopes: ["posts:read", "posts:write"]
+      x-oauth-scopes: ["posts:write"]
       operationId: createBlogArticle
       tags: ["Blogs"]
       x-platforms: ["shopify", "wordpress", "wix", "webflow"]
@@ -119437,7 +119437,7 @@ paths:
 
     patch:
       x-resource-group: "publishing"
-      x-oauth-scopes: ["posts:read", "posts:write"]
+      x-oauth-scopes: ["posts:write"]
       operationId: updateBlogArticle
       tags: ["Blogs"]
       x-platforms: ["shopify", "wordpress", "wix", "webflow"]
@@ -119517,7 +119517,7 @@ paths:
 
     delete:
       x-resource-group: "publishing"
-      x-oauth-scopes: ["posts:read", "posts:write"]
+      x-oauth-scopes: ["posts:write"]
       operationId: deleteBlogArticle
       tags: ["Blogs"]
       x-platforms: ["shopify", "wordpress", "wix", "webflow"]
@@ -123757,7 +123757,7 @@ paths:
   /v1/media/prepare:
     post:
       x-resource-group: "publishing"
-      x-oauth-scopes: ["posts:read", "posts:write"]
+      x-oauth-scopes: ["posts:write"]
       operationId: prepareMedia
       tags: [Media]
       summary: Prepare media for a platform
@@ -124064,7 +124064,7 @@ paths:
         '403': { $ref: '#/components/responses/ResourceGroupForbidden' }
     post:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: createConversionAuditMonitor
       tags:
         - Conversion Audit
@@ -124123,7 +124123,7 @@ paths:
   /v1/conversion-audit/monitors/{monitorId}:
     delete:
       x-resource-group: "accounts"
-      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      x-oauth-scopes: ["accounts:write"]
       operationId: deleteConversionAuditMonitor
       tags:
         - Conversion Audit

@@ -60566,46 +60566,19 @@ def register_generated_tools(mcp, _get_client):
 # The OAuth scopes any one of which reaches each tool, from the spec's x-oauth-scopes;
 # the first is the one the tool declares (securitySchemes).
 TOOL_OAUTH_SCOPES: dict[str, tuple[str, ...]] = {
-    "account_groups_create_account_group": (
-        "accounts:write",
-        "accounts:read",
-    ),
-    "account_groups_delete_account_group": (
-        "accounts:write",
-        "accounts:read",
-    ),
+    "account_groups_create_account_group": ("accounts:write",),
+    "account_groups_delete_account_group": ("accounts:write",),
     "account_groups_list_account_groups": (
         "accounts:read",
         "accounts:write",
     ),
-    "account_groups_update_account_group": (
-        "accounts:write",
-        "accounts:read",
-    ),
-    "account_settings_delete_instagram_ice_breakers": (
-        "accounts:write",
-        "accounts:read",
-    ),
-    "account_settings_delete_messenger_get_started": (
-        "accounts:write",
-        "accounts:read",
-    ),
-    "account_settings_delete_messenger_greeting": (
-        "accounts:write",
-        "accounts:read",
-    ),
-    "account_settings_delete_messenger_ice_breakers": (
-        "accounts:write",
-        "accounts:read",
-    ),
-    "account_settings_delete_messenger_menu": (
-        "accounts:write",
-        "accounts:read",
-    ),
-    "account_settings_delete_telegram_commands": (
-        "accounts:write",
-        "accounts:read",
-    ),
+    "account_groups_update_account_group": ("accounts:write",),
+    "account_settings_delete_instagram_ice_breakers": ("accounts:write",),
+    "account_settings_delete_messenger_get_started": ("accounts:write",),
+    "account_settings_delete_messenger_greeting": ("accounts:write",),
+    "account_settings_delete_messenger_ice_breakers": ("accounts:write",),
+    "account_settings_delete_messenger_menu": ("accounts:write",),
+    "account_settings_delete_telegram_commands": ("accounts:write",),
     "account_settings_get_facebook_page_info": (
         "accounts:read",
         "accounts:write",
@@ -60638,55 +60611,19 @@ TOOL_OAUTH_SCOPES: dict[str, tuple[str, ...]] = {
         "accounts:read",
         "accounts:write",
     ),
-    "account_settings_set_instagram_ice_breakers": (
-        "accounts:write",
-        "accounts:read",
-    ),
-    "account_settings_set_messenger_get_started": (
-        "accounts:write",
-        "accounts:read",
-    ),
-    "account_settings_set_messenger_greeting": (
-        "accounts:write",
-        "accounts:read",
-    ),
-    "account_settings_set_messenger_ice_breakers": (
-        "accounts:write",
-        "accounts:read",
-    ),
-    "account_settings_set_messenger_menu": (
-        "accounts:write",
-        "accounts:read",
-    ),
-    "account_settings_set_telegram_commands": (
-        "accounts:write",
-        "accounts:read",
-    ),
-    "account_settings_update_facebook_page_info": (
-        "accounts:write",
-        "accounts:read",
-    ),
+    "account_settings_set_instagram_ice_breakers": ("accounts:write",),
+    "account_settings_set_messenger_get_started": ("accounts:write",),
+    "account_settings_set_messenger_greeting": ("accounts:write",),
+    "account_settings_set_messenger_ice_breakers": ("accounts:write",),
+    "account_settings_set_messenger_menu": ("accounts:write",),
+    "account_settings_set_telegram_commands": ("accounts:write",),
+    "account_settings_update_facebook_page_info": ("accounts:write",),
     "accounts_batch_get_google_business_reviews": ("messaging:write",),
-    "accounts_create_google_business_media": (
-        "accounts:write",
-        "accounts:read",
-    ),
-    "accounts_create_google_business_place_action": (
-        "accounts:write",
-        "accounts:read",
-    ),
-    "accounts_delete_account": (
-        "accounts:write",
-        "accounts:read",
-    ),
-    "accounts_delete_google_business_media": (
-        "accounts:write",
-        "accounts:read",
-    ),
-    "accounts_delete_google_business_place_action": (
-        "accounts:write",
-        "accounts:read",
-    ),
+    "accounts_create_google_business_media": ("accounts:write",),
+    "accounts_create_google_business_place_action": ("accounts:write",),
+    "accounts_delete_account": ("accounts:write",),
+    "accounts_delete_google_business_media": ("accounts:write",),
+    "accounts_delete_google_business_place_action": ("accounts:write",),
     "accounts_delete_google_business_review_reply": ("messaging:write",),
     "accounts_get_account": (
         "accounts:read",
@@ -60769,10 +60706,7 @@ TOOL_OAUTH_SCOPES: dict[str, tuple[str, ...]] = {
         "accounts:read",
         "accounts:write",
     ),
-    "accounts_grant_business_partner": (
-        "accounts:write",
-        "accounts:read",
-    ),
+    "accounts_grant_business_partner": ("accounts:write",),
     "accounts_list_accounts": (
         "accounts:read",
         "accounts:write",
@@ -60801,15 +60735,9 @@ TOOL_OAUTH_SCOPES: dict[str, tuple[str, ...]] = {
         "accounts:read",
         "accounts:write",
     ),
-    "accounts_move_account_to_profile": (
-        "accounts:write",
-        "accounts:read",
-    ),
+    "accounts_move_account_to_profile": ("accounts:write",),
     "accounts_reply_to_google_business_review": ("messaging:write",),
-    "accounts_revoke_business_partner": (
-        "accounts:write",
-        "accounts:read",
-    ),
+    "accounts_revoke_business_partner": ("accounts:write",),
     "accounts_search_tik_tok_locations": (
         "accounts:read",
         "accounts:write",
@@ -60817,50 +60745,17 @@ TOOL_OAUTH_SCOPES: dict[str, tuple[str, ...]] = {
     "accounts_send_gohighlevel_past_won_deals": ("ads:write",),
     "accounts_start_gohighlevel_audience_sync": ("ads:write",),
     "accounts_stop_gohighlevel_audience_sync": ("ads:write",),
-    "accounts_update_account": (
-        "accounts:write",
-        "accounts:read",
-    ),
-    "accounts_update_bluesky_settings": (
-        "accounts:write",
-        "accounts:read",
-    ),
-    "accounts_update_gohighlevel_settings": (
-        "accounts:write",
-        "accounts:read",
-    ),
-    "accounts_update_google_business_attributes": (
-        "accounts:write",
-        "accounts:read",
-    ),
-    "accounts_update_google_business_food_menus": (
-        "accounts:write",
-        "accounts:read",
-    ),
-    "accounts_update_google_business_location_details": (
-        "accounts:write",
-        "accounts:read",
-    ),
-    "accounts_update_google_business_place_action": (
-        "accounts:write",
-        "accounts:read",
-    ),
-    "accounts_update_hub_spot_settings": (
-        "accounts:write",
-        "accounts:read",
-    ),
-    "accounts_update_salesforce_settings": (
-        "accounts:write",
-        "accounts:read",
-    ),
-    "accounts_update_slack_settings": (
-        "accounts:write",
-        "accounts:read",
-    ),
-    "accounts_update_stripe_settings": (
-        "accounts:write",
-        "accounts:read",
-    ),
+    "accounts_update_account": ("accounts:write",),
+    "accounts_update_bluesky_settings": ("accounts:write",),
+    "accounts_update_gohighlevel_settings": ("accounts:write",),
+    "accounts_update_google_business_attributes": ("accounts:write",),
+    "accounts_update_google_business_food_menus": ("accounts:write",),
+    "accounts_update_google_business_location_details": ("accounts:write",),
+    "accounts_update_google_business_place_action": ("accounts:write",),
+    "accounts_update_hub_spot_settings": ("accounts:write",),
+    "accounts_update_salesforce_settings": ("accounts:write",),
+    "accounts_update_slack_settings": ("accounts:write",),
+    "accounts_update_stripe_settings": ("accounts:write",),
     "accounts_verify_gohighlevel_funnel_tracking": ("ads:write",),
     "ad_accounts_add_account_callouts": ("ads:write",),
     "ad_accounts_add_account_sitelinks": ("ads:write",),
@@ -60871,10 +60766,7 @@ TOOL_OAUTH_SCOPES: dict[str, tuple[str, ...]] = {
     "ad_accounts_create_ad_account": ("ads:write",),
     "ad_accounts_create_ad_label": ("ads:write",),
     "ad_accounts_create_ad_negative_keyword_list": ("ads:write",),
-    "ad_accounts_create_custom_conversion": (
-        "accounts:write",
-        "accounts:read",
-    ),
+    "ad_accounts_create_custom_conversion": ("accounts:write",),
     "ad_accounts_create_high_demand_period": ("ads:write",),
     "ad_accounts_create_value_rule_set": ("ads:write",),
     "ad_accounts_delete_ad_comment": ("messaging:write",),
@@ -61426,14 +61318,17 @@ TOOL_OAUTH_SCOPES: dict[str, tuple[str, ...]] = {
     "analytics_query_google_search_console_search_analytics": ("analytics:read",),
     "analytics_run_google_analytics_realtime_report": ("analytics:read",),
     "analytics_run_google_analytics_report": ("analytics:read",),
-    "analytics_sync_external_posts": (
-        "posts:write",
-        "posts:read",
-    ),
+    "analytics_sync_external_posts": ("posts:write",),
     "automations_activate_automation": ("ads:write",),
     "automations_approve_automation_approval": ("ads:write",),
-    "automations_backtest_automation": ("ads:write",),
-    "automations_backtest_automation_draft": ("ads:write",),
+    "automations_backtest_automation": (
+        "ads:write",
+        "ads:read",
+    ),
+    "automations_backtest_automation_draft": (
+        "ads:write",
+        "ads:read",
+    ),
     "automations_create_automation": ("ads:write",),
     "automations_create_automation_template": ("ads:write",),
     "automations_delete_automation": ("ads:write",),
@@ -61502,8 +61397,14 @@ TOOL_OAUTH_SCOPES: dict[str, tuple[str, ...]] = {
         "ads:write",
     ),
     "automations_pause_automation": ("ads:write",),
-    "automations_preview_automation": ("ads:write",),
-    "automations_preview_automation_draft": ("ads:write",),
+    "automations_preview_automation": (
+        "ads:read",
+        "ads:write",
+    ),
+    "automations_preview_automation_draft": (
+        "ads:read",
+        "ads:write",
+    ),
     "automations_reject_automation_approval": ("ads:write",),
     "automations_take_over_automation": ("ads:write",),
     "automations_test_automation": ("ads:write",),
@@ -61511,22 +61412,10 @@ TOOL_OAUTH_SCOPES: dict[str, tuple[str, ...]] = {
     "automations_update_automation_ad_account_controls": ("ads:write",),
     "automations_update_automation_controls": ("ads:write",),
     "automations_update_automation_template": ("ads:write",),
-    "blogs_create_blog": (
-        "posts:write",
-        "posts:read",
-    ),
-    "blogs_create_blog_article": (
-        "posts:write",
-        "posts:read",
-    ),
-    "blogs_delete_blog": (
-        "posts:write",
-        "posts:read",
-    ),
-    "blogs_delete_blog_article": (
-        "posts:write",
-        "posts:read",
-    ),
+    "blogs_create_blog": ("posts:write",),
+    "blogs_create_blog_article": ("posts:write",),
+    "blogs_delete_blog": ("posts:write",),
+    "blogs_delete_blog_article": ("posts:write",),
     "blogs_get_blog": (
         "posts:read",
         "posts:write",
@@ -61543,14 +61432,8 @@ TOOL_OAUTH_SCOPES: dict[str, tuple[str, ...]] = {
         "posts:read",
         "posts:write",
     ),
-    "blogs_update_blog": (
-        "posts:write",
-        "posts:read",
-    ),
-    "blogs_update_blog_article": (
-        "posts:write",
-        "posts:read",
-    ),
+    "blogs_update_blog": ("posts:write",),
+    "blogs_update_blog_article": ("posts:write",),
     "branded_calling_attach_branded_calling_numbers": ("messaging:write",),
     "branded_calling_confirm_branded_calling_authorizer_email": ("messaging:write",),
     "branded_calling_create_branded_calling_enterprise": ("messaging:write",),
@@ -61869,86 +61752,29 @@ TOOL_OAUTH_SCOPES: dict[str, tuple[str, ...]] = {
     "commerce_update_commerce_product_prices": ("commerce:write",),
     "commerce_update_commerce_redirect": ("commerce:write",),
     "commerce_upsert_commerce_marketing_activity": ("commerce:write",),
-    "connect_add_org_connection_mailbox": (
-        "accounts:write",
-        "accounts:read",
-    ),
+    "connect_add_org_connection_mailbox": ("accounts:write",),
     "connect_ads": (
         "accounts:read",
         "accounts:write",
     ),
-    "connect_app_lovin_ads_credentials": (
-        "accounts:write",
-        "accounts:read",
-    ),
-    "connect_assign_google_business_location": (
-        "accounts:write",
-        "accounts:read",
-    ),
-    "connect_attentive_credentials": (
-        "accounts:write",
-        "accounts:read",
-    ),
-    "connect_awin_credentials": (
-        "accounts:write",
-        "accounts:read",
-    ),
-    "connect_bluesky_credentials": (
-        "accounts:write",
-        "accounts:read",
-    ),
-    "connect_complete_telegram_connect": (
-        "accounts:write",
-        "accounts:read",
-    ),
-    "connect_complete_whats_app_phone_selection": (
-        "accounts:write",
-        "accounts:read",
-    ),
-    "connect_configure_tik_tok_ads_brand_identity": (
-        "accounts:write",
-        "accounts:read",
-    ),
-    "connect_create_google_business_location": (
-        "accounts:write",
-        "accounts:read",
-    ),
-    "connect_create_google_org_connection": (
-        "accounts:write",
-        "accounts:read",
-    ),
-    "connect_create_microsoft_org_connection": (
-        "accounts:write",
-        "accounts:read",
-    ),
-    "connect_create_o_auth_app": (
-        "accounts:write",
-        "accounts:read",
-    ),
-    "connect_create_pinterest_board": (
-        "accounts:write",
-        "accounts:read",
-    ),
-    "connect_create_platform_invite": (
-        "accounts:write",
-        "accounts:read",
-    ),
-    "connect_create_youtube_playlist": (
-        "accounts:write",
-        "accounts:read",
-    ),
-    "connect_delete_o_auth_app": (
-        "accounts:write",
-        "accounts:read",
-    ),
-    "connect_delete_org_connection": (
-        "accounts:write",
-        "accounts:read",
-    ),
-    "connect_discord_channel": (
-        "accounts:write",
-        "accounts:read",
-    ),
+    "connect_app_lovin_ads_credentials": ("accounts:write",),
+    "connect_assign_google_business_location": ("accounts:write",),
+    "connect_attentive_credentials": ("accounts:write",),
+    "connect_awin_credentials": ("accounts:write",),
+    "connect_bluesky_credentials": ("accounts:write",),
+    "connect_complete_telegram_connect": ("accounts:write",),
+    "connect_complete_whats_app_phone_selection": ("accounts:write",),
+    "connect_configure_tik_tok_ads_brand_identity": ("accounts:write",),
+    "connect_create_google_business_location": ("accounts:write",),
+    "connect_create_google_org_connection": ("accounts:write",),
+    "connect_create_microsoft_org_connection": ("accounts:write",),
+    "connect_create_o_auth_app": ("accounts:write",),
+    "connect_create_pinterest_board": ("accounts:write",),
+    "connect_create_platform_invite": ("accounts:write",),
+    "connect_create_youtube_playlist": ("accounts:write",),
+    "connect_delete_o_auth_app": ("accounts:write",),
+    "connect_delete_org_connection": ("accounts:write",),
+    "connect_discord_channel": ("accounts:write",),
     "connect_get_amazon_ads_connect_url": (
         "accounts:read",
         "accounts:write",
@@ -62073,26 +61899,11 @@ TOOL_OAUTH_SCOPES: dict[str, tuple[str, ...]] = {
         "accounts:read",
         "accounts:write",
     ),
-    "connect_handle_o_auth_callback": (
-        "accounts:write",
-        "accounts:read",
-    ),
-    "connect_impact_credentials": (
-        "accounts:write",
-        "accounts:read",
-    ),
-    "connect_initiate_telegram_connect": (
-        "accounts:write",
-        "accounts:read",
-    ),
-    "connect_klaviyo_credentials": (
-        "accounts:write",
-        "accounts:read",
-    ),
-    "connect_line_credentials": (
-        "accounts:write",
-        "accounts:read",
-    ),
+    "connect_handle_o_auth_callback": ("accounts:write",),
+    "connect_impact_credentials": ("accounts:write",),
+    "connect_initiate_telegram_connect": ("accounts:write",),
+    "connect_klaviyo_credentials": ("accounts:write",),
+    "connect_line_credentials": ("accounts:write",),
     "connect_list_campaign_manager_profiles": (
         "accounts:read",
         "accounts:write",
@@ -62149,159 +61960,48 @@ TOOL_OAUTH_SCOPES: dict[str, tuple[str, ...]] = {
         "accounts:read",
         "accounts:write",
     ),
-    "connect_open_ai_ads_credentials": (
-        "accounts:write",
-        "accounts:read",
-    ),
-    "connect_outbrain_ads_credentials": (
-        "accounts:write",
-        "accounts:read",
-    ),
-    "connect_resync_page_webhook_subscription": (
-        "accounts:write",
-        "accounts:read",
-    ),
-    "connect_search_google_business_locations": (
-        "accounts:read",
-        "accounts:write",
-    ),
-    "connect_select_campaign_manager_profile": (
-        "accounts:write",
-        "accounts:read",
-    ),
-    "connect_select_facebook_page": (
-        "accounts:write",
-        "accounts:read",
-    ),
-    "connect_select_google_analytics_property": (
-        "accounts:write",
-        "accounts:read",
-    ),
-    "connect_select_google_business_location": (
-        "accounts:write",
-        "accounts:read",
-    ),
-    "connect_select_google_search_console_site": (
-        "accounts:write",
-        "accounts:read",
-    ),
-    "connect_select_instagram_account": (
-        "accounts:write",
-        "accounts:read",
-    ),
-    "connect_select_linked_in_organization": (
-        "accounts:write",
-        "accounts:read",
-    ),
-    "connect_select_pinterest_board": (
-        "accounts:write",
-        "accounts:read",
-    ),
-    "connect_select_snapchat_profile": (
-        "accounts:write",
-        "accounts:read",
-    ),
-    "connect_set_reddit_post_flair": (
-        "accounts:write",
-        "accounts:read",
-    ),
-    "connect_shopify_with_token": (
-        "accounts:write",
-        "accounts:read",
-    ),
-    "connect_slack_channel": (
-        "accounts:write",
-        "accounts:read",
-    ),
-    "connect_snapchat_ads_credentials": (
-        "accounts:write",
-        "accounts:read",
-    ),
+    "connect_open_ai_ads_credentials": ("accounts:write",),
+    "connect_outbrain_ads_credentials": ("accounts:write",),
+    "connect_resync_page_webhook_subscription": ("accounts:write",),
+    "connect_search_google_business_locations": ("accounts:write",),
+    "connect_select_campaign_manager_profile": ("accounts:write",),
+    "connect_select_facebook_page": ("accounts:write",),
+    "connect_select_google_analytics_property": ("accounts:write",),
+    "connect_select_google_business_location": ("accounts:write",),
+    "connect_select_google_search_console_site": ("accounts:write",),
+    "connect_select_instagram_account": ("accounts:write",),
+    "connect_select_linked_in_organization": ("accounts:write",),
+    "connect_select_pinterest_board": ("accounts:write",),
+    "connect_select_snapchat_profile": ("accounts:write",),
+    "connect_set_reddit_post_flair": ("accounts:write",),
+    "connect_shopify_with_token": ("accounts:write",),
+    "connect_slack_channel": ("accounts:write",),
+    "connect_snapchat_ads_credentials": ("accounts:write",),
     "connect_start_microsoft_admin_consent": (
         "accounts:read",
         "accounts:write",
     ),
-    "connect_taboola_ads_credentials": (
-        "accounts:write",
-        "accounts:read",
-    ),
-    "connect_test_o_auth_app": (
-        "accounts:write",
-        "accounts:read",
-    ),
-    "connect_trade_desk_ads_credentials": (
-        "accounts:write",
-        "accounts:read",
-    ),
-    "connect_trade_desk_ads_partner": (
-        "accounts:write",
-        "accounts:read",
-    ),
-    "connect_update_connect_welcome_screen": (
-        "accounts:write",
-        "accounts:read",
-    ),
-    "connect_update_facebook_page": (
-        "accounts:write",
-        "accounts:read",
-    ),
-    "connect_update_gmb_location": (
-        "accounts:write",
-        "accounts:read",
-    ),
-    "connect_update_linked_in_organization": (
-        "accounts:write",
-        "accounts:read",
-    ),
-    "connect_update_o_auth_app": (
-        "accounts:write",
-        "accounts:read",
-    ),
-    "connect_update_org_connection": (
-        "accounts:write",
-        "accounts:read",
-    ),
-    "connect_update_pinterest_boards": (
-        "accounts:write",
-        "accounts:read",
-    ),
-    "connect_update_reddit_subreddits": (
-        "accounts:write",
-        "accounts:read",
-    ),
-    "connect_update_youtube_default_playlist": (
-        "accounts:write",
-        "accounts:read",
-    ),
-    "connect_verify_org_connection": (
-        "accounts:write",
-        "accounts:read",
-    ),
+    "connect_taboola_ads_credentials": ("accounts:write",),
+    "connect_test_o_auth_app": ("accounts:write",),
+    "connect_trade_desk_ads_credentials": ("accounts:write",),
+    "connect_trade_desk_ads_partner": ("accounts:write",),
+    "connect_update_connect_welcome_screen": ("accounts:write",),
+    "connect_update_facebook_page": ("accounts:write",),
+    "connect_update_gmb_location": ("accounts:write",),
+    "connect_update_linked_in_organization": ("accounts:write",),
+    "connect_update_o_auth_app": ("accounts:write",),
+    "connect_update_org_connection": ("accounts:write",),
+    "connect_update_pinterest_boards": ("accounts:write",),
+    "connect_update_reddit_subreddits": ("accounts:write",),
+    "connect_update_youtube_default_playlist": ("accounts:write",),
+    "connect_verify_org_connection": ("accounts:write",),
     "connect_vote_reddit_thing": ("messaging:write",),
-    "connect_webflow_with_site_token": (
-        "accounts:write",
-        "accounts:read",
-    ),
-    "connect_wechat_credentials": (
-        "accounts:write",
-        "accounts:read",
-    ),
-    "connect_whats_app_credentials": (
-        "accounts:write",
-        "accounts:read",
-    ),
-    "connect_whats_app_embedded_signup": (
-        "accounts:write",
-        "accounts:read",
-    ),
-    "connect_whop_ads_credentials": (
-        "accounts:write",
-        "accounts:read",
-    ),
-    "connect_word_press_with_application_password": (
-        "accounts:write",
-        "accounts:read",
-    ),
+    "connect_webflow_with_site_token": ("accounts:write",),
+    "connect_wechat_credentials": ("accounts:write",),
+    "connect_whats_app_credentials": ("accounts:write",),
+    "connect_whats_app_embedded_signup": ("accounts:write",),
+    "connect_whop_ads_credentials": ("accounts:write",),
+    "connect_word_press_with_application_password": ("accounts:write",),
     "contacts_autocomplete_contacts": (
         "contacts:read",
         "automations:write",
@@ -62330,18 +62030,9 @@ TOOL_OAUTH_SCOPES: dict[str, tuple[str, ...]] = {
         "accounts:read",
         "accounts:write",
     ),
-    "content_retention_update_content_retention": (
-        "accounts:write",
-        "accounts:read",
-    ),
-    "conversion_audit_create_conversion_audit_monitor": (
-        "accounts:write",
-        "accounts:read",
-    ),
-    "conversion_audit_delete_conversion_audit_monitor": (
-        "accounts:write",
-        "accounts:read",
-    ),
+    "content_retention_update_content_retention": ("accounts:write",),
+    "conversion_audit_create_conversion_audit_monitor": ("accounts:write",),
+    "conversion_audit_delete_conversion_audit_monitor": ("accounts:write",),
     "conversion_audit_get_meta_conversion_audit": (
         "ads:read",
         "ads:write",
@@ -62555,23 +62246,14 @@ TOOL_OAUTH_SCOPES: dict[str, tuple[str, ...]] = {
     "crm_update_crm_contact": ("automations:write",),
     "crm_update_crm_deal": ("automations:write",),
     "custom_fields_clear_contact_field_value": ("automations:write",),
-    "custom_fields_create_custom_field": (
-        "accounts:write",
-        "accounts:read",
-    ),
-    "custom_fields_delete_custom_field": (
-        "accounts:write",
-        "accounts:read",
-    ),
+    "custom_fields_create_custom_field": ("accounts:write",),
+    "custom_fields_delete_custom_field": ("accounts:write",),
     "custom_fields_list_custom_fields": (
         "accounts:read",
         "accounts:write",
     ),
     "custom_fields_set_contact_field_value": ("automations:write",),
-    "custom_fields_update_custom_field": (
-        "accounts:write",
-        "accounts:read",
-    ),
+    "custom_fields_update_custom_field": ("accounts:write",),
     "discord_add_discord_member_role": ("automations:write",),
     "discord_create_discord_guild_role": ("messaging:write",),
     "discord_create_discord_scheduled_event": ("messaging:write",),
@@ -62622,10 +62304,7 @@ TOOL_OAUTH_SCOPES: dict[str, tuple[str, ...]] = {
     "discord_send_discord_direct_message": ("messaging:write",),
     "discord_unpin_discord_message": ("messaging:write",),
     "discord_update_discord_scheduled_event": ("messaging:write",),
-    "discord_update_discord_settings": (
-        "accounts:write",
-        "accounts:read",
-    ),
+    "discord_update_discord_settings": ("accounts:write",),
     "email_add_email_shared_mailbox": ("messaging:write",),
     "email_cancel_scheduled_email": ("messaging:write",),
     "email_create_email_draft": ("messaging:write",),
@@ -62708,10 +62387,7 @@ TOOL_OAUTH_SCOPES: dict[str, tuple[str, ...]] = {
     "email_update_email_message": ("messaging:write",),
     "email_update_email_signature": ("messaging:write",),
     "email_update_email_thread": ("messaging:write",),
-    "feedback_submit_feedback": (
-        "accounts:write",
-        "accounts:read",
-    ),
+    "feedback_submit_feedback": ("accounts:write",),
     "files_create_file_picker_session": ("files:write",),
     "files_create_folder": ("files:write",),
     "files_download_file": ("files:write",),
@@ -62725,26 +62401,14 @@ TOOL_OAUTH_SCOPES: dict[str, tuple[str, ...]] = {
         "accounts:read",
         "accounts:write",
     ),
-    "gmb_services_update_google_business_services": (
-        "accounts:write",
-        "accounts:read",
-    ),
-    "gmb_verifications_complete_google_business_verification": (
-        "accounts:write",
-        "accounts:read",
-    ),
-    "gmb_verifications_fetch_google_business_verification_options": (
-        "accounts:read",
-        "accounts:write",
-    ),
+    "gmb_services_update_google_business_services": ("accounts:write",),
+    "gmb_verifications_complete_google_business_verification": ("accounts:write",),
+    "gmb_verifications_fetch_google_business_verification_options": ("accounts:write",),
     "gmb_verifications_get_google_business_verifications": (
         "accounts:read",
         "accounts:write",
     ),
-    "gmb_verifications_start_google_business_verification": (
-        "accounts:write",
-        "accounts:read",
-    ),
+    "gmb_verifications_start_google_business_verification": ("accounts:write",),
     "inbox_analytics_get_inbox_conversation_analytics": (
         "messaging:read",
         "messaging:write",
@@ -62819,14 +62483,8 @@ TOOL_OAUTH_SCOPES: dict[str, tuple[str, ...]] = {
         "posts:read",
         "posts:write",
     ),
-    "media_get_media_presigned_url": (
-        "posts:write",
-        "posts:read",
-    ),
-    "media_prepare_media": (
-        "posts:write",
-        "posts:read",
-    ),
+    "media_get_media_presigned_url": ("posts:write",),
+    "media_prepare_media": ("posts:write",),
     "mentions_list_inbox_mentions": (
         "messaging:read",
         "messaging:write",
@@ -62876,10 +62534,7 @@ TOOL_OAUTH_SCOPES: dict[str, tuple[str, ...]] = {
     "messages_send_typing_indicator": ("messaging:write",),
     "messages_set_conversation_thread_control": ("messaging:write",),
     "messages_update_inbox_conversation": ("messaging:write",),
-    "messages_upload_media_direct": (
-        "posts:write",
-        "posts:read",
-    ),
+    "messages_upload_media_direct": ("posts:write",),
     "messaging_ads_create_call_ad": ("ads:write",),
     "messaging_ads_create_ctwa_ad": ("ads:write",),
     "messaging_ads_create_messaging_ad": ("ads:write",),
@@ -62981,22 +62636,10 @@ TOOL_OAUTH_SCOPES: dict[str, tuple[str, ...]] = {
         "messaging:read",
         "messaging:write",
     ),
-    "posts_bulk_upload_posts": (
-        "posts:write",
-        "posts:read",
-    ),
-    "posts_create_post": (
-        "posts:write",
-        "posts:read",
-    ),
-    "posts_delete_post": (
-        "posts:write",
-        "posts:read",
-    ),
-    "posts_edit_post": (
-        "posts:write",
-        "posts:read",
-    ),
+    "posts_bulk_upload_posts": ("posts:write",),
+    "posts_create_post": ("posts:write",),
+    "posts_delete_post": ("posts:write",),
+    "posts_edit_post": ("posts:write",),
     "posts_get_post": (
         "posts:read",
         "posts:write",
@@ -63005,30 +62648,12 @@ TOOL_OAUTH_SCOPES: dict[str, tuple[str, ...]] = {
         "posts:read",
         "posts:write",
     ),
-    "posts_pin_post": (
-        "posts:write",
-        "posts:read",
-    ),
-    "posts_review_post": (
-        "posts:write",
-        "posts:read",
-    ),
-    "posts_unpin_post": (
-        "posts:write",
-        "posts:read",
-    ),
-    "posts_unpublish_post": (
-        "posts:write",
-        "posts:read",
-    ),
-    "posts_update_post": (
-        "posts:write",
-        "posts:read",
-    ),
-    "posts_update_post_metadata": (
-        "posts:write",
-        "posts:read",
-    ),
+    "posts_pin_post": ("posts:write",),
+    "posts_review_post": ("posts:write",),
+    "posts_unpin_post": ("posts:write",),
+    "posts_unpublish_post": ("posts:write",),
+    "posts_update_post": ("posts:write",),
+    "posts_update_post_metadata": ("posts:write",),
     "product_catalogs_batch_ad_catalog_products": ("ads:write",),
     "product_catalogs_create_ad_catalog": ("ads:write",),
     "product_catalogs_create_ad_catalog_feed": ("ads:write",),
@@ -63075,14 +62700,8 @@ TOOL_OAUTH_SCOPES: dict[str, tuple[str, ...]] = {
     "products_get_product": ("commerce:write",),
     "products_list_products": ("commerce:write",),
     "products_update_product": ("commerce:write",),
-    "profiles_create_profile": (
-        "accounts:write",
-        "accounts:read",
-    ),
-    "profiles_delete_profile": (
-        "accounts:write",
-        "accounts:read",
-    ),
+    "profiles_create_profile": ("accounts:write",),
+    "profiles_delete_profile": ("accounts:write",),
     "profiles_get_profile": (
         "accounts:read",
         "accounts:write",
@@ -63095,18 +62714,9 @@ TOOL_OAUTH_SCOPES: dict[str, tuple[str, ...]] = {
         "accounts:read",
         "accounts:write",
     ),
-    "profiles_update_profile": (
-        "accounts:write",
-        "accounts:read",
-    ),
-    "queue_create_queue_slot": (
-        "posts:write",
-        "posts:read",
-    ),
-    "queue_delete_queue_slot": (
-        "posts:write",
-        "posts:read",
-    ),
+    "profiles_update_profile": ("accounts:write",),
+    "queue_create_queue_slot": ("posts:write",),
+    "queue_delete_queue_slot": ("posts:write",),
     "queue_get_next_queue_slot": (
         "posts:read",
         "posts:write",
@@ -63119,10 +62729,7 @@ TOOL_OAUTH_SCOPES: dict[str, tuple[str, ...]] = {
         "posts:read",
         "posts:write",
     ),
-    "queue_update_queue_slot": (
-        "posts:write",
-        "posts:read",
-    ),
+    "queue_update_queue_slot": ("posts:write",),
     "rcs_add_rcs_test_device": ("messaging:write",),
     "rcs_create_rcs_agent": ("messaging:write",),
     "rcs_deactivate_rcs_agent": ("messaging:write",),
@@ -63460,42 +63067,18 @@ TOOL_OAUTH_SCOPES: dict[str, tuple[str, ...]] = {
     "whatsapp_calling_update_whats_app_calling": ("messaging:write",),
     "whatsapp_calling_update_whats_app_calling_legacy": ("messaging:write",),
     "whatsapp_calling_verify_whats_app_caller_id": ("messaging:write",),
-    "whatsapp_create_whats_app_dataset": (
-        "accounts:write",
-        "accounts:read",
-    ),
+    "whatsapp_create_whats_app_dataset": ("accounts:write",),
     "whatsapp_create_whats_app_group_chat": ("messaging:write",),
     "whatsapp_create_whats_app_group_invite_link": ("messaging:write",),
-    "whatsapp_create_whats_app_template": (
-        "accounts:write",
-        "accounts:read",
-    ),
+    "whatsapp_create_whats_app_template": ("accounts:write",),
     "whatsapp_delete_whats_app_conversational_automation": ("messaging:write",),
     "whatsapp_delete_whats_app_group_chat": ("messaging:write",),
-    "whatsapp_delete_whats_app_template": (
-        "accounts:write",
-        "accounts:read",
-    ),
-    "whatsapp_delete_whats_app_template_by_id": (
-        "accounts:write",
-        "accounts:read",
-    ),
-    "whatsapp_delete_whatsapp_business_username": (
-        "accounts:write",
-        "accounts:read",
-    ),
-    "whatsapp_flows_create_whats_app_flow": (
-        "accounts:write",
-        "accounts:read",
-    ),
-    "whatsapp_flows_delete_whats_app_flow": (
-        "accounts:write",
-        "accounts:read",
-    ),
-    "whatsapp_flows_deprecate_whats_app_flow": (
-        "accounts:write",
-        "accounts:read",
-    ),
+    "whatsapp_delete_whats_app_template": ("accounts:write",),
+    "whatsapp_delete_whats_app_template_by_id": ("accounts:write",),
+    "whatsapp_delete_whatsapp_business_username": ("accounts:write",),
+    "whatsapp_flows_create_whats_app_flow": ("accounts:write",),
+    "whatsapp_flows_delete_whats_app_flow": ("accounts:write",),
+    "whatsapp_flows_deprecate_whats_app_flow": ("accounts:write",),
     "whatsapp_flows_get_whats_app_flow": (
         "accounts:read",
         "accounts:write",
@@ -63524,23 +63107,11 @@ TOOL_OAUTH_SCOPES: dict[str, tuple[str, ...]] = {
         "accounts:read",
         "accounts:write",
     ),
-    "whatsapp_flows_publish_whats_app_flow": (
-        "accounts:write",
-        "accounts:read",
-    ),
+    "whatsapp_flows_publish_whats_app_flow": ("accounts:write",),
     "whatsapp_flows_send_whats_app_flow_message": ("messaging:write",),
-    "whatsapp_flows_set_whats_app_flows_encryption_key": (
-        "accounts:write",
-        "accounts:read",
-    ),
-    "whatsapp_flows_update_whats_app_flow": (
-        "accounts:write",
-        "accounts:read",
-    ),
-    "whatsapp_flows_upload_whats_app_flow_json": (
-        "accounts:write",
-        "accounts:read",
-    ),
+    "whatsapp_flows_set_whats_app_flows_encryption_key": ("accounts:write",),
+    "whatsapp_flows_update_whats_app_flow": ("accounts:write",),
+    "whatsapp_flows_upload_whats_app_flow_json": ("accounts:write",),
     "whatsapp_get_whats_app_block_status": (
         "contacts:read",
         "automations:write",
@@ -63661,16 +63232,10 @@ TOOL_OAUTH_SCOPES: dict[str, tuple[str, ...]] = {
     "whatsapp_phone_numbers_validate_whats_app_number_kyc_address": (
         "messaging:write",
     ),
-    "whatsapp_register_whats_app_number": (
-        "accounts:write",
-        "accounts:read",
-    ),
+    "whatsapp_register_whats_app_number": ("accounts:write",),
     "whatsapp_reject_whats_app_group_join_requests": ("messaging:write",),
     "whatsapp_remove_whats_app_group_participants": ("messaging:write",),
-    "whatsapp_request_whats_app_verification_code": (
-        "accounts:write",
-        "accounts:read",
-    ),
+    "whatsapp_request_whats_app_verification_code": ("accounts:write",),
     "whatsapp_sandbox_create_whats_app_sandbox_session": ("messaging:write",),
     "whatsapp_sandbox_delete_whats_app_sandbox_session": ("messaging:write",),
     "whatsapp_sandbox_list_whats_app_sandbox_sessions": (
@@ -63679,58 +63244,25 @@ TOOL_OAUTH_SCOPES: dict[str, tuple[str, ...]] = {
     ),
     "whatsapp_send_whats_app_conversion": ("ads:write",),
     "whatsapp_set_whats_app_conversational_automation": ("messaging:write",),
-    "whatsapp_set_whatsapp_business_username": (
-        "accounts:write",
-        "accounts:read",
-    ),
+    "whatsapp_set_whatsapp_business_username": ("accounts:write",),
     "whatsapp_templates_get_whats_app_library_template": (
         "accounts:read",
         "accounts:write",
     ),
     "whatsapp_unblock_whats_app_users": ("automations:write",),
     "whatsapp_unlink_whats_app_catalog": ("messaging:write",),
-    "whatsapp_update_whats_app_business_profile": (
-        "accounts:write",
-        "accounts:read",
-    ),
+    "whatsapp_update_whats_app_business_profile": ("accounts:write",),
     "whatsapp_update_whats_app_commerce_settings": ("messaging:write",),
-    "whatsapp_update_whats_app_display_name": (
-        "accounts:write",
-        "accounts:read",
-    ),
+    "whatsapp_update_whats_app_display_name": ("accounts:write",),
     "whatsapp_update_whats_app_group_chat": ("messaging:write",),
-    "whatsapp_update_whats_app_template": (
-        "accounts:write",
-        "accounts:read",
-    ),
-    "whatsapp_update_whats_app_template_by_id": (
-        "accounts:write",
-        "accounts:read",
-    ),
-    "whatsapp_upload_whats_app_profile_photo": (
-        "accounts:write",
-        "accounts:read",
-    ),
-    "whatsapp_verify_whats_app_number": (
-        "accounts:write",
-        "accounts:read",
-    ),
-    "workflows_activate_workflow": (
-        "accounts:write",
-        "accounts:read",
-    ),
-    "workflows_create_workflow": (
-        "accounts:write",
-        "accounts:read",
-    ),
-    "workflows_delete_workflow": (
-        "accounts:write",
-        "accounts:read",
-    ),
-    "workflows_duplicate_workflow": (
-        "accounts:write",
-        "accounts:read",
-    ),
+    "whatsapp_update_whats_app_template": ("accounts:write",),
+    "whatsapp_update_whats_app_template_by_id": ("accounts:write",),
+    "whatsapp_upload_whats_app_profile_photo": ("accounts:write",),
+    "whatsapp_verify_whats_app_number": ("accounts:write",),
+    "workflows_activate_workflow": ("accounts:write",),
+    "workflows_create_workflow": ("accounts:write",),
+    "workflows_delete_workflow": ("accounts:write",),
+    "workflows_duplicate_workflow": ("accounts:write",),
     "workflows_get_workflow": (
         "accounts:read",
         "accounts:write",
@@ -63755,22 +63287,10 @@ TOOL_OAUTH_SCOPES: dict[str, tuple[str, ...]] = {
         "accounts:read",
         "accounts:write",
     ),
-    "workflows_pause_workflow": (
-        "accounts:write",
-        "accounts:read",
-    ),
-    "workflows_restore_workflow_version": (
-        "accounts:write",
-        "accounts:read",
-    ),
-    "workflows_take_over_workflow": (
-        "accounts:write",
-        "accounts:read",
-    ),
+    "workflows_pause_workflow": ("accounts:write",),
+    "workflows_restore_workflow_version": ("accounts:write",),
+    "workflows_take_over_workflow": ("accounts:write",),
     "workflows_trigger_api_call_workflow": ("messaging:write",),
     "workflows_trigger_workflow": ("messaging:write",),
-    "workflows_update_workflow": (
-        "accounts:write",
-        "accounts:read",
-    ),
+    "workflows_update_workflow": ("accounts:write",),
 }
