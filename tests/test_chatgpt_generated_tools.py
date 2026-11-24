@@ -25,6 +25,7 @@ from late.mcp.chatgpt_tools import (
     WAVE_1,
     WAVE_2,
     WAVE_3,
+    WAVE_4,
     WRITE_EFFECTS,
     _hints_for,
     concise_description,
@@ -113,6 +114,10 @@ async def test_every_generated_tool_has_explicit_hints_and_its_oauth_scope():
         ("workflows_trigger_api_call_workflow", True, True),
         ("posts_edit_post", True, True),
         ("accounts_reply_to_google_business_review", True, True),
+        ("ad_campaigns_create_standalone_ad", True, True),
+        ("ad_campaigns_update_ad_campaign_status", True, True),
+        ("accounts_delete_account", True, False),
+        ("comments_delete_inbox_comment", True, True),
     ],
 )
 async def test_a_write_says_whether_it_overwrites_and_whether_it_reaches_out(
@@ -134,7 +139,7 @@ async def test_every_listed_write_has_its_effects_spelled_out():
         if not listed[name]["annotations"]["readOnlyHint"]
     }
 
-    assert writes == set(WAVE_3)
+    assert writes == set(WAVE_3 + WAVE_4)
     for name in writes:
         hints = listed[name]["annotations"]
         effects = WRITE_EFFECTS[name]
@@ -161,14 +166,11 @@ def test_advertises_exactly_the_scopes_the_listed_tools_need():
     ]
     assert set(CHATGPT_SCOPES) == LINK_SCOPES | needed
     assert {"messaging:read", "ads:read", "contacts:read"} <= set(CHATGPT_SCOPES)
-    assert {"messaging:write", "accounts:write"} <= set(CHATGPT_SCOPES)
-    # automations:write also opens webhooks; ads:write and money:write spend.
-    assert not {
-        "automations:write",
-        "ads:write",
-        "money:write",
-        "commerce:write",
-    } & set(CHATGPT_SCOPES)
+    assert {"messaging:write", "accounts:write", "ads:write"} <= set(CHATGPT_SCOPES)
+    # automations:write also opens webhooks; money:write moves balance.
+    assert not {"automations:write", "money:write", "commerce:write"} & set(
+        CHATGPT_SCOPES
+    )
 
 
 async def test_a_held_write_says_who_it_reaches_right_after_its_title():
@@ -181,6 +183,14 @@ async def test_a_held_write_says_who_it_reaches_right_after_its_title():
     assert DESCRIPTION_LEADS.keys() <= set(CHATGPT_GENERATED_TOOLS)
 
 
+async def test_profile_id_says_where_the_id_comes_from():
+    listed = await _listed()
+
+    description = listed["comment_automations_create_comment_automation"]["description"]
+
+    assert "profile_id: A Zernio profile ID from profiles_list_profiles" in description
+
+
 def test_a_write_listed_without_its_effects_is_refused():
     generated = ToolAnnotations(readOnlyHint=False, destructiveHint=True)
 
@@ -191,7 +201,7 @@ def test_a_write_listed_without_its_effects_is_refused():
 async def test_the_whole_listing_stays_within_budget():
     listed = await _listed()
 
-    assert len(json.dumps(list(listed.values()))) < 300_000
+    assert len(json.dumps(list(listed.values()))) < 340_000
 
 
 def test_a_description_keeps_its_first_paragraph_and_one_line_per_argument():

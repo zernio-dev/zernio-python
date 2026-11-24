@@ -162,8 +162,7 @@ _OVERWRITES_IN_PUBLIC = {"destructive_hint": True, "open_world_hint": True}
 # broadcasts, managed messaging). Held back: creating and activating a
 # workflow (the API checks a workflow's sending nodes against API keys only,
 # so an OAuth link without messaging:write could install them) and updating a
-# contact (its only scope, automations:write, also opens webhooks). Deletes and
-# ad spend are a later wave.
+# contact (its only scope, automations:write, also opens webhooks).
 WAVE_3_EFFECTS = {
     "messages_send_inbox_message": _REACHES_OUT,
     "comments_send_private_reply_to_comment": _REACHES_OUT,
@@ -186,12 +185,25 @@ WAVE_3_EFFECTS = {
 }
 WAVE_3 = tuple(WAVE_3_EFFECTS)
 
-CHATGPT_GENERATED_TOOLS = WAVE_1 + WAVE_2 + WAVE_3
-WRITE_EFFECTS = WAVE_3_EFFECTS
+# Spend and deletes, all destructive: creating an ad and pausing or resuming a
+# campaign move real ad budget, the rest remove or hide what is there.
+WAVE_4_EFFECTS = {
+    "ad_campaigns_create_standalone_ad": _OVERWRITES_IN_PUBLIC,
+    "ad_campaigns_update_ad_campaign_status": _OVERWRITES_IN_PUBLIC,
+    "accounts_delete_account": _OVERWRITES,
+    "ad_insights_create_ad_insights_report": _OVERWRITES,
+    "comments_hide_inbox_comment": _OVERWRITES_IN_PUBLIC,
+    "comments_delete_inbox_comment": _OVERWRITES_IN_PUBLIC,
+}
+WAVE_4 = tuple(WAVE_4_EFFECTS)
 
-# OpenAI's scan held these writes on their generated text alone ("needs
-# further review"); each lead says who the call reaches and when nothing goes
-# out yet, which the generated summary leaves implicit.
+CHATGPT_GENERATED_TOOLS = WAVE_1 + WAVE_2 + WAVE_3 + WAVE_4
+WRITE_EFFECTS = WAVE_3_EFFECTS | WAVE_4_EFFECTS
+
+# Each lead says who a write reaches, what it spends or removes, and when
+# nothing goes out yet, which the generated summary leaves implicit. OpenAI's
+# scan held the first three on the generated text alone ("needs further
+# review").
 DESCRIPTION_LEADS = {
     "broadcasts_create_broadcast": (
         "Creates a draft only: nothing is sent to anyone. Sending is a separate "
@@ -209,8 +221,29 @@ DESCRIPTION_LEADS = {
         "message or call that person, or update the workflow's webhooks and CRM, "
         "so confirm with the user before calling."
     ),
+    "ad_campaigns_create_standalone_ad": (
+        "Spends the user's ad budget: unless status is PAUSED the ad goes live and "
+        "starts spending. Confirm the ad account, budget, schedule, targeting and "
+        "creative with the user before calling; validate_only checks it first "
+        "without creating anything."
+    ),
+    "ad_campaigns_update_ad_campaign_status": (
+        "Resuming restarts spending the user's ad budget and pausing stops "
+        "delivery. Confirm the campaign and the new status with the user before "
+        "calling."
+    ),
+    "accounts_delete_account": (
+        "Disconnects and removes the social account from Zernio; it cannot be "
+        "undone from ChatGPT. Confirm the account with the user before calling."
+    ),
 }
 
+
+# In a live test ChatGPT passed the user ID from get_profile as profile_id and
+# got a 404; the generated docs never say where the ID comes from.
+_ARGUMENT_SOURCES = {
+    "profile_id": "A Zernio profile ID from profiles_list_profiles, not the user ID.",
+}
 
 _SUMMARY_MAX = 400
 _PARAM_MAX = 100
@@ -230,10 +263,14 @@ def _argument_lines(args: str) -> list[str]:
         return []
     indent = matches[0][1]
     return [
-        f"    {m[2]}: {_clip(m[3] or '', _PARAM_MAX)}".rstrip(": ")
+        f"    {m[2]}: {_clip(_with_source(m[2], m[3] or ''), _PARAM_MAX)}".rstrip(": ")
         for m in matches
         if m[1] == indent
     ]
+
+
+def _with_source(argument: str, doc: str) -> str:
+    return " ".join(part for part in (_ARGUMENT_SOURCES.get(argument), doc) if part)
 
 
 def concise_description(doc: str) -> str:
