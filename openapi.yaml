@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.808.0"
+  version: "1.809.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -112580,6 +112580,7 @@ paths:
                         profileId: { type: string, description: The profile the site belongs to. }
                         hitsToday: { type: integer, description: Hits today. }
                         lastActiveOn: { type: [string, "null"], format: date, description: 'The last day in the past 7 with a hit. `null` when none.' }
+                        eventNamesLastWeek: { type: array, items: { type: string }, description: 'Each event name people (not bots) sent the site in the last 7 days, sorted. Names the site sends that are neither standard nor in its `customEvents` are left out.' }
                         totals:
                           type: object
                           description: 'The site''s page views per period (`today`, `7d`, `30d`), each ending today (UTC).'
