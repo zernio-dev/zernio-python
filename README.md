@@ -703,6 +703,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 ### Ad Changes
 | Method | Description |
 |--------|-------------|
+| `ad_changes.list_ad_changes()` | List staged ad changes |
 | `ad_changes.get_ad_change()` | Get a staged ad change |
 | `ad_changes.confirm_ad_change()` | Confirm a staged ad change |
 | `ad_changes.discard_ad_change()` | Discard a staged ad change |

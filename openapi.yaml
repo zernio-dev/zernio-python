@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.815.2"
+  version: "1.816.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -25987,6 +25987,39 @@ components:
         createdBy: 665f1c2ab3d4e5f6a7b8c9d1
         createdAt: '2026-11-20T10:00:00.000Z'
         finishedAt: null
+    StagedAdChangeSummary:
+      type: object
+      description: 'A staged ad change as the list returns it: what it targets and who staged it, without the diff.'
+      required: [id, type, platform, accountId, adAccountId, targetId, targetName, creates, createdBy, createdAt]
+      properties:
+        id: { type: string, description: 'The change id, used in /v1/ads/changes/{changeId}.' }
+        type:
+          type: string
+          enum: [campaign_status, ad_set_status, ad_status, campaign_update, ad_set_update, ad_update, ad_create, campaign_create, ad_set_create]
+          description: Which write was staged.
+        platform: { type: string, description: 'The ad platform of the object, as the write route names it.', example: facebook }
+        accountId: { type: string, description: The connected account the write goes through. }
+        adAccountId: { type: string, description: The ad account id on the platform. }
+        targetId:
+          type: [string, "null"]
+          description: 'The object the change applies to. Null for a create, whose object does not exist yet.'
+        targetName:
+          type: [string, "null"]
+          description: 'The name of the object when the change was staged, or the name a create will give it. Null when it is not known.'
+        creates: { type: boolean, description: True when the change creates a new object. }
+        createdBy: { type: string, description: The user who staged the change. }
+        createdAt: { type: string, format: date-time }
+      example:
+        id: 6790a1b2c3d4e5f6a7b8c9d0
+        type: campaign_status
+        platform: facebook
+        accountId: 665f1c2ab3d4e5f6a7b8c9d0
+        adAccountId: act_757082720485182
+        targetId: '120214567890123456'
+        targetName: Autumn sale
+        creates: false
+        createdBy: 665f1c2ab3d4e5f6a7b8c9d1
+        createdAt: '2026-11-20T10:00:00.000Z'
     AdRule:
       type: object
       required: [id, name, accountId, platform, adAccountId, level, campaignIds, filters, groups, lifecycle, conditions, actions, schedule, cooldownMinutes, enabled, lastRunAt, nextRunAt, createdAt, updatedAt]
@@ -92507,6 +92540,65 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
         '409':
           description: The change cannot be undone (code `invalid_resource_state`); `error` says why.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /v1/ads/changes:
+    get:
+      x-resource-group: "ads"
+      x-oauth-scopes: ["ads:write", "ads:read"]
+      operationId: listAdChanges
+      tags:
+        - Ad Changes
+      x-platforms:
+        - meta
+        - google
+      summary: List staged ad changes
+      description: >
+        Lists the ad changes waiting to be confirmed or discarded, newest first. A confirmed or failed change is not
+        listed; read it by id.
+
+
+        Each item is a summary without the diff. Read one change to get its before/after values.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 50 }
+          description: How many changes to return.
+        - name: cursor
+          in: query
+          schema: { type: string }
+          description: 'The `nextCursor` of the previous page, unchanged.'
+      responses:
+        '200':
+          description: One page of staged changes
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - changes
+                  - nextCursor
+                properties:
+                  changes:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/StagedAdChangeSummary'
+                  nextCursor:
+                    type: [string, "null"]
+                    description: 'Pass it as `cursor` to read the next page. Null on the last page.'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          x-summary: 'Ads access is required: legacy plans need the Ads add-on, and usage-based plans include it by default.'
+          description: >-
+            Ads access required (code `ads_addon_required`). Legacy plans need the Ads add-on; included by default on
+            usage-based plans.
           content:
             application/json:
               schema:

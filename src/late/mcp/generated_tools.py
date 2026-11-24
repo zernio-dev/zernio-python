@@ -12710,6 +12710,33 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="List staged ad changes",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def ad_changes_list_ad_changes(limit: int = 50, cursor: str | None = None) -> str:
+        """List staged ad changes
+
+        Lists the ad changes waiting to be confirmed or discarded, newest first. A confirmed or failed change is not listed; read it by id.
+
+        Each item is a summary without the diff. Read one change to get its before/after values.
+
+        Platforms: meta, google
+
+        Args:
+            limit: How many changes to return.
+            cursor: The `nextCursor` of the previous page, unchanged."""
+        client = _get_client()
+        try:
+            response = client.ad_changes.list_ad_changes(limit=limit, cursor=cursor)
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="Get a staged ad change",
             readOnlyHint=True,
             destructiveHint=False,
@@ -61257,6 +61284,10 @@ TOOL_OAUTH_SCOPES: dict[str, tuple[str, ...]] = {
     "ad_changes_confirm_ad_change": ("ads:write",),
     "ad_changes_discard_ad_change": ("ads:write",),
     "ad_changes_get_ad_change": (
+        "ads:read",
+        "ads:write",
+    ),
+    "ad_changes_list_ad_changes": (
         "ads:read",
         "ads:write",
     ),

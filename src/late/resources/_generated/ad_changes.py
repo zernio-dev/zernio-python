@@ -99,6 +99,18 @@ class AdChangesResource:
 
         return self._build_body({to_camel(k): v for k, v in kwargs.items()})
 
+    def list_ad_changes(
+        self, *, limit: int | None = 50, cursor: str | None = None
+    ) -> dict[str, Any]:
+        """List staged ad changes"""
+        params = self._build_query(
+            {
+                "limit": limit,
+                "cursor": cursor,
+            }
+        )
+        return self._client._get("/v1/ads/changes", params=params)
+
     def get_ad_change(self, change_id: str) -> dict[str, Any]:
         """Get a staged ad change"""
         return self._client._get(f"/v1/ads/changes/{change_id}")
@@ -110,6 +122,18 @@ class AdChangesResource:
     def confirm_ad_change(self, change_id: str) -> dict[str, Any]:
         """Confirm a staged ad change"""
         return self._client._post(f"/v1/ads/changes/{change_id}/confirm")
+
+    async def alist_ad_changes(
+        self, *, limit: int | None = 50, cursor: str | None = None
+    ) -> dict[str, Any]:
+        """List staged ad changes (async)"""
+        params = self._build_query(
+            {
+                "limit": limit,
+                "cursor": cursor,
+            }
+        )
+        return await self._client._aget("/v1/ads/changes", params=params)
 
     async def aget_ad_change(self, change_id: str) -> dict[str, Any]:
         """Get a staged ad change (async)"""
