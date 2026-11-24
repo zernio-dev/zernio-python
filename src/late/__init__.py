@@ -43,7 +43,7 @@ from .enums import (
     Visibility,
 )
 
-__version__ = "1.4.2044"
+__version__ = "1.4.2045"
 
 __all__ = [
     # Client
