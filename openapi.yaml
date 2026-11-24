@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.812.0"
+  version: "1.812.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -112447,13 +112447,16 @@ paths:
                   type: array
                   minItems: 1
                   maxItems: 20
-                  description: 'Send to these destinations instead of the saved ones (every event goes to each).'
+                  description: |
+                    Send to these destinations instead of the saved ones (every event goes to each).
+
+                    A Google Analytics stream is sent to with the Measurement Protocol API secret saved on a forwarding rule for the same account and stream: the rule of this `profileId`, else the most recently changed one in your other profiles. With none saved, the destination's `error` says how to save one.
                   items:
                     type: object
                     required: [accountId, destinationId]
                     additionalProperties: false
                     properties:
-                      accountId: { type: string, description: 'Connected ads account ID (metaads, googleads, linkedinads, tiktokads, openaiads, pinterestads or redditads).' }
+                      accountId: { type: string, description: 'ID of the connected account that owns the destination (metaads, googleads, googleanalytics or any other account POST /v1/events sends to).' }
                       destinationId: { type: string, description: 'Platform destination, as listed by GET /v1/ads/conversions/destinations.' }
                 consent:
                   allOf: [{ $ref: '#/components/schemas/EventConsent' }]
@@ -113441,7 +113444,9 @@ paths:
       description: |
         Changes the fields you send and keeps the others. Send `eventNameMap: null` to stop renaming, `valueOverride: { "mode": "original" }` to send the event's own value again, and `valueCondition: null` to forward whatever the value. `eventValues` replaces the whole map; `null` or `{}` clears it.
 
-        `apiSecret` replaces the secret of a rule whose destination needs one, such as a Google Analytics data stream's Measurement Protocol API secret. Before saving, Zernio sends one hit to Google's validation server; Google does not confirm the secret itself, so check GA4 Realtime after the next events.
+        `apiSecret` replaces the secret of a rule whose destination needs one, such as a Google Analytics data stream's Measurement Protocol API secret. Events that name the stream in `destinations` on `POST /v1/events` use it too.
+
+        Before saving, Zernio sends one hit to Google's validation server; Google does not confirm the secret itself, so check GA4 Realtime after the next events.
       security:
         - bearerAuth: []
       parameters:
