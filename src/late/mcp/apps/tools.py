@@ -205,7 +205,7 @@ def register_tools(mcp: FastMCP, app_uri: str) -> None:
         if resolved:
             try:
                 validation = client.validate.validate_post(
-                    resolved, content=content, media_items=media or None
+                    platforms=resolved, content=content, media_items=media or None
                 )
             except LateError as e:
                 validation = {"warnings": [{"warning": f"Validation unavailable: {e}"}]}

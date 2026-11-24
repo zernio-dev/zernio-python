@@ -2,13 +2,15 @@
 every regen. When the spec made a required parameter optional, the generator
 moved it behind `*`, and a positional call that worked the day before raised
 TypeError on every use (show_conversation). These tests bind each call site
-against the current signatures so a regen that breaks one fails here first."""
+against the current signatures, and require every argument that is not a URL
+path parameter to be passed by keyword, which survives that kind of change."""
 
 from __future__ import annotations
 
 import ast
 import inspect
 from pathlib import Path
+from typing import Any
 
 import httpx
 import pytest
@@ -21,55 +23,86 @@ from late.mcp.apps.tools import register_tools
 
 MCP_DIR = Path(__file__).resolve().parents[1] / "src" / "late" / "mcp"
 HAND_WRITTEN = [p for p in MCP_DIR.rglob("*.py") if p.name != "generated_tools.py"]
+SDK = Late(api_key="k")
+RESOURCES = {
+    name
+    for name in dir(SDK)
+    if not name.startswith("_") and hasattr(getattr(SDK, name), "_client")
+}
 
 
 def _sdk_calls(path: Path) -> list[tuple[ast.Call, str, str]]:
-    """Every `<x>.client.<resource>.<method>(...)` or `client.<resource>.<method>(...)`."""
+    """Every `<anything>.<resource>.<method>(...)` where <resource> is an SDK one."""
     calls = []
     for node in ast.walk(ast.parse(path.read_text())):
         if not isinstance(node, ast.Call) or not isinstance(node.func, ast.Attribute):
             continue
         resource = node.func.value
-        if not isinstance(resource, ast.Attribute):
-            continue
-        owner = resource.value
-        if isinstance(owner, ast.Name) and owner.id == "client":
+        if isinstance(resource, ast.Attribute) and resource.attr in RESOURCES:
             calls.append((node, resource.attr, node.func.attr))
     return calls
 
 
 CALL_SITES = [
     pytest.param(
-        call, resource, method, id=f"{path.name}:{call.lineno}:{resource}.{method}"
+        call,
+        resource,
+        method,
+        id=f"{path.relative_to(MCP_DIR)}:{call.lineno}:{resource}.{method}",
     )
     for path in HAND_WRITTEN
     for call, resource, method in _sdk_calls(path)
 ]
 
 
+def _method(resource: str, method: str) -> Any:
+    target = getattr(getattr(SDK, resource), method, None)
+    if target is None:
+        pytest.fail(f"client.{resource}.{method} does not exist in the SDK")
+    return target
+
+
 def test_call_sites_were_found() -> None:
-    assert any(p.id.startswith("tools.py:") for p in CALL_SITES)
+    ids = [p.id for p in CALL_SITES]
+    assert any(i.startswith("apps/tools.py:") for i in ids)
+    assert any(i.startswith("server.py:") for i in ids)
 
 
 @pytest.mark.parametrize(("call", "resource", "method"), CALL_SITES)
 def test_call_site_matches_the_sdk_signature(
     call: ast.Call, resource: str, method: str
 ) -> None:
-    sdk = Late(api_key="k")
-    target = getattr(getattr(sdk, resource, None), method, None)
-    if target is None:
-        pytest.skip(f"client.{resource} is not an SDK resource")
     if any(isinstance(a, ast.Starred) for a in call.args) or any(
         k.arg is None for k in call.keywords
     ):
-        pytest.skip("*args / **kwargs cannot be checked statically")
+        pytest.skip("*args / **kwargs cannot be bound statically")
 
     args = [object()] * len(call.args)
     kwargs = {k.arg: object() for k in call.keywords}
     try:
-        inspect.signature(target).bind(*args, **kwargs)
+        inspect.signature(_method(resource, method)).bind(*args, **kwargs)
     except TypeError as e:
         pytest.fail(f"client.{resource}.{method}(...) no longer fits the SDK: {e}")
+
+
+@pytest.mark.parametrize(("call", "resource", "method"), CALL_SITES)
+def test_generated_methods_get_only_path_params_positionally(
+    call: ast.Call, resource: str, method: str
+) -> None:
+    """A path parameter is always required, so it stays positional. Anything else
+    can turn optional on the next regen and move behind `*`."""
+    target = _method(resource, method)
+    if "._generated." not in target.__module__:
+        pytest.skip("hand-written resource, not regenerated")
+    params = list(inspect.signature(target).parameters.values())
+    source = inspect.getsource(target)
+    for param, arg in zip(params, call.args, strict=False):
+        if isinstance(arg, ast.Starred):
+            break
+        assert "{" + param.name + "}" in source, (
+            f"client.{resource}.{method}: pass {param.name}= by keyword, it is not a "
+            "path parameter and can become keyword-only on the next regen"
+        )
 
 
 @pytest.fixture
