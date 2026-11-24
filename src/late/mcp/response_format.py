@@ -170,7 +170,12 @@ def _main_list_key(root: dict[str, Any]) -> str | None:
 
 
 def _pages_by_number(page: Any, page_size: Any) -> bool:
-    return isinstance(page, int) and isinstance(page_size, int) and page_size > 0
+    return (
+        isinstance(page, int)
+        and page >= 1
+        and isinstance(page_size, int)
+        and page_size > 0
+    )
 
 
 def _aligned_to_page_size(keep: int, pagination: dict[str, Any]) -> int:
@@ -198,7 +203,7 @@ def _page_note(
     page, page_size = pagination.get("page"), pagination.get("limit")
     if isinstance(page, int) and isinstance(page_size, int) and page_size % keep == 0:
         steps.append(
-            f"if you page with `page`, continue with limit={keep} and page={(page - 1) * page_size // keep + 2}"
+            f"if you page with `page`, continue with limit={keep} and page={(page - 1) * page_size // keep + 2} (send both)"
         )
     if pages_by_cursor:
         steps.append(

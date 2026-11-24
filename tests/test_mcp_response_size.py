@@ -136,6 +136,47 @@ def test_a_trimmed_page_describes_the_rows_it_holds_not_the_page_asked_for() -> 
     }
 
 
+def test_a_trimmed_page_that_also_carries_a_cursor_is_renumbered_and_keeps_the_note() -> (
+    None
+):
+    document = json.loads(
+        format_payload(
+            {
+                "posts": [_item(i, 3_000) for i in range(40)],
+                "pagination": {
+                    "page": 1,
+                    "limit": 40,
+                    "total": 90,
+                    "pages": 3,
+                    "nextCursor": "c_after_40",
+                },
+            }
+        )
+    )
+
+    kept = len(document["posts"])
+    assert document["pagination"] == {
+        "page": 1,
+        "limit": kept,
+        "total": 90,
+        "pages": -(-90 // kept),
+    }
+    assert f"same cursor and limit={kept}" in document["_truncated"][0]
+
+
+def test_a_page_number_below_one_is_left_as_the_api_sent_it() -> None:
+    document = json.loads(
+        format_payload(
+            {
+                "ads": [_item(i, 3_000) for i in range(40)],
+                "pagination": {"page": 0, "limit": 40, "total": 90},
+            }
+        )
+    )
+
+    assert document["pagination"] == {"page": 0, "limit": 40, "total": 90}
+
+
 def test_a_trimmed_page_without_a_total_still_says_its_size() -> None:
     document = json.loads(
         format_payload(
