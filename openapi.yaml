@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.811.1"
+  version: "1.812.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -50570,6 +50570,9 @@ paths:
                   scope:
                     type: [string, 'null']
                     description: 'Granted OAuth scopes, space-separated. Null for API keys.'
+                  audience:
+                    type: [string, 'null']
+                    description: 'Resource the OAuth token was issued for (RFC 8707), for example https://mcp.zernio.com/mcp. Null for API keys and for tokens issued without one.'
               example:
                 valid: true
                 userId: "6507a1b2c3d4e5f6a7b8c9d0"
