@@ -26604,6 +26604,8 @@ components:
                     LinkedIn Insight Tag. Sent to LinkedIn as the
                     LINKEDIN_FIRST_PARTY_ADS_TRACKING_UUID userId. Opaque
                     token, not hashed.
+                ttclid: { type: string, description: "TikTok click ID (the `ttclid` URL param TikTok adds to ad clicks). Sent to TikTok pixel destinations as `user.ttclid`, not hashed." }
+                ttp: { type: string, description: "TikTok Pixel browser id (the `_ttp` cookie). Sent to TikTok pixel destinations as `user.ttp`, not hashed. Offline Event Sets match on email and phone only." }
                 epik: { type: string, description: "Pinterest click ID (the `epik` URL param or `_epik` cookie). Sent to Pinterest as `click_id`, not hashed." }
                 rdt_cid: { type: string, description: "Reddit click ID (the `rdt_cid` URL param Reddit adds to ad clicks). Sent to Reddit as `click_id`, not hashed." }
                 rdt_uuid: { type: string, description: "Reddit Pixel browser id (the `_rdt_uuid` first-party cookie). Sent to Reddit as `user.uuid`, not hashed." }
