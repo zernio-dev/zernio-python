@@ -238,15 +238,21 @@ async def test_a_link_without_the_tools_scope_is_asked_to_relink(monkeypatch):
     result = await _list_conversations(httpx.Response(403, json=GROUP_DENIED))
 
     assert result.is_error
-    (challenge,) = result.meta["mcp/www_authenticate"]
-    assert challenge.startswith(
-        'Bearer resource_metadata="https://mcp.zernio.com/.well-known/oauth-protected-resource/chatgpt"'
-    )
-    assert 'error="insufficient_scope"' in challenge
-    assert "messaging:read" in challenge
     text = result.content[0].text
-    assert "read your inbox" in text
+    assert "read your inbox" in text and "'messaging:read'" in text
     assert "Settings > Plugins" in text and "Reconnect" in text
+
+
+async def test_the_relink_steps_carry_no_auth_challenge_chatgpt_would_hide_them_behind(
+    monkeypatch,
+):
+    monkeypatch.setattr(
+        "late.mcp.middleware.missing_scope._granted_scopes", lambda: LINK_SCOPES
+    )
+
+    result = await _list_conversations(httpx.Response(403, json=GROUP_DENIED))
+
+    assert "mcp/www_authenticate" not in (result.meta or {})
 
 
 async def test_a_link_that_only_reads_messages_is_asked_to_relink_before_a_send(
@@ -279,9 +285,8 @@ async def test_a_link_that_only_reads_messages_is_asked_to_relink_before_a_send(
             )
 
     assert result.is_error
-    (challenge,) = result.meta["mcp/www_authenticate"]
-    assert "messaging:write" in challenge
-    assert "send messages" in result.content[0].text
+    text = result.content[0].text
+    assert "send messages" in text and "'messaging:write'" in text
 
 
 async def test_each_group_refusal_logs_whether_it_asked_to_relink(monkeypatch, caplog):
@@ -323,7 +328,7 @@ async def test_each_group_refusal_logs_whether_it_asked_to_relink(monkeypatch, c
         (LINK_SCOPES, {"error": "Upgrade your plan", "code": "plan_required"}),
     ],
 )
-async def test_other_403s_stay_plain_errors(monkeypatch, granted, body):
+async def test_other_403s_keep_the_apis_own_error(monkeypatch, granted, body):
     monkeypatch.setattr(
         "late.mcp.middleware.missing_scope._granted_scopes", lambda: granted
     )
@@ -331,7 +336,7 @@ async def test_other_403s_stay_plain_errors(monkeypatch, granted, body):
     result = await _list_conversations(httpx.Response(403, json=body))
 
     assert result.is_error
-    assert not (result.meta or {}).get("mcp/www_authenticate")
+    assert "Reconnect" not in result.content[0].text
 
 
 async def test_a_generated_tool_answers_from_the_api():

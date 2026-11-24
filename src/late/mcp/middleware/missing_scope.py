@@ -1,12 +1,14 @@
-"""Asks ChatGPT to re-link Zernio when a tool needs an OAuth scope the link never granted.
+"""Tells a ChatGPT user how to re-link Zernio when a tool needs an OAuth scope the link never granted.
 
 A ChatGPT link made before a tool's scope was advertised holds a token without
-it, and the API refuses that tool with 403 insufficient_permissions. ChatGPT
-shows its linking UI only for an error result carrying
-_meta["mcp/www_authenticate"], so the 403 is answered with that challenge
-instead of a plain error. A 403 the token's scope already covers (a team member
-with the group turned off, or a write scope that includes the read) stays a
-plain error: re-linking cannot fix it.
+it, and the API refuses that tool with 403 insufficient_permissions. The
+refusal becomes plain error text with the re-link steps, which the model
+relays. It carries no _meta["mcp/www_authenticate"]: for an account that is
+already linked, ChatGPT shows no re-link prompt for that challenge and hides
+the result's text from the model, so the user only heard "it failed" (tested
+in a live account on 2026-11-24). A 403 the token's scope already covers (a
+team member with the group turned off, or a write scope that includes the
+read) stays the API's own error: re-linking cannot fix it.
 """
 
 import json
@@ -34,7 +36,7 @@ _SCOPE_PURPOSE = {
 
 
 def relink_instructions(needed: str) -> str:
-    """What the model tells the user when ChatGPT does not show its re-link prompt."""
+    """What the model tells the user so they re-link with the missing scope."""
     purpose = _SCOPE_PURPOSE.get(needed, f"use this ({needed})")
     return (
         f"Zernio needs one more permission to {purpose} ('{needed}'); this ChatGPT "
@@ -68,20 +70,9 @@ def _refused_for_a_group(cause: BaseException | None) -> bool:
     )
 
 
-class MissingScopeChallengeMiddleware(Middleware):
-    def __init__(
-        self,
-        *,
-        scopes_by_tool: Mapping[str, Sequence[str]],
-        resource_metadata_url: str,
-        scopes: Sequence[str],
-    ) -> None:
+class MissingScopeMiddleware(Middleware):
+    def __init__(self, *, scopes_by_tool: Mapping[str, Sequence[str]]) -> None:
         self._scopes_by_tool = scopes_by_tool
-        self._challenge = (
-            f'Bearer resource_metadata="{resource_metadata_url}", '
-            f'error="insufficient_scope", scope="{" ".join(scopes)}", '
-            'error_description="Reconnect Zernio to grant the permission this needs"'
-        )
 
     async def on_call_tool(
         self,
@@ -104,10 +95,10 @@ class MissingScopeChallengeMiddleware(Middleware):
             )
             if not relink_helps:
                 raise
-            needed = reaching[0]
             return ToolResult(
-                content=[TextContent(type="text", text=relink_instructions(needed))],
-                meta={"mcp/www_authenticate": [self._challenge]},
+                content=[
+                    TextContent(type="text", text=relink_instructions(reaching[0]))
+                ],
                 is_error=True,
             )
 
@@ -115,7 +106,7 @@ class MissingScopeChallengeMiddleware(Middleware):
 def _log_group_refusal(
     *, tool: str, needed: str, granted: set[str] | None, challenged: bool
 ) -> None:
-    """One line per group 403 on a scoped tool, so a missing re-link prompt shows in Axiom."""
+    """One line per group 403 on a scoped tool; `challenged` is whether the user was told to re-link."""
     tool_call_logger.info(
         json.dumps(
             {
