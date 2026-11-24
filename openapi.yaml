@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.810.0"
+  version: "1.811.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -106853,7 +106853,7 @@ paths:
                   items: { type: string, maxLength: 255 }
                   description: 'Meta only. Optional description variations for Multiple Text Options. Sent alongside `bodies` and `headlines`.'
                 callToAction: { type: string, enum: [BOOK_TRAVEL, CONTACT_US, DONATE, DONATE_NOW, DOWNLOAD, GET_DIRECTIONS, GO_LIVE, INTERESTED, LEARN_MORE, SEE_DETAILS, LIKE_PAGE, MESSAGE_PAGE, RAISE_MONEY, SAVE, SEND_TIP, SHOP_NOW, SIGN_UP, VIEW_INSTAGRAM_PROFILE, INSTAGRAM_MESSAGE, LOYALTY_LEARN_MORE, PURCHASE_GIFT_CARDS, PAY_TO_ACCESS, SEE_MORE, TRY_IN_CAMERA, WHATSAPP_LINK, GET_IN_TOUCH, TRY_NOW, ASK_A_QUESTION, START_A_CHAT, CHAT_NOW, ASK_US, CHAT_WITH_US, SHOP_ON_RETAILER, BOOK_NOW, CHECK_AVAILABILITY, ORDER_NOW, WHATSAPP_MESSAGE, GET_MOBILE_APP, INSTALL_MOBILE_APP, USE_MOBILE_APP, INSTALL_APP, USE_APP, PLAY_GAME, TRY_DEMO, WATCH_VIDEO, WATCH_MORE, OPEN_LINK, NO_BUTTON, LISTEN_MUSIC, MOBILE_DOWNLOAD, GET_OFFER, GET_OFFER_VIEW, BUY_NOW, BUY_TICKETS, UPDATE_APP, BET_NOW, ADD_TO_CART, SELL_NOW, GET_SHOWTIMES, LISTEN_NOW, GET_EVENT_TICKETS, REMIND_ME, SEARCH_MORE, PRE_REGISTER, SWIPE_UP_PRODUCT, SWIPE_UP_SHOP, PLAY_GAME_ON_FACEBOOK, VISIT_WORLD, OPEN_INSTANT_APP, JOIN_GROUP, GET_PROMOTIONS, SEND_UPDATES, INQUIRE_NOW, VISIT_PROFILE, CHAT_ON_WHATSAPP, EXPLORE_MORE, CONFIRM, JOIN_CHANNEL, MAKE_AN_APPOINTMENT, ASK_ABOUT_SERVICES, BOOK_A_CONSULTATION, GET_A_QUOTE, BUY_VIA_MESSAGE, ASK_FOR_MORE_INFO, VIEW_PRODUCT, VIEW_CHANNEL, WATCH_LIVE_VIDEO, JOIN_LIVE_VIDEO, IMAGINE, WATCH_NOW, STREAM_NOW, BUY_ACTIVITY_TICKETS, CALL, MISSED_CALL, CALL_NOW, CALL_ME, APPLY_NOW, BUY, GET_QUOTE, SUBSCRIBE, RECORD_NOW, VOTE_NOW, GIVE_FREE_RIDES, REGISTER_NOW, OPEN_MESSENGER_EXT, EVENT_RSVP, CIVIC_ACTION, SEND_INVITES, REFER_FRIENDS, REQUEST_TIME, SEE_MENU, SEARCH, TRY_IT, TRY_ON, LINK_CARD, DIAL_CODE, FIND_YOUR_GROUPS, START_ORDER, REGISTER, JOIN, ATTEND, REQUEST_DEMO, VIEW_QUOTE, APPLY], description: "The ad's call-to-action button.\n\n- **Meta:** required on legacy + attach shapes. Accepts every call to action type Meta itself accepts (the enum lists them), including values such as SEE_DETAILS that ads synced from Meta carry.\n- **TikTok:** honoured, passed through to the Spark Ad creative's `call_to_action`.\n- **LinkedIn:** the CTA button on the ad; defaults to LEARN_MORE when `linkUrl` is set. Accepts LEARN_MORE, SIGN_UP, DOWNLOAD, SUBSCRIBE, REGISTER, JOIN, ATTEND, REQUEST_DEMO, VIEW_QUOTE, APPLY, SEE_MORE, SHOP_NOW, BUY_NOW.\n- **Reddit** (image, video and carousel ads): accepts LEARN_MORE, SHOP_NOW, SIGN_UP, CONTACT_US, DOWNLOAD, GET_QUOTE, SUBSCRIBE, APPLY_NOW, BOOK_NOW, BUY_TICKETS, DONATE_NOW, GET_DIRECTIONS, GET_SHOWTIMES, LISTEN_NOW, ORDER_NOW, SEE_MENU, INSTALL_MOBILE_APP. Other values return 400.\n- **Google, Pinterest, and X:** ignored." }
-                linkUrl: { type: string, format: uri, description: "The ad's destination URL. Required on legacy + attach shapes (skip for multi-creative). NOT required when `goal` is `lead_generation` (the ad opens a Lead Gen form instead).\n\n- **LinkedIn:** required for `traffic` ads, optional for `engagement` / `awareness`. `imageUrl` + `linkUrl` publishes an ARTICLE-content creative (LinkedIn's article ad format), with the image as thumbnail and `longHeadline` as description.\n- **OpenAI Ads:** required (the chat card's target_url).\n- **Reddit:** required on image and video ads (the post's destination and the ad's click URL), the fallback for carousel cards without their own, and refused with 400 on text ads." }
+                linkUrl: { type: string, format: uri, description: "The ad's destination URL. Required on legacy + attach shapes (skip for multi-creative). NOT required when `goal` is `lead_generation` (the ad opens a Lead Gen form instead).\n\n- **LinkedIn:** required for `traffic` ads, optional for `engagement` / `awareness`. `imageUrl` + `linkUrl` publishes an ARTICLE-content creative (LinkedIn's article ad format), with the image as thumbnail and `longHeadline` as description.\n- **OpenAI Ads:** required (the chat card's target_url).\n- **Reddit:** required on image and video ads (the post's destination and the ad's click URL), the fallback for carousel cards without their own, and refused with 400 on text ads.\n- **TikTok:** not required with goal `engagement` or `app_promotion`. With `smartPlus: true` and `adSetId`, required unless that ad group's campaign promotes an app." }
                 callToActionLink:
                   $ref: '#/components/schemas/MetaCallToActionLink'
                   description: |
@@ -106942,7 +106942,7 @@ paths:
 
                     **Platforms.** Supported on Meta (facebook, instagram), Google Ads, TikTok, LinkedIn and Reddit Ads.
 
-                    - TikTok: `adSetId` is the ad group ID; the new ad inherits the ad group's bid, budget and targeting.
+                    - TikTok: `adSetId` is the ad group ID; the new ad inherits the ad group's bid, budget and targeting. For an ad group of an Upgraded Smart+ campaign, also send `smartPlus: true` (see `smartPlus`).
                     - LinkedIn: `adSetId` is the LinkedIn Campaign ID (numeric). We attach a new Creative to that Campaign, so its `platformSpecificData` bidding, targeting, budget and schedule are inherited (passing those fields returns 400).
                     - Reddit Ads: `adSetId` is the AD GROUP id. Only the post and the ad are created; the ad group keeps its budget, schedule, targeting, bid and optimization. `goal` is not required. An ad group of another ad account returns 404.
                     - Reddit Ads, rejected with 400: `budgetAmount`, `budgetType`, `startDate`, `endDate`, targeting fields, `promotedObject`, `tracking.pixelId` and `optimizationGoal`.
@@ -107750,7 +107750,14 @@ paths:
 
                     Targeting works like on any TikTok ad (defaults to `countries: ["US"]` when omitted), and TikTok automates delivery within it.
 
-                    The budget lives on the Smart+ campaign (Campaign Budget Optimization). A `lifetime` budget without `endDate` ends 7 days after it starts. Smart+ needs `goal` sent; it is never inferred. Cannot be combined with `adSetId`.
+                    The budget lives on the Smart+ campaign (Campaign Budget Optimization). A `lifetime` budget without `endDate` ends 7 days after it starts. Smart+ needs `goal` sent; it is never inferred.
+
+                    **Adding a creative to an existing Smart+ ad group.** With `adSetId` (an ad group of an Upgraded Smart+ campaign), the uploaded video (`imageUrl`) and `body` become one more Smart+ ad in that ad group, under `identityType` / `identityId`.
+
+                    - The campaign keeps its goal, budget and bid, so `goal`, `promotedObject` and the budget fields are not needed. Targeting stays the ad group's (`smartTargeting` returns 400).
+                    - `linkUrl` is required unless the campaign is `app_promotion`, where the app is the destination and `linkUrl` is not used. Ad groups that use a TikTok Instant Form are not supported.
+                    - An ad group outside a Smart+ campaign returns 400 on `adSetId`.
+                    - `status: PAUSED` leaves the new ad paused. `validateOnly` is not supported with `adSetId`.
                 userOs:
                   type: array
                   minItems: 1
