@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.818.0"
+  version: "1.818.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -20316,7 +20316,7 @@ components:
             - PAYMENT_REQUIRED: X access is paused because billing on this account failed.
 
             New values may be added.
-        message: { type: string }
+        message: { type: string, description: 'The reason in words. X_ANALYTICS_NOT_ENABLED also says how to turn it on.' }
     AnalyticsOffAccount:
       allOf:
         - type: object
@@ -20356,7 +20356,7 @@ components:
         platformPostUrl: { type: [string, "null"], format: uri }
         isExternal: { type: boolean }
         syncStatus: { type: string, enum: [synced, pending, partial, unavailable], description: 'Overall sync state across all platforms' }
-        message: { type: [string, "null"], description: 'Human-readable status message for pending, partial, or failed states' }
+        message: { type: [string, "null"], description: 'Human-readable status message for pending, partial, or failed states. When a pending X entry waits on an account in analyticsOff, it gives the reason and, when X analytics is not enabled, how to turn it on.' }
         analyticsOff:
           type: array
           items:
@@ -38896,7 +38896,7 @@ paths:
                         isActive: true
                     hasAnalyticsAccess: true
         '202':
-          x-summary: "Analytics are still syncing or the post has not finished publishing everywhere: retry later to get the full results."
+          x-summary: "Analytics are still syncing or the post has not finished publishing everywhere: retry later to get the full results, except for X accounts in analyticsOff."
           description: |
             Analytics are being synced from the platform, or (single post lookup only) the post has not finished publishing on every platform yet.
 
@@ -38905,6 +38905,7 @@ paths:
             - While a platform has not published, status is the post's own status (for example scheduled or publishing).
             - A post with one failed platform returns 202 rather than 424 until the others finish.
             - Pending platforms whose account failed its last analytics sync carry that error in platformAnalytics[].errorMessage, and the message says so.
+            - A pending X entry whose account is in analyticsOff stays pending however often you retry: the message gives the reason.
           content:
             application/json:
               schema:
