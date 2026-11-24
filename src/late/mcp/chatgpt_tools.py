@@ -19,12 +19,12 @@ if TYPE_CHECKING:
     from collections.abc import Callable, Iterable
 
     from fastmcp import FastMCP
+    from mcp.types import ToolAnnotations
 
 # Ranked by 30-day use (REST requests plus /mcp tool calls), top first: the 40
 # most used reads. Each declares its group's read scope (messaging:read,
 # ads:read, contacts:read where the group has one), so a link that only reads
-# never grants sending or spending. Sends, writes, deletes and spend are later
-# waves.
+# never grants sending or spending.
 WAVE_1 = (
     "messages_get_inbox_conversation_messages",
     "comments_get_inbox_post_comments",
@@ -147,7 +147,47 @@ WAVE_2 = (
     "whatsapp_list_whats_app_group_chats",
 )
 
-CHATGPT_GENERATED_TOOLS = WAVE_1 + WAVE_2
+# What a write does, as the hints ChatGPT reads to decide how to confirm it:
+# destructiveHint when it overwrites what is there, openWorldHint when it
+# reaches people outside the account (a DM, a public reply, an automation that
+# answers commenters). The generator marks every write destructive and
+# open-world; these are the per-tool truths.
+_ADDS = {"destructive_hint": False, "open_world_hint": False}
+_REACHES_OUT = {"destructive_hint": False, "open_world_hint": True}
+_OVERWRITES = {"destructive_hint": True, "open_world_hint": False}
+_OVERWRITES_IN_PUBLIC = {"destructive_hint": True, "open_world_hint": True}
+
+# The most used sends and writes by the same ranking, each declaring its
+# group's write scope. Sends can be billed per message (SMS, RCS and X
+# broadcasts, managed messaging). Held back: creating and activating a
+# workflow (the API checks a workflow's sending nodes against API keys only,
+# so an OAuth link without messaging:write could install them) and updating a
+# contact (its only scope, automations:write, also opens webhooks). Deletes and
+# ad spend are a later wave.
+WAVE_3_EFFECTS = {
+    "messages_send_inbox_message": _REACHES_OUT,
+    "comments_send_private_reply_to_comment": _REACHES_OUT,
+    "comments_reply_to_inbox_post": _REACHES_OUT,
+    "posts_edit_post": _OVERWRITES_IN_PUBLIC,
+    "broadcasts_send_broadcast": _REACHES_OUT,
+    "messages_create_inbox_conversation": _REACHES_OUT,
+    "broadcasts_create_broadcast": _ADDS,
+    "broadcasts_add_broadcast_recipients": _ADDS,
+    "comment_automations_update_comment_automation": _OVERWRITES_IN_PUBLIC,
+    "comment_automations_create_comment_automation": _REACHES_OUT,
+    "comments_pin_inbox_comment": _OVERWRITES_IN_PUBLIC,
+    "comments_like_inbox_comment": _REACHES_OUT,
+    "messages_add_message_reaction": _REACHES_OUT,
+    "profiles_create_profile": _ADDS,
+    "posts_update_post_metadata": _OVERWRITES_IN_PUBLIC,
+    "whatsapp_create_whats_app_template": _ADDS,
+    "workflows_trigger_api_call_workflow": _OVERWRITES_IN_PUBLIC,
+    "accounts_reply_to_google_business_review": _OVERWRITES_IN_PUBLIC,
+}
+WAVE_3 = tuple(WAVE_3_EFFECTS)
+
+CHATGPT_GENERATED_TOOLS = WAVE_1 + WAVE_2 + WAVE_3
+WRITE_EFFECTS = WAVE_3_EFFECTS
 
 
 _SUMMARY_MAX = 400
@@ -197,9 +237,22 @@ def oauth_scopes_of(tools: Iterable[str]) -> list[str]:
     )
 
 
+def _hints_for(name: str, generated: ToolAnnotations) -> ToolAnnotations:
+    """The generated hints, or for a write its effects from WRITE_EFFECTS."""
+    if generated.read_only_hint:
+        return generated
+    if name not in WRITE_EFFECTS:
+        raise LookupError(
+            f"{name} is a write listed for ChatGPT without WRITE_EFFECTS: say "
+            "whether it overwrites and whether it reaches people outside the account"
+        )
+    return generated.model_copy(update=WRITE_EFFECTS[name])
+
+
 class _ListedToolsOnly:
     """Stands in for the server in register_generated_tools: registers only the
-    listed tools, each declaring its OAuth scope (securitySchemes)."""
+    listed tools, each declaring its OAuth scope (securitySchemes) and, for a
+    write, the hints of what it does."""
 
     def __init__(self, server: FastMCP, listed: Iterable[str]) -> None:
         self._server = server
@@ -217,7 +270,10 @@ class _ListedToolsOnly:
                 )
             meta = {"securitySchemes": [{"type": "oauth2", "scopes": scopes}]}
             description = concise_description(fn.__doc__ or fn.__name__)
-            self._server.tool(meta=meta, description=description, **kwargs)(fn)
+            annotations = _hints_for(fn.__name__, kwargs.pop("annotations"))
+            self._server.tool(
+                meta=meta, description=description, annotations=annotations, **kwargs
+            )(fn)
             return fn
 
         return register

@@ -29,6 +29,7 @@ _SCOPE_PURPOSE = {
     "messaging:read": "read your inbox, comments and messages",
     "ads:read": "read your ad accounts, campaigns and results",
     "contacts:read": "read your contacts and leads",
+    "messaging:write": "send messages, replies and broadcasts for you",
 }
 
 
@@ -36,20 +37,25 @@ def relink_instructions(needed: str) -> str:
     """What the model tells the user when ChatGPT does not show its re-link prompt."""
     purpose = _SCOPE_PURPOSE.get(needed, f"use this ({needed})")
     return (
-        f"Zernio needs a new permission to {purpose}, which this ChatGPT connection "
-        f"has not granted yet ('{needed}'). Tell the user to reconnect Zernio in ChatGPT: "
-        "Settings > Plugins (called Apps in some versions) > Zernio > Reconnect, then "
-        "approve the new permission and ask again. Nothing was changed in their account."
+        f"Zernio needs one more permission to {purpose} ('{needed}'); this ChatGPT "
+        "connection was set up before Zernio asked for it. Nothing was sent or changed. "
+        "Tell the user, in these steps: open ChatGPT Settings > Plugins (Apps in some "
+        "versions) > Zernio, click ... next to the connected Zernio account, choose "
+        "Reconnect, approve the new permission, then ask again."
     )
+
+
+def _token_claims() -> dict[str, Any]:
+    try:
+        token = get_access_token()
+    except Exception:
+        return {}
+    return token.claims if token else {}
 
 
 def _granted_scopes() -> set[str] | None:
     """The OAuth scope of the calling token, or None for an API key."""
-    try:
-        token = get_access_token()
-    except Exception:
-        return None
-    scope = token.claims.get("scope") if token else None
+    scope = _token_claims().get("scope")
     return set(scope.split()) if isinstance(scope, str) else None
 
 
@@ -122,6 +128,7 @@ def _log_group_refusal(
                 if granted is not None
                 else None,
                 "challenged": challenged,
+                "user_id": _token_claims().get("user_id"),
             }
         )
     )
