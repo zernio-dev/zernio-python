@@ -189,6 +189,28 @@ WAVE_3 = tuple(WAVE_3_EFFECTS)
 CHATGPT_GENERATED_TOOLS = WAVE_1 + WAVE_2 + WAVE_3
 WRITE_EFFECTS = WAVE_3_EFFECTS
 
+# OpenAI's scan held these writes on their generated text alone ("needs
+# further review"); each lead says who the call reaches and when nothing goes
+# out yet, which the generated summary leaves implicit.
+DESCRIPTION_LEADS = {
+    "broadcasts_create_broadcast": (
+        "Creates a draft only: nothing is sent to anyone. Sending is a separate "
+        "call (broadcasts_send_broadcast) that the user confirms."
+    ),
+    "comments_send_private_reply_to_comment": (
+        "Sends one private message, as the user's own account, to the person who "
+        "commented on the user's post, in reply to that comment. Confirm the text "
+        "with the user before calling."
+    ),
+    "workflows_trigger_api_call_workflow": (
+        "Runs one of the user's active workflows once, for one conversation or "
+        "contact on the workflow's account or, for a WhatsApp workflow, one phone "
+        "number (starting a conversation with it if there is none). Its steps may "
+        "message or call that person, or update the workflow's webhooks and CRM, "
+        "so confirm with the user before calling."
+    ),
+}
+
 
 _SUMMARY_MAX = 400
 _PARAM_MAX = 100
@@ -237,6 +259,14 @@ def oauth_scopes_of(tools: Iterable[str]) -> list[str]:
     )
 
 
+def _with_lead(name: str, description: str) -> str:
+    lead = DESCRIPTION_LEADS.get(name)
+    if not lead:
+        return description
+    title, _, rest = description.partition("\n\n")
+    return "\n\n".join(part for part in (title, lead, rest) if part)
+
+
 def _hints_for(name: str, generated: ToolAnnotations) -> ToolAnnotations:
     """The generated hints, or for a write its effects from WRITE_EFFECTS."""
     if generated.read_only_hint:
@@ -269,7 +299,9 @@ class _ListedToolsOnly:
                     "x-oauth-scopes; regenerate from a spec that has them"
                 )
             meta = {"securitySchemes": [{"type": "oauth2", "scopes": scopes}]}
-            description = concise_description(fn.__doc__ or fn.__name__)
+            description = _with_lead(
+                fn.__name__, concise_description(fn.__doc__ or fn.__name__)
+            )
             annotations = _hints_for(fn.__name__, kwargs.pop("annotations"))
             self._server.tool(
                 meta=meta, description=description, annotations=annotations, **kwargs

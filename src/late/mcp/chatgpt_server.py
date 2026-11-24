@@ -30,15 +30,10 @@ from late.mcp.chatgpt_tools import (
     oauth_scopes_of,
     register_chatgpt_generated_tools,
 )
-from late.mcp.constants import (
-    ENDPOINT_CHATGPT,
-    ENDPOINT_OAUTH_PROTECTED_RESOURCE,
-    MCP_PUBLIC_URL,
-)
 from late.mcp.generated_tools import TOOL_OAUTH_SCOPES
 from late.mcp.media_items import media_item
 from late.mcp.middleware import (
-    MissingScopeChallengeMiddleware,
+    MissingScopeMiddleware,
     RateLimitGuidanceMiddleware,
     WellFormedOutputMiddleware,
     WellFormedOutputTransform,
@@ -378,7 +373,9 @@ async def _posting_accounts_page(
 
 async def _find_posting_account(account_id: str) -> dict[str, Any] | None:
     data = await _api(
-        "GET", "/v1/accounts", params={"search": account_id, "limit": _ACCOUNT_LOOKUP_LIMIT}
+        "GET",
+        "/v1/accounts",
+        params={"search": account_id, "limit": _ACCOUNT_LOOKUP_LIMIT},
     )
     return next(
         (
@@ -466,8 +463,7 @@ async def _usernames(posts: list[dict[str, Any]]) -> dict[str, str]:
     except (ToolError, httpx.HTTPError):
         return {}
     return {
-        str(a["_id"]): a.get("username") or a.get("displayName") or ""
-        for a in accounts
+        str(a["_id"]): a.get("username") or a.get("displayName") or "" for a in accounts
     }
 
 
@@ -560,15 +556,7 @@ chatgpt_mcp = FastMCP(
 )
 chatgpt_mcp.add_middleware(WellFormedOutputMiddleware())
 chatgpt_mcp.add_middleware(RateLimitGuidanceMiddleware())
-chatgpt_mcp.add_middleware(
-    MissingScopeChallengeMiddleware(
-        scopes_by_tool=TOOL_OAUTH_SCOPES,
-        resource_metadata_url=(
-            f"{MCP_PUBLIC_URL}{ENDPOINT_OAUTH_PROTECTED_RESOURCE}{ENDPOINT_CHATGPT}"
-        ),
-        scopes=CHATGPT_SCOPES,
-    )
-)
+chatgpt_mcp.add_middleware(MissingScopeMiddleware(scopes_by_tool=TOOL_OAUTH_SCOPES))
 chatgpt_mcp.add_transform(WellFormedOutputTransform())
 
 
