@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.824.0"
+  version: "1.824.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -11329,7 +11329,7 @@ components:
 
         When a reply is present, review.hasReply is true and review.reply is populated.
 
-        On Facebook Pages it fires when the reviewer edits their review and when the Page adds or edits a reply, with the review read live from the Page. A reply sent through the API may be followed by a second delivery.
+        On Facebook Pages it fires when the reviewer edits their review and when the Page adds or edits a reply, with the review read live from the Page. A reply sent through the API produces only the review.updated from Meta's webhook, with no immediate delivery.
       required: [id, event, review, account, timestamp]
       properties:
         id:
@@ -31476,7 +31476,7 @@ webhooks:
 
         ### Facebook Pages
 
-        Fires when the reviewer edits their review and when the Page adds or edits a reply, with the review read live from the Page. A reply sent through the API may be followed by a second delivery.
+        Fires when the reviewer edits their review and when the Page adds or edits a reply, with the review read live from the Page. A reply sent through the API produces only the review.updated from Meta's webhook, with no immediate delivery.
 
         ### Payload notes
 
@@ -75707,6 +75707,8 @@ paths:
       summary: Reply to review
       description: |
         Post a reply to a review. Requires accountId in request body.
+
+        Google Business Profile replies are limited to 4096 bytes (UTF-8), which is fewer than 4096 characters when the text has multi-byte characters such as emoji or accents. A longer reply returns 400 `invalid_field_value`.
 
         ### Idempotency
 

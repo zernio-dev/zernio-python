@@ -50624,6 +50624,8 @@ def register_generated_tools(mcp, _get_client):
 
         Post a reply to a review. Requires accountId in request body.
 
+        Google Business Profile replies are limited to 4096 bytes (UTF-8), which is fewer than 4096 characters when the text has multi-byte characters such as emoji or accents. A longer reply returns 400 `invalid_field_value`.
+
         ### Idempotency
 
         Send an `Idempotency-Key` header to make retries safe (e.g. after a client-side timeout where delivery is unknown).
@@ -50636,9 +50638,7 @@ def register_generated_tools(mcp, _get_client):
 
         ### Failed requests
 
-        Only successful (2xx) responses are stored for replay. If the request throws or returns a non-2xx status the key is released, so the header protects the \"request succeeded but the response was lost\" case.
-
-        After an ambiguous failure (a 5xx or a network timeout), fetch the review before retrying with the same key. Treat a missing reply as inconclusive rather ...
+        Only successful (2xx) responses are stored for replay. If the request throws or returns a non-2xx status the key is released, so the header ...
 
         Args:
             review_id: Review ID (URL-encoded for Google Business Profile) (required)
