@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.803.1"
+  version: "1.804.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -20864,6 +20864,26 @@ components:
       type: object
       properties:
         message: { type: string }
+    CoexistenceHistorySync:
+      type: object
+      description: 'The outcome of the latest chat history request Zernio sent Meta for a WhatsApp coexistence number, read from the account (not a live probe).'
+      properties:
+        status:
+          type: string
+          enum: [requested, imported, declined, already_synced, refused]
+          description: |
+            - `requested`: Meta accepted the request and has not sent history yet, which can take a while.
+            - `imported`: Meta sent chat history to this account, including history a reconnect kept.
+            - `declined`: the business chose not to share its chat history in Meta's window.
+            - `already_synced`: Meta refused the request because an earlier connection already used the number's one history share. Disconnecting inside the WhatsApp Business app (Settings > Account > Business Platform), then connecting again gets a new import.
+            - `refused`: Meta refused it for another reason.
+        requestId:
+          type: [string, "null"]
+          description: 'The id of the last history request Meta accepted, kept across reconnects. Quote it in a Meta support case.'
+        refusedAt:
+          type: [string, "null"]
+          format: date-time
+          description: 'When Meta refused the latest request. Null when it was accepted.'
     InboundActivity:
       type: object
       required: [firstMessageAt, lastMessageAt, firstCommentAt, lastCommentAt]
@@ -49393,6 +49413,11 @@ paths:
                             - $ref: '#/components/schemas/InboundActivity'
                             - type: "null"
                           description: 'Present on WhatsApp, Instagram and Facebook accounts. An active WhatsApp number with no inbound message or comment 24 hours after its latest connect gets an entry in issues, which never changes status. Null for accounts connected before tracking shipped, until their first inbound event or next connect.'
+                        coexistenceHistorySync:
+                          anyOf:
+                            - $ref: '#/components/schemas/CoexistenceHistorySync'
+                            - type: "null"
+                          description: 'WhatsApp accounts only. On `already_synced` an entry with the steps for a new import is added to `issues`, which never changes status. Null when no request ran for the current connection, and on numbers that are not in coexistence.'
                         publishingRestriction:
                           type: [object, "null"]
                           description: 'Set when the last 3 finished publishes failed with the same account-level error (suspended, restricted, a verification check, an expired login). The next successful publish or a reconnect clears it. While set, status is at least `warning`. Null when the account publishes normally.'
@@ -49837,25 +49862,10 @@ paths:
                       lastSeenAt: { type: string, format: date-time }
                       pausedUntil: { type: [string, "null"], format: date-time, description: 'When held automation DMs are next retried. Null when nothing is held.' }
                   coexistenceHistorySync:
-                    type: [object, "null"]
-                    description: 'WhatsApp accounts only. The outcome of the latest chat history request Zernio sent Meta for a coexistence number, read from the account (not a live probe). Null when no request ran for the current connection, and on numbers that are not in coexistence.'
-                    properties:
-                      status:
-                        type: string
-                        enum: [requested, imported, declined, already_synced, refused]
-                        description: |
-                          - `requested`: Meta accepted the request and has not sent history yet, which can take a while.
-                          - `imported`: Meta sent chat history to this account, including history a reconnect kept.
-                          - `declined`: the business chose not to share its chat history in Meta's window.
-                          - `already_synced`: Meta refused the request because an earlier connection already used the number's one history share. The description above says how to get a new import.
-                          - `refused`: Meta refused it for another reason.
-                      requestId:
-                        type: [string, "null"]
-                        description: 'The id of the last history request Meta accepted, kept across reconnects. Quote it in a Meta support case.'
-                      refusedAt:
-                        type: [string, "null"]
-                        format: date-time
-                        description: 'When Meta refused the latest request. Null when it was accepted.'
+                    anyOf:
+                      - $ref: '#/components/schemas/CoexistenceHistorySync'
+                      - type: "null"
+                    description: 'WhatsApp accounts only. Null when no request ran for the current connection, and on numbers that are not in coexistence.'
                   platformConnection:
                     type: object
                     description: 'WhatsApp accounts only. Live probe of the Meta link behind the channel, performed at request time (the same read as GET /v1/whatsapp/number-info).'
