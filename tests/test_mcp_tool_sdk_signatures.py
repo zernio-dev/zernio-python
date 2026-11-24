@@ -1,10 +1,11 @@
-"""Every SDK call in the generated MCP tools must bind to the real client method.
+"""Every SDK call in the MCP tools must bind to the real client method.
 
 generated_tools.py and the SDK resources are regenerated together, but the
-hand-written resources can shadow or hide generated methods. When they drift,
-the MCP tool raises TypeError/AttributeError on every call (e.g.
-accounts_get_follower_stats after limit/cursor were added). This check runs
-in CI on regen PRs, so drift fails before deploy.
+hand-written resources can shadow or hide generated methods, and the MCP App
+views in apps/tools.py are never regenerated. When they drift, the MCP tool
+raises TypeError/AttributeError on every call (e.g. accounts_get_follower_stats
+after limit/cursor were added). This check runs in CI on regen PRs, so drift
+fails before deploy.
 """
 
 from __future__ import annotations
@@ -17,9 +18,8 @@ import pytest
 
 from late import Late
 
-GENERATED_TOOLS = (
-    Path(__file__).resolve().parents[1] / "src" / "late" / "mcp" / "generated_tools.py"
-)
+MCP_DIR = Path(__file__).resolve().parents[1] / "src" / "late" / "mcp"
+TOOL_MODULES = (MCP_DIR / "generated_tools.py", MCP_DIR / "apps" / "tools.py")
 
 
 def _sdk_calls() -> list[tuple[str, str, str, int, list[str]]]:
@@ -49,7 +49,8 @@ def _sdk_calls() -> list[tuple[str, str, str, int, list[str]]]:
         for child in ast.iter_child_nodes(node):
             visit(child, func_name)
 
-    visit(ast.parse(GENERATED_TOOLS.read_text()), "<module>")
+    for module in TOOL_MODULES:
+        visit(ast.parse(module.read_text()), "<module>")
     return calls
 
 

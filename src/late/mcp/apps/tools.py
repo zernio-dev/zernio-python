@@ -428,7 +428,7 @@ def register_tools(mcp: FastMCP, app_uri: str) -> None:
         client = _server()._get_client()
         result = _api(
             lambda: client.messages.get_inbox_conversation_messages(
-                conversation_id, account_id, limit=30, sort_order="desc"
+                conversation_id, account_id=account_id, limit=30, sort_order="desc"
             )
         )
         keep = ("id", "message", "senderName", "direction", "createdAt", "platform", "isDeleted")
