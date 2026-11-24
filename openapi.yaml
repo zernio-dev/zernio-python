@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.802.1"
+  version: "1.803.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -49667,6 +49667,9 @@ paths:
         - When `platformConnection.phoneStatus` is anything other than `CONNECTED`, an entry is added to `issues` and the overall `status` is at least `warning`; `BANNED` makes it `error`. `disconnectReason` stays null, since reconnecting does not lift a Meta status.
         - When Meta reports `platformConnection.canSendMessage` as `BLOCKED` (for example a payment-method error on the WhatsApp Business Account), an entry is added to `issues` with Meta's own reason, the recommendation is Meta's suggested fix, and the overall `status` is at least `warning`. `LIMITED` does not change `status`. Reconnecting does not lift it.
         - When sends to one country keep failing with error 130497 (3 failures within 7 days, none delivered there since), an entry naming the country is added to `issues` and `status` is at least `warning`. The recommendation says how Meta lifts it. A delivered send there clears it.
+        - `coexistenceHistorySync` reports the latest chat history request of a coexistence number. Meta shares a number's chat history only once until the number is disconnected inside the WhatsApp Business app.
+        - When Meta refused because an earlier connection already used it (Meta error 135000, or 4 after rapid reconnects) and this account holds no imported history, `coexistenceHistorySync.status` is `already_synced` and an entry is added to `issues`. It never changes the overall `status`.
+        - The recommendation then gives the steps that get a new import: disconnect inside the WhatsApp Business app (Settings > Account > Business Platform), then connect the number again. Removing the account in Zernio and connecting it again does not.
 
         ### LINE
 
@@ -49831,6 +49834,26 @@ paths:
                       firstSeenAt: { type: string, format: date-time }
                       lastSeenAt: { type: string, format: date-time }
                       pausedUntil: { type: [string, "null"], format: date-time, description: 'When held automation DMs are next retried. Null when nothing is held.' }
+                  coexistenceHistorySync:
+                    type: [object, "null"]
+                    description: 'WhatsApp accounts only. The outcome of the latest chat history request Zernio sent Meta for a coexistence number, read from the account (not a live probe). Null when no request ran for the current connection, and on numbers that are not in coexistence.'
+                    properties:
+                      status:
+                        type: string
+                        enum: [requested, imported, declined, already_synced, refused]
+                        description: |
+                          - `requested`: Meta accepted the request and has not sent history yet, which can take a while.
+                          - `imported`: Meta sent chat history to this account, including history a reconnect kept.
+                          - `declined`: the business chose not to share its chat history in Meta's window.
+                          - `already_synced`: Meta refused the request because an earlier connection already used the number's one history share. The description above says how to get a new import.
+                          - `refused`: Meta refused it for another reason.
+                      requestId:
+                        type: [string, "null"]
+                        description: 'The id of the last history request Meta accepted, kept across reconnects. Quote it in a Meta support case.'
+                      refusedAt:
+                        type: [string, "null"]
+                        format: date-time
+                        description: 'When Meta refused the latest request. Null when it was accepted.'
                   platformConnection:
                     type: object
                     description: 'WhatsApp accounts only. Live probe of the Meta link behind the channel, performed at request time (the same read as GET /v1/whatsapp/number-info).'
