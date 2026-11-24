@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.800.0"
+  version: "1.800.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -29631,7 +29631,7 @@ webhooks:
 
         ### When it fires
 
-        Fires once per ads-enabled account. `sync` reports whether the backfill succeeded fully or partially, and how many ads were synced versus failed.
+        Fires once per ads-enabled account. `sync.status` is `"success"` only when every ad synced. When any ad failed it is `"failure"`, and `sync.synced` and `sync.failed` say how many: a partial backfill is a `"failure"` with both above zero. Ads that failed keep syncing on the regular schedule.
 
         ### Scoped connects
 
@@ -29639,7 +29639,7 @@ webhooks:
 
         ### On failure
 
-        When `sync.status` is `"failure"`, the payload adds `sync.error` (raw platform error, about 2 KB), `sync.errorCode` and `sync.errorSubcode` when parseable, and `sync.errorCategory`.
+        When `sync.status` is `"failure"` and the platform returned an error, the payload adds `sync.error` (raw platform error, about 2 KB), `sync.errorCode` and `sync.errorSubcode` when parseable, and `sync.errorCategory`.
 
         ### Error categories
 
