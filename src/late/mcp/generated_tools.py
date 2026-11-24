@@ -42404,7 +42404,7 @@ def register_generated_tools(mcp, _get_client):
 
         Lists the leads submitted through one Meta lead form.
 
-        It serves persisted leads (ingested via the leadgen webhook) when available, falling back to a live Graph read.
+        It serves the leads Zernio stored when the form has any, newest stored first. Otherwise it reads them live from Meta. No parameter forces a live read.
 
         ### Accounts
 
@@ -42415,11 +42415,15 @@ def register_generated_tools(mcp, _get_client):
 
         ### Freshness
 
-        Persisted leads arrive in real time through Meta's webhook. A background pass re-reads every Page from Meta to catch the leads the webhook misses: every 15 minutes for Pages that received a lead in the last 7 days.
+        Leads are stored within seconds through Meta's webhook. A recovery pass stores the leads the webhook missed and sends them as `lead.received` too.
 
-        `meta.lastCheckedAt` says when that pass last ran, so polling this endpoint faster than that returns nothing new. Subscribe to the `lead.received` webhook instead.
+        Recovered leads usually arrive within 15 minutes for Pages with a lead in the last 7 days, up to 4 hours for Pages with forms but no recent lead, and up to 3 days for a Page's first lead form. Failing Meta reads add up to 24 hours.
 
-        The live Graph read is cached for 5 minutes, and `meta.lastCheckedAt` is when it was read.
+        Reading this endpoint does not trigger that pass. A live read that finds leads only moves the Page's next pass forward.
+
+        ### What recovery skips
+
+        For a form with no stored lead, recovery reaches back ...
 
         Platforms: meta
 
@@ -42427,7 +42431,7 @@ def register_generated_tools(mcp, _get_client):
             form_id: (required)
             account_id: (required)
             limit
-            cursor
+            cursor: The pagination.cursor of the previous page.
             since: Unix seconds."""
         client = _get_client()
         try:

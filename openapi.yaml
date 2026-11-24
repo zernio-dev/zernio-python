@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.819.0"
+  version: "1.819.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -89014,7 +89014,7 @@ paths:
 
         How fast the reply follows the comment:
 
-        - TikTok (business accounts only) and Threads: within seconds, since their comments arrive by webhook. Threads keeps the comment poll as a fallback.
+        - TikTok (business accounts only) and Threads: within seconds, since their comments arrive by webhook.
         - LinkedIn and YouTube: up to the comment poll interval, 10 minutes on posts from the last 24 hours and longer on older posts.
 
         `repeatPolicy` applies there too: with the default `once`, a person gets one public reply per automation, and their later comments get none.
@@ -108975,7 +108975,7 @@ paths:
       description: |
         Lists the leads submitted through one Meta lead form.
 
-        It serves persisted leads (ingested via the leadgen webhook) when available, falling back to a live Graph read.
+        It serves the leads Zernio stored when the form has any, newest stored first. Otherwise it reads them live from Meta. No parameter forces a live read.
 
         ### Accounts
 
@@ -108986,16 +108986,32 @@ paths:
 
         ### Freshness
 
-        Persisted leads arrive in real time through Meta's webhook. A background pass re-reads every Page from Meta to catch the leads the webhook misses: every 15 minutes for Pages that received a lead in the last 7 days.
+        Leads are stored within seconds through Meta's webhook. A recovery pass stores the leads the webhook missed and sends them as `lead.received` too.
 
-        `meta.lastCheckedAt` says when that pass last ran, so polling this endpoint faster than that returns nothing new. Subscribe to the `lead.received` webhook instead.
+        Recovered leads usually arrive within 15 minutes for Pages with a lead in the last 7 days, up to 4 hours for Pages with forms but no recent lead, and up to 3 days for a Page's first lead form. Failing Meta reads add up to 24 hours.
 
-        The live Graph read is cached for 5 minutes, and `meta.lastCheckedAt` is when it was read.
+        Reading this endpoint does not trigger that pass. A live read that finds leads only moves the Page's next pass forward.
+
+        ### What recovery skips
+
+        For a form with no stored lead, recovery reaches back 7 days. It reads only the first 200 forms Meta lists for a Page and skips archived or deleted forms. It stores at most 50 new leads per form per pass, leaving the rest for the next pass.
+
+        A form whose missed backlog is too deep to page through is skipped and logged, so recovery is not proof that every lead is stored.
+
+        ### meta.lastCheckedAt
+
+        For stored leads, it is when the recovery pass last finished for the Page. That pass can skip forms, so the value can be recent while leads are missing, including on an empty page.
+
+        For live reads, it is when Meta was read. With content retained, that read is cached for 5 minutes. With zero content retention, every read is live and uncached.
+
+        ### Paging
+
+        Pass `pagination.cursor` back as `cursor` while `hasMore` is true. Pages are not a snapshot: leads stored after the first page, recovered ones included, sort first and appear only when you read from the start again. Deduplicate on `id`.
       parameters:
         - { name: formId, in: path, required: true, schema: { type: string } }
         - { name: accountId, in: query, required: true, schema: { type: string } }
         - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 25 } }
-        - { name: cursor, in: query, schema: { type: string } }
+        - { name: cursor, in: query, schema: { type: string }, description: 'The pagination.cursor of the previous page.' }
         - { name: since, in: query, schema: { type: integer }, description: Unix seconds. }
       responses:
         '409': { $ref: '#/components/responses/AccountDisconnected' }
@@ -109022,15 +109038,15 @@ paths:
                         fields: { type: object, additionalProperties: { type: string } }
                         fieldData: { type: array, items: { type: object } }
                         consents: { $ref: '#/components/schemas/AdLeadConsents' }
-                  pagination: { type: object, properties: { hasMore: { type: boolean }, cursor: { type: [string, "null"] } } }
+                  pagination: { type: object, properties: { hasMore: { type: boolean }, cursor: { type: [string, "null"], description: 'Send it as cursor to read the next page. Absent when hasMore is false.' } } }
                   meta:
                     type: object
                     properties:
                       platform: { type: string, example: facebook }
                       accountId: { type: string }
                       formId: { type: string }
-                      source: { type: string, enum: [persisted, live], description: 'persisted: leads stored from the webhook and the reconcile pass. live: read from Meta because none are stored for this form yet.' }
-                      lastCheckedAt: { type: [string, "null"], format: date-time, description: 'When Zernio last read this form''s leads from Meta. For persisted leads, the last reconcile pass for the Page (null before the first one). For live reads, when the cached Graph read was made.' }
+                      source: { type: string, enum: [persisted, live], description: 'persisted: leads stored from the webhook and the recovery pass. live: read from Meta because none are stored for this form yet, or because content is not retained.' }
+                      lastCheckedAt: { type: [string, "null"], format: date-time, description: 'For persisted leads, when the recovery pass last finished for the Page (null before the first one). It does not prove every lead is stored. For live reads, when Meta was read.' }
                       lastUpdated: { type: string, format: date-time }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
