@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.817.0"
+  version: "1.818.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -19957,6 +19957,9 @@ components:
             restricted:
               type: boolean
               description: 'True when the caller (profile-scoped API key or member) cannot see every profile: `groups` are filtered, `totals` sum them, `unattributed` is zero, and the top-level `days` / `totals` / `lineItems` are projected onto the visible groups with `peaks`, `callUsage` and `tax` null.'
+        incomplete:
+          type: boolean
+          description: 'Check it before rebilling. Present and true when a read behind the split failed: a group''s spend can then be lower than the real one (it is `unattributed` in a full breakdown, missing from a view of some profiles or accounts). Retry in a minute.'
         scope:
           description: 'Present with `profileId` / `externalId` / `accountId`: echoes the group the payload was projected onto. A profile scope carries both ids.'
           oneOf:
