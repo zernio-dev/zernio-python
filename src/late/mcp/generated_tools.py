@@ -62519,6 +62519,34 @@ TOOL_OAUTH_SCOPES: dict[str, tuple[str, ...]] = {
         "accounts:write",
     ),
     "gmb_verifications_start_google_business_verification": ("accounts:write",),
+    "imessage_get_imessage_group": (
+        "messaging:read",
+        "messaging:write",
+    ),
+    "imessage_get_imessage_sender": (
+        "messaging:read",
+        "messaging:write",
+    ),
+    "imessage_list_imessage_audience": (
+        "messaging:read",
+        "messaging:write",
+    ),
+    "imessage_list_imessage_available_numbers": (
+        "messaging:read",
+        "messaging:write",
+    ),
+    "imessage_list_imessage_sandbox_contacts": (
+        "messaging:read",
+        "messaging:write",
+    ),
+    "imessage_list_imessage_sender_orders": (
+        "messaging:read",
+        "messaging:write",
+    ),
+    "imessage_list_imessage_senders": (
+        "messaging:read",
+        "messaging:write",
+    ),
     "inbox_analytics_get_inbox_conversation_analytics": (
         "messaging:read",
         "messaging:write",

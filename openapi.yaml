@@ -77392,6 +77392,8 @@ paths:
 
   /v1/imessage/senders:
     get:
+      x-resource-group: "telephony"
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       operationId: listImessageSenders
       summary: List iMessage senders
       description: Lists the iMessage senders registered across your accessible profiles.
@@ -77457,6 +77459,8 @@ paths:
 
   /v1/imessage/senders/order:
     get:
+      x-resource-group: "telephony"
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       operationId: listImessageSenderOrders
       summary: List iMessage sender orders
       description: 'Every sender lifecycle doc your team owns (ordered or registered), across statuses. Canceled senders are omitted unless `includeCanceled=true`.'
@@ -77550,6 +77554,8 @@ paths:
 
   /v1/imessage/senders/{senderId}:
     get:
+      x-resource-group: "telephony"
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       operationId: getImessageSender
       summary: Get iMessage sender status
       description: 'Lifecycle status of an ordered or registered sender (poll while an order activates), plus the provider''s live platform health for it.'
@@ -77643,6 +77649,8 @@ paths:
 
   /v1/imessage/audience:
     get:
+      x-resource-group: "messages"
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       operationId: listImessageAudience
       summary: List iMessage audience
       description: 'Contacts who have messaged your iMessage senders (1:1 threads), with subscription state and, for threads opened through a tracked opt-in link, the parameters that brought them in. Newest activity first.'
@@ -77673,6 +77681,8 @@ paths:
 
   /v1/imessage/sandbox/contacts:
     get:
+      x-resource-group: "messages"
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       operationId: listImessageSandboxContacts
       summary: List iMessage sandbox contacts
       description: |
@@ -77857,6 +77867,8 @@ paths:
 
   /v1/imessage/senders/available-numbers:
     get:
+      x-resource-group: "telephony"
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       operationId: listImessageAvailableNumbers
       summary: List instantly available iMessage numbers
       description: |
@@ -77965,6 +77977,8 @@ paths:
 
   /v1/imessage/groups/{conversationId}:
     get:
+      x-resource-group: "messages"
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
       operationId: getImessageGroup
       summary: Get an iMessage group
       description: 'The group''s name, participants and channel as the provider currently sees them. The conversation must be a group thread of the given account.'
