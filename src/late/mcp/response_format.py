@@ -47,7 +47,9 @@ def fit_to_size(document: Any, max_chars: int) -> str:
             root, excess, trims
         ):
             break
-    text = to_compact_json({"_truncated": trims.notes(root), **root})
+    notes = trims.notes(root)
+    trims.describe_kept_page(root)
+    text = to_compact_json({"_truncated": notes, **root})
     if len(text) <= max_chars:
         return text
     return text[: max_chars - 60] + f"…[cut at {max_chars} characters, not valid JSON]"
@@ -74,6 +76,7 @@ class _Trims:
         self.pages_by_cursor = (
             isinstance(pagination, dict) and pagination.get("nextCursor") is not None
         )
+        self.reports_more = isinstance(pagination, dict) and "hasMore" in pagination
         self.list_totals: dict[Path, int] = {}
         self.string_totals: dict[Path, int] = {}
 
@@ -87,6 +90,23 @@ class _Trims:
             for path, total in self.string_totals.items()
         ]
         return lists + strings
+
+    def describe_kept_page(self, root: dict[str, Any]) -> None:
+        """Rewrites `pagination` to the page the caller holds, so a client that
+        follows it (page + 1, same limit) skips no item it was not given."""
+        if self.page_key is None or (self.page_key,) not in self.list_totals:
+            return
+        pagination = root["pagination"]
+        page, page_size = pagination.get("page"), pagination.get("limit")
+        keep = len(root[self.page_key])
+        if not _pages_by_number(page, page_size) or page_size % keep:
+            return
+        pagination["page"] = (page - 1) * page_size // keep + 1
+        pagination["limit"] = keep
+        if isinstance(pagination.get("total"), int):
+            pagination["pages"] = -(-pagination["total"] // keep)
+        if self.reports_more:
+            pagination["hasMore"] = True
 
     def _list_note(self, root: dict[str, Any], path: Path, total: int) -> str:
         keep = len(_value_at(root, path))
@@ -149,13 +169,13 @@ def _main_list_key(root: dict[str, Any]) -> str | None:
     return next((key for key, value in root.items() if isinstance(value, list)), None)
 
 
+def _pages_by_number(page: Any, page_size: Any) -> bool:
+    return isinstance(page, int) and isinstance(page_size, int) and page_size > 0
+
+
 def _aligned_to_page_size(keep: int, pagination: dict[str, Any]) -> int:
     page_size = pagination.get("limit")
-    if (
-        not isinstance(page_size, int)
-        or not isinstance(pagination.get("page"), int)
-        or page_size <= 0
-    ):
+    if not _pages_by_number(pagination.get("page"), page_size):
         return keep
     return max(
         divisor
