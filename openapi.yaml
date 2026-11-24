@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.818.1"
+  version: "1.819.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -212,7 +212,7 @@ x-documentation:
     - `comment.received` - New comment received on a post (Instagram, Facebook, Threads, YouTube, LinkedIn, Bluesky, Reddit, TikTok). X/Twitter does NOT fire this event
     - `mention.received` - Your account was mentioned in a post, caption or comment (Instagram, Facebook, LinkedIn)
     - `review.new` - New review posted on a connected account (Google Business Profile, Facebook Pages)
-    - `review.updated` - A Google Business Profile reviewer edited their review text or rating, or a reply was added, edited or removed. A reply posted through `POST /v1/inbox/reviews/{reviewId}/reply` fires immediately, and the periodic check reports it again with the full review payload, so expect a second delivery. A reply removed through the API, or written or removed in Google's own interface, is reported by the periodic check: for replies written in Google, usually within 6 hours for reviews updated in the last 30 days and usually within about 7 days for older ones. Only teams with a webhook subscribed to `review.updated` are checked. A removed reply fires with `hasReply: false`.
+    - `review.updated` - A Google Business Profile reviewer edited their review text or rating, or a reply was added, edited or removed. A reply posted through `POST /v1/inbox/reviews/{reviewId}/reply` fires immediately, and the periodic check reports it again with the full review payload, so expect a second delivery. A reply removed through the API, or written or removed in Google's own interface, is reported by the periodic check: for replies written in Google, usually within 6 hours for reviews updated in the last 30 days and usually within about 7 days for older ones. Only teams with a webhook subscribed to `review.updated` are checked. A removed reply fires with `hasReply: false`. On Facebook Pages it fires when the reviewer edits their review and when the Page adds or edits a reply, with the review read live from the Page; a reply sent through the API may be followed by a second delivery.
     - `review.deleted` - Google Business Profile stopped returning this review, for example after Google's spam filter removed it. Detected by polling: fires usually 6 to 12 hours after the review disappears, only for locations covered by a webhook subscribed to `review.deleted` or `review.restored`. If the review comes back, `review.restored` fires. May arrive for a review id you never received `review.new` for. A review hidden and restored by Google may produce `review.deleted` followed by `review.restored`, and a `review.updated` can arrive for a review previously reported by `review.deleted` (it is restored on the next check).
     - `review.restored` - A review reported by `review.deleted` is returned by Google again. Same payload as `review.new`.
     - `conversion.received` - Zernio stored an event sent to `POST /v1/events`, by the relay or by a connected source (lead forms, stores, HubSpot), new or a newer version. `conversion.campaign` is the campaign it counts for.
@@ -11328,6 +11328,8 @@ components:
         Only teams with a webhook subscribed to review.updated are checked. A removed reply fires with hasReply false.
 
         When a reply is present, review.hasReply is true and review.reply is populated.
+
+        On Facebook Pages it fires when the reviewer edits their review and when the Page adds or edits a reply, with the review read live from the Page. A reply sent through the API may be followed by a second delivery.
       required: [id, event, review, account, timestamp]
       properties:
         id:
@@ -31457,7 +31459,7 @@ webhooks:
       operationId: onReviewUpdated
       summary: Review updated event
       description: |
-        A Google Business Profile review changed: the reviewer edited it, or its reply was added, edited or removed.
+        A review changed: the reviewer edited it, or its reply was added, edited or removed. The sections below describe Google Business Profile unless they say Facebook.
 
         ### Reply through the API
 
@@ -31470,6 +31472,10 @@ webhooks:
         ### Checks
 
         Only teams with a webhook subscribed to `review.updated` are checked. A removed reply, through the API or in Google, fires from the periodic check with `review.hasReply` set to `false`.
+
+        ### Facebook Pages
+
+        Fires when the reviewer edits their review and when the Page adds or edits a reply, with the review read live from the Page. A reply sent through the API may be followed by a second delivery.
 
         ### Payload notes
 
