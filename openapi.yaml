@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.813.0"
+  version: "1.813.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -19933,7 +19933,7 @@ components:
                 $ref: '#/components/schemas/UsageAttributionGroup'
             unattributed:
               $ref: '#/components/schemas/UsageAttributionSlice'
-              description: 'Spend no profile/account can claim: credits, 10DLC fees, Verify, and usage whose record no longer resolves to an account. Zero for a restricted principal.'
+              description: 'Spend no profile/account of your workspace can claim: credits, 10DLC fees, Verify, usage whose record no longer resolves to an account, and the share measured outside your workspace. Zero for a restricted principal.'
             totals:
               $ref: '#/components/schemas/UsageAttributionSlice'
               description: 'The window totals; for a restricted principal, the sum of the visible groups.'
@@ -45673,6 +45673,8 @@ paths:
         With `groupBy=profile`, each group also carries `profileId` and `externalId`.
 
         Profile-scoped API keys and members only see their profiles' groups (`attribution.restricted: true`, with `totals` summing the visible groups). Credits, 10DLC fees and Verify are always unattributed.
+
+        A caller that sees the whole workspace gets `restricted: false` and the same `totals` as without `groupBy`. Shares are measured over everything the bill and its members carry, so `unattributed` can include spend outside the workspace, never named.
 
         Since 1.630.0 a profile-scoped key or member never gets the team payload in metering mode: without `groupBy` or a filter, `days`, `totals` and `lineItems` are projected onto its visible profiles, `peaks`, `callUsage` and `tax` are `null`, and no `attribution` is returned. Full-access keys and sessions keep the team payload.
 
