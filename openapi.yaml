@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.829.0"
+  version: "1.830.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -52620,6 +52620,8 @@ paths:
         '400':
           description: "Platform doesn't support ads, missing accountId for X Ads, or a non-absolute redirect_url"
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '402':
+          $ref: '#/components/responses/PaymentRequired'
         '403':
           description: "Ads access required (Ads add-on on legacy plans, included on usage-based plans), or no access to profile"
         '404':
