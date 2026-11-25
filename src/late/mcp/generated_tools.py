@@ -9495,7 +9495,16 @@ def register_generated_tools(mcp, _get_client):
         to_date: str | None = None,
         has_delivery: bool | None = None,
         min_spend: float | None = None,
-        sort: Literal["newest", "oldest", "spend_desc", "spend_asc"] = "newest",
+        sort: Literal[
+            "newest",
+            "oldest",
+            "spend_desc",
+            "spend_asc",
+            "results_desc",
+            "results_asc",
+            "cost_per_result_asc",
+            "cost_per_result_desc",
+        ] = "newest",
         time_increment: int | None = None,
         daily_level: Literal["campaign", "adset", "ad"] = "campaign",
         compare: Literal["previous"] | None = None,
@@ -9566,7 +9575,7 @@ def register_generated_tools(mcp, _get_client):
 
         Unlike `status`, which reads a campaign's CURRENT state, this filters on what happened inside the window, so a campaign that spent then and is paused today is still returned. It filters the campaign set itself, so `pagination.total` counts only matching campaigns.
                 min_spend: Return only campaigns whose spend between `fromDate` and `toDate` reaches this amount. Expressed in each campaign's OWN currency (the `currency` field on the campaign node): spend is stored per ad account in its native currency and one response can span several. Implies `hasDelivery`; `minSpend=0` applies no filter.
-                sort: Campaign-level sort order. `newest` (default) / `oldest` order by the campaign's newest-ad createdAt. `spend_desc` / `spend_asc` order by aggregated spend in the requested date range; campaigns with no spend land at the end.
+                sort: Campaign order. `newest` (default) / `oldest`: by the newest ad's createdAt. `spend_*`: by spend in the date range. `results_*` / `cost_per_result_*`: by results, or spend per result, for each campaign's objective (reach summed across its ads); no-result campaigns end a cost order.
                 time_increment: Set to `1` to also return a daily breakdown (mirrors Meta Insights' `time_increment=1`). Only `1` (daily) is supported. See `dailyLevel` to control which levels carry it.
 
         Each node gains a `daily[]` array of per-day metrics (same fields as the aggregated `metrics`) next to the range total, so you get per-entity daily trends in ONE call instead of one tree call per day.
