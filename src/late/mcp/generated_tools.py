@@ -23075,7 +23075,7 @@ def register_generated_tools(mcp, _get_client):
                 sort_order: Sort order
                 limit
                 view: full returns every post as before. summary leaves out `picture` and cuts `content` to 280 characters, marking a cut caption with `contentTruncated: true`. Defaults to summary here; pass full for everything.
-                cursor
+                cursor: Pass back `pagination.nextCursor` of the previous page unchanged, with the same `sortBy` and `sortOrder`.
                 account_id: Filter by specific account ID.
 
         With `platform=metaads` it takes the Meta Ads account ID, or the Facebook or Instagram account ID the Meta Ads connection belongs to, which returns that connection's ad rows.
