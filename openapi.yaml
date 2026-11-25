@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.831.1"
+  version: "1.832.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -28221,19 +28221,34 @@ components:
             prefix: { type: string }
         requires_certificate: { type: boolean }
     BusinessAgentConnector:
-      allOf:
-        - $ref: '#/components/schemas/BusinessAgentConnectorInput'
-        - type: object
-          required: [id]
+      type: object
+      description: "Secret values are never returned: auth_config and mtls_config leave out client_secret, client_key, private_key and every API key value. Send them again with the credentials call to rotate them."
+      required: [id, name, base_url, auth_type]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        description: { type: string }
+        base_url: { type: string, format: uri }
+        connector_protocol: { type: string, example: HTTP }
+        auth_type: { type: string, enum: [OAUTH2_CLIENT_CREDENTIALS, API_KEY, NONE] }
+        auth_config:
+          type: object
+          additionalProperties: true
+          description: "What Meta stores for the connector's auth (for example oauth2_client_credentials with token_url and client_id), without secret values."
+        user_auth_injection_config:
+          type: object
           properties:
-            id: { type: string }
-            mcp_tool_sync: { type: object, additionalProperties: true }
-            mtls_config: { type: object, additionalProperties: true }
-            connection_status:
-              type: object
-              properties:
-                status: { type: string, description: 'ACTIVE, PENDING_OAUTH, EXPIRED or ERROR.' }
-                error_message: { type: string }
+            location: { type: string }
+            field_name: { type: string }
+            prefix: { type: string }
+        requires_certificate: { type: boolean }
+        mcp_tool_sync: { type: object, additionalProperties: true }
+        mtls_config: { type: object, additionalProperties: true, description: 'Certificate details, without client_key or private_key.' }
+        connection_status:
+          type: object
+          properties:
+            status: { type: string, description: 'ACTIVE, PENDING_OAUTH, EXPIRED or ERROR.' }
+            error_message: { type: string }
     BusinessAgentConnectorToolInput:
       type: object
       required: [name, description, request_definition]
