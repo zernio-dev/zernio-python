@@ -121,7 +121,7 @@ class GmbVerificationsResource:
         language_code: str | None = None,
         phone_number: str | None = None,
         email_address: str | None = None,
-        mailer_contact: dict[str, Any] | None = None,
+        mailer_contact: Any | None = None,
         context: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Start a verification"""
@@ -217,7 +217,7 @@ class GmbVerificationsResource:
         language_code: str | None = None,
         phone_number: str | None = None,
         email_address: str | None = None,
-        mailer_contact: dict[str, Any] | None = None,
+        mailer_contact: Any | None = None,
         context: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Start a verification (async)"""

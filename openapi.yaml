@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.831.0"
+  version: "1.831.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -55160,7 +55160,7 @@ paths:
                 languageCode: { type: string, example: "en-US" }
                 phoneNumber: { type: string, description: For PHONE_CALL / SMS. }
                 emailAddress: { type: string, description: For EMAIL. }
-                mailerContact: { type: object, description: For ADDRESS (postcard) verification. }
+                mailerContact: { anyOf: [{ type: string }, { type: object }], description: "For ADDRESS (postcard) verification. The contact name Google prints on the postcard; an object is also accepted." }
                 context: { type: object, description: ServiceBusinessContext (e.g. service address). Required for service-area businesses. }
             example:
               method: "SMS"

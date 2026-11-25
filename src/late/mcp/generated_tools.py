@@ -40551,7 +40551,7 @@ def register_generated_tools(mcp, _get_client):
         language_code: str | None = None,
         phone_number: str | None = None,
         email_address: str | None = None,
-        mailer_contact: dict[str, Any] | None = None,
+        mailer_contact: str | None = None,
         context: dict[str, Any] | None = None,
     ) -> str:
         """Start a verification
@@ -40565,7 +40565,7 @@ def register_generated_tools(mcp, _get_client):
             language_code
             phone_number: For PHONE_CALL / SMS.
             email_address: For EMAIL.
-            mailer_contact: For ADDRESS (postcard) verification.
+            mailer_contact: For ADDRESS (postcard) verification. The contact name Google prints on the postcard; an object is also accepted.
             context: ServiceBusinessContext (e.g. service address). Required for service-area businesses."""
         client = _get_client()
         try:
