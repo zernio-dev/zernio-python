@@ -3017,7 +3017,7 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             ad_id: Internal Zernio ad ID or indexed platform ad ID. (required)
-            comment_id: TikTok comment ID from the ad comment listing. (required)
+            comment_id: TikTok comment ID from the ad comment listing. A Meta comment ID (post_comment) answers 501 with the inbox comment endpoints to use. (required)
             since: Start date of the comment lookup window. Defaults to 30 days before until.
             until: End date of the comment lookup window. Defaults to today in UTC.
             text: Non-empty reply text. (required)"""
@@ -3069,7 +3069,7 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             ad_id: Internal Zernio ad ID or indexed platform ad ID. (required)
-            comment_id: TikTok comment ID from the ad comment listing. (required)
+            comment_id: TikTok comment ID from the ad comment listing. A Meta comment ID (post_comment) answers 501 with the inbox comment endpoints to use. (required)
             since: Start date of the comment lookup window. Defaults to 30 days before until.
             until: End date of the comment lookup window. Defaults to today in UTC.
             hidden: True to hide the comment; false to restore it. (required)"""
@@ -3125,7 +3125,7 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             ad_id: Internal Zernio ad ID or indexed platform ad ID. (required)
-            comment_id: TikTok comment ID from the ad comment listing. (required)
+            comment_id: TikTok comment ID from the ad comment listing. A Meta comment ID (post_comment) answers 501 with the inbox comment endpoints to use. (required)
             since: Start date of the comment lookup window. Defaults to 30 days before until.
             until: End date of the comment lookup window. Defaults to today in UTC."""
         client = _get_client()

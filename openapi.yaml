@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.832.0"
+  version: "1.832.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -99933,7 +99933,7 @@ paths:
         - bearerAuth: []
       parameters:
         - { name: adId, in: path, required: true, schema: { type: string }, description: "Internal Zernio ad ID or indexed platform ad ID." }
-        - { name: commentId, in: path, required: true, schema: { type: string, pattern: '^\d+$' }, description: "TikTok comment ID from the ad comment listing." }
+        - { name: commentId, in: path, required: true, schema: { type: string, pattern: '^\d+(_\d+)?$' }, description: "TikTok comment ID from the ad comment listing. A Meta comment ID (post_comment) answers 501 with the inbox comment endpoints to use." }
         - { name: since, in: query, schema: { type: string, format: date }, description: "Start date of the comment lookup window. Defaults to 30 days before until." }
         - { name: until, in: query, schema: { type: string, format: date }, description: "End date of the comment lookup window. Defaults to today in UTC." }
       requestBody:
@@ -100005,7 +100005,7 @@ paths:
         - bearerAuth: []
       parameters:
         - { name: adId, in: path, required: true, schema: { type: string }, description: "Internal Zernio ad ID or indexed platform ad ID." }
-        - { name: commentId, in: path, required: true, schema: { type: string, pattern: '^\d+$' }, description: "TikTok comment ID from the ad comment listing." }
+        - { name: commentId, in: path, required: true, schema: { type: string, pattern: '^\d+(_\d+)?$' }, description: "TikTok comment ID from the ad comment listing. A Meta comment ID (post_comment) answers 501 with the inbox comment endpoints to use." }
         - { name: since, in: query, schema: { type: string, format: date }, description: "Start date of the comment lookup window. Defaults to 30 days before until." }
         - { name: until, in: query, schema: { type: string, format: date }, description: "End date of the comment lookup window. Defaults to today in UTC." }
       requestBody:
@@ -100081,7 +100081,7 @@ paths:
         - bearerAuth: []
       parameters:
         - { name: adId, in: path, required: true, schema: { type: string }, description: "Internal Zernio ad ID or indexed platform ad ID." }
-        - { name: commentId, in: path, required: true, schema: { type: string, pattern: '^\d+$' }, description: "TikTok comment ID from the ad comment listing." }
+        - { name: commentId, in: path, required: true, schema: { type: string, pattern: '^\d+(_\d+)?$' }, description: "TikTok comment ID from the ad comment listing. A Meta comment ID (post_comment) answers 501 with the inbox comment endpoints to use." }
         - { name: since, in: query, schema: { type: string, format: date }, description: "Start date of the comment lookup window. Defaults to 30 days before until." }
         - { name: until, in: query, schema: { type: string, format: date }, description: "End date of the comment lookup window. Defaults to today in UTC." }
       responses:
