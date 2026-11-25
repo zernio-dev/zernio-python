@@ -339,6 +339,7 @@ class PhoneNumbersResource:
         foc_datetime_requested: datetime | str | None = None,
         customer_reference: str | None = None,
         port_type: str | None = "full",
+        profile_id: str | None = None,
         requirements: list[dict[str, Any]] | None = None,
     ) -> dict[str, Any]:
         """Port numbers in"""
@@ -351,6 +352,7 @@ class PhoneNumbersResource:
                 "focDatetimeRequested": foc_datetime_requested,
                 "customerReference": customer_reference,
                 "portType": port_type,
+                "profileId": profile_id,
                 "requirements": requirements,
             }
         )
@@ -763,6 +765,7 @@ class PhoneNumbersResource:
         foc_datetime_requested: datetime | str | None = None,
         customer_reference: str | None = None,
         port_type: str | None = "full",
+        profile_id: str | None = None,
         requirements: list[dict[str, Any]] | None = None,
     ) -> dict[str, Any]:
         """Port numbers in (async)"""
@@ -775,6 +778,7 @@ class PhoneNumbersResource:
                 "focDatetimeRequested": foc_datetime_requested,
                 "customerReference": customer_reference,
                 "portType": port_type,
+                "profileId": profile_id,
                 "requirements": requirements,
             }
         )

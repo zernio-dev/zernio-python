@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.833.1"
+  version: "1.834.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -83558,6 +83558,7 @@ paths:
                 focDatetimeRequested: { type: string, format: date-time, description: "Requested port date; the carrier confirms the actual FOC later. US/CA default is one week out (shifted off weekends); international orders are scheduled into the carrier's next allowed porting window at or after this date." }
                 customerReference: { type: string, maxLength: 100 }
                 portType: { type: string, enum: [full, partial], default: full, description: "Whether the losing account ports all its numbers (full) or keeps some (partial)." }
+                profileId: { type: string, description: "Profile the ported numbers land on. When omitted, a profile is picked the same way as for a number purchase. Must be a profile the caller can access." }
                 requirements:
                   type: array
                   maxItems: 30

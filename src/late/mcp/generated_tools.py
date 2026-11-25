@@ -47280,6 +47280,7 @@ def register_generated_tools(mcp, _get_client):
         foc_datetime_requested: str | None = None,
         customer_reference: str | None = None,
         port_type: Literal["full", "partial"] = "full",
+        profile_id: str | None = None,
         requirements: list[dict[str, Any]] | None = None,
     ) -> str:
         """Port numbers in
@@ -47313,6 +47314,7 @@ def register_generated_tools(mcp, _get_client):
             foc_datetime_requested: Requested port date; the carrier confirms the actual FOC later. US/CA default is one week out (shifted off weekends); international orders are scheduled into the carrier's next allowed porting window at or after this date.
             customer_reference
             port_type: Whether the losing account ports all its numbers (full) or keeps some (partial).
+            profile_id: Profile the ported numbers land on. When omitted, a profile is picked the same way as for a number purchase. Must be a profile the caller can access.
             requirements: Country-specific requirement values for international ports (from GET /v1/phone-numbers/port-in/requirements). Not needed for US/CA. The LOA and invoice requirements are satisfied automatically by loaDocumentId/invoiceDocumentId, and address-type requirements by the endUser service address. Each item is an object with keys: requirementTypeId (string, required) - The requirement's id, from the requirements endpoint.; fieldValue (string, required) - Text value, ISO datetime, or a documentId from POST /v1/phone-numbers/port-in/documents, per the requirement's kind."""
         client = _get_client()
         try:
@@ -47324,6 +47326,7 @@ def register_generated_tools(mcp, _get_client):
                 foc_datetime_requested=foc_datetime_requested,
                 customer_reference=customer_reference,
                 port_type=port_type,
+                profile_id=profile_id,
                 requirements=requirements,
             )
             return _format_response(response)
