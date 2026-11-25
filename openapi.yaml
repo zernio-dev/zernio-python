@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.826.0"
+  version: "1.827.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -96462,7 +96462,18 @@ paths:
                     Platform-specific post-launch delivery settings. The platform is implied by the
                     `platform` body param. Meta only; other platforms return 400. Unknown keys are rejected.
                   properties:
-                    optimizationGoal: { type: string, description: "Meta ad-set optimization_goal (e.g. OFFSITE_CONVERSIONS, LANDING_PAGE_VIEWS)." }
+                    optimizationGoal:
+                      type: string
+                      description: |
+                        Meta ad-set optimization_goal (e.g. OFFSITE_CONVERSIONS, LANDING_PAGE_VIEWS).
+
+                        Meta fixes an ad set's attribution window (`attribution_spec`) at creation. A goal that needs another window cannot be set here:
+
+                        - OFFSITE_CONVERSIONS to LANDING_PAGE_VIEWS needs a 1-day click window.
+                        - Meta answers subcode 1885560, and this returns 400 with `param: platformSpecificData.optimizationGoal`.
+                        - Instead, create a new ad set with POST /v1/ads/create, sending the new `optimizationGoal` and its `attributionSpec`, and pause this one.
+
+                        `attributionSpec` is not accepted here for the same reason (400 with `param: platformSpecificData.attributionSpec`).
                     billingEvent: { type: string, description: "Meta ad-set billing_event (e.g. IMPRESSIONS, LINK_CLICKS, THRUPLAY)." }
                     startDate: { type: string, description: "Ad set start_time (ISO 8601). A value without an offset (`YYYY-MM-DD`, `YYYY-MM-DD HH:MM:SS` or `YYYY-MM-DDTHH:MM:SS`) is read in the ad account timezone." }
                     endDate: { type: string, description: "Ad set end_time (ISO 8601). A value without an offset (`YYYY-MM-DD`, `YYYY-MM-DD HH:MM:SS` or `YYYY-MM-DDTHH:MM:SS`) is read in the ad account timezone." }
