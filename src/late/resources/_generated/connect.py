@@ -1133,7 +1133,7 @@ class ConnectResource:
         state: str | None = None,
         redirect_url: str | None = None,
     ) -> dict[str, Any]:
-        """Connect an AppLovin account"""
+        """Connect an AppLovin account (not available yet)"""
         payload = self._build_body(
             {
                 "apiKey": api_key,
@@ -3177,7 +3177,7 @@ class ConnectResource:
         state: str | None = None,
         redirect_url: str | None = None,
     ) -> dict[str, Any]:
-        """Connect an AppLovin account (async)"""
+        """Connect an AppLovin account (not available yet) (async)"""
         payload = self._build_body(
             {
                 "apiKey": api_key,

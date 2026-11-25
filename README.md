@@ -452,7 +452,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `connect.complete_whats_app_phone_selection()` | Complete number selection |
 | `connect.configure_tik_tok_ads_brand_identity()` | Set TikTok brand identity |
 | `connect.connect_ads()` | Connect ads for a platform |
-| `connect.connect_app_lovin_ads_credentials()` | Connect an AppLovin account |
+| `connect.connect_app_lovin_ads_credentials()` | Connect an AppLovin account (not available yet) |
 | `connect.connect_attentive_credentials()` | Connect an Attentive company |
 | `connect.connect_awin_credentials()` | Connect an Awin advertiser |
 | `connect.connect_bluesky_credentials()` | Connect Bluesky account |

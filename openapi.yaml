@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.825.0"
+  version: "1.826.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -27,18 +27,18 @@ info:
   x-logo:
     url: https://zernio.com/icon.png?v=3
   x-long-description: |
-    Zernio is the social media API that replaces 35 integrations. Schedule posts, retrieve analytics,
+    Zernio is the social media API that replaces 34 integrations. Schedule posts, retrieve analytics,
     manage DMs, comments, and reviews across X, Instagram, WhatsApp, TikTok, LinkedIn,
     Facebook, YouTube, Threads, Pinterest, Bluesky, Telegram, Google Business Profile, Snapchat,
     Discord, Slack, iMessage, LINE, and WeChat, all from a single REST API. Run paid ads on Meta (Facebook + Instagram), Google,
-    TikTok, LinkedIn, Pinterest, X, OpenAI, Reddit, Microsoft, Amazon, The Trade Desk, AppLovin, and Snapchat from the same account.
+    TikTok, LinkedIn, Pinterest, X, OpenAI, Reddit, Microsoft, Amazon, The Trade Desk, and Snapchat from the same account.
 
     Connect Shopify, WordPress and Wix as blog accounts to list sites and manage
     articles, drafts, featured images, tags, authors, and native scheduling.
 
-    Key features: Unified posting and messaging across 18 platforms, ads management on 13 ad networks (via /v1/ads), aggregated analytics, unified inbox (DMs, comments, reviews), webhooks, OAuth connect, queue scheduling, and white-label support for agencies managing unlimited accounts.
+    Key features: Unified posting and messaging across 18 platforms, ads management on 12 ad networks (via /v1/ads), aggregated analytics, unified inbox (DMs, comments, reviews), webhooks, OAuth connect, queue scheduling, and white-label support for agencies managing unlimited accounts.
 
-    Supported posting platforms: X, Instagram, WhatsApp, Facebook, LinkedIn, TikTok, YouTube, Pinterest, Bluesky, Threads, Google Business Profile, Telegram, Snapchat, Discord, Slack. Supported ad platforms: Meta Ads, Google Ads, TikTok Ads, LinkedIn Ads, Pinterest Ads, X Ads, OpenAI Ads, Reddit Ads, Microsoft Ads, Amazon Ads, The Trade Desk, AppLovin, Snapchat Ads. Organic Snapchat posting is a closed beta with no public release date: its connections are gated behind approval and return 403 `PLATFORM_BETA_RESTRICTED` until then (Snapchat Ads is not affected). Organic Reddit is temporarily unavailable: Reddit has blocked third-party apps from its API, so Reddit posting, messages, analytics and the Reddit endpoints return 503 `PLATFORM_DISABLED` until Reddit restores access. Your Reddit accounts stay connected. Reddit Ads is not affected.
+    Supported posting platforms: X, Instagram, WhatsApp, Facebook, LinkedIn, TikTok, YouTube, Pinterest, Bluesky, Threads, Google Business Profile, Telegram, Snapchat, Discord, Slack. Supported ad platforms: Meta Ads, Google Ads, TikTok Ads, LinkedIn Ads, Pinterest Ads, X Ads, OpenAI Ads, Reddit Ads, Microsoft Ads, Amazon Ads, The Trade Desk, Snapchat Ads. AppLovin is not available yet: AppLovin has not given Zernio access to its Campaign Management API, so its connect answers 403 `platform_not_available_yet`. Organic Snapchat posting is a closed beta with no public release date: its connections are gated behind approval and return 403 `PLATFORM_BETA_RESTRICTED` until then (Snapchat Ads is not affected). Organic Reddit is temporarily unavailable: Reddit has blocked third-party apps from its API, so Reddit posting, messages, analytics and the Reddit endpoints return 503 `PLATFORM_DISABLED` until Reddit restores access. Your Reddit accounts stay connected. Reddit Ads is not affected.
   x-category: Social
   x-website: https://zernio.com
   x-thumbnail: https://rapidapi-prod-apis.s3.amazonaws.com/b24d3df5-563c-4a50-9e1e-1ad3eb1fce69.png
@@ -70,7 +70,7 @@ x-documentation:
   readme: |
     # Zernio API
 
-    The social media API that replaces 35 integrations. Build social media and blog publishing features into your app in minutes, not months.
+    The social media API that replaces 34 integrations. Build social media and blog publishing features into your app in minutes, not months.
 
     ## Quick Start
 
@@ -16583,7 +16583,7 @@ components:
     AppLovinAdsPlatformData:
       type: object
       additionalProperties: false
-      description: 'AppLovin options in platformSpecificData. Campaign fields apply to a new campaign; assets, languages and brandInfo to the creative set (the ad).'
+      description: 'Not available yet: an AppLovin create answers 403 `platform_not_available_yet`. AppLovin options in platformSpecificData. Campaign fields apply to a new campaign; assets, languages and brandInfo to the creative set (the ad).'
       properties:
         campaignType: { type: string, enum: [APP, WEB], description: Required for a new campaign. }
         os: { type: string, enum: [IOS, ANDROID], description: APP campaigns. Required. }
@@ -58639,8 +58639,10 @@ paths:
       x-oauth-scopes: ["accounts:write"]
       operationId: connectAppLovinAdsCredentials
       tags: [Connect]
-      summary: Connect an AppLovin account
+      summary: Connect an AppLovin account (not available yet)
       description: |
+        **Not available yet.** AppLovin has not given Zernio access to its Campaign Management API, so this call answers 403 `platform_not_available_yet` and saves nothing. The rest of this description is how it will work once AppLovin opens.
+
         Connect an AppLovin account (Axon ads) with the Conversion API key and Event Key from the Keys page of AppLovin Axon Ads Manager, the Campaign Management API key with its account id, or all of them.
 
         Zernio checks each key set with AppLovin before saving it.
@@ -58723,7 +58725,7 @@ paths:
           description: "Unauthorized, or AppLovin did not accept the Conversion API key and Event Key, the Campaign Management key or the Report Key (code invalid_credentials)."
         '402': { $ref: '#/components/responses/PaymentRequired' }
         '403':
-          description: Ads add-on required.
+          description: "AppLovin is not available yet (code platform_not_available_yet), or the Ads add-on is required."
         '502':
           description: Axon or AppLovin could not confirm the keys right now, so nothing was saved (code platform_api_error). Retry in a minute.
 
@@ -89814,7 +89816,7 @@ paths:
       x-oauth-scopes: ["ads:write", "ads:read"]
       operationId: listAds
       tags: ["Ad Campaigns"]
-      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit", "microsoft", "amazon", "tradedesk", "applovin", "snapchat"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit", "microsoft", "amazon", "tradedesk", "snapchat"]
       summary: List ads
       description: |
         Lists your ads with their performance over a date range, including ads created directly in each platform's ads manager.
@@ -93917,7 +93919,7 @@ paths:
       x-oauth-scopes: ["ads:write", "ads:read"]
       operationId: listAdCampaigns
       tags: ["Ad Campaigns"]
-      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit", "microsoft", "amazon", "tradedesk", "applovin", "snapchat"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit", "microsoft", "amazon", "tradedesk", "snapchat"]
       summary: List campaigns
       description: |
         Lists your campaigns with spend, impressions and clicks summed across their ads, plus each campaign's status and budget.
@@ -94011,7 +94013,7 @@ paths:
       x-oauth-scopes: ["ads:write"]
       operationId: createAdCampaign
       tags: ["Ad Campaigns"]
-      x-platforms: ["meta", "google", "linkedin", "tiktok", "x", "pinterest", "openai", "reddit", "amazon", "tradedesk", "applovin", "snapchat"]
+      x-platforms: ["meta", "google", "linkedin", "tiktok", "x", "pinterest", "openai", "reddit", "amazon", "tradedesk", "snapchat"]
       summary: Create a standalone campaign
       description: |
         Creates an empty campaign, paused, so you can add ad sets and ads to it afterwards.
@@ -94208,7 +94210,7 @@ paths:
       x-oauth-scopes: ["ads:write"]
       operationId: updateAdCampaignStatus
       tags: ["Ad Campaigns"]
-      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "openai", "reddit", "microsoft", "amazon", "tradedesk", "applovin", "snapchat"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "openai", "reddit", "microsoft", "amazon", "tradedesk", "snapchat"]
       summary: Pause or resume a campaign
       description: |
         Pauses or resumes a campaign, leaving the on/off switches of its ad sets and ads as they are.
@@ -94597,7 +94599,7 @@ paths:
       x-oauth-scopes: ["ads:write"]
       operationId: updateAdCampaign
       tags: ["Ad Campaigns"]
-      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "openai", "reddit", "microsoft", "amazon", "tradedesk", "applovin", "snapchat"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "openai", "reddit", "microsoft", "amazon", "tradedesk", "snapchat"]
       summary: Update a campaign
       description: |
         Changes a campaign's settings, such as its name, budget, bidding or tracking URLs.
@@ -95101,7 +95103,7 @@ paths:
       x-oauth-scopes: ["ads:write"]
       operationId: bulkUpdateAdCampaignStatus
       tags: ["Ad Campaigns"]
-      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit", "microsoft", "amazon", "tradedesk", "applovin", "snapchat"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit", "microsoft", "amazon", "tradedesk", "snapchat"]
       summary: Pause or resume many campaigns
       description: |
         Pauses or resumes up to 50 campaigns in one call, with a separate result per campaign so one failure does not block the rest.
@@ -95642,7 +95644,7 @@ paths:
       x-oauth-scopes: ["ads:write", "ads:read"]
       operationId: listAdSets
       tags: ["Ad Campaigns"]
-      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "openai", "reddit", "microsoft", "amazon", "tradedesk", "applovin", "snapchat"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "openai", "reddit", "microsoft", "amazon", "tradedesk", "snapchat"]
       summary: List ad sets
       description: |
         Lists ad sets (ad groups on Google) with their targeting, bidding and optimization settings, optionally for one campaign.
@@ -96743,7 +96745,7 @@ paths:
       x-oauth-scopes: ["ads:write", "ads:read"]
       operationId: getAdTree
       tags: ["Ad Campaigns"]
-      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit", "microsoft", "amazon", "tradedesk", "applovin", "snapchat"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit", "microsoft", "amazon", "tradedesk", "snapchat"]
       summary: Get campaign tree
       description: |
         Shows your campaigns with their ad sets and ads nested inside, with spend and results rolled up at every level.
@@ -96834,7 +96836,7 @@ paths:
       x-oauth-scopes: ["ads:write", "ads:read"]
       operationId: listAdsByPerformance
       tags: ["Ad Campaigns"]
-      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit", "microsoft", "amazon", "applovin", "snapchat"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit", "microsoft", "amazon", "snapchat"]
       summary: Rank ads by performance
       description: |
         Returns an ads account's ads ranked by spend, impressions, clicks, results or ROAS over a date range, each with its creative (type, thumbnail, headline, body, link) and campaign.
@@ -96889,7 +96891,7 @@ paths:
       x-oauth-scopes: ["ads:write", "ads:read"]
       operationId: getAdsTimeline
       tags: ["Ad Campaigns"]
-      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit", "microsoft", "amazon", "applovin", "snapchat"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit", "microsoft", "amazon", "snapchat"]
       summary: Get daily account metrics
       description: |
         Returns an ads account's spend, results and other metrics day by day, ready for a daily performance chart.
@@ -96958,7 +96960,7 @@ paths:
       x-oauth-scopes: ["ads:write", "ads:read"]
       operationId: getAd
       tags: ["Ad Campaigns"]
-      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit", "microsoft", "amazon", "tradedesk", "applovin", "snapchat"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit", "microsoft", "amazon", "tradedesk", "snapchat"]
       summary: Get ad details
       description: |
         Shows one ad with its creative, targeting, status and performance metrics.
@@ -97081,7 +97083,7 @@ paths:
       x-oauth-scopes: ["ads:write"]
       operationId: updateAd
       tags: ["Ad Campaigns"]
-      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit", "microsoft", "amazon", "applovin", "snapchat"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit", "microsoft", "amazon", "snapchat"]
       summary: Update ad
       description: |
         Changes an ad's status, budget, targeting or creative and applies the change on the platform.
@@ -97525,7 +97527,7 @@ paths:
       x-oauth-scopes: ["ads:write"]
       operationId: deleteAd
       tags: ["Ad Campaigns"]
-      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit", "microsoft", "amazon", "tradedesk", "applovin", "snapchat"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit", "microsoft", "amazon", "tradedesk", "snapchat"]
       summary: Cancel an ad
       description: |
         Deletes an ad on the platform while keeping its history, and removes empty parents only when they were created through this API.
@@ -97595,7 +97597,7 @@ paths:
       x-oauth-scopes: ["ads:write"]
       operationId: updateAdStatus
       tags: ["Ad Campaigns"]
-      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit", "microsoft", "amazon", "applovin", "snapchat"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit", "microsoft", "amazon", "snapchat"]
       summary: Pause or resume a single ad
       description: |
         Pauses or resumes a single ad without touching its ad set, campaign or sibling ads.
@@ -98554,7 +98556,7 @@ paths:
       x-oauth-scopes: ["ads:write", "ads:read"]
       operationId: getCampaignAnalytics
       tags: ["Ad Insights"]
-      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit", "microsoft", "amazon", "applovin", "snapchat"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit", "microsoft", "amazon", "snapchat"]
       summary: Get campaign analytics
       description: |
         Returns a campaign's performance summary and daily timeline, with optional breakdowns by age, gender and other audience dimensions.
@@ -99448,7 +99450,7 @@ paths:
       x-oauth-scopes: ["ads:write", "ads:read"]
       operationId: getAdAnalytics
       tags: ["Ad Insights"]
-      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit", "microsoft", "amazon", "applovin", "snapchat"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit", "microsoft", "amazon", "snapchat"]
       summary: Get ad analytics
       description: |
         Returns one ad's performance summary and daily timeline, with optional audience breakdowns on Meta, TikTok and LinkedIn.
@@ -105696,7 +105698,7 @@ paths:
       x-oauth-scopes: ["ads:write", "ads:read"]
       operationId: listAdAccounts
       tags: ["Ad Accounts"]
-      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit", "microsoft", "amazon", "tradedesk", "applovin", "snapchat"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit", "microsoft", "amazon", "tradedesk", "snapchat"]
       summary: List ad accounts
       description: |
         Lists the ad accounts a connection can manage, such as Meta ad accounts, TikTok advertisers or Google Ads customers.
@@ -107052,7 +107054,7 @@ paths:
       x-oauth-scopes: ["ads:write"]
       operationId: createStandaloneAd
       tags: ["Ad Campaigns"]
-      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "openai", "reddit", "microsoft", "amazon", "applovin", "snapchat"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "openai", "reddit", "microsoft", "amazon", "snapchat"]
       summary: Create standalone ad
       description: |
         Creates a paid ad with your own creative, building the campaign and ad set it needs or adding it to existing ones.
@@ -108321,6 +108323,7 @@ paths:
 
                     **AppLovin**
 
+                    - Not available yet: AppLovin has not given Zernio access to its Campaign Management API, so an AppLovin create or change answers 403 `platform_not_available_yet`.
                     - A new campaign needs `campaignType` (`APP` or `WEB`), the goal and, for an app, `os`, `packageName` and `tracking`. With `existingCampaignId`, only the creative set fields (`assets`, `languages`, `brandInfo`) apply.
                     - Zernio checks every documented AppLovin rule (goal value limits, ROAS day targets, US-only regions and metros, the asset combination, brand info lengths) before calling AppLovin, because 100 refused calls in five minutes lock the AppLovin account for a day. `validateOnly` runs those checks and calls nothing.
 

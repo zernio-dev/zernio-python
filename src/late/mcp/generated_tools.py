@@ -5883,7 +5883,7 @@ def register_generated_tools(mcp, _get_client):
 
             Responds `429` when Google's API quota is ...
 
-            Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit, microsoft, amazon, tradedesk, applovin, snapchat
+            Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit, microsoft, amazon, tradedesk, snapchat
 
             Args:
                 account_id: Account ID (required)
@@ -7803,7 +7803,7 @@ def register_generated_tools(mcp, _get_client):
             - `bidStrategy`: Meta and Google (400 elsewhere). Google also accepts `portfolioBidStrategyId` instead.
             - Budget: Google, X and OpenAI require one (422 without one). OpenAI accepts daily or lifetime, Google only `budgetType: ...
 
-            Platforms: meta, google, linkedin, tiktok, x, pinterest, openai, reddit, amazon, tradedesk, applovin, snapchat
+            Platforms: meta, google, linkedin, tiktok, x, pinterest, openai, reddit, amazon, tradedesk, snapchat
 
             Args:
                 stage: Send true to stage this create instead of sending it. Nothing is created on the ad network; the response is `202` with the staged change. Create it with POST /v1/ads/changes/{changeId}/confirm. Meta and Google only; cannot be combined with `validateOnly`.
@@ -8533,7 +8533,7 @@ def register_generated_tools(mcp, _get_client):
 
         `updated` / `skipped` count campaigns.
 
-        Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit, microsoft, amazon, tradedesk, applovin, snapchat
+        Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit, microsoft, amazon, tradedesk, snapchat
 
         Args:
             status: (required)
@@ -9786,7 +9786,7 @@ def register_generated_tools(mcp, _get_client):
             - the creative's `effective_object_story_id` (`{pageId}_{postId}` shape, Facebook side)
             - the creative's `effective_instagram_media_id` ...
 
-            Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit, microsoft, amazon, tradedesk, applovin, snapchat
+            Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit, microsoft, amazon, tradedesk, snapchat
 
             Args:
                 ad_id: Zernio `_id` (hex), Meta `platformAdId` (numeric), or one of the creative's effective story/media IDs. See description for details.
@@ -9869,7 +9869,7 @@ def register_generated_tools(mcp, _get_client):
 
         - KEYWORD ...
 
-        Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit, microsoft, amazon, applovin, snapchat
+        Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit, microsoft, amazon, snapchat
 
         Args:
             ad_id: (required)
@@ -9939,7 +9939,7 @@ def register_generated_tools(mcp, _get_client):
 
         When the ad set and campaign were ...
 
-        Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit, microsoft, amazon, tradedesk, applovin, snapchat
+        Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit, microsoft, amazon, tradedesk, snapchat
 
         Args:
             ad_id: (required)"""
@@ -9989,7 +9989,7 @@ def register_generated_tools(mcp, _get_client):
 
         After the write the switch is read back from ...
 
-        Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit, microsoft, amazon, applovin, snapchat
+        Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit, microsoft, amazon, snapchat
 
         Args:
             ad_id: Zernio `_id` (hex), Meta `platformAdId` (numeric), or one of the creative's effective story/media IDs. (required)
@@ -11789,7 +11789,7 @@ def register_generated_tools(mcp, _get_client):
 
             On LinkedIn, adSetId in the attach shape is the existing Campaign id, and the budget, schedule, targeting and bidding fields must be ...
 
-            Platforms: meta, google, tiktok, linkedin, pinterest, x, openai, reddit, microsoft, amazon, applovin, snapchat
+            Platforms: meta, google, tiktok, linkedin, pinterest, x, openai, reddit, microsoft, amazon, snapchat
 
             Safe to retry: an identical call within 24 hours returns the first result instead of creating a second one, and answers 409 while the first is still running. To create another on purpose, or if that 409 does not clear, change an argument such as the name.
 
@@ -12318,7 +12318,7 @@ def register_generated_tools(mcp, _get_client):
         attaching, and requires `valueRuleSetId`. `false` is REJECTED here with 400:
         a newly created ad set has nothing to detach, so detaching lives on
         `PUT /v1/ads/ad-sets/{adSetId}`.
-                platform_specific_data: Platform-specific options. The platform is derived from `accountId`; options for a different platform return a 400. LinkedIn (campaign bidding and delivery controls), Meta (the bid trio) Amazon Ads (required: the ad product, products, creative and targeting) and AppLovin (the campaign and creative set) have options today. **Amazon Ads**: see `AmazonAdsPlatformData`. Amazon has no dry run, so `validateOnly` returns a 501. **AppLovin** - A new campaign needs `campaignType` (`APP` or `WEB`), the goal and, for an app, `os`, `packageName` and `tracking`. With `existingCampaignId`, only the creative set fields (`assets`, `languages`, `brandInfo`) apply. - Zernio checks every documented AppLovin rule (goal value limits, ROAS day targets, US-only regions and metros, the asset combination, brand info lengths) before calling AppLovin, because 100 refused calls in five minutes lock the AppLovin account for a day. `validateOnly` runs those checks and calls nothing. **Meta** - `bidStrategy`, `bidAmount` and `roasAverageFloor` may be sent here instead of at the root (the preferred home going forward). Sending them in BOTH places returns a 400 (`mutually_exclusive_fields`). - Sending any bid field in `adSetId` attach mode is a 400 (the ad set already has its bid). - `dailyMinSpendTarget` / `lifetimeMinSpendTarget` set the new ad set's minimum spend and live here only; also rejected in `adSetId` attach mode. Object with keys: costType (one of: CPM, CPC, CPV) - Campaign cost model (billing event). Defaults to `CPM`. Required when `unitCost` is set so the manual bid applies to an explicit cost model.; unitCost (number) - Manual bid in WHOLE account-currency units (e.g. 2.5 = $2.50). Requires `costType`. Omit for LinkedIn's automated (max delivery) bidding. LinkedIn enforces ...; optimizationTargetType (string) - Campaign `optimizationTargetType` (e.g. `MAX_CLICK`, `TARGET_COST_PER_CLICK`, `MAX_IMPRESSION`). Forwarded verbatim; LinkedIn validates compatibility with the ...; creativeSelection (one of: OPTIMIZED, ROUND_ROBIN) - How LinkedIn rotates creatives within the campaign. Defaults to `OPTIMIZED`.; audienceExpansionEnabled (boolean) - Enable LinkedIn audience expansion. Defaults to false.; offsiteDeliveryEnabled (boolean) - Deliver on the LinkedIn Audience Network. Defaults to false.; connectedTelevisionOnly (boolean) - Restrict delivery to Connected TV inventory.; carousel (object with keys cards) - POST /v1/ads/create only. Carousel ad with 2-10 image cards. Mutually exclusive with the other creative sources.; document (object with keys url, title) - POST /v1/ads/create only. Document ad rendered as an in-feed viewer. PDF, PPT or DOC up to 100MB. Mutually exclusive with the other creative sources.; spotlight (object with keys headline, description, callToAction, landingUrl, logoUrl, organizationName, showMemberProfilePhoto, backgroundImageUrl) - POST /v1/ads/create only. Dynamic Spotlight Ad personalized with the viewer's profile photo. Supported goals: traffic, awareness. logoUrl and organizationName ...; follower (object with keys headline, description, callToAction, logoUrl, organizationName, showMemberProfilePhoto) - POST /v1/ads/create only. Dynamic Follower Ad promoting the Company Page. Supported goals: engagement, awareness. headline and description take exactly one of ...; jobs (object with keys headline, buttonLabel, logoUrl, organizationName, showMemberProfilePhoto) - POST /v1/ads/create only. Dynamic Jobs Ad promoting your open roles, personalized with the viewer's profile photo. Mutually exclusive with the other creative ...; textAd (object with keys headline, description, landingUrl, imageUrl) - POST /v1/ads/create only. Classic right-rail Text Ad. The copy lives here; ad-level body and headline are not used. Mutually exclusive with the other creative ...; conversation (object with keys subject, sender, body, footer, headline, firstMessageId, messages) - POST /v1/ads/create only. Conversation Ad: a choose-your-path message tree delivered to the member's LinkedIn inbox. - Messages are flat nodes wired by local ...; event (object with keys urn) - POST /v1/ads/create only. Promotes an existing LinkedIn Event; no headline needed. Mutually exclusive with the other creative sources.; thoughtLeader (object with keys postUrn) - POST /v1/ads/create only. Sponsors an existing LinkedIn post (a share or ugcPost authored by your organization's Company Page) as the creative, keeping its ...
+                platform_specific_data: Platform-specific options. The platform is derived from `accountId`; options for a different platform return a 400. LinkedIn (campaign bidding and delivery controls), Meta (the bid trio) Amazon Ads (required: the ad product, products, creative and targeting) and AppLovin (the campaign and creative set) have options today. **Amazon Ads**: see `AmazonAdsPlatformData`. Amazon has no dry run, so `validateOnly` returns a 501. **AppLovin** - Not available yet: AppLovin has not given Zernio access to its Campaign Management API, so an AppLovin create or change answers 403 `platform_not_available_yet`. - A new campaign needs `campaignType` (`APP` or `WEB`), the goal and, for an app, `os`, `packageName` and `tracking`. With `existingCampaignId`, only the creative set fields (`assets`, `languages`, `brandInfo`) apply. - Zernio checks every documented AppLovin rule (goal value limits, ROAS day targets, US-only regions and metros, the asset combination, brand info lengths) before calling AppLovin, because 100 refused calls in five minutes lock the AppLovin account for a day. `validateOnly` runs those checks and calls nothing. **Meta** - `bidStrategy`, `bidAmount` and `roasAverageFloor` may be sent here instead of at the root (the preferred home going forward). Sending them in BOTH places returns a 400 (`mutually_exclusive_fields`). - Sending any bid field in `adSetId` attach mode is a 400 (the ad set already has its bid). - `dailyMinSpendTarget` / `lifetimeMinSpendTarget` set the new ad set's minimum spend and live here only; also rejected in `adSetId` attach mode. Object with keys: costType (one of: CPM, CPC, CPV) - Campaign cost model (billing event). Defaults to `CPM`. Required when `unitCost` is set so the manual bid applies to an explicit cost model.; unitCost (number) - Manual bid in WHOLE account-currency units (e.g. 2.5 = $2.50). Requires `costType`. Omit for LinkedIn's automated (max delivery) bidding. LinkedIn enforces ...; optimizationTargetType (string) - Campaign `optimizationTargetType` (e.g. `MAX_CLICK`, `TARGET_COST_PER_CLICK`, `MAX_IMPRESSION`). Forwarded verbatim; LinkedIn validates compatibility with the ...; creativeSelection (one of: OPTIMIZED, ROUND_ROBIN) - How LinkedIn rotates creatives within the campaign. Defaults to `OPTIMIZED`.; audienceExpansionEnabled (boolean) - Enable LinkedIn audience expansion. Defaults to false.; offsiteDeliveryEnabled (boolean) - Deliver on the LinkedIn Audience Network. Defaults to false.; connectedTelevisionOnly (boolean) - Restrict delivery to Connected TV inventory.; carousel (object with keys cards) - POST /v1/ads/create only. Carousel ad with 2-10 image cards. Mutually exclusive with the other creative sources.; document (object with keys url, title) - POST /v1/ads/create only. Document ad rendered as an in-feed viewer. PDF, PPT or DOC up to 100MB. Mutually exclusive with the other creative sources.; spotlight (object with keys headline, description, callToAction, landingUrl, logoUrl, organizationName, showMemberProfilePhoto, backgroundImageUrl) - POST /v1/ads/create only. Dynamic Spotlight Ad personalized with the viewer's profile photo. Supported goals: traffic, awareness. logoUrl and organizationName ...; follower (object with keys headline, description, callToAction, logoUrl, organizationName, showMemberProfilePhoto) - POST /v1/ads/create only. Dynamic Follower Ad promoting the Company Page. Supported goals: engagement, awareness. headline and description take exactly one of ...; jobs (object with keys headline, buttonLabel, logoUrl, organizationName, showMemberProfilePhoto) - POST /v1/ads/create only. Dynamic Jobs Ad promoting your open roles, personalized with the viewer's profile photo. Mutually exclusive with the other creative ...; textAd (object with keys headline, description, landingUrl, imageUrl) - POST /v1/ads/create only. Classic right-rail Text Ad. The copy lives here; ad-level body and headline are not used. Mutually exclusive with the other creative ...; conversation (object with keys subject, sender, body, footer, headline, firstMessageId, messages) - POST /v1/ads/create only. Conversation Ad: a choose-your-path message tree delivered to the member's LinkedIn inbox. - Messages are flat nodes wired by local ...; event (object with keys urn) - POST /v1/ads/create only. Promotes an existing LinkedIn Event; no headline needed. Mutually exclusive with the other creative sources.; thoughtLeader (object with keys postUrn) - POST /v1/ads/create only. Sponsors an existing LinkedIn post (a share or ugcPost authored by your organization's Company Page) as the creative, keeping its ...
                 dsa_beneficiary: Legal entity that benefits from the ad. Required when targeting EU users
         (EU DSA, Article 26). Optional if the ad account has a default beneficiary:
         set it once via `PATCH /v1/ads/accounts` or in Meta Ads Manager, and Meta
@@ -13873,7 +13873,7 @@ def register_generated_tools(mcp, _get_client):
 
             Breakdowns and Google's impression ...
 
-            Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit, microsoft, amazon, applovin, snapchat
+            Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit, microsoft, amazon, snapchat
 
             Args:
                 campaign_id: Platform campaign id (platformCampaignId). (required)
@@ -14294,7 +14294,7 @@ def register_generated_tools(mcp, _get_client):
 
             The newer way to read this is `GET ...
 
-            Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit, microsoft, amazon, applovin, snapchat
+            Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit, microsoft, amazon, snapchat
 
             Args:
                 ad_id: (required)
@@ -29584,7 +29584,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
-            title="Connect an AppLovin account",
+            title="Connect an AppLovin account (not available yet)",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
@@ -29602,7 +29602,9 @@ def register_generated_tools(mcp, _get_client):
         state: str | None = None,
         redirect_url: str | None = None,
     ) -> str:
-        """Connect an AppLovin account
+        """Connect an AppLovin account (not available yet)
+
+        **Not available yet.** AppLovin has not given Zernio access to its Campaign Management API, so this call answers 403 `platform_not_available_yet` and saves nothing. The rest of this description is how it will work once AppLovin opens.
 
         Connect an AppLovin account (Axon ads) with the Conversion API key and Event Key from the Keys page of AppLovin Axon Ads Manager, the Campaign Management API key with its account id, or all of them.
 
@@ -29610,9 +29612,7 @@ def register_generated_tools(mcp, _get_client):
 
         - With the conversion keys, the account receives the conversion events you forward to it (`POST /v1/events`, forwarding rules), and its Event Key works as a site tag on tracking sites.
         - With the Campaign Management keys, Zernio reads, creates and manages the account's campaigns and creative sets (`/v1/ads`).
-        - Connecting the Campaign Management keys to a profile that already has the conversion keys adds them to the same connection. A connection made with the Campaign Management keys only cannot take the conversion keys later: connect all keys together instead.
-
-        Add the optional Report Key to sync AppLovin spend. Every few hours Zernio reads spend, impressions and clicks per campaign and creative set for the last 7 days, so ...
+        - Connecting the Campaign Management keys to a profile that already has the conversion keys adds them to the same connection. A connection made with the Campaign Management keys only cannot ...
 
         Args:
             api_key: Conversion API key from the Keys page of AppLovin Axon Ads Manager. Sent with eventKey.
