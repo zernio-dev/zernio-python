@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.830.0"
+  version: "1.831.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -25599,10 +25599,13 @@ components:
         key: { type: string, description: 'The name to send the value under in `inputs`, for example `adAccount`.', example: adAccount }
         type:
           type: string
-          enum: [ad_account, profile, social_accounts, notify_destination, number, money, percent, choice]
+          enum: [ad_account, profile, social_account, social_accounts, notify_destination, number, money, percent, choice]
           description: >-
-            What the value is. `ad_account`: `{ accountId, adAccountId }`. `profile`: a profile id. `social_accounts`:
-            an array of social account ids. `notify_destination`: an array of `{ accountId, to?, channelId? }`.
+            What the value is. `ad_account`: `{ accountId, adAccountId }`. `profile`: a profile id. `social_account`:
+            one social account id of that profile (a comment to DM or a sequence).
+
+
+            `social_accounts`: an array of social account ids. `notify_destination`: an array of `{ accountId, to?, channelId? }`.
             `number`, `money` (in the ad account's currency) and `percent`: a number within the bounds below. `choice`:
             one of `options[].value`.
         label: { type: string, example: Ad account }
@@ -90751,8 +90754,8 @@ paths:
         '404': { $ref: '#/components/responses/AccountUnavailable' }
   /v1/automations:
     get:
-      x-resource-group: "ads"
-      x-oauth-scopes: ["ads:write", "ads:read"]
+      x-resource-group: "accounts"
+      x-oauth-scopes: ["accounts:read", "accounts:write"]
       operationId: listAutomations
       tags: [Automations]
       summary: List automations
@@ -90807,8 +90810,8 @@ paths:
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
     post:
-      x-resource-group: "ads"
-      x-oauth-scopes: ["ads:write"]
+      x-resource-group: "accounts"
+      x-oauth-scopes: ["accounts:write"]
       operationId: createAutomation
       tags: [Automations]
       summary: Create an automation
@@ -90883,8 +90886,8 @@ paths:
         '422': { $ref: '#/components/responses/IdempotencyKeyReused' }
   /v1/automations/catalog:
     get:
-      x-resource-group: "ads"
-      x-oauth-scopes: ["ads:write", "ads:read"]
+      x-resource-group: "accounts"
+      x-oauth-scopes: ["accounts:read", "accounts:write"]
       operationId: getAutomationCatalog
       tags: [Automations]
       summary: Get the automations catalog
@@ -91003,8 +91006,8 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
   /v1/automations/{automationId}/checks:
     get:
-      x-resource-group: "ads"
-      x-oauth-scopes: ["ads:write", "ads:read"]
+      x-resource-group: "accounts"
+      x-oauth-scopes: ["accounts:read", "accounts:write"]
       operationId: listAutomationChecks
       tags: [Automations]
       summary: List an automation's checks
@@ -91040,8 +91043,8 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
   /v1/automations/{automationId}/runs:
     get:
-      x-resource-group: "ads"
-      x-oauth-scopes: ["ads:write", "ads:read"]
+      x-resource-group: "accounts"
+      x-oauth-scopes: ["accounts:read", "accounts:write"]
       operationId: listAutomationRuns
       tags: [Automations]
       summary: List an automation's runs
@@ -91084,8 +91087,8 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
   /v1/automations/{automationId}/runs/{runId}:
     get:
-      x-resource-group: "ads"
-      x-oauth-scopes: ["ads:write", "ads:read"]
+      x-resource-group: "accounts"
+      x-oauth-scopes: ["accounts:read", "accounts:write"]
       operationId: getAutomationRun
       tags: [Automations]
       summary: Get one run of an automation
@@ -91117,8 +91120,8 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
   /v1/automations/{automationId}/test:
     post:
-      x-resource-group: "ads"
-      x-oauth-scopes: ["ads:write"]
+      x-resource-group: "accounts"
+      x-oauth-scopes: ["accounts:write"]
       operationId: testAutomation
       tags: [Automations]
       summary: Test an automation on a sample event
@@ -91171,8 +91174,8 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
   /v1/automations/{automationId}/test/sample:
     get:
-      x-resource-group: "ads"
-      x-oauth-scopes: ["ads:write", "ads:read"]
+      x-resource-group: "accounts"
+      x-oauth-scopes: ["accounts:read", "accounts:write"]
       operationId: getAutomationTestSample
       tags: [Automations]
       summary: Get a sample test body for an automation
@@ -91249,8 +91252,8 @@ paths:
         required: true
         schema: { type: string }
     get:
-      x-resource-group: "ads"
-      x-oauth-scopes: ["ads:write", "ads:read"]
+      x-resource-group: "accounts"
+      x-oauth-scopes: ["accounts:read", "accounts:write"]
       operationId: getAutomation
       tags: [Automations]
       summary: Get an automation
@@ -91271,8 +91274,8 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
     patch:
-      x-resource-group: "ads"
-      x-oauth-scopes: ["ads:write"]
+      x-resource-group: "accounts"
+      x-oauth-scopes: ["accounts:write"]
       operationId: updateAutomation
       tags: [Automations]
       summary: Edit an automation
@@ -91345,8 +91348,8 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
     delete:
-      x-resource-group: "ads"
-      x-oauth-scopes: ["ads:write"]
+      x-resource-group: "accounts"
+      x-oauth-scopes: ["accounts:write"]
       operationId: deleteAutomation
       tags: [Automations]
       summary: Delete an automation
@@ -91366,8 +91369,8 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
   /v1/automations/{automationId}/activate:
     post:
-      x-resource-group: "ads"
-      x-oauth-scopes: ["ads:write"]
+      x-resource-group: "accounts"
+      x-oauth-scopes: ["accounts:write"]
       operationId: activateAutomation
       tags: [Automations]
       summary: Turn an automation on
@@ -91395,8 +91398,8 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
   /v1/automations/{automationId}/pause:
     post:
-      x-resource-group: "ads"
-      x-oauth-scopes: ["ads:write"]
+      x-resource-group: "accounts"
+      x-oauth-scopes: ["accounts:write"]
       operationId: pauseAutomation
       tags: [Automations]
       summary: Turn an automation off
@@ -91494,8 +91497,8 @@ paths:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
   /v1/automations/templates:
     get:
-      x-resource-group: "ads"
-      x-oauth-scopes: ["ads:write", "ads:read"]
+      x-resource-group: "accounts"
+      x-oauth-scopes: ["accounts:read", "accounts:write"]
       operationId: listAutomationTemplates
       tags:
         - Automations
@@ -91528,8 +91531,8 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
     post:
-      x-resource-group: "ads"
-      x-oauth-scopes: ["ads:write"]
+      x-resource-group: "accounts"
+      x-oauth-scopes: ["accounts:write"]
       operationId: createAutomationTemplate
       tags:
         - Automations
@@ -91612,8 +91615,8 @@ paths:
           $ref: '#/components/responses/IdempotencyKeyReused'
   /v1/automations/templates/{templateId}:
     get:
-      x-resource-group: "ads"
-      x-oauth-scopes: ["ads:write", "ads:read"]
+      x-resource-group: "accounts"
+      x-oauth-scopes: ["accounts:read", "accounts:write"]
       operationId: getAutomationTemplate
       tags:
         - Automations
@@ -91650,8 +91653,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
     patch:
-      x-resource-group: "ads"
-      x-oauth-scopes: ["ads:write"]
+      x-resource-group: "accounts"
+      x-oauth-scopes: ["accounts:write"]
       operationId: updateAutomationTemplate
       tags:
         - Automations
@@ -91711,8 +91714,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
     delete:
-      x-resource-group: "ads"
-      x-oauth-scopes: ["ads:write"]
+      x-resource-group: "accounts"
+      x-oauth-scopes: ["accounts:write"]
       operationId: deleteAutomationTemplate
       tags:
         - Automations
@@ -91749,8 +91752,8 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
   /v1/automations/templates/{templateId}/install:
     post:
-      x-resource-group: "ads"
-      x-oauth-scopes: ["ads:write"]
+      x-resource-group: "accounts"
+      x-oauth-scopes: ["accounts:write"]
       operationId: installAutomationTemplate
       tags:
         - Automations
@@ -91846,8 +91849,8 @@ paths:
           $ref: '#/components/responses/IdempotencyKeyReused'
   /v1/automations/templates/shared/{shareToken}:
     get:
-      x-resource-group: "ads"
-      x-oauth-scopes: ["ads:write", "ads:read"]
+      x-resource-group: "accounts"
+      x-oauth-scopes: ["accounts:read", "accounts:write"]
       operationId: getSharedAutomationTemplate
       tags:
         - Automations
@@ -91886,8 +91889,8 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
   /v1/automations/templates/shared/{shareToken}/install:
     post:
-      x-resource-group: "ads"
-      x-oauth-scopes: ["ads:write"]
+      x-resource-group: "accounts"
+      x-oauth-scopes: ["accounts:write"]
       operationId: installSharedAutomationTemplate
       tags:
         - Automations
@@ -91982,15 +91985,20 @@ paths:
           $ref: '#/components/responses/IdempotencyKeyReused'
   /v1/automations/templates/zernio/{templateId}:
     get:
-      x-resource-group: "ads"
-      x-oauth-scopes: ["ads:write", "ads:read"]
+      x-resource-group: "accounts"
+      x-oauth-scopes: ["accounts:read", "accounts:write"]
       operationId: getZernioAutomationTemplate
       tags:
         - Automations
       summary: Get a Zernio automation template
       description: >
-        Returns one of Zernio's ready-made ad rule templates in the same shape as your own. Each threshold and budget
-        or bid amount is an input with the template's own value as its default, so an install can change it or leave it.
+        Returns one of Zernio's ready-made templates in the same shape as your own: an ad rule (like `stop_losers`), a
+        comment to DM (`comment-keyword-dm`, `comment-keyword-dm-follow-gate`) or a sequence (`sequence-welcome-series`,
+        `sequence-nurture`).
+
+
+        In an ad rule, each threshold and budget or bid amount is an input with the template's own value as its default,
+        so an install can change it or leave it. A comment to DM or a sequence asks for a profile and one account of it.
       security:
         - bearerAuth: []
       parameters:
@@ -92023,8 +92031,8 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
   /v1/automations/templates/zernio/{templateId}/install:
     post:
-      x-resource-group: "ads"
-      x-oauth-scopes: ["ads:write"]
+      x-resource-group: "accounts"
+      x-oauth-scopes: ["accounts:write"]
       operationId: installZernioAutomationTemplate
       tags:
         - Automations

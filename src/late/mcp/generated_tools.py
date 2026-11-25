@@ -18552,7 +18552,9 @@ def register_generated_tools(mcp, _get_client):
     def automations_get_zernio_automation_template(template_id: str) -> str:
         """Get a Zernio automation template
 
-        Returns one of Zernio's ready-made ad rule templates in the same shape as your own. Each threshold and budget or bid amount is an input with the template's own value as its default, so an install can change it or leave it.
+        Returns one of Zernio's ready-made templates in the same shape as your own: an ad rule (like `stop_losers`), a comment to DM (`comment-keyword-dm`, `comment-keyword-dm-follow-gate`) or a sequence (`sequence-welcome-series`, `sequence-nurture`).
+
+        In an ad rule, each threshold and budget or bid amount is an input with the template's own value as its default, so an install can change it or leave it. A comment to DM or a sequence asks for a profile and one account of it.
 
         Args:
             template_id: The id of one of Zernio's templates, for example `stop_losers`. (required)"""
@@ -61639,7 +61641,7 @@ TOOL_OAUTH_SCOPES: dict[str, tuple[str, ...]] = {
     "analytics_run_google_analytics_realtime_report": ("analytics:read",),
     "analytics_run_google_analytics_report": ("analytics:read",),
     "analytics_sync_external_posts": ("posts:write",),
-    "automations_activate_automation": ("ads:write",),
+    "automations_activate_automation": ("accounts:write",),
     "automations_approve_automation_approval": ("ads:write",),
     "automations_backtest_automation": (
         "ads:write",
@@ -61649,49 +61651,49 @@ TOOL_OAUTH_SCOPES: dict[str, tuple[str, ...]] = {
         "ads:write",
         "ads:read",
     ),
-    "automations_create_automation": ("ads:write",),
-    "automations_create_automation_template": ("ads:write",),
-    "automations_delete_automation": ("ads:write",),
-    "automations_delete_automation_template": ("ads:write",),
+    "automations_create_automation": ("accounts:write",),
+    "automations_create_automation_template": ("accounts:write",),
+    "automations_delete_automation": ("accounts:write",),
+    "automations_delete_automation_template": ("accounts:write",),
     "automations_get_automation": (
-        "ads:read",
-        "ads:write",
+        "accounts:read",
+        "accounts:write",
     ),
     "automations_get_automation_approval": (
         "ads:read",
         "ads:write",
     ),
     "automations_get_automation_catalog": (
-        "ads:read",
-        "ads:write",
+        "accounts:read",
+        "accounts:write",
     ),
     "automations_get_automation_controls": (
         "ads:read",
         "ads:write",
     ),
     "automations_get_automation_run": (
-        "ads:read",
-        "ads:write",
+        "accounts:read",
+        "accounts:write",
     ),
     "automations_get_automation_template": (
-        "ads:read",
-        "ads:write",
+        "accounts:read",
+        "accounts:write",
     ),
     "automations_get_automation_test_sample": (
-        "ads:read",
-        "ads:write",
+        "accounts:read",
+        "accounts:write",
     ),
     "automations_get_shared_automation_template": (
-        "ads:read",
-        "ads:write",
+        "accounts:read",
+        "accounts:write",
     ),
     "automations_get_zernio_automation_template": (
-        "ads:read",
-        "ads:write",
+        "accounts:read",
+        "accounts:write",
     ),
-    "automations_install_automation_template": ("ads:write",),
-    "automations_install_shared_automation_template": ("ads:write",),
-    "automations_install_zernio_automation_template": ("ads:write",),
+    "automations_install_automation_template": ("accounts:write",),
+    "automations_install_shared_automation_template": ("accounts:write",),
+    "automations_install_zernio_automation_template": ("accounts:write",),
     "automations_list_automation_actions": (
         "ads:read",
         "ads:write",
@@ -61701,22 +61703,22 @@ TOOL_OAUTH_SCOPES: dict[str, tuple[str, ...]] = {
         "ads:write",
     ),
     "automations_list_automation_checks": (
-        "ads:read",
-        "ads:write",
+        "accounts:read",
+        "accounts:write",
     ),
     "automations_list_automation_runs": (
-        "ads:read",
-        "ads:write",
+        "accounts:read",
+        "accounts:write",
     ),
     "automations_list_automation_templates": (
-        "ads:read",
-        "ads:write",
+        "accounts:read",
+        "accounts:write",
     ),
     "automations_list_automations": (
-        "ads:read",
-        "ads:write",
+        "accounts:read",
+        "accounts:write",
     ),
-    "automations_pause_automation": ("ads:write",),
+    "automations_pause_automation": ("accounts:write",),
     "automations_preview_automation": (
         "ads:read",
         "ads:write",
@@ -61727,11 +61729,11 @@ TOOL_OAUTH_SCOPES: dict[str, tuple[str, ...]] = {
     ),
     "automations_reject_automation_approval": ("ads:write",),
     "automations_take_over_automation": ("ads:write",),
-    "automations_test_automation": ("ads:write",),
-    "automations_update_automation": ("ads:write",),
+    "automations_test_automation": ("accounts:write",),
+    "automations_update_automation": ("accounts:write",),
     "automations_update_automation_ad_account_controls": ("ads:write",),
     "automations_update_automation_controls": ("ads:write",),
-    "automations_update_automation_template": ("ads:write",),
+    "automations_update_automation_template": ("accounts:write",),
     "blogs_create_blog": ("posts:write",),
     "blogs_create_blog_article": ("posts:write",),
     "blogs_delete_blog": ("posts:write",),
