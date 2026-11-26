@@ -6,6 +6,7 @@ from starlette.testclient import TestClient
 
 from late.mcp.auth import build_auth_provider
 from late.mcp.constants import OAUTH_AUTHORIZATION_SERVER
+from late.mcp.middleware.missing_scope import relink_instructions
 
 
 def _metadata(scopes: list[str] | None = None) -> dict:
@@ -43,6 +44,26 @@ def test_metadata_advertises_the_google_and_microsoft_and_commerce_scopes() -> N
     # Clients such as ChatGPT and Cursor request exactly the advertised scopes, so a scope
     # missing here means no MCP user can ever reach the calendar, files or commerce routes.
     assert {"calendar:write", "files:write", "commerce:write"} <= set(_metadata()["scopes_supported"])
+
+
+AREA_READ_SCOPES = [
+    "commerce:read",
+    "calendar:read",
+    "files:read",
+    "campaigns:read",
+    "money:read",
+    "automations:read",
+]
+
+
+def test_metadata_advertises_the_area_read_scopes_at_the_end() -> None:
+    # Appended after messaging:read to match libs/oauth/scopes.ts in Schedule-Posts-API (#10954).
+    assert _metadata()["scopes_supported"][-6:] == AREA_READ_SCOPES
+
+
+def test_every_area_read_scope_has_a_relink_purpose() -> None:
+    for scope in AREA_READ_SCOPES:
+        assert f"use this ({scope})" not in relink_instructions(scope)
 
 
 def test_metadata_scopes_match_the_live_authorization_server() -> None:

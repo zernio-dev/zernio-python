@@ -39,6 +39,12 @@ _SCOPE_PURPOSE = {
     "messaging:write": "send messages, replies and broadcasts for you",
     "ads:write": "create ads and pause or resume campaigns, which spends your ad budget",
     "accounts:write": "create, change or remove your profiles and connected accounts",
+    "commerce:read": "read your shop's orders, products and promotions",
+    "calendar:read": "read your calendar events and availability",
+    "files:read": "list and download your Drive and OneDrive files",
+    "campaigns:read": "read your creator campaigns, creators and payouts",
+    "money:read": "read your balance, ledger and transfers",
+    "automations:read": "read your contacts and webhooks",
 }
 
 
