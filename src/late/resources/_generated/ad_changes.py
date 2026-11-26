@@ -100,11 +100,24 @@ class AdChangesResource:
         return self._build_body({to_camel(k): v for k, v in kwargs.items()})
 
     def list_ad_changes(
-        self, *, limit: int | None = 50, cursor: str | None = None
+        self,
+        *,
+        status: str | None = "staged",
+        account_id: str | None = None,
+        platform: str | None = None,
+        type: str | None = None,
+        created_by: str | None = None,
+        limit: int | None = 50,
+        cursor: str | None = None,
     ) -> dict[str, Any]:
         """List staged ad changes"""
         params = self._build_query(
             {
+                "status": status,
+                "accountId": account_id,
+                "platform": platform,
+                "type": type,
+                "createdBy": created_by,
                 "limit": limit,
                 "cursor": cursor,
             }
@@ -115,20 +128,41 @@ class AdChangesResource:
         """Get a staged ad change"""
         return self._client._get(f"/v1/ads/changes/{change_id}")
 
+    def update_ad_change(self, change_id: str) -> dict[str, Any]:
+        """Edit or refresh a staged ad change"""
+        return self._client._patch(f"/v1/ads/changes/{change_id}")
+
     def discard_ad_change(self, change_id: str) -> dict[str, Any]:
         """Discard a staged ad change"""
         return self._client._delete(f"/v1/ads/changes/{change_id}")
+
+    def restage_ad_change(self, change_id: str) -> dict[str, Any]:
+        """Stage a failed ad change again"""
+        return self._client._post(f"/v1/ads/changes/{change_id}/restage")
 
     def confirm_ad_change(self, change_id: str) -> dict[str, Any]:
         """Confirm a staged ad change"""
         return self._client._post(f"/v1/ads/changes/{change_id}/confirm")
 
     async def alist_ad_changes(
-        self, *, limit: int | None = 50, cursor: str | None = None
+        self,
+        *,
+        status: str | None = "staged",
+        account_id: str | None = None,
+        platform: str | None = None,
+        type: str | None = None,
+        created_by: str | None = None,
+        limit: int | None = 50,
+        cursor: str | None = None,
     ) -> dict[str, Any]:
         """List staged ad changes (async)"""
         params = self._build_query(
             {
+                "status": status,
+                "accountId": account_id,
+                "platform": platform,
+                "type": type,
+                "createdBy": created_by,
                 "limit": limit,
                 "cursor": cursor,
             }
@@ -139,9 +173,17 @@ class AdChangesResource:
         """Get a staged ad change (async)"""
         return await self._client._aget(f"/v1/ads/changes/{change_id}")
 
+    async def aupdate_ad_change(self, change_id: str) -> dict[str, Any]:
+        """Edit or refresh a staged ad change (async)"""
+        return await self._client._apatch(f"/v1/ads/changes/{change_id}")
+
     async def adiscard_ad_change(self, change_id: str) -> dict[str, Any]:
         """Discard a staged ad change (async)"""
         return await self._client._adelete(f"/v1/ads/changes/{change_id}")
+
+    async def arestage_ad_change(self, change_id: str) -> dict[str, Any]:
+        """Stage a failed ad change again (async)"""
+        return await self._client._apost(f"/v1/ads/changes/{change_id}/restage")
 
     async def aconfirm_ad_change(self, change_id: str) -> dict[str, Any]:
         """Confirm a staged ad change (async)"""

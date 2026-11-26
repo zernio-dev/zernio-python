@@ -12851,21 +12851,55 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=False,
         )
     )
-    def ad_changes_list_ad_changes(limit: int = 50, cursor: str | None = None) -> str:
+    def ad_changes_list_ad_changes(
+        status: Literal["staged", "failed"] = "staged",
+        account_id: str | None = None,
+        platform: str | None = None,
+        type: Literal[
+            "campaign_status",
+            "ad_set_status",
+            "ad_status",
+            "campaign_update",
+            "ad_set_update",
+            "ad_update",
+            "campaign_targeting",
+            "ad_create",
+            "campaign_create",
+            "ad_set_create",
+            "operation",
+        ]
+        | None = None,
+        created_by: str | None = None,
+        limit: int = 50,
+        cursor: str | None = None,
+    ) -> str:
         """List staged ad changes
 
-        Lists the ad changes waiting to be confirmed or discarded, newest first. A confirmed or failed change is not listed; read it by id.
+        Lists the ad changes waiting to be confirmed or discarded, newest first. With `status=failed` it lists the changes a confirm could not apply, each with its error, until they are deleted (7 days, 30 for a failed create). A confirmed change is not listed; read it by id.
 
         Each item is a summary without the diff. Read one change to get its before/after values.
 
         Platforms: meta, google
 
         Args:
+            status: Which changes to list.
+            account_id: Only the changes of this connected account.
+            platform: Only the changes on this ad platform, as the change names it (for example `facebook` or `google`).
+            type: Only the changes of this type.
+            created_by: Only the changes this user staged.
             limit: How many changes to return.
             cursor: The `nextCursor` of the previous page, unchanged."""
         client = _get_client()
         try:
-            response = client.ad_changes.list_ad_changes(limit=limit, cursor=cursor)
+            response = client.ad_changes.list_ad_changes(
+                status=status,
+                account_id=account_id,
+                platform=platform,
+                type=type,
+                created_by=created_by,
+                limit=limit,
+                cursor=cursor,
+            )
             return _format_response(response)
         except Exception as e:
             raise ToolError(f"Error: {e}") from e
@@ -12883,6 +12917,10 @@ def register_generated_tools(mcp, _get_client):
 
         Returns one ad change with its before/after diff. A change is created by sending a supported ad write with `stage: true`.
 
+        Campaign, ad set and ad edits, status changes and creates stage with a live read and a diff against the current values.
+
+        Every other write listed under `request.operation` stages as its request. Send `stage: true` in its body, or `?stage=true` on a write without a body. The answer is `202` with the change.
+
         A staged change does not expire. A confirmed or failed change stays readable for 7 days, a failed create for 30 days. Disconnecting the connection of a staged change deletes it.
 
         Platforms: meta, google
@@ -12892,6 +12930,40 @@ def register_generated_tools(mcp, _get_client):
         client = _get_client()
         try:
             response = client.ad_changes.get_ad_change(change_id=change_id)
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Edit or refresh a staged ad change",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def ad_changes_update_ad_change(change_id: str) -> str:
+        """Edit or refresh a staged ad change
+
+        Replaces the request body of a staged change, or reads its object again when no body is sent. The change keeps its id. Nothing is written to the ad network.
+
+        ### Edit
+
+        Send the new body: the same kind of body as the route the change was staged on, without `stage`. It passes the checks of staging again for the calling user. The object is read again, so the diff and the changed-since check start from its current values.
+
+        A change of type `operation` stores a whole request and cannot be edited in place (`409`): discard it and stage the request again.
+
+        ### Refresh
+
+        Send no body. The object is read again with the body the change already holds. Use it on a change that reads `stale: true` after a confirm answered `409` `change_target_changed`: once refreshed it can be confirmed.
+
+        Platforms: meta, google
+
+        Args:
+            change_id: The id of the staged change. (required)"""
+        client = _get_client()
+        try:
+            response = client.ad_changes.update_ad_change(change_id=change_id)
             return _format_response(response)
         except Exception as e:
             raise ToolError(f"Error: {e}") from e
@@ -12924,6 +12996,34 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="Stage a failed ad change again",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def ad_changes_restage_ad_change(change_id: str) -> str:
+        """Stage a failed ad change again
+
+        Makes a new staged change from a change that failed at confirm. Nothing is written to the ad network.
+
+        The new change holds the same request. It is checked for the calling user, and an edit is read against the current values of its object. The failed change stays readable until it is deleted.
+
+        A failed create cannot be staged again (`409`): it may have made part of its objects on the ad network, which its `error.details` lists. Stage a new create instead.
+
+        Platforms: meta, google
+
+        Args:
+            change_id: The id of the failed change. (required)"""
+        client = _get_client()
+        try:
+            response = client.ad_changes.restage_ad_change(change_id=change_id)
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="Confirm a staged ad change",
             readOnlyHint=False,
             destructiveHint=True,
@@ -12941,13 +13041,15 @@ def register_generated_tools(mcp, _get_client):
 
         Before writing, the object is read from the ad network again and compared with what it held when the change was staged.
 
-        If it changed in between, nothing is written and the answer is `409` `change_target_changed` with the current values in `details.current`. The change stays `staged` and reads `stale: true`. Discard it and stage the change again from those values.
+        If it changed in between, nothing is written and the answer is `409` `change_target_changed` with the current values in `details.current`. The change stays `staged` and reads `stale: true`. Refresh it with PATCH /v1/ads/changes/{changeId}, or discard it and stage the change again from those values.
+
+        A change of type `operation` has no such check: its request is sent through its own route as it was stored.
 
         After a confirm, the other staged changes on the same object are read again, so confirming one of two changes on an object does not refuse the other.
 
         ### Retrying
 
-        A change is applied at most once. Confirming a change that is already `confirmed` returns its stored result again. A change that failed answers `409` ...
+        A ...
 
         Platforms: meta, google
 
@@ -61788,6 +61890,8 @@ TOOL_OAUTH_SCOPES: dict[str, tuple[str, ...]] = {
         "ads:read",
         "ads:write",
     ),
+    "ad_changes_restage_ad_change": ("ads:write",),
+    "ad_changes_update_ad_change": ("ads:write",),
     "ad_creatives_create_ad_creative": ("ads:write",),
     "ad_creatives_delete_ad_creative": ("ads:write",),
     "ad_creatives_delete_ad_video": ("ads:write",),

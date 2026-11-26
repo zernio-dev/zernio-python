@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.841.0"
+  version: "1.842.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -26147,8 +26147,19 @@ components:
         id: { type: string, description: 'The change id, used in /v1/ads/changes/{changeId}.' }
         type:
           type: string
-          enum: [campaign_status, ad_set_status, ad_status, campaign_update, ad_set_update, ad_update, campaign_targeting, ad_create, campaign_create, ad_set_create]
-          description: 'Which write was staged: a status route, the update route of a campaign, an ad set or an ad, the campaign targeting route, or one of the create routes (POST /v1/ads/create, POST /v1/ads/campaigns, POST /v1/ads/ad-sets).'
+          enum: [campaign_status, ad_set_status, ad_status, campaign_update, ad_set_update, ad_update, campaign_targeting, ad_create, campaign_create, ad_set_create, operation]
+          description: 'Which write was staged: a status route, an update route (campaign, ad set, ad), the campaign targeting route or a create route. `operation` is any other ads write, staged as its request and named by `request`. It has no live read, so its diff shows the new values only.'
+        request:
+          type: object
+          description: 'Only with type `operation`: the write that was staged as its request. Confirm sends this request through its own route.'
+          required: [operation, method, path]
+          properties:
+            operation:
+              type: string
+              description: 'The operationId of the staged write. Every write in this list accepts `stage: true` in its body, or `?stage=true` when it has no body.'
+              enum: [addAccountCallouts, addAccountSitelinks, addAccountStructuredSnippets, addAdKeywords, applyGoogleRecommendations, archiveLeadForm, assignAdAccountUser, assignPageUser, attachAdGroupAssets, attachAdLabel, attachCampaignAssets, boostPost, bulkUpdateAdCampaignStatus, createAdAudience, createAdCreative, createAdLabel, createAdNegativeKeywordList, createBidStrategy, createCallAd, createConversionAction, createCtwaAd, createCustomConversionGoal, createGoogleAssetGroup, createHighDemandPeriod, createLeadForm, createMessagingAd, createSharedBudget, createValueRuleSet, deleteAd, deleteAdAudience, deleteAdCampaign, deleteAdCreative, deleteAdNegativeKeywordList, deleteAdSet, deleteAdVideo, deleteValueRuleSet, detachAdLabel, dismissGoogleRecommendations, duplicateAd, duplicateAdCampaign, duplicateAdSet, editAdNegativeKeywordListKeywords, editCampaignNegativeKeywordLists, editCampaignNegativeKeywords, editGoogleAssetGroupAssets, inviteAdAccountToManager, inviteAdAccountUser, removeAccountCallout, removeAccountSitelink, removeAccountStructuredSnippet, removeAdAccountUser, removeAdGroupAssets, removeAdKeyword, removeAdLabel, removeCampaignAssets, removeCustomConversionGoal, removeGoogleAssetGroup, removePageUser, replaceAdAudienceCompanies, replaceAdNegativeKeywordListKeywords, replaceCampaignNegativeKeywordLists, replaceCampaignNegativeKeywords, replaceGoogleListingGroupFilters, revokeAdAccountUserInvitation, setPartnershipAdPermission, setUpAdAccountBilling, updateAccountCallouts, updateAccountSitelinks, updateAccountStructuredSnippets, updateAdAccount, updateAdAccountManagerLink, updateAdAudience, updateAdConversionGoals, updateAdCreative, updateAdGroupAssets, updateAdKeyword, updateAdLabel, updateAdNegativeKeywordList, updateAdTrackingTags, updateBidStrategy, updateCampaignAdSchedule, updateCampaignAssets, updateCampaignConversionGoals, updateConversionAction, updateCustomConversionGoal, updateGoogleAssetGroup, updateValueRuleSet, withdrawAdAccountUserInvitationApproval]
+            method: { type: string, enum: [POST, PUT, PATCH, DELETE] }
+            path: { type: string, description: 'The path of the write, for example /v1/ads/keywords.', example: /v1/ads/keywords }
         platform: { type: string, description: 'The ad platform of the object, as the write route names it.', example: facebook }
         accountId: { type: string, description: The connected account the write goes through. }
         adAccountId: { type: string, description: The ad account id on the platform. }
@@ -26194,7 +26205,7 @@ components:
                 description: 'Only on a list of plain values (strings or numbers) with `beforeAvailable` true: the values in `before` that are not in `after`. Order is ignored.'
         createdBy: { type: string, description: The user who staged the change. }
         confirmedBy: { type: [string, "null"], description: 'The user who confirmed the change. Null while nobody has, and after a confirm that left the change staged.' }
-        stale: { type: boolean, description: 'Present and true on a staged change whose last confirm was refused with `change_target_changed`. `error` then says why. Discard it and stage it again from the current values.' }
+        stale: { type: boolean, description: 'Present and true on a staged change whose last confirm was refused with `change_target_changed`. `error` then says why. Refresh it with PATCH /v1/ads/changes/{changeId} (no body), or discard it and stage it again.' }
         createdAt: { type: string, format: date-time }
         finishedAt: { type: [string, "null"], format: date-time, description: 'When the confirm ended, as `confirmed` or `failed`. A finished change is deleted 7 days later, a failed create 30 days later.' }
         result:
@@ -26227,14 +26238,30 @@ components:
         finishedAt: null
     StagedAdChangeSummary:
       type: object
-      description: 'A staged ad change as the list returns it: what it targets and who staged it, without the diff.'
-      required: [id, type, platform, accountId, adAccountId, targetId, targetName, creates, createdBy, createdAt]
+      description: 'A staged or failed ad change as the list returns it: what it targets and who staged it, without the diff.'
+      required: [id, type, platform, accountId, adAccountId, targetId, targetName, status, creates, createdBy, createdAt]
       properties:
         id: { type: string, description: 'The change id, used in /v1/ads/changes/{changeId}.' }
         type:
           type: string
-          enum: [campaign_status, ad_set_status, ad_status, campaign_update, ad_set_update, ad_update, campaign_targeting, ad_create, campaign_create, ad_set_create]
-          description: Which write was staged.
+          enum: [campaign_status, ad_set_status, ad_status, campaign_update, ad_set_update, ad_update, campaign_targeting, ad_create, campaign_create, ad_set_create, operation]
+          description: 'Which write was staged. `operation` is a write staged as its request, named by `request`.'
+        request:
+          type: object
+          description: 'Only with type `operation`: the staged write.'
+          required: [operation, method, path]
+          properties:
+            operation: { type: string, description: 'The operationId of the staged write.', example: addAdKeywords }
+            method: { type: string, enum: [POST, PUT, PATCH, DELETE] }
+            path: { type: string, example: /v1/ads/keywords }
+        status: { type: string, enum: [staged, failed], description: 'The status the list was asked for.' }
+        stale: { type: boolean, description: 'Present and true on a staged change whose object was edited on the ad network after staging. Refresh it with PATCH /v1/ads/changes/{changeId}.' }
+        error:
+          type: object
+          description: 'Present on a failed change: why it failed.'
+          properties:
+            code: { type: string }
+            message: { type: [string, "null"] }
         platform: { type: string, description: 'The ad platform of the object, as the write route names it.', example: facebook }
         accountId: { type: string, description: The connected account the write goes through. }
         adAccountId: { type: string, description: The ad account id on the platform. }
@@ -93117,14 +93144,35 @@ paths:
         - google
       summary: List staged ad changes
       description: >
-        Lists the ad changes waiting to be confirmed or discarded, newest first. A confirmed or failed change is not
-        listed; read it by id.
+        Lists the ad changes waiting to be confirmed or discarded, newest first. With `status=failed` it lists the
+        changes a confirm could not apply, each with its error, until they are deleted (7 days, 30 for a failed
+        create). A confirmed change is not listed; read it by id.
 
 
         Each item is a summary without the diff. Read one change to get its before/after values.
       security:
         - bearerAuth: []
       parameters:
+        - name: status
+          in: query
+          schema: { type: string, enum: [staged, failed], default: staged }
+          description: Which changes to list.
+        - name: accountId
+          in: query
+          schema: { type: string }
+          description: Only the changes of this connected account.
+        - name: platform
+          in: query
+          schema: { type: string }
+          description: 'Only the changes on this ad platform, as the change names it (for example `facebook` or `google`).'
+        - name: type
+          in: query
+          schema: { type: string, enum: [campaign_status, ad_set_status, ad_status, campaign_update, ad_set_update, ad_update, campaign_targeting, ad_create, campaign_create, ad_set_create, operation] }
+          description: Only the changes of this type.
+        - name: createdBy
+          in: query
+          schema: { type: string }
+          description: Only the changes this user staged.
         - name: limit
           in: query
           schema: { type: integer, minimum: 1, maximum: 100, default: 50 }
@@ -93181,6 +93229,10 @@ paths:
       description: |
         Returns one ad change with its before/after diff. A change is created by sending a supported ad write with `stage: true`.
 
+        Campaign, ad set and ad edits, status changes and creates stage with a live read and a diff against the current values.
+
+        Every other write listed under `request.operation` stages as its request. Send `stage: true` in its body, or `?stage=true` on a write without a body. The answer is `202` with the change.
+
         A staged change does not expire. A confirmed or failed change stays readable for 7 days, a failed create for 30 days. Disconnecting the connection of a staged change deletes it.
       security:
         - bearerAuth: []
@@ -93207,6 +93259,67 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
         '404':
           $ref: '#/components/responses/NotFound'
+    patch:
+      x-resource-group: "ads"
+      x-oauth-scopes: ["ads:write"]
+      operationId: updateAdChange
+      tags: [Ad Changes]
+      x-platforms: [meta, google]
+      summary: Edit or refresh a staged ad change
+      description: |
+        Replaces the request body of a staged change, or reads its object again when no body is sent. The change keeps its id. Nothing is written to the ad network.
+
+        ### Edit
+
+        Send the new body: the same kind of body as the route the change was staged on, without `stage`. It passes the checks of staging again for the calling user. The object is read again, so the diff and the changed-since check start from its current values.
+
+        A change of type `operation` stores a whole request and cannot be edited in place (`409`): discard it and stage the request again.
+
+        ### Refresh
+
+        Send no body. The object is read again with the body the change already holds. Use it on a change that reads `stale: true` after a confirm answered `409` `change_target_changed`: once refreshed it can be confirmed.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+              description: 'The new request body of the change. Leave it out to refresh the change.'
+            example:
+              budget: { amount: 25, type: daily }
+      responses:
+        '200':
+          description: The change as it is now
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [change]
+                properties:
+                  change: { $ref: '#/components/schemas/StagedAdChange' }
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          x-summary: "Ads access is required: legacy plans need the Ads add-on, and usage-based plans include it by default."
+          description: Ads access required (code `ads_addon_required`). Legacy plans need the Ads add-on; included by default on usage-based plans.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          x-summary: "The change is no longer staged, or it cannot be edited in place."
+          description: 'The change is no longer staged (`change_not_staged`, or `change_outcome_unknown` while a confirm is running), or it is a write staged as its request and a body was sent (`invalid_resource_state`).'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
     delete:
       x-resource-group: "ads"
       x-oauth-scopes: ["ads:write"]
@@ -93243,6 +93356,58 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+  /v1/ads/changes/{changeId}/restage:
+    post:
+      x-resource-group: "ads"
+      x-oauth-scopes: ["ads:write"]
+      operationId: restageAdChange
+      tags: [Ad Changes]
+      x-platforms: [meta, google]
+      summary: Stage a failed ad change again
+      description: |
+        Makes a new staged change from a change that failed at confirm. Nothing is written to the ad network.
+
+        The new change holds the same request. It is checked for the calling user, and an edit is read against the current values of its object. The failed change stays readable until it is deleted.
+
+        A failed create cannot be staged again (`409`): it may have made part of its objects on the ad network, which its `error.details` lists. Stage a new create instead.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: changeId
+          in: path
+          required: true
+          schema: { type: string }
+          description: The id of the failed change.
+      responses:
+        '201':
+          description: The new staged change
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [change]
+                properties:
+                  change: { $ref: '#/components/schemas/StagedAdChange' }
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          x-summary: "Ads access is required: legacy plans need the Ads add-on, and usage-based plans include it by default."
+          description: Ads access required (code `ads_addon_required`). Legacy plans need the Ads add-on; included by default on usage-based plans.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          x-summary: "Only a failed edit or a failed request can be staged again."
+          description: 'The change did not fail, or it is a failed create (`invalid_resource_state`).'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
   /v1/ads/changes/{changeId}/confirm:
     post:
       x-resource-group: "ads"
@@ -93260,7 +93425,9 @@ paths:
 
         Before writing, the object is read from the ad network again and compared with what it held when the change was staged.
 
-        If it changed in between, nothing is written and the answer is `409` `change_target_changed` with the current values in `details.current`. The change stays `staged` and reads `stale: true`. Discard it and stage the change again from those values.
+        If it changed in between, nothing is written and the answer is `409` `change_target_changed` with the current values in `details.current`. The change stays `staged` and reads `stale: true`. Refresh it with PATCH /v1/ads/changes/{changeId}, or discard it and stage the change again from those values.
+
+        A change of type `operation` has no such check: its request is sent through its own route as it was stored.
 
         After a confirm, the other staged changes on the same object are read again, so confirming one of two changes on an object does not refuse the other.
 
