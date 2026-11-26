@@ -7940,7 +7940,7 @@ def register_generated_tools(mcp, _get_client):
             campaign_id: Platform campaign ID (required)
             status: (required)
             platform: (required)
-            stage: Send true to stage this change instead of applying it. Nothing is written to the ad network; the response is `202` with the staged change and its diff. Apply it with POST /v1/ads/changes/{changeId}/confirm. Meta and Google only; cannot be combined with `validateOnly` or `dryRun`."""
+            stage: Send true to stage this change instead of applying it. Nothing is written to the ad network; the response is `202` with the staged change and its diff. Apply it with POST /v1/ads/changes/{changeId}/confirm. Meta, Google, TikTok, X, Snapchat and Reddit; cannot be combined with `validateOnly` or `dryRun`."""
         client = _get_client()
         try:
             response = client.ad_campaigns.update_ad_campaign_status(
@@ -8223,7 +8223,7 @@ def register_generated_tools(mcp, _get_client):
 
             Args:
                 campaign_id: Platform campaign ID (required)
-                stage: Send true to stage this change instead of applying it. Nothing is written to the ad network; the response is `202` with the staged change and its diff. Apply it with POST /v1/ads/changes/{changeId}/confirm. Meta and Google only; cannot be combined with `validateOnly` or `dryRun`.
+                stage: Send true to stage this change instead of applying it. Nothing is written to the ad network; the response is `202` with the staged change and its diff. Apply it with POST /v1/ads/changes/{changeId}/confirm. Meta, Google, TikTok, X, Snapchat and Reddit; cannot be combined with `validateOnly` or `dryRun`.
                 platform: Required: platform campaign IDs are not globally unique. (required)
                 account_id: **Meta only.** Zernio SocialAccount id owning the ad account. Needed only for an EMPTY campaign (zero ads); ignored otherwise.
                 bid_strategy: **Meta, Google and AppLovin.**
@@ -9195,7 +9195,7 @@ def register_generated_tools(mcp, _get_client):
 
             Args:
                 ad_set_id: Platform ad set ID (required)
-                stage: Send true to stage this change instead of applying it. Nothing is written to the ad network; the response is `202` with the staged change and its diff. Apply it with POST /v1/ads/changes/{changeId}/confirm. Meta and Google only; cannot be combined with `validateOnly` or `dryRun`.
+                stage: Send true to stage this change instead of applying it. Nothing is written to the ad network; the response is `202` with the staged change and its diff. Apply it with POST /v1/ads/changes/{changeId}/confirm. Meta, Google, TikTok, X, Snapchat and Reddit; cannot be combined with `validateOnly` or `dryRun`.
                 platform: (required)
                 budget: Omit if not updating budget Object with keys: amount (number); type (one of: daily, lifetime)
                 status: Writes the ad set's own on/off switch (Meta: `configured_status`; X: the line item's `entity_status` ACTIVE / PAUSED), whatever delivery status its ads report. Omit if not toggling delivery state.
@@ -9435,7 +9435,7 @@ def register_generated_tools(mcp, _get_client):
             ad_set_id: Platform ad set ID (required)
             status: (required)
             platform: (required)
-            stage: Send true to stage this change instead of applying it. Nothing is written to the ad network; the response is `202` with the staged change and its diff. Apply it with POST /v1/ads/changes/{changeId}/confirm. Meta and Google only; cannot be combined with `validateOnly` or `dryRun`."""
+            stage: Send true to stage this change instead of applying it. Nothing is written to the ad network; the response is `202` with the staged change and its diff. Apply it with POST /v1/ads/changes/{changeId}/confirm. Meta, Google, TikTok, X, Snapchat and Reddit; cannot be combined with `validateOnly` or `dryRun`."""
         client = _get_client()
         try:
             response = client.ad_campaigns.update_ad_set_status(
@@ -9882,7 +9882,7 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             ad_id: (required)
-            stage: Send true to stage this change instead of applying it. Nothing is written to the ad network; the response is `202` with the staged change and its diff. Apply it with POST /v1/ads/changes/{changeId}/confirm. Meta and Google only; cannot be combined with `validateOnly` or `dryRun`.
+            stage: Send true to stage this change instead of applying it. Nothing is written to the ad network; the response is `202` with the staged change and its diff. Apply it with POST /v1/ads/changes/{changeId}/confirm. Meta, Google, TikTok, X, Snapchat and Reddit; cannot be combined with `validateOnly` or `dryRun`.
             headlines: Google Search and Display only. Replaces the complete headline list. Search takes 3-15, Display 1-5 and rejects pinnedField; the count is checked once the ad's channel is known. No padding or truncation on update. Each item is an object with keys: text (string, required); pinnedField (one of: HEADLINE_1, HEADLINE_2, HEADLINE_3) - Optional fixed headline position. Omit to leave the asset unpinned.
             descriptions: Google Search and Display only. Replaces the complete description list. Search takes 2-4, Display 1-5 and rejects pinnedField. No padding or truncation on update. Each item is an object with keys: text (string, required); pinnedField (one of: DESCRIPTION_1, DESCRIPTION_2) - Optional fixed description position. Omit to leave the asset unpinned.
             final_urls: Google Search and Display only. Replaces final URLs. Omitted lists stay unchanged. For Performance Max use assetGroup.finalUrl.
@@ -10003,7 +10003,7 @@ def register_generated_tools(mcp, _get_client):
         Args:
             ad_id: Zernio `_id` (hex), Meta `platformAdId` (numeric), or one of the creative's effective story/media IDs. (required)
             status: (required)
-            stage: Send true to stage this change instead of applying it. Nothing is written to the ad network; the response is `202` with the staged change and its diff. Apply it with POST /v1/ads/changes/{changeId}/confirm. Meta and Google only; cannot be combined with `validateOnly` or `dryRun`."""
+            stage: Send true to stage this change instead of applying it. Nothing is written to the ad network; the response is `202` with the staged change and its diff. Apply it with POST /v1/ads/changes/{changeId}/confirm. Meta, Google, TikTok, X, Snapchat and Reddit; cannot be combined with `validateOnly` or `dryRun`."""
         client = _get_client()
         try:
             response = client.ad_campaigns.update_ad_status(
