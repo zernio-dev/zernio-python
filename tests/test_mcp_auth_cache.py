@@ -298,3 +298,85 @@ async def test_an_oauth_token_past_the_outage_grace_is_not_granted():
 
     with pytest.raises(AuthenticationError):
         await verifier.verify_token("late_at_live")
+
+
+def _verifier_granting_scope(scope: str | None) -> ZernioTokenVerifier:
+    return _verifier_answering(
+        httpx.Response(200, json={"userId": "u" * 24, "scope": scope})
+    )
+
+
+async def test_an_oauth_token_with_a_narrow_scope_carries_exactly_those_scopes():
+    verifier = _verifier_granting_scope("posts:read accounts:read")
+
+    granted = await verifier.verify_token("late_at_live")
+
+    assert granted is not None
+    assert granted.scopes == ["posts:read", "accounts:read"]
+
+
+@pytest.mark.parametrize("count", [8, 13, len(auth.OAUTH_SCOPES)])
+async def test_a_full_scope_list_from_any_earlier_day_carries_every_current_scope(
+    count,
+):
+    verifier = _verifier_granting_scope(" ".join(auth.OAUTH_SCOPES[:count]))
+
+    granted = await verifier.verify_token("late_at_live")
+
+    assert granted is not None
+    assert granted.scopes == list(auth.OAUTH_SCOPES)
+
+
+async def test_eight_scopes_that_are_not_the_original_eight_stay_narrow():
+    narrow = auth.OAUTH_SCOPES[1:9]
+    verifier = _verifier_granting_scope(" ".join(narrow))
+
+    granted = await verifier.verify_token("late_at_live")
+
+    assert granted is not None
+    assert granted.scopes == narrow
+
+
+async def test_an_api_key_carries_every_scope():
+    verifier = _verifier_granting_scope(None)
+
+    granted = await verifier.verify_token("sk_live")
+
+    assert granted is not None
+    assert granted.scopes == list(auth.OAUTH_SCOPES)
+
+
+async def test_a_grant_served_from_cache_carries_the_cached_scope():
+    verifier = _verifier_granting_scope("posts:read")
+    await verifier.verify_token("late_at_live")
+
+    cached = await verifier.verify_token("late_at_live")
+
+    assert cached is not None
+    assert cached.claims["resolved_by"] == "cache"
+    assert cached.scopes == ["posts:read"]
+
+
+async def test_a_grant_during_an_outage_carries_the_cached_scope():
+    verifier, _ = _verifier_counting(httpx.Response(503))
+    _verified_seconds_ago("late_at_live", 1800)
+    auth._remember_identity(
+        auth.token_cache_key("late_at_live"), {"scope": "messaging:read"}
+    )
+
+    granted = await verifier.verify_token("late_at_live")
+
+    assert granted is not None
+    assert granted.claims["resolved_by"] == "grace"
+    assert granted.scopes == ["messaging:read"]
+
+
+async def test_an_api_key_during_an_outage_carries_every_scope():
+    verifier, _ = _verifier_counting(httpx.Response(503))
+    _verified_seconds_ago("sk_live", 1800)
+
+    granted = await verifier.verify_token("sk_live")
+
+    assert granted is not None
+    assert granted.claims["resolved_by"] == "grace"
+    assert granted.scopes == list(auth.OAUTH_SCOPES)
