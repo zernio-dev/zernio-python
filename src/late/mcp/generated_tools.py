@@ -12204,7 +12204,7 @@ def register_generated_tools(mcp, _get_client):
         - `budgetAmount`/`budgetType` and bidding fields (`bidStrategy`, `bidAmount`, `portfolioBidStrategyId`) return 400; the ad group already owns them.
         - With `campaignType: "demand_gen"` the ad group must belong to a Demand Gen campaign (otherwise 400). `demandGen` carries only the ad's creative, and the new ad is created PAUSED.
         - Demand Gen ad group settings return 400: geo, languages, `demandGen.channels`/`audience`/`audienceId`/ `adGroupName`.
-                existing_campaign_id: Create the new objects under this EXISTING campaign instead of creating a new one. Supported on Meta, Google Ads, LinkedIn, TikTok and Reddit Ads. Mutually exclusive with `adSetId`.
+                existing_campaign_id: Create the new objects under this EXISTING campaign instead of creating a new one. Supported on Meta, Google Ads, LinkedIn, TikTok, Reddit Ads and Microsoft Ads. Mutually exclusive with `adSetId`.
 
         - TikTok: creates the ad group and the ad under this campaign. The campaign is neither created nor activated, and its objective must fit `goal`. Not with `smartPlus`.
         - Meta: adds the new ad set under this campaign (multi-ad-set audience testing). Its budget matches the campaign's mode: for a CBO campaign (campaign-level budget) omit `budgetAmount`/`budgetType`, since the campaign owns the budget; for an ABO campaign pass them (they go on the new ad set).
