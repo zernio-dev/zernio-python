@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.842.0"
+  version: "1.843.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -26148,7 +26148,7 @@ components:
         type:
           type: string
           enum: [campaign_status, ad_set_status, ad_status, campaign_update, ad_set_update, ad_update, campaign_targeting, ad_create, campaign_create, ad_set_create, operation]
-          description: 'Which write was staged: a status route, an update route (campaign, ad set, ad), the campaign targeting route or a create route. `operation` is any other ads write, staged as its request and named by `request`. It has no live read, so its diff shows the new values only.'
+          description: 'Which write was staged: a status route, an update route (campaign, ad set, ad), the campaign targeting route or a create route. `operation` is any other ads write, staged as its request and named by `request`. It has no live read, so its diff shows the sent values only.'
         request:
           type: object
           description: 'Only with type `operation`: the write that was staged as its request. Confirm sends this request through its own route.'
@@ -26160,12 +26160,14 @@ components:
               enum: [addAccountCallouts, addAccountSitelinks, addAccountStructuredSnippets, addAdKeywords, applyGoogleRecommendations, archiveLeadForm, assignAdAccountUser, assignPageUser, attachAdGroupAssets, attachAdLabel, attachCampaignAssets, boostPost, bulkUpdateAdCampaignStatus, createAdAudience, createAdCreative, createAdLabel, createAdNegativeKeywordList, createBidStrategy, createCallAd, createConversionAction, createCtwaAd, createCustomConversionGoal, createGoogleAssetGroup, createHighDemandPeriod, createLeadForm, createMessagingAd, createSharedBudget, createValueRuleSet, deleteAd, deleteAdAudience, deleteAdCampaign, deleteAdCreative, deleteAdNegativeKeywordList, deleteAdSet, deleteAdVideo, deleteValueRuleSet, detachAdLabel, dismissGoogleRecommendations, duplicateAd, duplicateAdCampaign, duplicateAdSet, editAdNegativeKeywordListKeywords, editCampaignNegativeKeywordLists, editCampaignNegativeKeywords, editGoogleAssetGroupAssets, inviteAdAccountToManager, inviteAdAccountUser, removeAccountCallout, removeAccountSitelink, removeAccountStructuredSnippet, removeAdAccountUser, removeAdGroupAssets, removeAdKeyword, removeAdLabel, removeCampaignAssets, removeCustomConversionGoal, removeGoogleAssetGroup, removePageUser, replaceAdAudienceCompanies, replaceAdNegativeKeywordListKeywords, replaceCampaignNegativeKeywordLists, replaceCampaignNegativeKeywords, replaceGoogleListingGroupFilters, revokeAdAccountUserInvitation, setPartnershipAdPermission, setUpAdAccountBilling, updateAccountCallouts, updateAccountSitelinks, updateAccountStructuredSnippets, updateAdAccount, updateAdAccountManagerLink, updateAdAudience, updateAdConversionGoals, updateAdCreative, updateAdGroupAssets, updateAdKeyword, updateAdLabel, updateAdNegativeKeywordList, updateAdTrackingTags, updateBidStrategy, updateCampaignAdSchedule, updateCampaignAssets, updateCampaignConversionGoals, updateConversionAction, updateCustomConversionGoal, updateGoogleAssetGroup, updateValueRuleSet, withdrawAdAccountUserInvitationApproval]
             method: { type: string, enum: [POST, PUT, PATCH, DELETE] }
             path: { type: string, description: 'The path of the write, for example /v1/ads/keywords.', example: /v1/ads/keywords }
+            params: { type: object, additionalProperties: { type: string }, description: 'The path values of the staged request, by the names in `path`.', example: { labelId: '22292442088' } }
+            query: { type: object, additionalProperties: { type: string }, description: 'The query values of the staged request, without `stage`.' }
         platform: { type: string, description: 'The ad platform of the object, as the write route names it.', example: facebook }
         accountId: { type: string, description: The connected account the write goes through. }
         adAccountId: { type: string, description: The ad account id on the platform. }
         targetId:
           type: [string, "null"]
-          description: 'The object the change applies to: the platform campaign id, the platform ad set id, or the Zernio ad id. Null for a create, whose object does not exist yet.'
+          description: 'The object the change applies to: the platform campaign id, the platform ad set id, or the Zernio ad id. A write staged as its request with no such object carries the last id of its path. Null when there is none, as for a create.'
         targetName:
           type: [string, "null"]
           description: 'The name of the object when the change was staged, or the name a create will give it. Null when it is not known.'
