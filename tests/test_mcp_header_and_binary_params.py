@@ -74,18 +74,20 @@ def test_connect_list_snapchat_profiles_sends_connect_token(client: Late) -> Non
     assert "profileId=prof_1" in str(request.url)
 
 
-def test_mcp_generator_exposes_only_required_headers(mcp_generator) -> None:
+def test_mcp_generator_exposes_required_headers_and_idempotency_key(mcp_generator) -> None:
     operation = {
         "parameters": [
             {"name": "X-Connect-Token", "in": "header", "required": True},
             {"name": "Idempotency-Key", "in": "header", "required": False},
+            {"name": "x-request-id", "in": "header", "required": False},
+            {"name": "If-Match", "in": "header", "required": False},
             {"name": "profileId", "in": "query", "required": True},
         ]
     }
 
     names = [p["name"] for p in mcp_generator.extract_parameters(operation, {})]
 
-    assert names == ["x_connect_token", "profile_id"]
+    assert names == ["x_connect_token", "idempotency_key", "profile_id"]
 
 
 def test_mcp_generator_maps_octet_stream_body_to_base64(mcp_generator) -> None:
