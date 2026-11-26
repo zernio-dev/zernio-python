@@ -202,22 +202,30 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `accounts.get_all_accounts_health()` | Check accounts health |
 | `accounts.list_accounts()` | List accounts |
 | `accounts.list_business_partners()` | List partner businesses of the Page |
+| `accounts.list_gohighlevel_audience_syncs()` | List HighLevel tag audience syncs |
+| `accounts.list_hub_spot_contact_properties()` | List HubSpot contact properties |
 | `accounts.list_tik_tok_commercial_music()` | List trending commercial music |
+| `accounts.get_account()` | Get account |
 | `accounts.get_account_health()` | Check account health |
 | `accounts.get_account_posts()` | List posts published on the platform |
 | `accounts.get_bluesky_settings()` | Get Bluesky account settings |
 | `accounts.get_follower_stats()` | Get follower stats |
+| `accounts.get_gohighlevel_funnel_tracking()` | Get HighLevel funnel tracking |
+| `accounts.get_gohighlevel_settings()` | Get HighLevel account settings |
 | `accounts.get_google_business_review()` | Get a review |
 | `accounts.get_google_business_reviews()` | Get reviews |
 | `accounts.get_hub_spot_settings()` | Get HubSpot account settings |
 | `accounts.get_instagram_follow_status()` | Check whether an Instagram user follows the account |
 | `accounts.get_linked_in_mentions()` | Resolve LinkedIn mention |
+| `accounts.get_salesforce_settings()` | Get Salesforce account settings |
 | `accounts.get_slack_settings()` | Get Slack account settings |
 | `accounts.get_stripe_settings()` | Get Stripe account settings |
 | `accounts.get_tik_tok_creator_info()` | Get TikTok creator info |
 | `accounts.update_account()` | Update account |
 | `accounts.update_bluesky_settings()` | Update Bluesky account settings |
+| `accounts.update_gohighlevel_settings()` | Update HighLevel account settings |
 | `accounts.update_hub_spot_settings()` | Update HubSpot account settings |
+| `accounts.update_salesforce_settings()` | Update Salesforce account settings |
 | `accounts.update_slack_settings()` | Update Slack account settings |
 | `accounts.update_stripe_settings()` | Update Stripe account settings |
 | `accounts.delete_account()` | Disconnect account |
@@ -228,6 +236,10 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `accounts.reply_to_google_business_review()` | Reply to a review |
 | `accounts.revoke_business_partner()` | Revoke a partner business from the Page |
 | `accounts.search_tik_tok_locations()` | Search TikTok location tags |
+| `accounts.send_gohighlevel_past_won_deals()` | Send past HighLevel won deals as conversions |
+| `accounts.start_gohighlevel_audience_sync()` | Sync a HighLevel tag to ad audiences |
+| `accounts.stop_gohighlevel_audience_sync()` | Stop a HighLevel tag audience sync |
+| `accounts.verify_gohighlevel_funnel_tracking()` | Check the Zernio tag on a HighLevel funnel page |
 
 ### Profiles
 | Method | Description |
@@ -244,6 +256,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 |--------|-------------|
 | `analytics.list_facebook_tagged_posts()` | List the posts a Facebook Page is tagged in |
 | `analytics.list_facebook_visitor_posts()` | List visitor posts on a Facebook Page |
+| `analytics.list_google_search_console_sitemaps()` | List Google Search Console sitemaps |
 | `analytics.list_post_authenticity()` | List authenticity scores |
 | `analytics.list_tracking_windows()` | List tracking windows |
 | `analytics.get_analytics()` | Get post analytics |
@@ -281,7 +294,9 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `analytics.get_you_tube_demographics()` | Get YouTube demographics |
 | `analytics.get_you_tube_video_retention()` | Get YouTube video retention curve |
 | `analytics.cancel_tracking_window()` | Cancel a tracking window |
+| `analytics.inspect_google_search_console_url()` | Inspect a URL in Google Search Console |
 | `analytics.open_tracking_window()` | Open a tracking window |
+| `analytics.query_google_search_console_search_analytics()` | Query Google Search Console search analytics |
 | `analytics.run_google_analytics_realtime_report()` | Run a Google Analytics (GA4) realtime report |
 | `analytics.run_google_analytics_report()` | Run a Google Analytics (GA4) report |
 | `analytics.sync_external_posts()` | Sync an external post |
@@ -338,7 +353,9 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | Method | Description |
 |--------|-------------|
 | `users.list_users()` | List users |
+| `users.get_current_user()` | Get the current user |
 | `users.get_user()` | Get user |
+| `users.remove_user()` | Remove member |
 
 ### Usage
 | Method | Description |
@@ -358,10 +375,13 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 ### Connect (OAuth)
 | Method | Description |
 |--------|-------------|
+| `connect.list_campaign_manager_profiles()` | List Campaign Manager 360 profiles for a pending connect |
+| `connect.list_connect_custom_domains()` | List the workspace's custom domains |
 | `connect.list_facebook_pages()` | List Facebook pages |
 | `connect.list_google_analytics_properties()` | List Google Analytics properties for a pending connect |
 | `connect.list_google_business_categories()` | List Google Business Profile categories |
 | `connect.list_google_business_locations()` | List Google Business Profile locations |
+| `connect.list_google_search_console_sites()` | List Search Console sites for a pending connect |
 | `connect.list_instagram_pages()` | List Pages with a linked Instagram account |
 | `connect.list_linked_in_organizations()` | List LinkedIn orgs |
 | `connect.list_o_auth_apps()` | List your OAuth apps |
@@ -371,6 +391,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `connect.list_slack_channels()` | List Slack channels for the channel picker |
 | `connect.list_snapchat_profiles()` | List Snapchat profiles |
 | `connect.list_whats_app_phone_numbers()` | List numbers for selection |
+| `connect.create_connect_custom_domain()` | Add a custom domain |
 | `connect.create_google_business_location()` | Create Google Business Profile location |
 | `connect.create_google_org_connection()` | Start a Google Workspace organization connection |
 | `connect.create_microsoft_org_connection()` | Start a Microsoft 365 organization connection |
@@ -378,13 +399,18 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `connect.create_pinterest_board()` | Create Pinterest board |
 | `connect.create_platform_invite()` | Create a connect link |
 | `connect.create_youtube_playlist()` | Create YouTube playlist |
+| `connect.get_amazon_ads_connect_url()` | Get Amazon Ads OAuth connect URL |
+| `connect.get_campaign_manager_connect_url()` | Get Campaign Manager 360 OAuth connect URL |
+| `connect.get_connect_custom_domain()` | Get a custom domain |
 | `connect.get_connect_handoff()` | Get a phone handoff |
 | `connect.get_connect_url()` | Get OAuth connect URL |
 | `connect.get_connect_welcome_screen()` | Get the saved welcome screen |
 | `connect.get_email_connect_url()` | Get a hosted link to connect any mailbox |
 | `connect.get_facebook_pages()` | List Facebook pages |
 | `connect.get_gmb_locations()` | List Google Business Profile locations |
+| `connect.get_gohighlevel_connect_url()` | Get HighLevel OAuth connect URL |
 | `connect.get_google_analytics_connect_url()` | Get Google Analytics OAuth connect URL |
+| `connect.get_google_search_console_connect_url()` | Get Google Search Console OAuth connect URL |
 | `connect.get_hub_spot_connect_url()` | Get HubSpot OAuth connect URL |
 | `connect.get_linked_in_organizations()` | List LinkedIn orgs |
 | `connect.get_o_auth_app()` | Get an OAuth app |
@@ -394,6 +420,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `connect.get_pinterest_boards()` | List Pinterest boards |
 | `connect.get_reddit_flairs()` | List subreddit flairs |
 | `connect.get_reddit_subreddits()` | List Reddit subreddits |
+| `connect.get_salesforce_connect_url()` | Get Salesforce OAuth connect URL |
 | `connect.get_shopify_connect_url()` | Get Shopify OAuth connect URL |
 | `connect.get_stripe_connect_url()` | Get Stripe connect URL |
 | `connect.get_subreddit_rules()` | Get subreddit rules |
@@ -405,6 +432,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `connect.get_word_press_auth_url()` | Get WordPress.com OAuth connect URL |
 | `connect.get_youtube_captions()` | Get a YouTube video transcript |
 | `connect.get_youtube_playlists()` | List YouTube playlists |
+| `connect.update_connect_custom_domain()` | Turn a custom domain on or off for connect |
 | `connect.update_connect_welcome_screen()` | Save the welcome screen |
 | `connect.update_facebook_page()` | Update Facebook page |
 | `connect.update_gmb_location()` | Update Google Business Profile location |
@@ -414,6 +442,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `connect.update_pinterest_boards()` | Set default Pinterest board |
 | `connect.update_reddit_subreddits()` | Set default subreddit |
 | `connect.update_youtube_default_playlist()` | Set default YouTube playlist |
+| `connect.delete_connect_custom_domain()` | Remove a custom domain |
 | `connect.delete_o_auth_app()` | Remove an OAuth app |
 | `connect.delete_org_connection()` | Delete an organization connection |
 | `connect.add_org_connection_mailbox()` | Add a mailbox from an organization connection |
@@ -423,12 +452,22 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `connect.complete_whats_app_phone_selection()` | Complete number selection |
 | `connect.configure_tik_tok_ads_brand_identity()` | Set TikTok brand identity |
 | `connect.connect_ads()` | Connect ads for a platform |
+| `connect.connect_app_lovin_ads_credentials()` | Connect an AppLovin account (not available yet) |
+| `connect.connect_attentive_credentials()` | Connect an Attentive company |
+| `connect.connect_awin_credentials()` | Connect an Awin advertiser |
 | `connect.connect_bluesky_credentials()` | Connect Bluesky account |
 | `connect.connect_discord_channel()` | Connect a Discord channel |
+| `connect.connect_impact_credentials()` | Connect an Impact program |
+| `connect.connect_klaviyo_credentials()` | Connect a Klaviyo account |
 | `connect.connect_line_credentials()` | Connect LINE Official Account |
 | `connect.connect_open_ai_ads_credentials()` | Connect an OpenAI Ads account |
+| `connect.connect_outbrain_ads_credentials()` | Connect an Outbrain marketer |
 | `connect.connect_shopify_with_token()` | Connect a Shopify store with a custom-app Admin token |
 | `connect.connect_slack_channel()` | Connect a Slack channel |
+| `connect.connect_snapchat_ads_credentials()` | Connect a Snapchat Ads pixel |
+| `connect.connect_taboola_ads_credentials()` | Connect a Taboola account |
+| `connect.connect_trade_desk_ads_credentials()` | Connect a Trade Desk tracking tag |
+| `connect.connect_trade_desk_ads_partner()` | Connect a Trade Desk partner for ads management |
 | `connect.connect_webflow_with_site_token()` | Connect Webflow with a site API token |
 | `connect.connect_wechat_credentials()` | Connect WeChat Official Account |
 | `connect.connect_whats_app_credentials()` | Connect WhatsApp via credentials |
@@ -439,9 +478,11 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `connect.initiate_telegram_connect()` | Connect Telegram directly |
 | `connect.resync_page_webhook_subscription()` | Re-subscribe an account to Zernio's webhooks |
 | `connect.search_google_business_locations()` | Search existing Google listings |
+| `connect.select_campaign_manager_profile()` | Connect the chosen Campaign Manager 360 profile |
 | `connect.select_facebook_page()` | Select Facebook page |
 | `connect.select_google_analytics_property()` | Connect the chosen Google Analytics property |
 | `connect.select_google_business_location()` | Select Google Business Profile location |
+| `connect.select_google_search_console_site()` | Connect the chosen Search Console site |
 | `connect.select_instagram_account()` | Select the Page whose Instagram account to connect |
 | `connect.select_linked_in_organization()` | Select LinkedIn org |
 | `connect.select_pinterest_board()` | Select Pinterest board |
@@ -449,6 +490,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `connect.set_reddit_post_flair()` | Set Reddit post flair |
 | `connect.start_microsoft_admin_consent()` | Admin-consent link for a Microsoft tenant |
 | `connect.test_o_auth_app()` | Check an OAuth app's keys |
+| `connect.verify_connect_custom_domain()` | Check a custom domain's DNS records now |
 | `connect.verify_org_connection()` | Verify an organization connection |
 | `connect.vote_reddit_thing()` | Vote on a Reddit post or comment |
 
@@ -544,6 +586,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `ad_accounts.assign_page_user()` | Assign a user to a Page |
 | `ad_accounts.attach_ad_label()` | Attach a Google Ads label |
 | `ad_accounts.detach_ad_label()` | Detach a Google Ads label |
+| `ad_accounts.edit_ad_negative_keyword_list_keywords()` | Add or remove negative list keywords |
 | `ad_accounts.hide_ad_comment()` | Hide or unhide an ad comment |
 | `ad_accounts.invite_ad_account_to_manager()` | Invite a client account to a manager |
 | `ad_accounts.invite_ad_account_user()` | Invite a user to an ad account by email |
@@ -576,9 +619,15 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 |--------|-------------|
 | `ad_campaign_results.list_campaign_result_metrics()` | List your result metrics |
 | `ad_campaign_results.list_campaign_results()` | List your results per campaign |
+| `ad_campaign_results.get_campaign_result_events()` | List the events that count as campaign results |
+| `ad_campaign_results.get_campaign_result_profit()` | Get your profit setting |
 | `ad_campaign_results.get_campaign_results_totals()` | Get your results totals |
 | `ad_campaign_results.get_campaign_results_upload()` | Check a results upload |
+| `ad_campaign_results.get_tag_new_ads()` | Get the Tag new ads setting |
+| `ad_campaign_results.set_campaign_result_events()` | Choose the events that count as campaign results |
 | `ad_campaign_results.set_campaign_result_metric()` | Name a result metric or define a formula |
+| `ad_campaign_results.set_campaign_result_profit()` | Set your margin and cost per order |
+| `ad_campaign_results.set_tag_new_ads()` | Turn Tag new ads on or off |
 | `ad_campaign_results.upload_campaign_results()` | Upload your results per campaign |
 
 ### Ad Campaigns
@@ -610,7 +659,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `ad_campaigns.get_ad_campaign_details()` | Get live campaign details |
 | `ad_campaigns.get_ad_review()` | Read the platform's review verdict for an ad |
 | `ad_campaigns.get_ad_set_details()` | Get live ad-set details |
-| `ad_campaigns.get_ad_set_targeting()` | Read a Reddit ad group's targeting and schedule |
+| `ad_campaigns.get_ad_set_targeting()` | Read an ad group's targeting and schedule |
 | `ad_campaigns.get_ad_tree()` | Get campaign tree |
 | `ad_campaigns.get_ads_timeline()` | Get daily account metrics |
 | `ad_campaigns.get_campaign_ad_schedule()` | Read a campaign's ad schedule (dayparting) |
@@ -646,6 +695,8 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `ad_campaigns.duplicate_ad()` | Duplicate an ad |
 | `ad_campaigns.duplicate_ad_campaign()` | Duplicate a campaign |
 | `ad_campaigns.duplicate_ad_set()` | Duplicate an ad set |
+| `ad_campaigns.edit_campaign_negative_keyword_lists()` | Attach or detach campaign negative lists |
+| `ad_campaigns.edit_campaign_negative_keywords()` | Add or remove campaign-level negative keywords |
 | `ad_campaigns.edit_google_asset_group_assets()` | Link or unlink asset group assets |
 | `ad_campaigns.remove_ad_group_assets()` | Remove ad-group assets |
 | `ad_campaigns.remove_ad_keyword()` | Remove a Search keyword |
@@ -654,6 +705,14 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `ad_campaigns.replace_campaign_negative_keyword_lists()` | Replace campaign negative lists |
 | `ad_campaigns.replace_campaign_negative_keywords()` | Replace campaign-level negative keywords |
 | `ad_campaigns.replace_google_listing_group_filters()` | Replace an asset group's listing-group tree |
+
+### Ad Changes
+| Method | Description |
+|--------|-------------|
+| `ad_changes.list_ad_changes()` | List staged ad changes |
+| `ad_changes.get_ad_change()` | Get a staged ad change |
+| `ad_changes.confirm_ad_change()` | Confirm a staged ad change |
+| `ad_changes.discard_ad_change()` | Discard a staged ad change |
 
 ### Ad Creatives
 | Method | Description |
@@ -700,6 +759,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 ### Ad Rules
 | Method | Description |
 |--------|-------------|
+| `ad_rules.list_ad_account_rule_alerts()` | List an ad account's open alerts |
 | `ad_rules.list_ad_rule_activity()` | List every change ad rules made |
 | `ad_rules.list_ad_rule_alerts()` | List a rule's alerts |
 | `ad_rules.list_ad_rule_runs()` | List an ad rule's runs |
@@ -729,6 +789,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `automations.list_automation_actions()` | List automation actions |
 | `automations.list_automation_approvals()` | List an automation's approval requests |
 | `automations.list_automation_checks()` | List an automation's checks |
+| `automations.list_automation_runs()` | List an automation's runs |
 | `automations.list_automation_templates()` | List automation templates |
 | `automations.list_automations()` | List automations |
 | `automations.create_automation()` | Create an automation |
@@ -737,7 +798,9 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `automations.get_automation_approval()` | Get an approval request |
 | `automations.get_automation_catalog()` | Get the automations catalog |
 | `automations.get_automation_controls()` | Get automation controls |
+| `automations.get_automation_run()` | Get one run of an automation |
 | `automations.get_automation_template()` | Get an automation template |
+| `automations.get_automation_test_sample()` | Get a sample test body for an automation |
 | `automations.get_shared_automation_template()` | Get a shared automation template |
 | `automations.get_zernio_automation_template()` | Get a Zernio automation template |
 | `automations.update_automation()` | Edit an automation |
@@ -757,6 +820,8 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `automations.preview_automation()` | Preview a saved automation |
 | `automations.preview_automation_draft()` | Preview an unsaved automation |
 | `automations.reject_automation_approval()` | Reject an approval request |
+| `automations.take_over_automation()` | Take over an automation |
+| `automations.test_automation()` | Test an automation on a sample event |
 
 ### Blogs
 | Method | Description |
@@ -1035,6 +1100,16 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `content_retention.get_content_retention()` | Get content retention mode |
 | `content_retention.update_content_retention()` | Turn zero content retention on or off |
 
+### Conversion Audit
+| Method | Description |
+|--------|-------------|
+| `conversion_audit.list_conversion_audit_monitors()` | List watched domains |
+| `conversion_audit.create_conversion_audit_monitor()` | Watch a domain |
+| `conversion_audit.get_latest_conversion_audit()` | Get a host's latest stored conversion audit |
+| `conversion_audit.get_meta_conversion_audit()` | Audit a connected Meta pixel from inside Events Manager |
+| `conversion_audit.delete_conversion_audit_monitor()` | Stop watching a domain |
+| `conversion_audit.audit_conversion_tracking()` | Audit a site's ad conversion tracking |
+
 ### Conversions
 | Method | Description |
 |--------|-------------|
@@ -1063,17 +1138,21 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `conversions.get_ad_conversion_metrics()` | Get attribution metrics |
 | `conversions.get_conversion_destination()` | Get a conversion destination |
 | `conversions.get_conversion_metrics()` | Get attribution metrics |
+| `conversions.get_conversion_paths()` | List the touch paths that lead to conversions |
 | `conversions.get_conversions_quality()` | Get Event Match Quality |
 | `conversions.get_event()` | Get one stored event and its deliveries |
+| `conversions.get_events_accuracy()` | Get delivery accuracy per destination |
 | `conversions.get_events_overview()` | Get today's tracking overview |
 | `conversions.get_events_overview_daily()` | Get daily tracking figures |
+| `conversions.get_ltv_cohorts()` | Get buyer cohorts by first purchase month and first channel |
+| `conversions.get_survey_answers()` | Get post-purchase survey answers |
 | `conversions.get_tracking_site()` | Get a tracking site |
 | `conversions.update_ad_conversion_destination()` | Update a conversion destination |
 | `conversions.update_ad_conversion_goals()` | Update account conversion goals |
 | `conversions.update_conversion_action()` | Update a conversion action's settings |
 | `conversions.update_conversion_destination()` | Update a conversion destination |
 | `conversions.update_custom_conversion_goal()` | Update a custom conversion goal |
-| `conversions.update_forwarding_rule()` | Change a forwarding rule's API secret |
+| `conversions.update_forwarding_rule()` | Update a forwarding rule |
 | `conversions.update_tracking_site()` | Update a tracking site |
 | `conversions.delete_ad_conversion_destination()` | Delete a conversion destination |
 | `conversions.delete_conversion_destination()` | Delete a conversion destination |
@@ -1083,6 +1162,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `conversions.add_ad_conversion_associations()` | Associate campaigns |
 | `conversions.add_conversion_associations()` | Associate campaigns |
 | `conversions.adjust_conversions()` | Adjust uploaded conversions |
+| `conversions.check_tracking_site_proxy()` | Check a tracking site's own-domain path |
 | `conversions.remove_ad_conversion_associations()` | Remove associated campaigns |
 | `conversions.remove_conversion_associations()` | Remove associated campaigns |
 | `conversions.remove_custom_conversion_goal()` | Remove a custom conversion goal |
@@ -1157,6 +1237,19 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `creator_portal.start_creator_payouts()` | Start payout onboarding |
 | `creator_portal.submit_creator_draft()` | Submit a draft for review |
 | `creator_portal.submit_creator_post()` | Submit a post |
+
+### CRM
+| Method | Description |
+|--------|-------------|
+| `crm.list_crm_deals()` | List CRM deals |
+| `crm.list_crm_owners()` | List CRM owners |
+| `crm.create_crm_activity()` | Log a CRM activity |
+| `crm.create_crm_contact()` | Create a CRM contact |
+| `crm.get_crm_contact()` | Get a CRM contact |
+| `crm.get_crm_deal()` | Get a CRM deal |
+| `crm.update_crm_contact()` | Update a CRM contact |
+| `crm.update_crm_deal()` | Update a CRM deal |
+| `crm.search_crm_contacts()` | Search CRM contacts |
 
 ### Custom Fields
 | Method | Description |
@@ -1359,6 +1452,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `lead_gen.list_form_leads()` | List leads for a single form |
 | `lead_gen.list_lead_forms()` | List lead forms |
 | `lead_gen.list_leads()` | List submitted leads |
+| `lead_gen.create_lead()` | Create a lead from your own form |
 | `lead_gen.create_lead_form()` | Create a lead form |
 | `lead_gen.create_test_lead()` | Create a test lead |
 | `lead_gen.get_lead_form()` | Get a lead form |
@@ -1413,6 +1507,23 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `messaging_ads.create_call_ad()` | Create Click-to-Call ad |
 | `messaging_ads.create_ctwa_ad()` | Create CTWA ad (deprecated) |
 | `messaging_ads.create_messaging_ad()` | Create messaging ad |
+
+### Metrics
+| Method | Description |
+|--------|-------------|
+| `metrics.get_account_metrics()` | Read follower and post totals per account, platform or scope over time |
+| `metrics.get_ad_account_metrics()` | Read the uploaded results summed across ad accounts |
+| `metrics.get_ad_metrics()` | Read ad metrics by id, or one ad day by day with breakdowns |
+| `metrics.get_ad_set_metrics()` | Read the delivery metrics of ad sets over a window |
+| `metrics.get_campaign_metrics()` | Read the delivery metrics or the uploaded results of each campaign over a window |
+| `metrics.get_inbox_metrics()` | Read message volume and response times |
+| `metrics.get_insight_metrics()` | Read live account or post insights from the platform |
+| `metrics.get_metrics_catalog()` | List the metrics, groupings and limits of each metrics endpoint |
+| `metrics.get_post_metrics()` | Read post metrics by id, day by day, as a list, or grouped |
+| `metrics.query_google_ads()` | Run a Google Ads Query Language search on one customer |
+| `metrics.query_google_analytics()` | Run a GA4 standard or realtime report on one property |
+| `metrics.query_meta_ads()` | Run a Meta Marketing API insights query on one ad account |
+| `metrics.query_tik_tok_ads()` | Run a TikTok Marketing API report on one advertiser |
 
 ### Phone Numbers
 | Method | Description |
@@ -1564,6 +1675,17 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `support_assistant.list_support_answers()` | List a thread's support answers |
 | `support_assistant.get_support_answer()` | Get a support answer |
 | `support_assistant.ask_support_question()` | Ask a support question |
+
+### Tracking links
+| Method | Description |
+|--------|-------------|
+| `tracking_links.list_tracking_links()` | List tracking links |
+| `tracking_links.create_tracking_link()` | Create a tracking link |
+| `tracking_links.get_tracking_link()` | Get a tracking link |
+| `tracking_links.get_tracking_link_stats()` | Get a tracking link's results |
+| `tracking_links.update_tracking_link()` | Update a tracking link |
+| `tracking_links.delete_tracking_link()` | Delete a tracking link |
+| `tracking_links.rotate_tracking_link_postback_token()` | Rotate a tracking link's postback URL |
 
 ### Tracking Tags
 | Method | Description |
@@ -1805,8 +1927,19 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `workflows.duplicate_workflow()` | Duplicate a workflow |
 | `workflows.pause_workflow()` | Pause workflow |
 | `workflows.restore_workflow_version()` | Restore a workflow version |
+| `workflows.take_over_workflow()` | Take over a workflow |
 | `workflows.trigger_api_call_workflow()` | Start an API-triggered workflow |
 | `workflows.trigger_workflow()` | Manually start a workflow run |
+
+### Workspaces
+| Method | Description |
+|--------|-------------|
+| `workspaces.list_workspaces()` | List workspaces |
+| `workspaces.create_workspace()` | Create workspace |
+| `workspaces.create_workspace_api_key()` | Create workspace key |
+| `workspaces.get_workspace()` | Get workspace |
+| `workspaces.update_workspace()` | Rename workspace |
+| `workspaces.delete_workspace()` | Delete workspace |
 
 ### Invites
 | Method | Description |

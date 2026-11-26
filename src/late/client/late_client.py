@@ -20,6 +20,7 @@ from ..resources import (
     AdAudiencesResource,
     AdCampaignResultsResource,
     AdCampaignsResource,
+    AdChangesResource,
     AdCreativesResource,
     AdInsightsResource,
     AdLibraryResource,
@@ -43,9 +44,11 @@ from ..resources import (
     ConnectResource,
     ContactsResource,
     ContentRetentionResource,
+    ConversionAuditResource,
     ConversionsResource,
     CreatorCampaignsResource,
     CreatorPortalResource,
+    CrmResource,
     CustomFieldsResource,
     DiscordResource,
     EmailResource,
@@ -64,6 +67,7 @@ from ..resources import (
     MentionsResource,
     MessagesResource,
     MessagingAdsResource,
+    MetricsResource,
     PhoneNumbersResource,
     PostsResource,
     ProductCatalogsResource,
@@ -79,6 +83,7 @@ from ..resources import (
     SmsResource,
     SupportAssistantResource,
     ToolsResource,
+    TrackingLinksResource,
     TrackingTagsResource,
     TreasuryResource,
     TwitterEngagementResource,
@@ -95,6 +100,7 @@ from ..resources import (
     WhatsappSandboxResource,
     WhatsappTemplatesResource,
     WorkflowsResource,
+    WorkspacesResource,
 )
 from .base import BaseClient
 
@@ -141,6 +147,7 @@ class Zernio(BaseClient):
         max_retries: int = 3,
         publish_timeout: float = 300.0,
         transport: httpx.BaseTransport | None = None,
+        user_agent: str | None = None,
     ) -> None:
         """
         Initialize the Zernio client.
@@ -157,6 +164,8 @@ class Zernio(BaseClient):
             transport: Sync httpx transport shared across requests and clients,
                        so connections and TLS sessions are reused. The caller
                        owns it and closes it (default: a new connection per request)
+            user_agent: Product token of the integration built on the SDK, sent
+                        ahead of the SDK's own in the User-Agent header
 
         Raises:
             ValueError: If no API key is provided and neither ZERNIO_API_KEY
@@ -177,6 +186,7 @@ class Zernio(BaseClient):
             max_retries=max_retries,
             publish_timeout=publish_timeout,
             transport=transport,
+            user_agent=user_agent,
         )
 
         # --- auto-registered resources (do not edit) ---
@@ -187,6 +197,7 @@ class Zernio(BaseClient):
         self.ad_audiences = AdAudiencesResource(self)
         self.ad_campaign_results = AdCampaignResultsResource(self)
         self.ad_campaigns = AdCampaignsResource(self)
+        self.ad_changes = AdChangesResource(self)
         self.ad_creatives = AdCreativesResource(self)
         self.ad_insights = AdInsightsResource(self)
         self.ad_library = AdLibraryResource(self)
@@ -210,9 +221,11 @@ class Zernio(BaseClient):
         self.connected_apps = ConnectedAppsResource(self)
         self.contacts = ContactsResource(self)
         self.content_retention = ContentRetentionResource(self)
+        self.conversion_audit = ConversionAuditResource(self)
         self.conversions = ConversionsResource(self)
         self.creator_campaigns = CreatorCampaignsResource(self)
         self.creator_portal = CreatorPortalResource(self)
+        self.crm = CrmResource(self)
         self.custom_fields = CustomFieldsResource(self)
         self.discord = DiscordResource(self)
         self.email = EmailResource(self)
@@ -231,6 +244,7 @@ class Zernio(BaseClient):
         self.mentions = MentionsResource(self)
         self.messages = MessagesResource(self)
         self.messaging_ads = MessagingAdsResource(self)
+        self.metrics = MetricsResource(self)
         self.phone_numbers = PhoneNumbersResource(self)
         self.posts = PostsResource(self)
         self.product_catalogs = ProductCatalogsResource(self)
@@ -246,6 +260,7 @@ class Zernio(BaseClient):
         self.sms = SmsResource(self)
         self.support_assistant = SupportAssistantResource(self)
         self.tools = ToolsResource(self)
+        self.tracking_links = TrackingLinksResource(self)
         self.tracking_tags = TrackingTagsResource(self)
         self.treasury = TreasuryResource(self)
         self.twitter_engagement = TwitterEngagementResource(self)
@@ -262,6 +277,7 @@ class Zernio(BaseClient):
         self.whatsapp_sandbox = WhatsappSandboxResource(self)
         self.whatsapp_templates = WhatsappTemplatesResource(self)
         self.workflows = WorkflowsResource(self)
+        self.workspaces = WorkspacesResource(self)
         # --- end auto-registered resources ---
 
     async def __aenter__(self) -> Zernio:

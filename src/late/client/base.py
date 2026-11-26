@@ -8,11 +8,14 @@ import re
 import time
 import uuid
 from contextlib import asynccontextmanager, contextmanager
+from datetime import datetime, timezone
+from email.utils import parsedate_to_datetime
 from importlib.metadata import PackageNotFoundError, version
 from typing import TYPE_CHECKING, Any
 
 import httpx
 
+from .binary_response import BinaryResponse, is_json_content_type
 from .exceptions import (
     LateAPIError,
     LateAuthenticationError,
@@ -51,6 +54,23 @@ def _parse_error_body(response: httpx.Response) -> dict[str, Any]:
     except ValueError:
         return {}
     return data if isinstance(data, dict) else {}
+
+
+def _retry_after_seconds(value: str | None) -> float | None:
+    """Seconds from a Retry-After header: delay-seconds or an HTTP-date."""
+    if not value:
+        return None
+    try:
+        return max(0.0, float(value))
+    except ValueError:
+        pass
+    try:
+        when = parsedate_to_datetime(value)
+    except (TypeError, ValueError):
+        return None
+    if when.tzinfo is None:
+        when = when.replace(tzinfo=timezone.utc)
+    return max(0.0, (when - datetime.now(timezone.utc)).total_seconds())
 
 
 def _with_request_id(headers: dict[str, str] | None) -> dict[str, str]:
@@ -120,6 +140,7 @@ class BaseClient:
         max_retries: int = DEFAULT_MAX_RETRIES,
         publish_timeout: float = DEFAULT_PUBLISH_TIMEOUT,
         transport: httpx.BaseTransport | None = None,
+        user_agent: str | None = None,
     ) -> None:
         """
         Initialize the base client.
@@ -139,6 +160,9 @@ class BaseClient:
                        connections and TLS sessions are reused. The caller owns
                        it: the client never closes it. Default: a new
                        connection per request.
+            user_agent: Product token of the integration built on the SDK,
+                        sent ahead of the SDK's own in the User-Agent header
+                        (e.g. "my-app/1.2" sends "my-app/1.2 late-python-sdk/<ver>")
         """
         if not api_key:
             raise ValueError("API key is required")
@@ -155,7 +179,9 @@ class BaseClient:
             "Authorization": f"Bearer {api_key}",
             "Content-Type": "application/json",
             "Accept": "application/json",
-            "User-Agent": f"late-python-sdk/{self.SDK_VERSION}",
+            "User-Agent": " ".join(
+                filter(None, [user_agent, f"late-python-sdk/{self.SDK_VERSION}"])
+            ),
         }
 
     def _resolve_timeout(
@@ -236,11 +262,14 @@ class BaseClient:
             )
 
         if response.status_code == 429:
+            error_data = _parse_error_body(response)
             raise LateRateLimitError(
-                "Rate limit exceeded",
+                error_data.get("error") or "Rate limit exceeded",
                 reset_time=self._rate_limiter.reset_time,
                 limit=self._rate_limiter.limit,
                 remaining=self._rate_limiter.remaining,
+                retry_after=_retry_after_seconds(response.headers.get("Retry-After")),
+                details=error_data,
             )
 
         if response.status_code >= 400:
@@ -257,10 +286,12 @@ class BaseClient:
                 details=error_data,
             )
 
-        # Return parsed JSON or empty dict
-        if response.content:
+        # Return parsed JSON, the raw bytes of a file, or an empty dict
+        if not response.content:
+            return {}
+        if is_json_content_type(response.headers.get("content-type")):
             return response.json()  # type: ignore[no-any-return]
-        return {}
+        return BinaryResponse.from_response(response)
 
     def _request_with_retry(
         self,
@@ -383,7 +414,7 @@ class BaseClient:
         self,
         path: str,
         data: dict[str, Any] | None = None,
-        params: dict[str, Any] | None = None,
+        params: dict[str, Any] | None = None,        headers: dict[str, str] | None = None,
     ) -> dict[str, Any]:
         """Make a sync PUT request.
 
@@ -400,6 +431,7 @@ class BaseClient:
                 path,
                 json=data,
                 params=params,
+                headers=headers,
                 timeout=self._resolve_timeout("PUT", path, data),
             )
 
@@ -407,7 +439,7 @@ class BaseClient:
         self,
         path: str,
         data: dict[str, Any] | None = None,
-        params: dict[str, Any] | None = None,
+        params: dict[str, Any] | None = None,        headers: dict[str, str] | None = None,
     ) -> dict[str, Any]:
         """Make a sync PATCH request.
 
@@ -422,6 +454,7 @@ class BaseClient:
                 path,
                 json=data,
                 params=params,
+                headers=headers,
                 timeout=self._resolve_timeout("PATCH", path, data),
             )
 
@@ -429,7 +462,7 @@ class BaseClient:
         self,
         path: str,
         params: dict[str, Any] | None = None,
-        data: dict[str, Any] | None = None,
+        data: dict[str, Any] | None = None,        headers: dict[str, str] | None = None,
     ) -> dict[str, Any]:
         """Make a sync DELETE request.
 
@@ -438,7 +471,7 @@ class BaseClient:
         """
         with self._sync_client() as client:
             return self._request_with_retry(
-                client, "DELETE", path, params=params, json=data
+                client, "DELETE", path, params=params, json=data, headers=headers
             )
 
     # =========================================================================
@@ -581,7 +614,7 @@ class BaseClient:
         self,
         path: str,
         data: dict[str, Any] | None = None,
-        params: dict[str, Any] | None = None,
+        params: dict[str, Any] | None = None,        headers: dict[str, str] | None = None,
     ) -> dict[str, Any]:
         """Make an async PUT request.
 
@@ -598,6 +631,7 @@ class BaseClient:
                 path,
                 json=data,
                 params=params,
+                headers=headers,
                 timeout=self._resolve_timeout("PUT", path, data),
             )
 
@@ -605,7 +639,7 @@ class BaseClient:
         self,
         path: str,
         data: dict[str, Any] | None = None,
-        params: dict[str, Any] | None = None,
+        params: dict[str, Any] | None = None,        headers: dict[str, str] | None = None,
     ) -> dict[str, Any]:
         """Make an async PATCH request.
 
@@ -620,6 +654,7 @@ class BaseClient:
                 path,
                 json=data,
                 params=params,
+                headers=headers,
                 timeout=self._resolve_timeout("PATCH", path, data),
             )
 
@@ -627,10 +662,10 @@ class BaseClient:
         self,
         path: str,
         params: dict[str, Any] | None = None,
-        data: dict[str, Any] | None = None,
+        data: dict[str, Any] | None = None,        headers: dict[str, str] | None = None,
     ) -> dict[str, Any]:
         """Make an async DELETE request (``data`` is the JSON body, see ``_delete``)."""
         async with self._async_client() as client:
             return await self._arequest_with_retry(
-                client, "DELETE", path, params=params, json=data
+                client, "DELETE", path, params=params, json=data, headers=headers
             )

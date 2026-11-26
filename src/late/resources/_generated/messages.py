@@ -10,6 +10,8 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
+    from datetime import datetime
+
     from ..client.base import BaseClient
 
 
@@ -21,13 +23,16 @@ class MessagesResource:
     def __init__(self, client: BaseClient) -> None:
         self._client = client
 
-    def _build_params(self, **kwargs: Any) -> dict[str, Any]:
-        """Build query parameters, filtering None and empty-string values.
+    def _build_query(self, fields: dict[str, Any]) -> dict[str, Any]:
+        """Build query parameters keyed by their wire names, as given.
 
-        Empty strings are filtered because MCP tool wrappers pass ``""`` as the
-        default for optional string args, and the API rejects empty query
-        values (e.g. ``platform=``) with a 400. Filtering here keeps both direct
-        SDK callers and MCP tool callers safe.
+        Generated methods pass the parameter names exactly as the OpenAPI
+        spec declares them, so no casing rule is applied here.
+
+        None and empty strings are filtered because MCP tool wrappers pass
+        ``""`` as the default for optional string args, and the API rejects
+        empty query values (e.g. ``platform=``) with a 400. Filtering here
+        keeps both direct SDK callers and MCP tool callers safe.
 
         Enum members are unwrapped to their value: httpx serializes params
         via str(), which yields "ClassName.MEMBER" for Enum members, so
@@ -36,48 +41,72 @@ class MessagesResource:
         """
         from enum import Enum
 
-        def to_camel(s: str) -> str:
-            parts = s.split("_")
-            return parts[0] + "".join(p.title() for p in parts[1:])
-
         result: dict[str, Any] = {}
-        for k, v in kwargs.items():
+        for k, v in fields.items():
             if isinstance(v, Enum):
                 v = v.value
             if v is None or v == "":
                 continue
-            result[to_camel(k)] = v
+            result[k] = v
         return result
 
-    def _build_payload(self, **kwargs: Any) -> dict[str, Any]:
-        """Build request payload, filtering None values. Enum members are
-        unwrapped to their value so JSON bodies carry e.g. "failed" rather
-        than a raw Enum member (plain Enum members are not JSON-serializable).
+    def _build_body(self, fields: dict[str, Any]) -> dict[str, Any]:
+        """Build a JSON request body keyed by its wire names, as given.
+
+        Generated methods pass the property names exactly as the request
+        body schema declares them: most are camelCase, but some routes read
+        snake_case (``ice_breakers``, ``message_send_ttl_seconds``), so no
+        casing rule is applied here. None values are dropped, Enum members
+        are unwrapped to their value (e.g. "failed") and datetimes are sent
+        as ISO 8601 strings.
         """
         from datetime import datetime
         from enum import Enum
 
-        def to_camel(s: str) -> str:
-            parts = s.split("_")
-            return parts[0] + "".join(p.title() for p in parts[1:])
-
         result: dict[str, Any] = {}
-        for k, v in kwargs.items():
+        for k, v in fields.items():
             if isinstance(v, Enum):
                 v = v.value
             if v is None:
                 continue
             if isinstance(v, datetime):
-                result[to_camel(k)] = v.isoformat()
+                result[k] = v.isoformat()
             else:
-                result[to_camel(k)] = v
+                result[k] = v
         return result
+
+    def _build_params(self, **kwargs: Any) -> dict[str, Any]:
+        """Build query parameters from snake_case kwargs, camelCasing each key.
+
+        For hand-written resource methods, whose endpoints take camelCase
+        names. Generated methods use _build_query with the spec's names.
+        """
+
+        def to_camel(s: str) -> str:
+            parts = s.split("_")
+            return parts[0] + "".join(p.title() for p in parts[1:])
+
+        return self._build_query({to_camel(k): v for k, v in kwargs.items()})
+
+    def _build_payload(self, **kwargs: Any) -> dict[str, Any]:
+        """Build a request body from snake_case kwargs, camelCasing each key.
+
+        For hand-written resource methods, whose endpoints take camelCase
+        names. Generated methods use _build_body with the spec's names.
+        """
+
+        def to_camel(s: str) -> str:
+            parts = s.split("_")
+            return parts[0] + "".join(p.title() for p in parts[1:])
+
+        return self._build_body({to_camel(k): v for k, v in kwargs.items()})
 
     def list_inbox_conversations(
         self,
         *,
         profile_id: str | None = None,
         platform: str | None = None,
+        updated_since: datetime | str | None = None,
         status: str | None = None,
         folder: str | None = "inbox",
         sort_order: str | None = "desc",
@@ -87,16 +116,19 @@ class MessagesResource:
         tags: str | None = None,
     ) -> dict[str, Any]:
         """List conversations"""
-        params = self._build_params(
-            profile_id=profile_id,
-            platform=platform,
-            status=status,
-            folder=folder,
-            sort_order=sort_order,
-            limit=limit,
-            cursor=cursor,
-            account_id=account_id,
-            tags=tags,
+        params = self._build_query(
+            {
+                "profileId": profile_id,
+                "platform": platform,
+                "updatedSince": updated_since,
+                "status": status,
+                "folder": folder,
+                "sortOrder": sort_order,
+                "limit": limit,
+                "cursor": cursor,
+                "accountId": account_id,
+                "tags": tags,
+            }
         )
         return self._client._get("/v1/inbox/conversations", params=params)
 
@@ -121,23 +153,25 @@ class MessagesResource:
         header_location: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Create conversation"""
-        payload = self._build_payload(
-            account_id=account_id,
-            participant_id=participant_id,
-            participant_username=participant_username,
-            message=message,
-            subject=subject,
-            cc=cc,
-            skip_dm_check=skip_dm_check,
-            template_name=template_name,
-            category=category,
-            link_preview=link_preview,
-            template_language=template_language,
-            template_params=template_params,
-            template_button_params=template_button_params,
-            template_cards=template_cards,
-            header_media=header_media,
-            header_location=header_location,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "participantId": participant_id,
+                "participantUsername": participant_username,
+                "message": message,
+                "subject": subject,
+                "cc": cc,
+                "skipDmCheck": skip_dm_check,
+                "templateName": template_name,
+                "category": category,
+                "linkPreview": link_preview,
+                "templateLanguage": template_language,
+                "templateParams": template_params,
+                "templateButtonParams": template_button_params,
+                "templateCards": template_cards,
+                "headerMedia": header_media,
+                "headerLocation": header_location,
+            }
         )
         return self._client._post("/v1/inbox/conversations", data=payload)
 
@@ -153,14 +187,16 @@ class MessagesResource:
         cursor: str | None = None,
     ) -> dict[str, Any]:
         """Search conversations"""
-        params = self._build_params(
-            query=query,
-            direction=direction,
-            profile_id=profile_id,
-            platform=platform,
-            account_id=account_id,
-            limit=limit,
-            cursor=cursor,
+        params = self._build_query(
+            {
+                "query": query,
+                "direction": direction,
+                "profileId": profile_id,
+                "platform": platform,
+                "accountId": account_id,
+                "limit": limit,
+                "cursor": cursor,
+            }
         )
         return self._client._get("/v1/inbox/conversations/search", params=params)
 
@@ -168,8 +204,10 @@ class MessagesResource:
         self, conversation_id: str, account_id: str
     ) -> dict[str, Any]:
         """Get conversation"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return self._client._get(
             f"/v1/inbox/conversations/{conversation_id}", params=params
@@ -179,9 +217,11 @@ class MessagesResource:
         self, conversation_id: str, account_id: str, status: str
     ) -> dict[str, Any]:
         """Update conversation status"""
-        payload = self._build_payload(
-            account_id=account_id,
-            status=status,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "status": status,
+            }
         )
         return self._client._put(
             f"/v1/inbox/conversations/{conversation_id}", data=payload
@@ -191,8 +231,10 @@ class MessagesResource:
         self, conversation_id: str, account_id: str
     ) -> dict[str, Any]:
         """Delete conversation"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return self._client._delete(
             f"/v1/inbox/conversations/{conversation_id}", params=params
@@ -201,18 +243,20 @@ class MessagesResource:
     def get_inbox_conversation_messages(
         self,
         conversation_id: str,
-        account_id: str,
         *,
+        account_id: str | None = None,
         limit: int | None = 100,
         cursor: str | None = None,
         sort_order: str | None = "asc",
     ) -> dict[str, Any]:
         """List messages"""
-        params = self._build_params(
-            account_id=account_id,
-            limit=limit,
-            cursor=cursor,
-            sort_order=sort_order,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "limit": limit,
+                "cursor": cursor,
+                "sortOrder": sort_order,
+            }
         )
         return self._client._get(
             f"/v1/inbox/conversations/{conversation_id}/messages", params=params
@@ -250,32 +294,34 @@ class MessagesResource:
         contacts: list[dict[str, Any]] | None = None,
     ) -> dict[str, Any]:
         """Send message"""
-        payload = self._build_payload(
-            account_id=account_id,
-            message=message,
-            attachment_url=attachment_url,
-            category=category,
-            link_preview=link_preview,
-            attachment_type=attachment_type,
-            attachment_name=attachment_name,
-            voice_note=voice_note,
-            subject=subject,
-            cc=cc,
-            effect=effect,
-            contact_card=contact_card,
-            channel=channel,
-            shared_media_id=shared_media_id,
-            sticker=sticker,
-            quick_replies=quick_replies,
-            buttons=buttons,
-            template=template,
-            interactive=interactive,
-            reply_markup=reply_markup,
-            messaging_type=messaging_type,
-            message_tag=message_tag,
-            reply_to=reply_to,
-            location=location,
-            contacts=contacts,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "message": message,
+                "attachmentUrl": attachment_url,
+                "category": category,
+                "linkPreview": link_preview,
+                "attachmentType": attachment_type,
+                "attachmentName": attachment_name,
+                "voiceNote": voice_note,
+                "subject": subject,
+                "cc": cc,
+                "effect": effect,
+                "contactCard": contact_card,
+                "channel": channel,
+                "sharedMediaId": shared_media_id,
+                "sticker": sticker,
+                "quickReplies": quick_replies,
+                "buttons": buttons,
+                "template": template,
+                "interactive": interactive,
+                "replyMarkup": reply_markup,
+                "messagingType": messaging_type,
+                "messageTag": message_tag,
+                "replyTo": reply_to,
+                "location": location,
+                "contacts": contacts,
+            }
         )
         headers: dict[str, str] = {}
         if idempotency_key is not None:
@@ -296,10 +342,12 @@ class MessagesResource:
         reply_markup: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Edit message"""
-        payload = self._build_payload(
-            account_id=account_id,
-            text=text,
-            reply_markup=reply_markup,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "text": text,
+                "replyMarkup": reply_markup,
+            }
         )
         return self._client._patch(
             f"/v1/inbox/conversations/{conversation_id}/messages/{message_id}",
@@ -310,8 +358,10 @@ class MessagesResource:
         self, conversation_id: str, message_id: str, account_id: str
     ) -> dict[str, Any]:
         """Delete message"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return self._client._delete(
             f"/v1/inbox/conversations/{conversation_id}/messages/{message_id}",
@@ -322,8 +372,10 @@ class MessagesResource:
         self, conversation_id: str, account_id: str
     ) -> dict[str, Any]:
         """Send typing indicator"""
-        payload = self._build_payload(
-            account_id=account_id,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+            }
         )
         return self._client._post(
             f"/v1/inbox/conversations/{conversation_id}/typing", data=payload
@@ -340,12 +392,14 @@ class MessagesResource:
         metadata: str | None = None,
     ) -> dict[str, Any]:
         """Change who answers a conversation (handover)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            action=action,
-            target=target,
-            target_app_id=target_app_id,
-            metadata=metadata,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "action": action,
+                "target": target,
+                "targetAppId": target_app_id,
+                "metadata": metadata,
+            }
         )
         return self._client._post(
             f"/v1/inbox/conversations/{conversation_id}/thread-control", data=payload
@@ -355,9 +409,11 @@ class MessagesResource:
         self, conversation_id: str, account_id: str, message: str
     ) -> dict[str, Any]:
         """Accept a message request"""
-        payload = self._build_payload(
-            account_id=account_id,
-            message=message,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "message": message,
+            }
         )
         return self._client._post(
             f"/v1/inbox/conversations/{conversation_id}/accept", data=payload
@@ -365,23 +421,29 @@ class MessagesResource:
 
     def list_inbox_labels(self, account_id: str) -> dict[str, Any]:
         """List the Page's conversation labels"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return self._client._get("/v1/inbox/labels", params=params)
 
     def create_inbox_label(self, account_id: str, name: str) -> dict[str, Any]:
         """Create a conversation label"""
-        payload = self._build_payload(
-            account_id=account_id,
-            name=name,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "name": name,
+            }
         )
         return self._client._post("/v1/inbox/labels", data=payload)
 
     def delete_inbox_label(self, label_id: str, account_id: str) -> dict[str, Any]:
         """Delete a conversation label"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return self._client._delete(f"/v1/inbox/labels/{label_id}", params=params)
 
@@ -389,8 +451,10 @@ class MessagesResource:
         self, conversation_id: str, account_id: str
     ) -> dict[str, Any]:
         """List the labels on a conversation"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return self._client._get(
             f"/v1/inbox/conversations/{conversation_id}/labels", params=params
@@ -400,9 +464,11 @@ class MessagesResource:
         self, conversation_id: str, account_id: str, label_id: str
     ) -> dict[str, Any]:
         """Add a label to a conversation"""
-        payload = self._build_payload(
-            account_id=account_id,
-            label_id=label_id,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "labelId": label_id,
+            }
         )
         return self._client._post(
             f"/v1/inbox/conversations/{conversation_id}/labels", data=payload
@@ -412,8 +478,10 @@ class MessagesResource:
         self, conversation_id: str, label_id: str, account_id: str
     ) -> dict[str, Any]:
         """Remove a label from a conversation"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return self._client._delete(
             f"/v1/inbox/conversations/{conversation_id}/labels/{label_id}",
@@ -424,8 +492,10 @@ class MessagesResource:
         self, conversation_id: str, account_id: str
     ) -> dict[str, Any]:
         """Mark a conversation as read"""
-        payload = self._build_payload(
-            account_id=account_id,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+            }
         )
         return self._client._post(
             f"/v1/inbox/conversations/{conversation_id}/read", data=payload
@@ -435,9 +505,11 @@ class MessagesResource:
         self, conversation_id: str, message_id: str, account_id: str, emoji: str
     ) -> dict[str, Any]:
         """Add reaction"""
-        payload = self._build_payload(
-            account_id=account_id,
-            emoji=emoji,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "emoji": emoji,
+            }
         )
         return self._client._post(
             f"/v1/inbox/conversations/{conversation_id}/messages/{message_id}/reactions",
@@ -448,8 +520,10 @@ class MessagesResource:
         self, conversation_id: str, message_id: str, account_id: str
     ) -> dict[str, Any]:
         """Remove reaction"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return self._client._delete(
             f"/v1/inbox/conversations/{conversation_id}/messages/{message_id}/reactions",
@@ -470,9 +544,11 @@ class MessagesResource:
         format: str | None = "redirect",
     ) -> dict[str, Any]:
         """Resolve message attachment"""
-        params = self._build_params(
-            account_id=account_id,
-            format=format,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "format": format,
+            }
         )
         return self._client._get(
             f"/v1/inbox/conversations/{conversation_id}/messages/{message_id}/attachments/{index}",
@@ -484,6 +560,7 @@ class MessagesResource:
         *,
         profile_id: str | None = None,
         platform: str | None = None,
+        updated_since: datetime | str | None = None,
         status: str | None = None,
         folder: str | None = "inbox",
         sort_order: str | None = "desc",
@@ -493,16 +570,19 @@ class MessagesResource:
         tags: str | None = None,
     ) -> dict[str, Any]:
         """List conversations (async)"""
-        params = self._build_params(
-            profile_id=profile_id,
-            platform=platform,
-            status=status,
-            folder=folder,
-            sort_order=sort_order,
-            limit=limit,
-            cursor=cursor,
-            account_id=account_id,
-            tags=tags,
+        params = self._build_query(
+            {
+                "profileId": profile_id,
+                "platform": platform,
+                "updatedSince": updated_since,
+                "status": status,
+                "folder": folder,
+                "sortOrder": sort_order,
+                "limit": limit,
+                "cursor": cursor,
+                "accountId": account_id,
+                "tags": tags,
+            }
         )
         return await self._client._aget("/v1/inbox/conversations", params=params)
 
@@ -527,23 +607,25 @@ class MessagesResource:
         header_location: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Create conversation (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            participant_id=participant_id,
-            participant_username=participant_username,
-            message=message,
-            subject=subject,
-            cc=cc,
-            skip_dm_check=skip_dm_check,
-            template_name=template_name,
-            category=category,
-            link_preview=link_preview,
-            template_language=template_language,
-            template_params=template_params,
-            template_button_params=template_button_params,
-            template_cards=template_cards,
-            header_media=header_media,
-            header_location=header_location,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "participantId": participant_id,
+                "participantUsername": participant_username,
+                "message": message,
+                "subject": subject,
+                "cc": cc,
+                "skipDmCheck": skip_dm_check,
+                "templateName": template_name,
+                "category": category,
+                "linkPreview": link_preview,
+                "templateLanguage": template_language,
+                "templateParams": template_params,
+                "templateButtonParams": template_button_params,
+                "templateCards": template_cards,
+                "headerMedia": header_media,
+                "headerLocation": header_location,
+            }
         )
         return await self._client._apost("/v1/inbox/conversations", data=payload)
 
@@ -559,14 +641,16 @@ class MessagesResource:
         cursor: str | None = None,
     ) -> dict[str, Any]:
         """Search conversations (async)"""
-        params = self._build_params(
-            query=query,
-            direction=direction,
-            profile_id=profile_id,
-            platform=platform,
-            account_id=account_id,
-            limit=limit,
-            cursor=cursor,
+        params = self._build_query(
+            {
+                "query": query,
+                "direction": direction,
+                "profileId": profile_id,
+                "platform": platform,
+                "accountId": account_id,
+                "limit": limit,
+                "cursor": cursor,
+            }
         )
         return await self._client._aget("/v1/inbox/conversations/search", params=params)
 
@@ -574,8 +658,10 @@ class MessagesResource:
         self, conversation_id: str, account_id: str
     ) -> dict[str, Any]:
         """Get conversation (async)"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return await self._client._aget(
             f"/v1/inbox/conversations/{conversation_id}", params=params
@@ -585,9 +671,11 @@ class MessagesResource:
         self, conversation_id: str, account_id: str, status: str
     ) -> dict[str, Any]:
         """Update conversation status (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            status=status,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "status": status,
+            }
         )
         return await self._client._aput(
             f"/v1/inbox/conversations/{conversation_id}", data=payload
@@ -597,8 +685,10 @@ class MessagesResource:
         self, conversation_id: str, account_id: str
     ) -> dict[str, Any]:
         """Delete conversation (async)"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return await self._client._adelete(
             f"/v1/inbox/conversations/{conversation_id}", params=params
@@ -607,18 +697,20 @@ class MessagesResource:
     async def aget_inbox_conversation_messages(
         self,
         conversation_id: str,
-        account_id: str,
         *,
+        account_id: str | None = None,
         limit: int | None = 100,
         cursor: str | None = None,
         sort_order: str | None = "asc",
     ) -> dict[str, Any]:
         """List messages (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            limit=limit,
-            cursor=cursor,
-            sort_order=sort_order,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "limit": limit,
+                "cursor": cursor,
+                "sortOrder": sort_order,
+            }
         )
         return await self._client._aget(
             f"/v1/inbox/conversations/{conversation_id}/messages", params=params
@@ -656,32 +748,34 @@ class MessagesResource:
         contacts: list[dict[str, Any]] | None = None,
     ) -> dict[str, Any]:
         """Send message (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            message=message,
-            attachment_url=attachment_url,
-            category=category,
-            link_preview=link_preview,
-            attachment_type=attachment_type,
-            attachment_name=attachment_name,
-            voice_note=voice_note,
-            subject=subject,
-            cc=cc,
-            effect=effect,
-            contact_card=contact_card,
-            channel=channel,
-            shared_media_id=shared_media_id,
-            sticker=sticker,
-            quick_replies=quick_replies,
-            buttons=buttons,
-            template=template,
-            interactive=interactive,
-            reply_markup=reply_markup,
-            messaging_type=messaging_type,
-            message_tag=message_tag,
-            reply_to=reply_to,
-            location=location,
-            contacts=contacts,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "message": message,
+                "attachmentUrl": attachment_url,
+                "category": category,
+                "linkPreview": link_preview,
+                "attachmentType": attachment_type,
+                "attachmentName": attachment_name,
+                "voiceNote": voice_note,
+                "subject": subject,
+                "cc": cc,
+                "effect": effect,
+                "contactCard": contact_card,
+                "channel": channel,
+                "sharedMediaId": shared_media_id,
+                "sticker": sticker,
+                "quickReplies": quick_replies,
+                "buttons": buttons,
+                "template": template,
+                "interactive": interactive,
+                "replyMarkup": reply_markup,
+                "messagingType": messaging_type,
+                "messageTag": message_tag,
+                "replyTo": reply_to,
+                "location": location,
+                "contacts": contacts,
+            }
         )
         headers: dict[str, str] = {}
         if idempotency_key is not None:
@@ -702,10 +796,12 @@ class MessagesResource:
         reply_markup: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Edit message (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            text=text,
-            reply_markup=reply_markup,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "text": text,
+                "replyMarkup": reply_markup,
+            }
         )
         return await self._client._apatch(
             f"/v1/inbox/conversations/{conversation_id}/messages/{message_id}",
@@ -716,8 +812,10 @@ class MessagesResource:
         self, conversation_id: str, message_id: str, account_id: str
     ) -> dict[str, Any]:
         """Delete message (async)"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return await self._client._adelete(
             f"/v1/inbox/conversations/{conversation_id}/messages/{message_id}",
@@ -728,8 +826,10 @@ class MessagesResource:
         self, conversation_id: str, account_id: str
     ) -> dict[str, Any]:
         """Send typing indicator (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+            }
         )
         return await self._client._apost(
             f"/v1/inbox/conversations/{conversation_id}/typing", data=payload
@@ -746,12 +846,14 @@ class MessagesResource:
         metadata: str | None = None,
     ) -> dict[str, Any]:
         """Change who answers a conversation (handover) (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            action=action,
-            target=target,
-            target_app_id=target_app_id,
-            metadata=metadata,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "action": action,
+                "target": target,
+                "targetAppId": target_app_id,
+                "metadata": metadata,
+            }
         )
         return await self._client._apost(
             f"/v1/inbox/conversations/{conversation_id}/thread-control", data=payload
@@ -761,9 +863,11 @@ class MessagesResource:
         self, conversation_id: str, account_id: str, message: str
     ) -> dict[str, Any]:
         """Accept a message request (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            message=message,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "message": message,
+            }
         )
         return await self._client._apost(
             f"/v1/inbox/conversations/{conversation_id}/accept", data=payload
@@ -771,16 +875,20 @@ class MessagesResource:
 
     async def alist_inbox_labels(self, account_id: str) -> dict[str, Any]:
         """List the Page's conversation labels (async)"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return await self._client._aget("/v1/inbox/labels", params=params)
 
     async def acreate_inbox_label(self, account_id: str, name: str) -> dict[str, Any]:
         """Create a conversation label (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            name=name,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "name": name,
+            }
         )
         return await self._client._apost("/v1/inbox/labels", data=payload)
 
@@ -788,8 +896,10 @@ class MessagesResource:
         self, label_id: str, account_id: str
     ) -> dict[str, Any]:
         """Delete a conversation label (async)"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return await self._client._adelete(
             f"/v1/inbox/labels/{label_id}", params=params
@@ -799,8 +909,10 @@ class MessagesResource:
         self, conversation_id: str, account_id: str
     ) -> dict[str, Any]:
         """List the labels on a conversation (async)"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return await self._client._aget(
             f"/v1/inbox/conversations/{conversation_id}/labels", params=params
@@ -810,9 +922,11 @@ class MessagesResource:
         self, conversation_id: str, account_id: str, label_id: str
     ) -> dict[str, Any]:
         """Add a label to a conversation (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            label_id=label_id,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "labelId": label_id,
+            }
         )
         return await self._client._apost(
             f"/v1/inbox/conversations/{conversation_id}/labels", data=payload
@@ -822,8 +936,10 @@ class MessagesResource:
         self, conversation_id: str, label_id: str, account_id: str
     ) -> dict[str, Any]:
         """Remove a label from a conversation (async)"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return await self._client._adelete(
             f"/v1/inbox/conversations/{conversation_id}/labels/{label_id}",
@@ -834,8 +950,10 @@ class MessagesResource:
         self, conversation_id: str, account_id: str
     ) -> dict[str, Any]:
         """Mark a conversation as read (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+            }
         )
         return await self._client._apost(
             f"/v1/inbox/conversations/{conversation_id}/read", data=payload
@@ -845,9 +963,11 @@ class MessagesResource:
         self, conversation_id: str, message_id: str, account_id: str, emoji: str
     ) -> dict[str, Any]:
         """Add reaction (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            emoji=emoji,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "emoji": emoji,
+            }
         )
         return await self._client._apost(
             f"/v1/inbox/conversations/{conversation_id}/messages/{message_id}/reactions",
@@ -858,8 +978,10 @@ class MessagesResource:
         self, conversation_id: str, message_id: str, account_id: str
     ) -> dict[str, Any]:
         """Remove reaction (async)"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return await self._client._adelete(
             f"/v1/inbox/conversations/{conversation_id}/messages/{message_id}/reactions",
@@ -880,9 +1002,11 @@ class MessagesResource:
         format: str | None = "redirect",
     ) -> dict[str, Any]:
         """Resolve message attachment (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            format=format,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "format": format,
+            }
         )
         return await self._client._aget(
             f"/v1/inbox/conversations/{conversation_id}/messages/{message_id}/attachments/{index}",

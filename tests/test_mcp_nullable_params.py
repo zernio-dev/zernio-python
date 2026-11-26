@@ -36,3 +36,27 @@ def test_nullable_param_keeps_its_type(generator, schema, expected):
 def test_a_real_union_still_falls_back_to_str(generator):
     schema = {"oneOf": [{"type": "string"}, {"type": "integer"}, {"type": "null"}]}
     assert generator.get_python_type(schema, required=False, spec=SPEC)[0] == "str | None"
+
+
+AD_STATUS_SPEC = {
+    "components": {
+        "schemas": {
+            "AdStatus": {
+                "type": "string",
+                "enum": ["active", "paused", "pending_review", "rejected", "completed", "cancelled", "error"],
+            },
+        }
+    }
+}
+
+
+def test_string_union_keeps_every_branch_enum(generator):
+    schema = {"anyOf": [{"$ref": "#/components/schemas/AdStatus"}, {"type": "string", "enum": ["not_deleted"]}]}
+    assert generator.get_python_type(schema, required=False, spec=AD_STATUS_SPEC)[0] == (
+        "Literal['active', 'paused', 'pending_review', 'rejected', 'completed', 'cancelled', 'error', 'not_deleted'] | None"
+    )
+
+
+def test_string_union_with_an_open_branch_is_plain_str(generator):
+    schema = {"oneOf": [{"$ref": "#/components/schemas/AdStatus"}, {"type": "string"}]}
+    assert generator.get_python_type(schema, required=False, spec=AD_STATUS_SPEC)[0] == "str | None"

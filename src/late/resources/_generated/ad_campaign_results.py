@@ -21,13 +21,16 @@ class AdCampaignResultsResource:
     def __init__(self, client: BaseClient) -> None:
         self._client = client
 
-    def _build_params(self, **kwargs: Any) -> dict[str, Any]:
-        """Build query parameters, filtering None and empty-string values.
+    def _build_query(self, fields: dict[str, Any]) -> dict[str, Any]:
+        """Build query parameters keyed by their wire names, as given.
 
-        Empty strings are filtered because MCP tool wrappers pass ``""`` as the
-        default for optional string args, and the API rejects empty query
-        values (e.g. ``platform=``) with a 400. Filtering here keeps both direct
-        SDK callers and MCP tool callers safe.
+        Generated methods pass the parameter names exactly as the OpenAPI
+        spec declares them, so no casing rule is applied here.
+
+        None and empty strings are filtered because MCP tool wrappers pass
+        ``""`` as the default for optional string args, and the API rejects
+        empty query values (e.g. ``platform=``) with a 400. Filtering here
+        keeps both direct SDK callers and MCP tool callers safe.
 
         Enum members are unwrapped to their value: httpx serializes params
         via str(), which yields "ClassName.MEMBER" for Enum members, so
@@ -36,49 +39,74 @@ class AdCampaignResultsResource:
         """
         from enum import Enum
 
-        def to_camel(s: str) -> str:
-            parts = s.split("_")
-            return parts[0] + "".join(p.title() for p in parts[1:])
-
         result: dict[str, Any] = {}
-        for k, v in kwargs.items():
+        for k, v in fields.items():
             if isinstance(v, Enum):
                 v = v.value
             if v is None or v == "":
                 continue
-            result[to_camel(k)] = v
+            result[k] = v
         return result
 
-    def _build_payload(self, **kwargs: Any) -> dict[str, Any]:
-        """Build request payload, filtering None values. Enum members are
-        unwrapped to their value so JSON bodies carry e.g. "failed" rather
-        than a raw Enum member (plain Enum members are not JSON-serializable).
+    def _build_body(self, fields: dict[str, Any]) -> dict[str, Any]:
+        """Build a JSON request body keyed by its wire names, as given.
+
+        Generated methods pass the property names exactly as the request
+        body schema declares them: most are camelCase, but some routes read
+        snake_case (``ice_breakers``, ``message_send_ttl_seconds``), so no
+        casing rule is applied here. None values are dropped, Enum members
+        are unwrapped to their value (e.g. "failed") and datetimes are sent
+        as ISO 8601 strings.
         """
         from datetime import datetime
         from enum import Enum
 
-        def to_camel(s: str) -> str:
-            parts = s.split("_")
-            return parts[0] + "".join(p.title() for p in parts[1:])
-
         result: dict[str, Any] = {}
-        for k, v in kwargs.items():
+        for k, v in fields.items():
             if isinstance(v, Enum):
                 v = v.value
             if v is None:
                 continue
             if isinstance(v, datetime):
-                result[to_camel(k)] = v.isoformat()
+                result[k] = v.isoformat()
             else:
-                result[to_camel(k)] = v
+                result[k] = v
         return result
+
+    def _build_params(self, **kwargs: Any) -> dict[str, Any]:
+        """Build query parameters from snake_case kwargs, camelCasing each key.
+
+        For hand-written resource methods, whose endpoints take camelCase
+        names. Generated methods use _build_query with the spec's names.
+        """
+
+        def to_camel(s: str) -> str:
+            parts = s.split("_")
+            return parts[0] + "".join(p.title() for p in parts[1:])
+
+        return self._build_query({to_camel(k): v for k, v in kwargs.items()})
+
+    def _build_payload(self, **kwargs: Any) -> dict[str, Any]:
+        """Build a request body from snake_case kwargs, camelCasing each key.
+
+        For hand-written resource methods, whose endpoints take camelCase
+        names. Generated methods use _build_body with the spec's names.
+        """
+
+        def to_camel(s: str) -> str:
+            parts = s.split("_")
+            return parts[0] + "".join(p.title() for p in parts[1:])
+
+        return self._build_body({to_camel(k): v for k, v in kwargs.items()})
 
     def upload_campaign_results(
         self, rows: list[dict[str, Any]], *, idempotency_key: str | None = None
     ) -> dict[str, Any]:
         """Upload your results per campaign"""
-        payload = self._build_payload(
-            rows=rows,
+        payload = self._build_body(
+            {
+                "rows": rows,
+            }
         )
         headers: dict[str, str] = {}
         if idempotency_key is not None:
@@ -92,17 +120,21 @@ class AdCampaignResultsResource:
         from_date: str,
         to_date: str,
         *,
+        model: str | None = "last_click",
         campaign_ids: str | None = None,
         limit: int | None = 100,
         cursor: str | None = None,
     ) -> dict[str, Any]:
         """List your results per campaign"""
-        params = self._build_params(
-            from_date=from_date,
-            to_date=to_date,
-            campaign_ids=campaign_ids,
-            limit=limit,
-            cursor=cursor,
+        params = self._build_query(
+            {
+                "fromDate": from_date,
+                "toDate": to_date,
+                "model": model,
+                "campaignIds": campaign_ids,
+                "limit": limit,
+                "cursor": cursor,
+            }
         )
         return self._client._get("/v1/ads/campaign-results", params=params)
 
@@ -111,15 +143,65 @@ class AdCampaignResultsResource:
         return self._client._get(f"/v1/ads/campaign-results/uploads/{upload_id}")
 
     def get_campaign_results_totals(
-        self, from_date: str, to_date: str, *, ad_account_ids: str | None = None
+        self,
+        from_date: str,
+        to_date: str,
+        *,
+        model: str | None = "last_click",
+        ad_account_ids: str | None = None,
     ) -> dict[str, Any]:
         """Get your results totals"""
-        params = self._build_params(
-            from_date=from_date,
-            to_date=to_date,
-            ad_account_ids=ad_account_ids,
+        params = self._build_query(
+            {
+                "fromDate": from_date,
+                "toDate": to_date,
+                "model": model,
+                "adAccountIds": ad_account_ids,
+            }
         )
         return self._client._get("/v1/ads/campaign-results/totals", params=params)
+
+    def get_campaign_result_events(self) -> dict[str, Any]:
+        """List the events that count as campaign results"""
+        return self._client._get("/v1/ads/campaign-results/events")
+
+    def set_campaign_result_events(self, event_names: Any) -> dict[str, Any]:
+        """Choose the events that count as campaign results"""
+        payload = self._build_body(
+            {
+                "eventNames": event_names,
+            }
+        )
+        return self._client._put("/v1/ads/campaign-results/events", data=payload)
+
+    def get_tag_new_ads(self) -> dict[str, Any]:
+        """Get the Tag new ads setting"""
+        return self._client._get("/v1/ads/campaign-results/tag-new-ads")
+
+    def set_tag_new_ads(self, enabled: bool) -> dict[str, Any]:
+        """Turn Tag new ads on or off"""
+        payload = self._build_body(
+            {
+                "enabled": enabled,
+            }
+        )
+        return self._client._put("/v1/ads/campaign-results/tag-new-ads", data=payload)
+
+    def get_campaign_result_profit(self) -> dict[str, Any]:
+        """Get your profit setting"""
+        return self._client._get("/v1/ads/campaign-results/profit")
+
+    def set_campaign_result_profit(
+        self, margin_percent: Any, *, cost_per_order: Any | None = None
+    ) -> dict[str, Any]:
+        """Set your margin and cost per order"""
+        payload = self._build_body(
+            {
+                "marginPercent": margin_percent,
+                "costPerOrder": cost_per_order,
+            }
+        )
+        return self._client._put("/v1/ads/campaign-results/profit", data=payload)
 
     def list_campaign_result_metrics(self) -> dict[str, Any]:
         """List your result metrics"""
@@ -135,11 +217,13 @@ class AdCampaignResultsResource:
         formula: Any | None = None,
     ) -> dict[str, Any]:
         """Name a result metric or define a formula"""
-        payload = self._build_payload(
-            label=label,
-            kind=kind,
-            currency=currency,
-            formula=formula,
+        payload = self._build_body(
+            {
+                "label": label,
+                "kind": kind,
+                "currency": currency,
+                "formula": formula,
+            }
         )
         return self._client._put(
             f"/v1/ads/campaign-results/metrics/{key}", data=payload
@@ -149,8 +233,10 @@ class AdCampaignResultsResource:
         self, rows: list[dict[str, Any]], *, idempotency_key: str | None = None
     ) -> dict[str, Any]:
         """Upload your results per campaign (async)"""
-        payload = self._build_payload(
-            rows=rows,
+        payload = self._build_body(
+            {
+                "rows": rows,
+            }
         )
         headers: dict[str, str] = {}
         if idempotency_key is not None:
@@ -164,17 +250,21 @@ class AdCampaignResultsResource:
         from_date: str,
         to_date: str,
         *,
+        model: str | None = "last_click",
         campaign_ids: str | None = None,
         limit: int | None = 100,
         cursor: str | None = None,
     ) -> dict[str, Any]:
         """List your results per campaign (async)"""
-        params = self._build_params(
-            from_date=from_date,
-            to_date=to_date,
-            campaign_ids=campaign_ids,
-            limit=limit,
-            cursor=cursor,
+        params = self._build_query(
+            {
+                "fromDate": from_date,
+                "toDate": to_date,
+                "model": model,
+                "campaignIds": campaign_ids,
+                "limit": limit,
+                "cursor": cursor,
+            }
         )
         return await self._client._aget("/v1/ads/campaign-results", params=params)
 
@@ -183,17 +273,69 @@ class AdCampaignResultsResource:
         return await self._client._aget(f"/v1/ads/campaign-results/uploads/{upload_id}")
 
     async def aget_campaign_results_totals(
-        self, from_date: str, to_date: str, *, ad_account_ids: str | None = None
+        self,
+        from_date: str,
+        to_date: str,
+        *,
+        model: str | None = "last_click",
+        ad_account_ids: str | None = None,
     ) -> dict[str, Any]:
         """Get your results totals (async)"""
-        params = self._build_params(
-            from_date=from_date,
-            to_date=to_date,
-            ad_account_ids=ad_account_ids,
+        params = self._build_query(
+            {
+                "fromDate": from_date,
+                "toDate": to_date,
+                "model": model,
+                "adAccountIds": ad_account_ids,
+            }
         )
         return await self._client._aget(
             "/v1/ads/campaign-results/totals", params=params
         )
+
+    async def aget_campaign_result_events(self) -> dict[str, Any]:
+        """List the events that count as campaign results (async)"""
+        return await self._client._aget("/v1/ads/campaign-results/events")
+
+    async def aset_campaign_result_events(self, event_names: Any) -> dict[str, Any]:
+        """Choose the events that count as campaign results (async)"""
+        payload = self._build_body(
+            {
+                "eventNames": event_names,
+            }
+        )
+        return await self._client._aput("/v1/ads/campaign-results/events", data=payload)
+
+    async def aget_tag_new_ads(self) -> dict[str, Any]:
+        """Get the Tag new ads setting (async)"""
+        return await self._client._aget("/v1/ads/campaign-results/tag-new-ads")
+
+    async def aset_tag_new_ads(self, enabled: bool) -> dict[str, Any]:
+        """Turn Tag new ads on or off (async)"""
+        payload = self._build_body(
+            {
+                "enabled": enabled,
+            }
+        )
+        return await self._client._aput(
+            "/v1/ads/campaign-results/tag-new-ads", data=payload
+        )
+
+    async def aget_campaign_result_profit(self) -> dict[str, Any]:
+        """Get your profit setting (async)"""
+        return await self._client._aget("/v1/ads/campaign-results/profit")
+
+    async def aset_campaign_result_profit(
+        self, margin_percent: Any, *, cost_per_order: Any | None = None
+    ) -> dict[str, Any]:
+        """Set your margin and cost per order (async)"""
+        payload = self._build_body(
+            {
+                "marginPercent": margin_percent,
+                "costPerOrder": cost_per_order,
+            }
+        )
+        return await self._client._aput("/v1/ads/campaign-results/profit", data=payload)
 
     async def alist_campaign_result_metrics(self) -> dict[str, Any]:
         """List your result metrics (async)"""
@@ -209,11 +351,13 @@ class AdCampaignResultsResource:
         formula: Any | None = None,
     ) -> dict[str, Any]:
         """Name a result metric or define a formula (async)"""
-        payload = self._build_payload(
-            label=label,
-            kind=kind,
-            currency=currency,
-            formula=formula,
+        payload = self._build_body(
+            {
+                "label": label,
+                "kind": kind,
+                "currency": currency,
+                "formula": formula,
+            }
         )
         return await self._client._aput(
             f"/v1/ads/campaign-results/metrics/{key}", data=payload

@@ -23,13 +23,16 @@ class CommentsResource:
     def __init__(self, client: BaseClient) -> None:
         self._client = client
 
-    def _build_params(self, **kwargs: Any) -> dict[str, Any]:
-        """Build query parameters, filtering None and empty-string values.
+    def _build_query(self, fields: dict[str, Any]) -> dict[str, Any]:
+        """Build query parameters keyed by their wire names, as given.
 
-        Empty strings are filtered because MCP tool wrappers pass ``""`` as the
-        default for optional string args, and the API rejects empty query
-        values (e.g. ``platform=``) with a 400. Filtering here keeps both direct
-        SDK callers and MCP tool callers safe.
+        Generated methods pass the parameter names exactly as the OpenAPI
+        spec declares them, so no casing rule is applied here.
+
+        None and empty strings are filtered because MCP tool wrappers pass
+        ``""`` as the default for optional string args, and the API rejects
+        empty query values (e.g. ``platform=``) with a 400. Filtering here
+        keeps both direct SDK callers and MCP tool callers safe.
 
         Enum members are unwrapped to their value: httpx serializes params
         via str(), which yields "ClassName.MEMBER" for Enum members, so
@@ -38,42 +41,65 @@ class CommentsResource:
         """
         from enum import Enum
 
-        def to_camel(s: str) -> str:
-            parts = s.split("_")
-            return parts[0] + "".join(p.title() for p in parts[1:])
-
         result: dict[str, Any] = {}
-        for k, v in kwargs.items():
+        for k, v in fields.items():
             if isinstance(v, Enum):
                 v = v.value
             if v is None or v == "":
                 continue
-            result[to_camel(k)] = v
+            result[k] = v
         return result
 
-    def _build_payload(self, **kwargs: Any) -> dict[str, Any]:
-        """Build request payload, filtering None values. Enum members are
-        unwrapped to their value so JSON bodies carry e.g. "failed" rather
-        than a raw Enum member (plain Enum members are not JSON-serializable).
+    def _build_body(self, fields: dict[str, Any]) -> dict[str, Any]:
+        """Build a JSON request body keyed by its wire names, as given.
+
+        Generated methods pass the property names exactly as the request
+        body schema declares them: most are camelCase, but some routes read
+        snake_case (``ice_breakers``, ``message_send_ttl_seconds``), so no
+        casing rule is applied here. None values are dropped, Enum members
+        are unwrapped to their value (e.g. "failed") and datetimes are sent
+        as ISO 8601 strings.
         """
         from datetime import datetime
         from enum import Enum
 
-        def to_camel(s: str) -> str:
-            parts = s.split("_")
-            return parts[0] + "".join(p.title() for p in parts[1:])
-
         result: dict[str, Any] = {}
-        for k, v in kwargs.items():
+        for k, v in fields.items():
             if isinstance(v, Enum):
                 v = v.value
             if v is None:
                 continue
             if isinstance(v, datetime):
-                result[to_camel(k)] = v.isoformat()
+                result[k] = v.isoformat()
             else:
-                result[to_camel(k)] = v
+                result[k] = v
         return result
+
+    def _build_params(self, **kwargs: Any) -> dict[str, Any]:
+        """Build query parameters from snake_case kwargs, camelCasing each key.
+
+        For hand-written resource methods, whose endpoints take camelCase
+        names. Generated methods use _build_query with the spec's names.
+        """
+
+        def to_camel(s: str) -> str:
+            parts = s.split("_")
+            return parts[0] + "".join(p.title() for p in parts[1:])
+
+        return self._build_query({to_camel(k): v for k, v in kwargs.items()})
+
+    def _build_payload(self, **kwargs: Any) -> dict[str, Any]:
+        """Build a request body from snake_case kwargs, camelCasing each key.
+
+        For hand-written resource methods, whose endpoints take camelCase
+        names. Generated methods use _build_body with the spec's names.
+        """
+
+        def to_camel(s: str) -> str:
+            parts = s.split("_")
+            return parts[0] + "".join(p.title() for p in parts[1:])
+
+        return self._build_body({to_camel(k): v for k, v in kwargs.items()})
 
     def list_inbox_comments(
         self,
@@ -90,17 +116,19 @@ class CommentsResource:
         account_id: str | None = None,
     ) -> dict[str, Any]:
         """List commented posts"""
-        params = self._build_params(
-            profile_id=profile_id,
-            platform=platform,
-            min_comments=min_comments,
-            since=since,
-            sort_by=sort_by,
-            sort_order=sort_order,
-            limit=limit,
-            view=view,
-            cursor=cursor,
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "profileId": profile_id,
+                "platform": platform,
+                "minComments": min_comments,
+                "since": since,
+                "sortBy": sort_by,
+                "sortOrder": sort_order,
+                "limit": limit,
+                "view": view,
+                "cursor": cursor,
+                "accountId": account_id,
+            }
         )
         return self._client._get("/v1/inbox/comments", params=params)
 
@@ -116,13 +144,15 @@ class CommentsResource:
         view: str | None = "full",
     ) -> dict[str, Any]:
         """Get post comments"""
-        params = self._build_params(
-            account_id=account_id,
-            subreddit=subreddit,
-            limit=limit,
-            cursor=cursor,
-            comment_id=comment_id,
-            view=view,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "subreddit": subreddit,
+                "limit": limit,
+                "cursor": cursor,
+                "commentId": comment_id,
+                "view": view,
+            }
         )
         return self._client._get(f"/v1/inbox/comments/{post_id}", params=params)
 
@@ -134,6 +164,7 @@ class CommentsResource:
         *,
         idempotency_key: str | None = None,
         attachment_url: str | None = None,
+        attachment_type: str | None = None,
         comment_id: str | None = None,
         mention_author: bool | None = None,
         parent_cid: str | None = None,
@@ -141,15 +172,18 @@ class CommentsResource:
         root_cid: str | None = None,
     ) -> dict[str, Any]:
         """Reply to comment"""
-        payload = self._build_payload(
-            account_id=account_id,
-            message=message,
-            attachment_url=attachment_url,
-            comment_id=comment_id,
-            mention_author=mention_author,
-            parent_cid=parent_cid,
-            root_uri=root_uri,
-            root_cid=root_cid,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "message": message,
+                "attachmentUrl": attachment_url,
+                "attachmentType": attachment_type,
+                "commentId": comment_id,
+                "mentionAuthor": mention_author,
+                "parentCid": parent_cid,
+                "rootUri": root_uri,
+                "rootCid": root_cid,
+            }
         )
         headers: dict[str, str] = {}
         if idempotency_key is not None:
@@ -162,9 +196,11 @@ class CommentsResource:
         self, post_id: str, account_id: str, comment_id: str
     ) -> dict[str, Any]:
         """Delete comment"""
-        params = self._build_params(
-            account_id=account_id,
-            comment_id=comment_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "commentId": comment_id,
+            }
         )
         return self._client._delete(f"/v1/inbox/comments/{post_id}", params=params)
 
@@ -177,10 +213,12 @@ class CommentsResource:
         content: str,
     ) -> dict[str, Any]:
         """Edit comment"""
-        payload = self._build_payload(
-            account_id=account_id,
-            platform=platform,
-            content=content,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "platform": platform,
+                "content": content,
+            }
         )
         return self._client._patch(
             f"/v1/inbox/comments/{post_id}/{comment_id}", data=payload
@@ -197,11 +235,13 @@ class CommentsResource:
         ban_author: bool | None = None,
     ) -> dict[str, Any]:
         """Set comment moderation status"""
-        payload = self._build_payload(
-            account_id=account_id,
-            platform=platform,
-            moderation_status=moderation_status,
-            ban_author=ban_author,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "platform": platform,
+                "moderationStatus": moderation_status,
+                "banAuthor": ban_author,
+            }
         )
         return self._client._post(
             f"/v1/inbox/comments/{post_id}/{comment_id}/moderation", data=payload
@@ -211,8 +251,10 @@ class CommentsResource:
         self, post_id: str, comment_id: str, account_id: str
     ) -> dict[str, Any]:
         """Hide comment"""
-        payload = self._build_payload(
-            account_id=account_id,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+            }
         )
         return self._client._post(
             f"/v1/inbox/comments/{post_id}/{comment_id}/hide", data=payload
@@ -222,8 +264,10 @@ class CommentsResource:
         self, post_id: str, comment_id: str, account_id: str
     ) -> dict[str, Any]:
         """Unhide comment"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return self._client._delete(
             f"/v1/inbox/comments/{post_id}/{comment_id}/hide", params=params
@@ -233,8 +277,10 @@ class CommentsResource:
         self, post_id: str, comment_id: str, account_id: str
     ) -> dict[str, Any]:
         """Pin comment"""
-        payload = self._build_payload(
-            account_id=account_id,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+            }
         )
         return self._client._post(
             f"/v1/inbox/comments/{post_id}/{comment_id}/pin", data=payload
@@ -244,8 +290,10 @@ class CommentsResource:
         self, post_id: str, comment_id: str, account_id: str
     ) -> dict[str, Any]:
         """Unpin comment"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return self._client._delete(
             f"/v1/inbox/comments/{post_id}/{comment_id}/pin", params=params
@@ -261,10 +309,12 @@ class CommentsResource:
         cid: str | None = None,
     ) -> dict[str, Any]:
         """Like comment"""
-        payload = self._build_payload(
-            account_id=account_id,
-            reaction_type=reaction_type,
-            cid=cid,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "reactionType": reaction_type,
+                "cid": cid,
+            }
         )
         return self._client._post(
             f"/v1/inbox/comments/{post_id}/{comment_id}/like", data=payload
@@ -279,9 +329,11 @@ class CommentsResource:
         like_uri: str | None = None,
     ) -> dict[str, Any]:
         """Unlike comment"""
-        params = self._build_params(
-            account_id=account_id,
-            like_uri=like_uri,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "likeUri": like_uri,
+            }
         )
         return self._client._delete(
             f"/v1/inbox/comments/{post_id}/{comment_id}/like", params=params
@@ -296,10 +348,12 @@ class CommentsResource:
         cid: str | None = None,
     ) -> dict[str, Any]:
         """Like post"""
-        payload = self._build_payload(
-            account_id=account_id,
-            reaction_type=reaction_type,
-            cid=cid,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "reactionType": reaction_type,
+                "cid": cid,
+            }
         )
         return self._client._post(f"/v1/inbox/posts/{post_id}/like", data=payload)
 
@@ -307,9 +361,11 @@ class CommentsResource:
         self, post_id: str, account_id: str, *, like_uri: str | None = None
     ) -> dict[str, Any]:
         """Unlike post"""
-        params = self._build_params(
-            account_id=account_id,
-            like_uri=like_uri,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "likeUri": like_uri,
+            }
         )
         return self._client._delete(f"/v1/inbox/posts/{post_id}/like", params=params)
 
@@ -324,11 +380,13 @@ class CommentsResource:
         buttons: list[Any] | None = None,
     ) -> dict[str, Any]:
         """Send private reply"""
-        payload = self._build_payload(
-            account_id=account_id,
-            message=message,
-            quick_replies=quick_replies,
-            buttons=buttons,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "message": message,
+                "quickReplies": quick_replies,
+                "buttons": buttons,
+            }
         )
         return self._client._post(
             f"/v1/inbox/comments/{post_id}/{comment_id}/private-reply", data=payload
@@ -349,17 +407,19 @@ class CommentsResource:
         account_id: str | None = None,
     ) -> dict[str, Any]:
         """List commented posts (async)"""
-        params = self._build_params(
-            profile_id=profile_id,
-            platform=platform,
-            min_comments=min_comments,
-            since=since,
-            sort_by=sort_by,
-            sort_order=sort_order,
-            limit=limit,
-            view=view,
-            cursor=cursor,
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "profileId": profile_id,
+                "platform": platform,
+                "minComments": min_comments,
+                "since": since,
+                "sortBy": sort_by,
+                "sortOrder": sort_order,
+                "limit": limit,
+                "view": view,
+                "cursor": cursor,
+                "accountId": account_id,
+            }
         )
         return await self._client._aget("/v1/inbox/comments", params=params)
 
@@ -375,13 +435,15 @@ class CommentsResource:
         view: str | None = "full",
     ) -> dict[str, Any]:
         """Get post comments (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            subreddit=subreddit,
-            limit=limit,
-            cursor=cursor,
-            comment_id=comment_id,
-            view=view,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "subreddit": subreddit,
+                "limit": limit,
+                "cursor": cursor,
+                "commentId": comment_id,
+                "view": view,
+            }
         )
         return await self._client._aget(f"/v1/inbox/comments/{post_id}", params=params)
 
@@ -393,6 +455,7 @@ class CommentsResource:
         *,
         idempotency_key: str | None = None,
         attachment_url: str | None = None,
+        attachment_type: str | None = None,
         comment_id: str | None = None,
         mention_author: bool | None = None,
         parent_cid: str | None = None,
@@ -400,15 +463,18 @@ class CommentsResource:
         root_cid: str | None = None,
     ) -> dict[str, Any]:
         """Reply to comment (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            message=message,
-            attachment_url=attachment_url,
-            comment_id=comment_id,
-            mention_author=mention_author,
-            parent_cid=parent_cid,
-            root_uri=root_uri,
-            root_cid=root_cid,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "message": message,
+                "attachmentUrl": attachment_url,
+                "attachmentType": attachment_type,
+                "commentId": comment_id,
+                "mentionAuthor": mention_author,
+                "parentCid": parent_cid,
+                "rootUri": root_uri,
+                "rootCid": root_cid,
+            }
         )
         headers: dict[str, str] = {}
         if idempotency_key is not None:
@@ -421,9 +487,11 @@ class CommentsResource:
         self, post_id: str, account_id: str, comment_id: str
     ) -> dict[str, Any]:
         """Delete comment (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            comment_id=comment_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "commentId": comment_id,
+            }
         )
         return await self._client._adelete(
             f"/v1/inbox/comments/{post_id}", params=params
@@ -438,10 +506,12 @@ class CommentsResource:
         content: str,
     ) -> dict[str, Any]:
         """Edit comment (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            platform=platform,
-            content=content,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "platform": platform,
+                "content": content,
+            }
         )
         return await self._client._apatch(
             f"/v1/inbox/comments/{post_id}/{comment_id}", data=payload
@@ -458,11 +528,13 @@ class CommentsResource:
         ban_author: bool | None = None,
     ) -> dict[str, Any]:
         """Set comment moderation status (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            platform=platform,
-            moderation_status=moderation_status,
-            ban_author=ban_author,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "platform": platform,
+                "moderationStatus": moderation_status,
+                "banAuthor": ban_author,
+            }
         )
         return await self._client._apost(
             f"/v1/inbox/comments/{post_id}/{comment_id}/moderation", data=payload
@@ -472,8 +544,10 @@ class CommentsResource:
         self, post_id: str, comment_id: str, account_id: str
     ) -> dict[str, Any]:
         """Hide comment (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+            }
         )
         return await self._client._apost(
             f"/v1/inbox/comments/{post_id}/{comment_id}/hide", data=payload
@@ -483,8 +557,10 @@ class CommentsResource:
         self, post_id: str, comment_id: str, account_id: str
     ) -> dict[str, Any]:
         """Unhide comment (async)"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return await self._client._adelete(
             f"/v1/inbox/comments/{post_id}/{comment_id}/hide", params=params
@@ -494,8 +570,10 @@ class CommentsResource:
         self, post_id: str, comment_id: str, account_id: str
     ) -> dict[str, Any]:
         """Pin comment (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+            }
         )
         return await self._client._apost(
             f"/v1/inbox/comments/{post_id}/{comment_id}/pin", data=payload
@@ -505,8 +583,10 @@ class CommentsResource:
         self, post_id: str, comment_id: str, account_id: str
     ) -> dict[str, Any]:
         """Unpin comment (async)"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return await self._client._adelete(
             f"/v1/inbox/comments/{post_id}/{comment_id}/pin", params=params
@@ -522,10 +602,12 @@ class CommentsResource:
         cid: str | None = None,
     ) -> dict[str, Any]:
         """Like comment (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            reaction_type=reaction_type,
-            cid=cid,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "reactionType": reaction_type,
+                "cid": cid,
+            }
         )
         return await self._client._apost(
             f"/v1/inbox/comments/{post_id}/{comment_id}/like", data=payload
@@ -540,9 +622,11 @@ class CommentsResource:
         like_uri: str | None = None,
     ) -> dict[str, Any]:
         """Unlike comment (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            like_uri=like_uri,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "likeUri": like_uri,
+            }
         )
         return await self._client._adelete(
             f"/v1/inbox/comments/{post_id}/{comment_id}/like", params=params
@@ -557,10 +641,12 @@ class CommentsResource:
         cid: str | None = None,
     ) -> dict[str, Any]:
         """Like post (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            reaction_type=reaction_type,
-            cid=cid,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "reactionType": reaction_type,
+                "cid": cid,
+            }
         )
         return await self._client._apost(
             f"/v1/inbox/posts/{post_id}/like", data=payload
@@ -570,9 +656,11 @@ class CommentsResource:
         self, post_id: str, account_id: str, *, like_uri: str | None = None
     ) -> dict[str, Any]:
         """Unlike post (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            like_uri=like_uri,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "likeUri": like_uri,
+            }
         )
         return await self._client._adelete(
             f"/v1/inbox/posts/{post_id}/like", params=params
@@ -589,11 +677,13 @@ class CommentsResource:
         buttons: list[Any] | None = None,
     ) -> dict[str, Any]:
         """Send private reply (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            message=message,
-            quick_replies=quick_replies,
-            buttons=buttons,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "message": message,
+                "quickReplies": quick_replies,
+                "buttons": buttons,
+            }
         )
         return await self._client._apost(
             f"/v1/inbox/comments/{post_id}/{comment_id}/private-reply", data=payload

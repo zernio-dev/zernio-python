@@ -10,9 +10,9 @@ import respx
 from fastmcp import Client, FastMCP
 
 from late.mcp import response_format
+from late.mcp.middleware import ToolTelemetryMiddleware
 from late.mcp.response_format import MAX_RESULT_CHARS, fit_to_size, format_payload
 from late.mcp.server import mcp
-from late.mcp.telemetry import ToolTelemetryMiddleware
 
 API = "https://api.test.com"
 
@@ -99,13 +99,97 @@ def test_following_the_page_instructions_reads_every_item_once(
     assert seen == [f"item_{i}" for i in range(first_index, 300)]
 
 
-def test_a_trimmed_page_drops_counts_that_would_skip_items() -> None:
+@pytest.mark.parametrize(
+    ("limit", "start_page"), [(100, 1), (100, 2), (40, 1), (40, 3), (50, 3), (7, 4)]
+)
+def test_following_the_pagination_alone_reads_every_item_once(
+    limit: int, start_page: int
+) -> None:
+    items = [_item(i, size=3_000) for i in range(300)]
+    first_index = (start_page - 1) * limit
+    seen: list[str] = []
+    page = start_page
+    for _ in range(200):
+        document = json.loads(format_payload(_page_api(items, page, limit)))
+        pagination = document["pagination"]
+        assert len(document["ads"]) <= pagination["limit"]
+        seen.extend(_ids(document, "ads"))
+        if pagination["page"] >= pagination["pages"]:
+            break
+        page, limit = pagination["page"] + 1, pagination["limit"]
+
+    assert seen == [f"item_{i}" for i in range(first_index, 300)]
+
+
+def test_a_trimmed_page_describes_the_rows_it_holds_not_the_page_asked_for() -> None:
     document = json.loads(
-        format_payload(_page_api([_item(i, 3_000) for i in range(100)], 1, 100))
+        format_payload(_page_api([_item(i, 3_000) for i in range(90)], 2, 40))
     )
 
-    assert "pages" not in document["pagination"]
-    assert len(document["ads"]) < 100
+    kept = len(document["ads"])
+    assert 1 < kept < 40
+    assert document["pagination"] == {
+        "page": 40 // kept + 1,
+        "limit": kept,
+        "total": 90,
+        "pages": -(-90 // kept),
+    }
+
+
+def test_a_trimmed_page_that_also_carries_a_cursor_is_renumbered_and_keeps_the_note() -> (
+    None
+):
+    document = json.loads(
+        format_payload(
+            {
+                "posts": [_item(i, 3_000) for i in range(40)],
+                "pagination": {
+                    "page": 1,
+                    "limit": 40,
+                    "total": 90,
+                    "pages": 3,
+                    "nextCursor": "c_after_40",
+                },
+            }
+        )
+    )
+
+    kept = len(document["posts"])
+    assert document["pagination"] == {
+        "page": 1,
+        "limit": kept,
+        "total": 90,
+        "pages": -(-90 // kept),
+    }
+    assert f"same cursor and limit={kept}" in document["_truncated"][0]
+
+
+def test_a_page_number_below_one_is_left_as_the_api_sent_it() -> None:
+    document = json.loads(
+        format_payload(
+            {
+                "ads": [_item(i, 3_000) for i in range(40)],
+                "pagination": {"page": 0, "limit": 40, "total": 90},
+            }
+        )
+    )
+
+    assert document["pagination"] == {"page": 0, "limit": 40, "total": 90}
+
+
+def test_a_trimmed_page_without_a_total_still_says_its_size() -> None:
+    document = json.loads(
+        format_payload(
+            {
+                "ads": [_item(i, 3_000) for i in range(40)],
+                "pagination": {"page": 1, "limit": 40, "hasMore": False},
+            }
+        )
+    )
+
+    kept = len(document["ads"])
+    assert document["pagination"] == {"page": 1, "limit": kept, "hasMore": True}
+    assert kept < 40
 
 
 def test_a_trimmed_cursor_page_drops_its_next_cursor_and_says_how_to_continue() -> None:

@@ -1,0 +1,310 @@
+/*
+ * The Zernio product look (v2), as the dashboard draws it under data-look="v2".
+ * Values are the Figma `Product` file's, copied from Schedule-Posts-API
+ * libs/design-system/new-look.ts: `Theme` (light and dark, from `Primitives`),
+ * `Scale` (sizes, radius, spacing) and the `type/*` text styles. Change them
+ * there first; this file follows.
+ *
+ * In Claude the host's surface shows through: the page is transparent inline,
+ * the panels are bg/raised. Dark mode follows the host's theme (data-theme,
+ * which useHostStyles sets from the host context).
+ */
+:root {
+  /* Theme, light */
+  --bg-base: #faf9f8;
+  --bg-raised: #ffffff;
+  --bg-overlay: #ffffff;
+  --bg-inverse: #1a1a1a;
+  --fill-primary: #faf9f8;
+  --fill-hover: rgb(92 68 37 / 0.03);
+  --fill-selected: rgb(92 68 37 / 0.05);
+  --fill-active: rgb(92 68 37 / 0.05);
+  --text-primary: #1a1a1a;
+  --text-secondary: #525252;
+  --text-tertiary: #6b6b6b;
+  --text-placeholder: #a3a3a3;
+  --text-inverse: #ffffff;
+  --text-link: #1e4a7c;
+  --text-disabled: #d4d4d4;
+  --border-default: #e4e4e4;
+  --border-subtle: #f2f2f2;
+  --border-focus: #1a1a1a;
+  --brand-default: #eb3514;
+  --brand-hover: #d12c0e;
+  --brand-subtle: #fbe8e5;
+  --status-success-fg: #15803d;
+  --status-success-bg: #e3f4e9;
+  --status-warning-fg: #7c4a18;
+  --status-warning-bg: #fff3c5;
+  --status-danger-fg: #b9342e;
+  --status-danger-bg: #fbe0e0;
+  --status-info-fg: #1e4a7c;
+  --status-info-bg: #e4eefb;
+  --shadow-color: rgb(0 0 0 / 0.1);
+  --chart-3: #1e4a7c;
+
+  /* Scale */
+  --size-control-sm: 28px;
+  --size-control-md: 32px;
+  --size-control-lg: 36px;
+  --size-icon-sm: 12px;
+  --size-icon-md: 16px;
+  --size-row: 40px;
+  --radius-surface: 0px;
+  --radius-control: 0px;
+  --radius-item: 4px;
+  --radius-item-lg: 6px;
+
+  /* Type families */
+  --font-sans: "Geist", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-pixel: "Geist Pixel Square", "Geist Mono", ui-monospace, Menlo, monospace;
+
+  color-scheme: light;
+}
+
+/* Theme, dark */
+:root[data-theme="dark"] {
+  --bg-base: #0f0f10;
+  --bg-raised: #151516;
+  --bg-overlay: #151516;
+  --bg-inverse: #1a1a1a;
+  --fill-primary: #0f0f10;
+  --fill-hover: rgb(255 255 255 / 0.04);
+  --fill-selected: rgb(255 255 255 / 0.06);
+  --fill-active: rgb(255 255 255 / 0.06);
+  --text-primary: #fafafa;
+  --text-secondary: #d4d4d4;
+  --text-tertiary: #a3a3a3;
+  --text-placeholder: #6b6b6b;
+  --text-inverse: #ffffff;
+  --text-link: #7ed4fc;
+  --text-disabled: #333333;
+  --border-default: #212122;
+  --border-subtle: #1c1c1d;
+  --border-focus: #fafafa;
+  --brand-subtle: #261514;
+  --status-success-fg: #6ee7b7;
+  --status-success-bg: #0d2418;
+  --status-warning-fg: #fcd44f;
+  --status-warning-bg: #2b1f0a;
+  --status-danger-fg: #fca6a6;
+  --status-danger-bg: #2b1414;
+  --status-info-fg: #7ed4fc;
+  --status-info-bg: #0e1c2e;
+  --shadow-color: rgb(0 0 0 / 0.5);
+  --chart-3: #7ed4fc;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; background: transparent; }
+body {
+  /* body/14 */
+  font: 400 14px/20px var(--font-sans);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+}
+button { font: inherit; color: inherit; }
+img { display: block; }
+
+/* Text styles (type/*), weights 400 and 500 only (11) */
+.type-page-title { font: 500 14px/20px var(--font-pixel); }
+.type-eyebrow { margin: 0; font: 500 12px/16px var(--font-pixel); text-transform: uppercase; color: var(--text-tertiary); }
+.type-metric { font: 500 24px/32px var(--font-sans); font-variant-numeric: tabular-nums; }
+.type-label { font: 500 14px/20px var(--font-sans); }
+.type-mono { font: 400 14px/20px var(--font-mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+/* 5. A count beside a pixel title: pixel font, light outline. */
+.count { display: inline-block; margin-left: 6px; padding: 0 4px; border: 1px solid var(--border-default); border-radius: var(--radius-item); font: inherit; color: var(--text-tertiary); }
+.icon { width: var(--size-icon-md); height: var(--size-icon-md); flex: none; }
+.icon-sm { width: var(--size-icon-sm); height: var(--size-icon-sm); flex: none; }
+
+.app { padding: 2px 0 4px; }
+.app-fullscreen { min-height: 100vh; max-width: 960px; margin: 0 auto; padding: 12px 12px calc(var(--safe-bottom, 0px) + 112px); background: var(--bg-base); }
+.header { display: flex; align-items: center; gap: 8px; min-height: var(--size-control-md); margin-bottom: 8px; }
+.crumb { color: var(--text-tertiary); }
+.crumb::before { content: "/"; margin-right: 8px; color: var(--border-default); }
+.header-actions { margin-left: auto; display: inline-flex; align-items: center; gap: 4px; color: var(--text-tertiary); }
+
+/* 28. Underline tabs: the active one marked, the rest grey; hover darkens the text only. */
+.tabs { display: flex; gap: 16px; margin-bottom: 8px; border-bottom: 1px solid var(--border-default); }
+.tab { height: var(--size-control-md); padding: 0; border: 0; border-bottom: 1px solid transparent; margin-bottom: -1px; background: none; color: var(--text-tertiary); cursor: pointer; }
+.tab:hover { color: var(--text-primary); }
+.tab-active { color: var(--text-primary); border-bottom-color: var(--text-primary); }
+.logo { width: 18px; height: 18px; border-radius: var(--radius-item); }
+.stack { display: flex; flex-direction: column; gap: 8px; }
+
+/* 18. Panels: white, bordered, square; a list's panel has a grey bar with its eyebrow title. */
+.section, .kpis {
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-surface);
+  background: var(--bg-raised);
+}
+.section-bar {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  height: var(--size-control-md);
+  padding: 0 8px;
+  border-bottom: 1px solid var(--border-default);
+  background: var(--fill-primary);
+}
+.section-actions { display: flex; align-items: center; gap: 4px; }
+.section-body { padding: 0 8px; }
+.section-body-flush { padding: 0; }
+.section-body > .notice { padding: 8px 0; }
+.section-footer { display: flex; gap: 8px; padding: 8px 0; border-top: 1px solid var(--border-subtle); }
+.more { display: flex; padding: 4px 0 8px; }
+
+/* 20. KPIs: one row, divided by hairlines, grey label above the figure. */
+.kpi-row { display: grid; }
+.kpi { padding: 12px; text-align: left; border: 0; background: none; color: inherit; }
+.kpi + .kpi { border-left: 1px solid var(--border-default); }
+button.kpi { cursor: pointer; box-shadow: inset 0 -2px 0 transparent; }
+button.kpi:hover { background: var(--fill-hover); }
+.kpi-selected { box-shadow: inset 0 -2px 0 var(--chart-3) !important; }
+.kpi-label { color: var(--text-tertiary); }
+.kpi-chart { padding: 8px 12px 12px; border-top: 1px solid var(--border-default); }
+
+/* 20. The chart: the panel's hue, dashed gridlines, dates under it. */
+.chart-readout { display: flex; align-items: baseline; gap: 8px; margin-bottom: 8px; }
+.chart-plot { position: relative; }
+.chart-plot svg { display: block; width: 100%; touch-action: none; }
+.chart-max { position: absolute; top: -2px; right: 0; color: var(--text-tertiary); font: 400 12px/16px var(--font-mono); background: var(--bg-raised); padding-left: 4px; }
+.chart-grid { stroke: var(--border-default); stroke-dasharray: 3 3; vector-effect: non-scaling-stroke; }
+.chart-axis { stroke: var(--border-default); vector-effect: non-scaling-stroke; }
+.chart-line { fill: none; stroke: var(--chart-3); stroke-width: 1.5; vector-effect: non-scaling-stroke; }
+.chart-dates { display: flex; justify-content: space-between; margin-top: 4px; color: var(--text-tertiary); font: 400 12px/16px var(--font-mono); }
+
+/* 24, 51. Tables: eyebrow headers, 14px cells, one line, the share as a grey bar. */
+.table { width: 100%; border-collapse: collapse; }
+.table th { height: var(--size-control-md); padding: 0 8px; text-align: left; font: 500 12px/16px var(--font-pixel); text-transform: uppercase; color: var(--text-tertiary); border-bottom: 1px solid var(--border-default); white-space: nowrap; }
+.table td { height: var(--size-row); padding: 0 8px; white-space: nowrap; }
+.table tr + tr td { border-top: 1px solid var(--border-subtle); }
+.table .num { text-align: right; font-variant-numeric: tabular-nums; }
+.share-col { width: 25%; }
+.share { display: block; height: 6px; background: var(--fill-active); }
+.share > span { display: block; height: 100%; background: var(--text-tertiary); }
+.cell-lead { display: inline-flex; align-items: center; gap: 8px; }
+
+/* 16. A label that is not a state: outline chip. */
+.badge { display: inline-flex; align-items: center; height: 20px; padding: 0 4px; border: 1px solid var(--border-default); border-radius: var(--radius-item); color: var(--text-secondary); white-space: nowrap; flex: none; }
+
+/* Post preview */
+.post-body { margin: 0; padding: 8px 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.media { display: flex; gap: 4px; padding-bottom: 8px; }
+.media img, .media-tile { width: 64px; height: 64px; object-fit: cover; border: 1px solid var(--border-default); border-radius: var(--radius-item-lg); }
+.media-tile { display: inline-flex; align-items: center; justify-content: center; color: var(--text-tertiary); background: var(--fill-primary); }
+
+/* Rows: 40px, one line, everything centred (22, 44); one border between rows (23). */
+.rows { list-style: none; margin: 0; padding: 0; }
+.row { display: flex; align-items: center; gap: 8px; min-height: var(--size-row); }
+.row + .row { border-top: 1px solid var(--border-subtle); }
+.row-name { flex: 1; min-width: 0; display: flex; align-items: baseline; gap: 6px; overflow: hidden; white-space: nowrap; }
+.row-name > * { overflow: hidden; text-overflow: ellipsis; }
+.row-secondary { color: var(--text-tertiary); }
+.row-fix { min-width: 96px; display: flex; justify-content: flex-end; flex: none; }
+.row-actions { display: inline-flex; align-items: center; gap: 4px; }
+.platform-tiles { display: inline-flex; align-items: center; gap: 2px; flex: none; }
+
+/* 42. PlatformTile md: the app icon in a 22px bordered tile, radius/item-lg. */
+.platform-tile {
+  display: inline-flex; align-items: center; justify-content: center; flex: none;
+  padding: 2px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-item-lg);
+}
+.platform-tile img { width: 16px; height: 16px; object-fit: contain; }
+
+/* 16, 51. StatusPill: 20px, 14px at 400, radius/item, tinted. */
+.status-pill {
+  display: inline-flex; align-items: center; gap: 2px; flex: none;
+  height: 20px; padding: 0 4px;
+  border-radius: var(--radius-item);
+  font-size: 14px; line-height: 20px; white-space: nowrap;
+}
+.status-pill-success { color: var(--status-success-fg); background: var(--status-success-bg); }
+.status-pill-warning { color: var(--status-warning-fg); background: var(--status-warning-bg); }
+.status-pill-danger { color: var(--status-danger-fg); background: var(--status-danger-bg); }
+.status-pill-info { color: var(--status-info-fg); background: var(--status-info-bg); }
+.status-pill-muted { color: var(--text-tertiary); background: var(--fill-primary); }
+
+/* Buttons: square controls; hover changes colour only (1); focus darkens the border, no ring (13). */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-control);
+  background: transparent;
+  font-size: 14px; font-weight: 400; line-height: 20px;
+  cursor: pointer; white-space: nowrap;
+}
+.btn-md { height: var(--size-control-md); padding: 0 12px; }
+.btn-sm { height: var(--size-control-sm); padding: 0 8px; }
+.btn-icon.btn-md { width: var(--size-control-md); padding: 0; }
+.btn-icon.btn-sm { width: var(--size-control-sm); padding: 0; }
+.btn-primary { background: var(--brand-default); color: var(--text-inverse); }
+.btn-primary:hover { background: var(--brand-hover); }
+.btn-primary:disabled { background: var(--fill-active); color: var(--text-disabled); }
+.btn-outline { border-color: var(--border-default); background: var(--bg-raised); color: var(--text-primary); }
+.btn-outline:hover { background: var(--fill-hover); }
+.btn-ghost { color: var(--text-primary); }
+.btn-ghost:hover { background: var(--fill-hover); }
+.btn-link { padding: 0; height: auto; color: var(--brand-default); }
+.btn-link:hover { color: var(--brand-hover); }
+.btn:disabled { cursor: default; }
+.btn:focus-visible { outline: none; border-color: var(--border-focus); }
+.btn-primary:focus-visible { background: var(--brand-hover); }
+
+.actions { display: flex; align-items: center; gap: 8px; }
+
+/* 15. A notice is coloured text with its icon, no fill, no border. */
+.notice { display: flex; align-items: flex-start; gap: 6px; margin: 0; }
+.notice .icon { margin-top: 2px; }
+.notice-danger { color: var(--status-danger-fg); }
+.notice-success { color: var(--status-success-fg); }
+.notice-warning { color: var(--status-warning-fg); }
+.notice-muted { color: var(--text-tertiary); }
+
+/* 54. Empty state: icon and what the list would hold. */
+.empty { display: flex; align-items: center; gap: 6px; min-height: var(--size-row); color: var(--text-tertiary); }
+
+/* 17. Spinner: 3x3 pixel rain, 4px cells, stepping, in the text colour. */
+.loading { display: flex; align-items: center; justify-content: center; min-height: 96px; color: var(--text-tertiary); }
+.spinner { display: inline-grid; grid-template-columns: repeat(3, 4px); gap: 2px; color: currentColor; }
+.spinner > span { width: 4px; height: 4px; background: currentColor; animation: pixel-rain 600ms steps(1, end) infinite; }
+@keyframes pixel-rain {
+  0% { opacity: 1; }
+  33.333% { opacity: 0.4; }
+  66.666%, 100% { opacity: 0.15; }
+}
+@media (prefers-reduced-motion: reduce) { .spinner > span { animation: none; } }
+
+@media (max-width: 420px) {
+  .kpi { padding: 8px; }
+  .type-metric { font-size: 16px; line-height: 24px; }
+  .row-fix { min-width: 0; }
+  .row-secondary { display: none; }
+  .share-col { display: none; }
+}
+
+/* 47, 13. Fields: bordered, square, 14px; focus darkens the border, no ring. */
+.field {
+  width: 100%; min-height: 56px; padding: 6px 8px; resize: vertical;
+  border: 1px solid var(--border-default); border-radius: var(--radius-control);
+  background: var(--bg-raised); color: var(--text-primary);
+  font: 400 14px/20px var(--font-sans);
+}
+.field::placeholder { color: var(--text-placeholder); }
+.field:focus { outline: none; border-color: var(--border-focus); }
+.reply { display: flex; flex-direction: column; gap: 8px; padding: 8px 0; border-top: 1px solid var(--border-subtle); }
+.message .reply { border-top: 0; padding-bottom: 0; }
+.reply-actions { display: flex; gap: 8px; }
+
+/* Threads: messages and comments, one block each, yours tinted. */
+.thread { list-style: none; margin: 0; padding: 0; }
+.message { padding: 8px 0; }
+.message + .message { border-top: 1px solid var(--border-subtle); }
+.message-out { margin-left: 15%; padding: 8px; background: var(--fill-primary); }
+.message-out + .message, .message + .message-out { border-top: 0; margin-top: 4px; }
+.message-meta { display: flex; align-items: center; gap: 6px; min-height: 20px; }
+.message-actions { margin-left: auto; }
+.message-body { margin: 2px 0 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.back { display: flex; }

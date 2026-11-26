@@ -21,13 +21,16 @@ class ImessageResource:
     def __init__(self, client: BaseClient) -> None:
         self._client = client
 
-    def _build_params(self, **kwargs: Any) -> dict[str, Any]:
-        """Build query parameters, filtering None and empty-string values.
+    def _build_query(self, fields: dict[str, Any]) -> dict[str, Any]:
+        """Build query parameters keyed by their wire names, as given.
 
-        Empty strings are filtered because MCP tool wrappers pass ``""`` as the
-        default for optional string args, and the API rejects empty query
-        values (e.g. ``platform=``) with a 400. Filtering here keeps both direct
-        SDK callers and MCP tool callers safe.
+        Generated methods pass the parameter names exactly as the OpenAPI
+        spec declares them, so no casing rule is applied here.
+
+        None and empty strings are filtered because MCP tool wrappers pass
+        ``""`` as the default for optional string args, and the API rejects
+        empty query values (e.g. ``platform=``) with a 400. Filtering here
+        keeps both direct SDK callers and MCP tool callers safe.
 
         Enum members are unwrapped to their value: httpx serializes params
         via str(), which yields "ClassName.MEMBER" for Enum members, so
@@ -36,42 +39,65 @@ class ImessageResource:
         """
         from enum import Enum
 
-        def to_camel(s: str) -> str:
-            parts = s.split("_")
-            return parts[0] + "".join(p.title() for p in parts[1:])
-
         result: dict[str, Any] = {}
-        for k, v in kwargs.items():
+        for k, v in fields.items():
             if isinstance(v, Enum):
                 v = v.value
             if v is None or v == "":
                 continue
-            result[to_camel(k)] = v
+            result[k] = v
         return result
 
-    def _build_payload(self, **kwargs: Any) -> dict[str, Any]:
-        """Build request payload, filtering None values. Enum members are
-        unwrapped to their value so JSON bodies carry e.g. "failed" rather
-        than a raw Enum member (plain Enum members are not JSON-serializable).
+    def _build_body(self, fields: dict[str, Any]) -> dict[str, Any]:
+        """Build a JSON request body keyed by its wire names, as given.
+
+        Generated methods pass the property names exactly as the request
+        body schema declares them: most are camelCase, but some routes read
+        snake_case (``ice_breakers``, ``message_send_ttl_seconds``), so no
+        casing rule is applied here. None values are dropped, Enum members
+        are unwrapped to their value (e.g. "failed") and datetimes are sent
+        as ISO 8601 strings.
         """
         from datetime import datetime
         from enum import Enum
 
-        def to_camel(s: str) -> str:
-            parts = s.split("_")
-            return parts[0] + "".join(p.title() for p in parts[1:])
-
         result: dict[str, Any] = {}
-        for k, v in kwargs.items():
+        for k, v in fields.items():
             if isinstance(v, Enum):
                 v = v.value
             if v is None:
                 continue
             if isinstance(v, datetime):
-                result[to_camel(k)] = v.isoformat()
+                result[k] = v.isoformat()
             else:
-                result[to_camel(k)] = v
+                result[k] = v
         return result
+
+    def _build_params(self, **kwargs: Any) -> dict[str, Any]:
+        """Build query parameters from snake_case kwargs, camelCasing each key.
+
+        For hand-written resource methods, whose endpoints take camelCase
+        names. Generated methods use _build_query with the spec's names.
+        """
+
+        def to_camel(s: str) -> str:
+            parts = s.split("_")
+            return parts[0] + "".join(p.title() for p in parts[1:])
+
+        return self._build_query({to_camel(k): v for k, v in kwargs.items()})
+
+    def _build_payload(self, **kwargs: Any) -> dict[str, Any]:
+        """Build a request body from snake_case kwargs, camelCasing each key.
+
+        For hand-written resource methods, whose endpoints take camelCase
+        names. Generated methods use _build_body with the spec's names.
+        """
+
+        def to_camel(s: str) -> str:
+            parts = s.split("_")
+            return parts[0] + "".join(p.title() for p in parts[1:])
+
+        return self._build_body({to_camel(k): v for k, v in kwargs.items()})
 
     def list_imessage_senders(self) -> dict[str, Any]:
         """List iMessage senders"""
@@ -86,11 +112,13 @@ class ImessageResource:
         provider: str | None = None,
     ) -> dict[str, Any]:
         """Register an iMessage sender"""
-        payload = self._build_payload(
-            profile_id=profile_id,
-            sender=sender,
-            display_name=display_name,
-            provider=provider,
+        payload = self._build_body(
+            {
+                "profileId": profile_id,
+                "sender": sender,
+                "displayName": display_name,
+                "provider": provider,
+            }
         )
         return self._client._post("/v1/imessage/senders", data=payload)
 
@@ -98,8 +126,10 @@ class ImessageResource:
         self, *, include_canceled: bool | None = False
     ) -> dict[str, Any]:
         """List iMessage sender orders"""
-        params = self._build_params(
-            include_canceled=include_canceled,
+        params = self._build_query(
+            {
+                "includeCanceled": include_canceled,
+            }
         )
         return self._client._get("/v1/imessage/senders/order", params=params)
 
@@ -118,17 +148,19 @@ class ImessageResource:
         contact: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Order a new iMessage sender"""
-        payload = self._build_payload(
-            profile_id=profile_id,
-            kind=kind,
-            region=region,
-            available_number_id=available_number_id,
-            zip_code=zip_code,
-            email_name=email_name,
-            email_domain=email_domain,
-            display_name=display_name,
-            purchase_intent_id=purchase_intent_id,
-            contact=contact,
+        payload = self._build_body(
+            {
+                "profileId": profile_id,
+                "kind": kind,
+                "region": region,
+                "availableNumberId": available_number_id,
+                "zipCode": zip_code,
+                "emailName": email_name,
+                "emailDomain": email_domain,
+                "displayName": display_name,
+                "purchaseIntentId": purchase_intent_id,
+                "contact": contact,
+            }
         )
         return self._client._post("/v1/imessage/senders/order", data=payload)
 
@@ -144,9 +176,11 @@ class ImessageResource:
         contact: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Update an iMessage sender"""
-        payload = self._build_payload(
-            display_name=display_name,
-            contact=contact,
+        payload = self._build_body(
+            {
+                "displayName": display_name,
+                "contact": contact,
+            }
         )
         return self._client._patch(f"/v1/imessage/senders/{sender_id}", data=payload)
 
@@ -164,12 +198,14 @@ class ImessageResource:
         skip: int | None = 0,
     ) -> dict[str, Any]:
         """List iMessage audience"""
-        params = self._build_params(
-            account_id=account_id,
-            status=status,
-            search=search,
-            limit=limit,
-            skip=skip,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "status": status,
+                "search": search,
+                "limit": limit,
+                "skip": skip,
+            }
         )
         return self._client._get("/v1/imessage/audience", params=params)
 
@@ -179,8 +215,10 @@ class ImessageResource:
 
     def add_imessage_sandbox_contact(self, handle: str) -> dict[str, Any]:
         """Add an iMessage sandbox contact"""
-        payload = self._build_payload(
-            handle=handle,
+        payload = self._build_body(
+            {
+                "handle": handle,
+            }
         )
         return self._client._post("/v1/imessage/sandbox/contacts", data=payload)
 
@@ -192,10 +230,12 @@ class ImessageResource:
         self, account_id: str, conversation_id: str, subscribed: bool
     ) -> dict[str, Any]:
         """Subscribe or opt out an iMessage contact"""
-        payload = self._build_payload(
-            account_id=account_id,
-            conversation_id=conversation_id,
-            subscribed=subscribed,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "conversationId": conversation_id,
+                "subscribed": subscribed,
+            }
         )
         return self._client._post("/v1/imessage/audience/subscription", data=payload)
 
@@ -208,10 +248,12 @@ class ImessageResource:
         opt_in_code: str | None = None,
     ) -> dict[str, Any]:
         """Create a tracked iMessage opt-in link"""
-        payload = self._build_payload(
-            body=body,
-            parameters=parameters,
-            opt_in_code=opt_in_code,
+        payload = self._build_body(
+            {
+                "body": body,
+                "parameters": parameters,
+                "optInCode": opt_in_code,
+            }
         )
         return self._client._post(
             f"/v1/imessage/senders/{sender_id}/opt-in-links", data=payload
@@ -221,8 +263,10 @@ class ImessageResource:
         self, *, region: str | None = None
     ) -> dict[str, Any]:
         """List instantly available iMessage numbers"""
-        params = self._build_params(
-            region=region,
+        params = self._build_query(
+            {
+                "region": region,
+            }
         )
         return self._client._get(
             "/v1/imessage/senders/available-numbers", params=params
@@ -244,12 +288,14 @@ class ImessageResource:
         channel: str | None = "imessage",
     ) -> dict[str, Any]:
         """Start an iMessage group chat"""
-        payload = self._build_payload(
-            account_id=account_id,
-            contacts=contacts,
-            text=text,
-            name=name,
-            channel=channel,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "contacts": contacts,
+                "text": text,
+                "name": name,
+                "channel": channel,
+            }
         )
         return self._client._post("/v1/imessage/groups", data=payload)
 
@@ -257,8 +303,10 @@ class ImessageResource:
         self, conversation_id: str, account_id: str
     ) -> dict[str, Any]:
         """Get an iMessage group"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return self._client._get(
             f"/v1/imessage/groups/{conversation_id}", params=params
@@ -273,10 +321,12 @@ class ImessageResource:
         photo_url: str | None = None,
     ) -> dict[str, Any]:
         """Rename an iMessage group or change its photo"""
-        payload = self._build_payload(
-            account_id=account_id,
-            name=name,
-            photo_url=photo_url,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "name": name,
+                "photoUrl": photo_url,
+            }
         )
         return self._client._patch(
             f"/v1/imessage/groups/{conversation_id}", data=payload
@@ -286,9 +336,11 @@ class ImessageResource:
         self, conversation_id: str, account_id: str, contact: str
     ) -> dict[str, Any]:
         """Add a participant to an iMessage group"""
-        payload = self._build_payload(
-            account_id=account_id,
-            contact=contact,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "contact": contact,
+            }
         )
         return self._client._post(
             f"/v1/imessage/groups/{conversation_id}/participants", data=payload
@@ -298,9 +350,11 @@ class ImessageResource:
         self, conversation_id: str, account_id: str, contact: str
     ) -> dict[str, Any]:
         """Remove a participant from an iMessage group"""
-        params = self._build_params(
-            account_id=account_id,
-            contact=contact,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "contact": contact,
+            }
         )
         return self._client._delete(
             f"/v1/imessage/groups/{conversation_id}/participants", params=params
@@ -319,11 +373,13 @@ class ImessageResource:
         provider: str | None = None,
     ) -> dict[str, Any]:
         """Register an iMessage sender (async)"""
-        payload = self._build_payload(
-            profile_id=profile_id,
-            sender=sender,
-            display_name=display_name,
-            provider=provider,
+        payload = self._build_body(
+            {
+                "profileId": profile_id,
+                "sender": sender,
+                "displayName": display_name,
+                "provider": provider,
+            }
         )
         return await self._client._apost("/v1/imessage/senders", data=payload)
 
@@ -331,8 +387,10 @@ class ImessageResource:
         self, *, include_canceled: bool | None = False
     ) -> dict[str, Any]:
         """List iMessage sender orders (async)"""
-        params = self._build_params(
-            include_canceled=include_canceled,
+        params = self._build_query(
+            {
+                "includeCanceled": include_canceled,
+            }
         )
         return await self._client._aget("/v1/imessage/senders/order", params=params)
 
@@ -351,17 +409,19 @@ class ImessageResource:
         contact: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Order a new iMessage sender (async)"""
-        payload = self._build_payload(
-            profile_id=profile_id,
-            kind=kind,
-            region=region,
-            available_number_id=available_number_id,
-            zip_code=zip_code,
-            email_name=email_name,
-            email_domain=email_domain,
-            display_name=display_name,
-            purchase_intent_id=purchase_intent_id,
-            contact=contact,
+        payload = self._build_body(
+            {
+                "profileId": profile_id,
+                "kind": kind,
+                "region": region,
+                "availableNumberId": available_number_id,
+                "zipCode": zip_code,
+                "emailName": email_name,
+                "emailDomain": email_domain,
+                "displayName": display_name,
+                "purchaseIntentId": purchase_intent_id,
+                "contact": contact,
+            }
         )
         return await self._client._apost("/v1/imessage/senders/order", data=payload)
 
@@ -377,9 +437,11 @@ class ImessageResource:
         contact: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Update an iMessage sender (async)"""
-        payload = self._build_payload(
-            display_name=display_name,
-            contact=contact,
+        payload = self._build_body(
+            {
+                "displayName": display_name,
+                "contact": contact,
+            }
         )
         return await self._client._apatch(
             f"/v1/imessage/senders/{sender_id}", data=payload
@@ -399,12 +461,14 @@ class ImessageResource:
         skip: int | None = 0,
     ) -> dict[str, Any]:
         """List iMessage audience (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            status=status,
-            search=search,
-            limit=limit,
-            skip=skip,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "status": status,
+                "search": search,
+                "limit": limit,
+                "skip": skip,
+            }
         )
         return await self._client._aget("/v1/imessage/audience", params=params)
 
@@ -414,8 +478,10 @@ class ImessageResource:
 
     async def aadd_imessage_sandbox_contact(self, handle: str) -> dict[str, Any]:
         """Add an iMessage sandbox contact (async)"""
-        payload = self._build_payload(
-            handle=handle,
+        payload = self._build_body(
+            {
+                "handle": handle,
+            }
         )
         return await self._client._apost("/v1/imessage/sandbox/contacts", data=payload)
 
@@ -429,10 +495,12 @@ class ImessageResource:
         self, account_id: str, conversation_id: str, subscribed: bool
     ) -> dict[str, Any]:
         """Subscribe or opt out an iMessage contact (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            conversation_id=conversation_id,
-            subscribed=subscribed,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "conversationId": conversation_id,
+                "subscribed": subscribed,
+            }
         )
         return await self._client._apost(
             "/v1/imessage/audience/subscription", data=payload
@@ -447,10 +515,12 @@ class ImessageResource:
         opt_in_code: str | None = None,
     ) -> dict[str, Any]:
         """Create a tracked iMessage opt-in link (async)"""
-        payload = self._build_payload(
-            body=body,
-            parameters=parameters,
-            opt_in_code=opt_in_code,
+        payload = self._build_body(
+            {
+                "body": body,
+                "parameters": parameters,
+                "optInCode": opt_in_code,
+            }
         )
         return await self._client._apost(
             f"/v1/imessage/senders/{sender_id}/opt-in-links", data=payload
@@ -460,8 +530,10 @@ class ImessageResource:
         self, *, region: str | None = None
     ) -> dict[str, Any]:
         """List instantly available iMessage numbers (async)"""
-        params = self._build_params(
-            region=region,
+        params = self._build_query(
+            {
+                "region": region,
+            }
         )
         return await self._client._aget(
             "/v1/imessage/senders/available-numbers", params=params
@@ -485,12 +557,14 @@ class ImessageResource:
         channel: str | None = "imessage",
     ) -> dict[str, Any]:
         """Start an iMessage group chat (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            contacts=contacts,
-            text=text,
-            name=name,
-            channel=channel,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "contacts": contacts,
+                "text": text,
+                "name": name,
+                "channel": channel,
+            }
         )
         return await self._client._apost("/v1/imessage/groups", data=payload)
 
@@ -498,8 +572,10 @@ class ImessageResource:
         self, conversation_id: str, account_id: str
     ) -> dict[str, Any]:
         """Get an iMessage group (async)"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return await self._client._aget(
             f"/v1/imessage/groups/{conversation_id}", params=params
@@ -514,10 +590,12 @@ class ImessageResource:
         photo_url: str | None = None,
     ) -> dict[str, Any]:
         """Rename an iMessage group or change its photo (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            name=name,
-            photo_url=photo_url,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "name": name,
+                "photoUrl": photo_url,
+            }
         )
         return await self._client._apatch(
             f"/v1/imessage/groups/{conversation_id}", data=payload
@@ -527,9 +605,11 @@ class ImessageResource:
         self, conversation_id: str, account_id: str, contact: str
     ) -> dict[str, Any]:
         """Add a participant to an iMessage group (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            contact=contact,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "contact": contact,
+            }
         )
         return await self._client._apost(
             f"/v1/imessage/groups/{conversation_id}/participants", data=payload
@@ -539,9 +619,11 @@ class ImessageResource:
         self, conversation_id: str, account_id: str, contact: str
     ) -> dict[str, Any]:
         """Remove a participant from an iMessage group (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            contact=contact,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "contact": contact,
+            }
         )
         return await self._client._adelete(
             f"/v1/imessage/groups/{conversation_id}/participants", params=params

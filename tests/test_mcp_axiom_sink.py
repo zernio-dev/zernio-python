@@ -9,7 +9,7 @@ from fastmcp import Client, FastMCP
 
 from late.mcp import axiom_sink, telemetry
 from late.mcp.axiom_sink import AxiomIngestHandler, axiom_handler_from_env
-from late.mcp.telemetry import ToolTelemetryMiddleware
+from late.mcp.middleware import ToolTelemetryMiddleware
 
 
 class RecordingIngest:

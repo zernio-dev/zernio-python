@@ -3,6 +3,7 @@ Late API client module.
 """
 
 from .base import BaseClient
+from .binary_response import BinaryResponse
 from .exceptions import (
     LateAPIError,
     LateAuthenticationError,
@@ -18,6 +19,7 @@ from .rate_limiter import RateLimiter, RateLimitInfo
 
 __all__ = [
     "BaseClient",
+    "BinaryResponse",
     "LateAPIError",
     "LateAuthenticationError",
     "LateConnectionError",

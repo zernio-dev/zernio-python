@@ -21,13 +21,16 @@ class ProfilesResource:
     def __init__(self, client: BaseClient) -> None:
         self._client = client
 
-    def _build_params(self, **kwargs: Any) -> dict[str, Any]:
-        """Build query parameters, filtering None and empty-string values.
+    def _build_query(self, fields: dict[str, Any]) -> dict[str, Any]:
+        """Build query parameters keyed by their wire names, as given.
 
-        Empty strings are filtered because MCP tool wrappers pass ``""`` as the
-        default for optional string args, and the API rejects empty query
-        values (e.g. ``platform=``) with a 400. Filtering here keeps both direct
-        SDK callers and MCP tool callers safe.
+        Generated methods pass the parameter names exactly as the OpenAPI
+        spec declares them, so no casing rule is applied here.
+
+        None and empty strings are filtered because MCP tool wrappers pass
+        ``""`` as the default for optional string args, and the API rejects
+        empty query values (e.g. ``platform=``) with a 400. Filtering here
+        keeps both direct SDK callers and MCP tool callers safe.
 
         Enum members are unwrapped to their value: httpx serializes params
         via str(), which yields "ClassName.MEMBER" for Enum members, so
@@ -36,42 +39,65 @@ class ProfilesResource:
         """
         from enum import Enum
 
-        def to_camel(s: str) -> str:
-            parts = s.split("_")
-            return parts[0] + "".join(p.title() for p in parts[1:])
-
         result: dict[str, Any] = {}
-        for k, v in kwargs.items():
+        for k, v in fields.items():
             if isinstance(v, Enum):
                 v = v.value
             if v is None or v == "":
                 continue
-            result[to_camel(k)] = v
+            result[k] = v
         return result
 
-    def _build_payload(self, **kwargs: Any) -> dict[str, Any]:
-        """Build request payload, filtering None values. Enum members are
-        unwrapped to their value so JSON bodies carry e.g. "failed" rather
-        than a raw Enum member (plain Enum members are not JSON-serializable).
+    def _build_body(self, fields: dict[str, Any]) -> dict[str, Any]:
+        """Build a JSON request body keyed by its wire names, as given.
+
+        Generated methods pass the property names exactly as the request
+        body schema declares them: most are camelCase, but some routes read
+        snake_case (``ice_breakers``, ``message_send_ttl_seconds``), so no
+        casing rule is applied here. None values are dropped, Enum members
+        are unwrapped to their value (e.g. "failed") and datetimes are sent
+        as ISO 8601 strings.
         """
         from datetime import datetime
         from enum import Enum
 
-        def to_camel(s: str) -> str:
-            parts = s.split("_")
-            return parts[0] + "".join(p.title() for p in parts[1:])
-
         result: dict[str, Any] = {}
-        for k, v in kwargs.items():
+        for k, v in fields.items():
             if isinstance(v, Enum):
                 v = v.value
             if v is None:
                 continue
             if isinstance(v, datetime):
-                result[to_camel(k)] = v.isoformat()
+                result[k] = v.isoformat()
             else:
-                result[to_camel(k)] = v
+                result[k] = v
         return result
+
+    def _build_params(self, **kwargs: Any) -> dict[str, Any]:
+        """Build query parameters from snake_case kwargs, camelCasing each key.
+
+        For hand-written resource methods, whose endpoints take camelCase
+        names. Generated methods use _build_query with the spec's names.
+        """
+
+        def to_camel(s: str) -> str:
+            parts = s.split("_")
+            return parts[0] + "".join(p.title() for p in parts[1:])
+
+        return self._build_query({to_camel(k): v for k, v in kwargs.items()})
+
+    def _build_payload(self, **kwargs: Any) -> dict[str, Any]:
+        """Build a request body from snake_case kwargs, camelCasing each key.
+
+        For hand-written resource methods, whose endpoints take camelCase
+        names. Generated methods use _build_body with the spec's names.
+        """
+
+        def to_camel(s: str) -> str:
+            parts = s.split("_")
+            return parts[0] + "".join(p.title() for p in parts[1:])
+
+        return self._build_body({to_camel(k): v for k, v in kwargs.items()})
 
     def list_profiles(
         self,
@@ -83,12 +109,14 @@ class ProfilesResource:
         skip: int | None = None,
     ) -> dict[str, Any]:
         """List profiles"""
-        params = self._build_params(
-            include_over_limit=include_over_limit,
-            name=name,
-            external_id=external_id,
-            limit=limit,
-            skip=skip,
+        params = self._build_query(
+            {
+                "includeOverLimit": include_over_limit,
+                "name": name,
+                "externalId": external_id,
+                "limit": limit,
+                "skip": skip,
+            }
         )
         return self._client._get("/v1/profiles", params=params)
 
@@ -107,16 +135,18 @@ class ProfilesResource:
         max_forwarded_minutes_per_day: int | None = None,
     ) -> dict[str, Any]:
         """Create profile"""
-        payload = self._build_payload(
-            name=name,
-            description=description,
-            color=color,
-            timezone=timezone,
-            external_id=external_id,
-            content_retention=content_retention,
-            max_outbound_calls_per_hour=max_outbound_calls_per_hour,
-            max_daily_call_spend_usd=max_daily_call_spend_usd,
-            max_forwarded_minutes_per_day=max_forwarded_minutes_per_day,
+        payload = self._build_body(
+            {
+                "name": name,
+                "description": description,
+                "color": color,
+                "timezone": timezone,
+                "externalId": external_id,
+                "contentRetention": content_retention,
+                "maxOutboundCallsPerHour": max_outbound_calls_per_hour,
+                "maxDailyCallSpendUsd": max_daily_call_spend_usd,
+                "maxForwardedMinutesPerDay": max_forwarded_minutes_per_day,
+            }
         )
         headers: dict[str, str] = {}
         if idempotency_key is not None:
@@ -143,17 +173,19 @@ class ProfilesResource:
         max_forwarded_minutes_per_day: Any | None = None,
     ) -> dict[str, Any]:
         """Update profile"""
-        payload = self._build_payload(
-            name=name,
-            description=description,
-            color=color,
-            timezone=timezone,
-            external_id=external_id,
-            is_default=is_default,
-            content_retention=content_retention,
-            max_outbound_calls_per_hour=max_outbound_calls_per_hour,
-            max_daily_call_spend_usd=max_daily_call_spend_usd,
-            max_forwarded_minutes_per_day=max_forwarded_minutes_per_day,
+        payload = self._build_body(
+            {
+                "name": name,
+                "description": description,
+                "color": color,
+                "timezone": timezone,
+                "externalId": external_id,
+                "isDefault": is_default,
+                "contentRetention": content_retention,
+                "maxOutboundCallsPerHour": max_outbound_calls_per_hour,
+                "maxDailyCallSpendUsd": max_daily_call_spend_usd,
+                "maxForwardedMinutesPerDay": max_forwarded_minutes_per_day,
+            }
         )
         return self._client._put(f"/v1/profiles/{profile_id}", data=payload)
 
@@ -175,12 +207,14 @@ class ProfilesResource:
         skip: int | None = None,
     ) -> dict[str, Any]:
         """List profiles (async)"""
-        params = self._build_params(
-            include_over_limit=include_over_limit,
-            name=name,
-            external_id=external_id,
-            limit=limit,
-            skip=skip,
+        params = self._build_query(
+            {
+                "includeOverLimit": include_over_limit,
+                "name": name,
+                "externalId": external_id,
+                "limit": limit,
+                "skip": skip,
+            }
         )
         return await self._client._aget("/v1/profiles", params=params)
 
@@ -199,16 +233,18 @@ class ProfilesResource:
         max_forwarded_minutes_per_day: int | None = None,
     ) -> dict[str, Any]:
         """Create profile (async)"""
-        payload = self._build_payload(
-            name=name,
-            description=description,
-            color=color,
-            timezone=timezone,
-            external_id=external_id,
-            content_retention=content_retention,
-            max_outbound_calls_per_hour=max_outbound_calls_per_hour,
-            max_daily_call_spend_usd=max_daily_call_spend_usd,
-            max_forwarded_minutes_per_day=max_forwarded_minutes_per_day,
+        payload = self._build_body(
+            {
+                "name": name,
+                "description": description,
+                "color": color,
+                "timezone": timezone,
+                "externalId": external_id,
+                "contentRetention": content_retention,
+                "maxOutboundCallsPerHour": max_outbound_calls_per_hour,
+                "maxDailyCallSpendUsd": max_daily_call_spend_usd,
+                "maxForwardedMinutesPerDay": max_forwarded_minutes_per_day,
+            }
         )
         headers: dict[str, str] = {}
         if idempotency_key is not None:
@@ -235,17 +271,19 @@ class ProfilesResource:
         max_forwarded_minutes_per_day: Any | None = None,
     ) -> dict[str, Any]:
         """Update profile (async)"""
-        payload = self._build_payload(
-            name=name,
-            description=description,
-            color=color,
-            timezone=timezone,
-            external_id=external_id,
-            is_default=is_default,
-            content_retention=content_retention,
-            max_outbound_calls_per_hour=max_outbound_calls_per_hour,
-            max_daily_call_spend_usd=max_daily_call_spend_usd,
-            max_forwarded_minutes_per_day=max_forwarded_minutes_per_day,
+        payload = self._build_body(
+            {
+                "name": name,
+                "description": description,
+                "color": color,
+                "timezone": timezone,
+                "externalId": external_id,
+                "isDefault": is_default,
+                "contentRetention": content_retention,
+                "maxOutboundCallsPerHour": max_outbound_calls_per_hour,
+                "maxDailyCallSpendUsd": max_daily_call_spend_usd,
+                "maxForwardedMinutesPerDay": max_forwarded_minutes_per_day,
+            }
         )
         return await self._client._aput(f"/v1/profiles/{profile_id}", data=payload)
 

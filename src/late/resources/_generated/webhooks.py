@@ -21,13 +21,16 @@ class WebhooksResource:
     def __init__(self, client: BaseClient) -> None:
         self._client = client
 
-    def _build_params(self, **kwargs: Any) -> dict[str, Any]:
-        """Build query parameters, filtering None and empty-string values.
+    def _build_query(self, fields: dict[str, Any]) -> dict[str, Any]:
+        """Build query parameters keyed by their wire names, as given.
 
-        Empty strings are filtered because MCP tool wrappers pass ``""`` as the
-        default for optional string args, and the API rejects empty query
-        values (e.g. ``platform=``) with a 400. Filtering here keeps both direct
-        SDK callers and MCP tool callers safe.
+        Generated methods pass the parameter names exactly as the OpenAPI
+        spec declares them, so no casing rule is applied here.
+
+        None and empty strings are filtered because MCP tool wrappers pass
+        ``""`` as the default for optional string args, and the API rejects
+        empty query values (e.g. ``platform=``) with a 400. Filtering here
+        keeps both direct SDK callers and MCP tool callers safe.
 
         Enum members are unwrapped to their value: httpx serializes params
         via str(), which yields "ClassName.MEMBER" for Enum members, so
@@ -36,42 +39,65 @@ class WebhooksResource:
         """
         from enum import Enum
 
-        def to_camel(s: str) -> str:
-            parts = s.split("_")
-            return parts[0] + "".join(p.title() for p in parts[1:])
-
         result: dict[str, Any] = {}
-        for k, v in kwargs.items():
+        for k, v in fields.items():
             if isinstance(v, Enum):
                 v = v.value
             if v is None or v == "":
                 continue
-            result[to_camel(k)] = v
+            result[k] = v
         return result
 
-    def _build_payload(self, **kwargs: Any) -> dict[str, Any]:
-        """Build request payload, filtering None values. Enum members are
-        unwrapped to their value so JSON bodies carry e.g. "failed" rather
-        than a raw Enum member (plain Enum members are not JSON-serializable).
+    def _build_body(self, fields: dict[str, Any]) -> dict[str, Any]:
+        """Build a JSON request body keyed by its wire names, as given.
+
+        Generated methods pass the property names exactly as the request
+        body schema declares them: most are camelCase, but some routes read
+        snake_case (``ice_breakers``, ``message_send_ttl_seconds``), so no
+        casing rule is applied here. None values are dropped, Enum members
+        are unwrapped to their value (e.g. "failed") and datetimes are sent
+        as ISO 8601 strings.
         """
         from datetime import datetime
         from enum import Enum
 
-        def to_camel(s: str) -> str:
-            parts = s.split("_")
-            return parts[0] + "".join(p.title() for p in parts[1:])
-
         result: dict[str, Any] = {}
-        for k, v in kwargs.items():
+        for k, v in fields.items():
             if isinstance(v, Enum):
                 v = v.value
             if v is None:
                 continue
             if isinstance(v, datetime):
-                result[to_camel(k)] = v.isoformat()
+                result[k] = v.isoformat()
             else:
-                result[to_camel(k)] = v
+                result[k] = v
         return result
+
+    def _build_params(self, **kwargs: Any) -> dict[str, Any]:
+        """Build query parameters from snake_case kwargs, camelCasing each key.
+
+        For hand-written resource methods, whose endpoints take camelCase
+        names. Generated methods use _build_query with the spec's names.
+        """
+
+        def to_camel(s: str) -> str:
+            parts = s.split("_")
+            return parts[0] + "".join(p.title() for p in parts[1:])
+
+        return self._build_query({to_camel(k): v for k, v in kwargs.items()})
+
+    def _build_payload(self, **kwargs: Any) -> dict[str, Any]:
+        """Build a request body from snake_case kwargs, camelCasing each key.
+
+        For hand-written resource methods, whose endpoints take camelCase
+        names. Generated methods use _build_body with the spec's names.
+        """
+
+        def to_camel(s: str) -> str:
+            parts = s.split("_")
+            return parts[0] + "".join(p.title() for p in parts[1:])
+
+        return self._build_body({to_camel(k): v for k, v in kwargs.items()})
 
     def get_webhook_settings(self) -> dict[str, Any]:
         """List webhooks"""
@@ -91,16 +117,18 @@ class WebhooksResource:
         account_ids: list[str] | None = None,
     ) -> dict[str, Any]:
         """Create webhook"""
-        payload = self._build_payload(
-            name=name,
-            url=url,
-            secret=secret,
-            events=events,
-            is_active=is_active,
-            custom_headers=custom_headers,
-            disabled_resource_groups=disabled_resource_groups,
-            profile_ids=profile_ids,
-            account_ids=account_ids,
+        payload = self._build_body(
+            {
+                "name": name,
+                "url": url,
+                "secret": secret,
+                "events": events,
+                "isActive": is_active,
+                "customHeaders": custom_headers,
+                "disabledResourceGroups": disabled_resource_groups,
+                "profileIds": profile_ids,
+                "accountIds": account_ids,
+            }
         )
         return self._client._post("/v1/webhooks/settings", data=payload)
 
@@ -120,18 +148,20 @@ class WebhooksResource:
         account_ids: list[str] | None = None,
     ) -> dict[str, Any]:
         """Update webhook"""
-        payload = self._build_payload(
-            webhook_id=webhook_id,
-            _id=_id,
-            name=name,
-            url=url,
-            secret=secret,
-            events=events,
-            is_active=is_active,
-            custom_headers=custom_headers,
-            disabled_resource_groups=disabled_resource_groups,
-            profile_ids=profile_ids,
-            account_ids=account_ids,
+        payload = self._build_body(
+            {
+                "webhookId": webhook_id,
+                "_id": _id,
+                "name": name,
+                "url": url,
+                "secret": secret,
+                "events": events,
+                "isActive": is_active,
+                "customHeaders": custom_headers,
+                "disabledResourceGroups": disabled_resource_groups,
+                "profileIds": profile_ids,
+                "accountIds": account_ids,
+            }
         )
         return self._client._put("/v1/webhooks/settings", data=payload)
 
@@ -139,9 +169,11 @@ class WebhooksResource:
         self, *, webhook_id: str | None = None, id: str | None = None
     ) -> dict[str, Any]:
         """Delete webhook"""
-        params = self._build_params(
-            webhook_id=webhook_id,
-            id=id,
+        params = self._build_query(
+            {
+                "webhookId": webhook_id,
+                "id": id,
+            }
         )
         return self._client._delete("/v1/webhooks/settings", params=params)
 
@@ -156,21 +188,25 @@ class WebhooksResource:
         event_id: str | None = None,
     ) -> dict[str, Any]:
         """List webhook delivery logs"""
-        params = self._build_params(
-            limit=limit,
-            skip=skip,
-            status=status,
-            event=event,
-            webhook_id=webhook_id,
-            event_id=event_id,
+        params = self._build_query(
+            {
+                "limit": limit,
+                "skip": skip,
+                "status": status,
+                "event": event,
+                "webhookId": webhook_id,
+                "eventId": event_id,
+            }
         )
         return self._client._get("/v1/webhooks/logs", params=params)
 
     def redeliver_webhook_event(self, webhook_id: str, event_id: str) -> dict[str, Any]:
         """Redeliver a webhook event"""
-        payload = self._build_payload(
-            webhook_id=webhook_id,
-            event_id=event_id,
+        payload = self._build_body(
+            {
+                "webhookId": webhook_id,
+                "eventId": event_id,
+            }
         )
         return self._client._post("/v1/webhooks/logs/redeliver", data=payload)
 
@@ -178,9 +214,11 @@ class WebhooksResource:
         self, webhook_id: str, *, event: str | None = None
     ) -> dict[str, Any]:
         """Send test webhook"""
-        payload = self._build_payload(
-            webhook_id=webhook_id,
-            event=event,
+        payload = self._build_body(
+            {
+                "webhookId": webhook_id,
+                "event": event,
+            }
         )
         return self._client._post("/v1/webhooks/test", data=payload)
 
@@ -202,16 +240,18 @@ class WebhooksResource:
         account_ids: list[str] | None = None,
     ) -> dict[str, Any]:
         """Create webhook (async)"""
-        payload = self._build_payload(
-            name=name,
-            url=url,
-            secret=secret,
-            events=events,
-            is_active=is_active,
-            custom_headers=custom_headers,
-            disabled_resource_groups=disabled_resource_groups,
-            profile_ids=profile_ids,
-            account_ids=account_ids,
+        payload = self._build_body(
+            {
+                "name": name,
+                "url": url,
+                "secret": secret,
+                "events": events,
+                "isActive": is_active,
+                "customHeaders": custom_headers,
+                "disabledResourceGroups": disabled_resource_groups,
+                "profileIds": profile_ids,
+                "accountIds": account_ids,
+            }
         )
         return await self._client._apost("/v1/webhooks/settings", data=payload)
 
@@ -231,18 +271,20 @@ class WebhooksResource:
         account_ids: list[str] | None = None,
     ) -> dict[str, Any]:
         """Update webhook (async)"""
-        payload = self._build_payload(
-            webhook_id=webhook_id,
-            _id=_id,
-            name=name,
-            url=url,
-            secret=secret,
-            events=events,
-            is_active=is_active,
-            custom_headers=custom_headers,
-            disabled_resource_groups=disabled_resource_groups,
-            profile_ids=profile_ids,
-            account_ids=account_ids,
+        payload = self._build_body(
+            {
+                "webhookId": webhook_id,
+                "_id": _id,
+                "name": name,
+                "url": url,
+                "secret": secret,
+                "events": events,
+                "isActive": is_active,
+                "customHeaders": custom_headers,
+                "disabledResourceGroups": disabled_resource_groups,
+                "profileIds": profile_ids,
+                "accountIds": account_ids,
+            }
         )
         return await self._client._aput("/v1/webhooks/settings", data=payload)
 
@@ -250,9 +292,11 @@ class WebhooksResource:
         self, *, webhook_id: str | None = None, id: str | None = None
     ) -> dict[str, Any]:
         """Delete webhook (async)"""
-        params = self._build_params(
-            webhook_id=webhook_id,
-            id=id,
+        params = self._build_query(
+            {
+                "webhookId": webhook_id,
+                "id": id,
+            }
         )
         return await self._client._adelete("/v1/webhooks/settings", params=params)
 
@@ -267,13 +311,15 @@ class WebhooksResource:
         event_id: str | None = None,
     ) -> dict[str, Any]:
         """List webhook delivery logs (async)"""
-        params = self._build_params(
-            limit=limit,
-            skip=skip,
-            status=status,
-            event=event,
-            webhook_id=webhook_id,
-            event_id=event_id,
+        params = self._build_query(
+            {
+                "limit": limit,
+                "skip": skip,
+                "status": status,
+                "event": event,
+                "webhookId": webhook_id,
+                "eventId": event_id,
+            }
         )
         return await self._client._aget("/v1/webhooks/logs", params=params)
 
@@ -281,9 +327,11 @@ class WebhooksResource:
         self, webhook_id: str, event_id: str
     ) -> dict[str, Any]:
         """Redeliver a webhook event (async)"""
-        payload = self._build_payload(
-            webhook_id=webhook_id,
-            event_id=event_id,
+        payload = self._build_body(
+            {
+                "webhookId": webhook_id,
+                "eventId": event_id,
+            }
         )
         return await self._client._apost("/v1/webhooks/logs/redeliver", data=payload)
 
@@ -291,8 +339,10 @@ class WebhooksResource:
         self, webhook_id: str, *, event: str | None = None
     ) -> dict[str, Any]:
         """Send test webhook (async)"""
-        payload = self._build_payload(
-            webhook_id=webhook_id,
-            event=event,
+        payload = self._build_body(
+            {
+                "webhookId": webhook_id,
+                "event": event,
+            }
         )
         return await self._client._apost("/v1/webhooks/test", data=payload)

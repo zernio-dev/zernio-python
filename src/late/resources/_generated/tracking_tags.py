@@ -21,13 +21,16 @@ class TrackingTagsResource:
     def __init__(self, client: BaseClient) -> None:
         self._client = client
 
-    def _build_params(self, **kwargs: Any) -> dict[str, Any]:
-        """Build query parameters, filtering None and empty-string values.
+    def _build_query(self, fields: dict[str, Any]) -> dict[str, Any]:
+        """Build query parameters keyed by their wire names, as given.
 
-        Empty strings are filtered because MCP tool wrappers pass ``""`` as the
-        default for optional string args, and the API rejects empty query
-        values (e.g. ``platform=``) with a 400. Filtering here keeps both direct
-        SDK callers and MCP tool callers safe.
+        Generated methods pass the parameter names exactly as the OpenAPI
+        spec declares them, so no casing rule is applied here.
+
+        None and empty strings are filtered because MCP tool wrappers pass
+        ``""`` as the default for optional string args, and the API rejects
+        empty query values (e.g. ``platform=``) with a 400. Filtering here
+        keeps both direct SDK callers and MCP tool callers safe.
 
         Enum members are unwrapped to their value: httpx serializes params
         via str(), which yields "ClassName.MEMBER" for Enum members, so
@@ -36,42 +39,65 @@ class TrackingTagsResource:
         """
         from enum import Enum
 
-        def to_camel(s: str) -> str:
-            parts = s.split("_")
-            return parts[0] + "".join(p.title() for p in parts[1:])
-
         result: dict[str, Any] = {}
-        for k, v in kwargs.items():
+        for k, v in fields.items():
             if isinstance(v, Enum):
                 v = v.value
             if v is None or v == "":
                 continue
-            result[to_camel(k)] = v
+            result[k] = v
         return result
 
-    def _build_payload(self, **kwargs: Any) -> dict[str, Any]:
-        """Build request payload, filtering None values. Enum members are
-        unwrapped to their value so JSON bodies carry e.g. "failed" rather
-        than a raw Enum member (plain Enum members are not JSON-serializable).
+    def _build_body(self, fields: dict[str, Any]) -> dict[str, Any]:
+        """Build a JSON request body keyed by its wire names, as given.
+
+        Generated methods pass the property names exactly as the request
+        body schema declares them: most are camelCase, but some routes read
+        snake_case (``ice_breakers``, ``message_send_ttl_seconds``), so no
+        casing rule is applied here. None values are dropped, Enum members
+        are unwrapped to their value (e.g. "failed") and datetimes are sent
+        as ISO 8601 strings.
         """
         from datetime import datetime
         from enum import Enum
 
-        def to_camel(s: str) -> str:
-            parts = s.split("_")
-            return parts[0] + "".join(p.title() for p in parts[1:])
-
         result: dict[str, Any] = {}
-        for k, v in kwargs.items():
+        for k, v in fields.items():
             if isinstance(v, Enum):
                 v = v.value
             if v is None:
                 continue
             if isinstance(v, datetime):
-                result[to_camel(k)] = v.isoformat()
+                result[k] = v.isoformat()
             else:
-                result[to_camel(k)] = v
+                result[k] = v
         return result
+
+    def _build_params(self, **kwargs: Any) -> dict[str, Any]:
+        """Build query parameters from snake_case kwargs, camelCasing each key.
+
+        For hand-written resource methods, whose endpoints take camelCase
+        names. Generated methods use _build_query with the spec's names.
+        """
+
+        def to_camel(s: str) -> str:
+            parts = s.split("_")
+            return parts[0] + "".join(p.title() for p in parts[1:])
+
+        return self._build_query({to_camel(k): v for k, v in kwargs.items()})
+
+    def _build_payload(self, **kwargs: Any) -> dict[str, Any]:
+        """Build a request body from snake_case kwargs, camelCasing each key.
+
+        For hand-written resource methods, whose endpoints take camelCase
+        names. Generated methods use _build_body with the spec's names.
+        """
+
+        def to_camel(s: str) -> str:
+            parts = s.split("_")
+            return parts[0] + "".join(p.title() for p in parts[1:])
+
+        return self._build_body({to_camel(k): v for k, v in kwargs.items()})
 
     def get_ad_tracking_tags(self, ad_id: str) -> dict[str, Any]:
         """Get ad tracking tags"""
@@ -89,13 +115,15 @@ class TrackingTagsResource:
         custom_value_parameters: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Set ad tracking tags"""
-        payload = self._build_payload(
-            url_tags=url_tags,
-            creative=creative,
-            tracking_url_template=tracking_url_template,
-            final_url_suffix=final_url_suffix,
-            dynamic_value_parameters=dynamic_value_parameters,
-            custom_value_parameters=custom_value_parameters,
+        payload = self._build_body(
+            {
+                "urlTags": url_tags,
+                "creative": creative,
+                "trackingUrlTemplate": tracking_url_template,
+                "finalUrlSuffix": final_url_suffix,
+                "dynamicValueParameters": dynamic_value_parameters,
+                "customValueParameters": custom_value_parameters,
+            }
         )
         return self._client._patch(f"/v1/ads/{ad_id}/tracking-tags", data=payload)
 
@@ -103,8 +131,10 @@ class TrackingTagsResource:
         self, account_id: str, *, ad_account_id: str | None = None
     ) -> dict[str, Any]:
         """List tracking tags"""
-        params = self._build_params(
-            ad_account_id=ad_account_id,
+        params = self._build_query(
+            {
+                "adAccountId": ad_account_id,
+            }
         )
         return self._client._get(
             f"/v1/accounts/{account_id}/tracking-tags", params=params
@@ -120,11 +150,13 @@ class TrackingTagsResource:
         automatic_matching_fields: list[str] | None = None,
     ) -> dict[str, Any]:
         """Create a tracking tag"""
-        payload = self._build_payload(
-            ad_account_id=ad_account_id,
-            name=name,
-            default_event_type=default_event_type,
-            automatic_matching_fields=automatic_matching_fields,
+        payload = self._build_body(
+            {
+                "adAccountId": ad_account_id,
+                "name": name,
+                "defaultEventType": default_event_type,
+                "automaticMatchingFields": automatic_matching_fields,
+            }
         )
         return self._client._post(
             f"/v1/accounts/{account_id}/tracking-tags", data=payload
@@ -134,8 +166,10 @@ class TrackingTagsResource:
         self, account_id: str, tag_id: str, *, ad_account_id: str | None = None
     ) -> dict[str, Any]:
         """Get a tracking tag"""
-        params = self._build_params(
-            ad_account_id=ad_account_id,
+        params = self._build_query(
+            {
+                "adAccountId": ad_account_id,
+            }
         )
         return self._client._get(
             f"/v1/accounts/{account_id}/tracking-tags/{tag_id}", params=params
@@ -156,15 +190,17 @@ class TrackingTagsResource:
         auto_tagging: bool | None = None,
     ) -> dict[str, Any]:
         """Update a tracking tag"""
-        payload = self._build_payload(
-            ad_account_id=ad_account_id,
-            name=name,
-            enable_automatic_matching=enable_automatic_matching,
-            automatic_matching_fields=automatic_matching_fields,
-            first_party_cookie_status=first_party_cookie_status,
-            data_use_setting=data_use_setting,
-            enable_first_party_cookies=enable_first_party_cookies,
-            auto_tagging=auto_tagging,
+        payload = self._build_body(
+            {
+                "adAccountId": ad_account_id,
+                "name": name,
+                "enableAutomaticMatching": enable_automatic_matching,
+                "automaticMatchingFields": automatic_matching_fields,
+                "firstPartyCookieStatus": first_party_cookie_status,
+                "dataUseSetting": data_use_setting,
+                "enableFirstPartyCookies": enable_first_party_cookies,
+                "autoTagging": auto_tagging,
+            }
         )
         return self._client._patch(
             f"/v1/accounts/{account_id}/tracking-tags/{tag_id}", data=payload
@@ -182,8 +218,10 @@ class TrackingTagsResource:
         self, account_id: str, tag_id: str, ad_account_id: str
     ) -> dict[str, Any]:
         """Share with an ad account"""
-        payload = self._build_payload(
-            ad_account_id=ad_account_id,
+        payload = self._build_body(
+            {
+                "adAccountId": ad_account_id,
+            }
         )
         return self._client._post(
             f"/v1/accounts/{account_id}/tracking-tags/{tag_id}/shared-accounts",
@@ -194,8 +232,10 @@ class TrackingTagsResource:
         self, account_id: str, tag_id: str, *, ad_account_id: str | None = None
     ) -> dict[str, Any]:
         """Stop sharing with an account"""
-        params = self._build_params(
-            ad_account_id=ad_account_id,
+        params = self._build_query(
+            {
+                "adAccountId": ad_account_id,
+            }
         )
         return self._client._delete(
             f"/v1/accounts/{account_id}/tracking-tags/{tag_id}/shared-accounts",
@@ -213,11 +253,13 @@ class TrackingTagsResource:
         verify_homepage: bool | None = True,
     ) -> dict[str, Any]:
         """Install on a Shopify, WordPress, Wix or Webflow site"""
-        payload = self._build_payload(
-            store_account_id=store_account_id,
-            ad_account_id=ad_account_id,
-            sidebar_id=sidebar_id,
-            verify_homepage=verify_homepage,
+        payload = self._build_body(
+            {
+                "storeAccountId": store_account_id,
+                "adAccountId": ad_account_id,
+                "sidebarId": sidebar_id,
+                "verifyHomepage": verify_homepage,
+            }
         )
         return self._client._post(
             f"/v1/accounts/{account_id}/tracking-tags/{tag_id}/install", data=payload
@@ -232,9 +274,11 @@ class TrackingTagsResource:
         ad_account_id: str | None = None,
     ) -> dict[str, Any]:
         """Get store install status"""
-        params = self._build_params(
-            store_account_id=store_account_id,
-            ad_account_id=ad_account_id,
+        params = self._build_query(
+            {
+                "storeAccountId": store_account_id,
+                "adAccountId": ad_account_id,
+            }
         )
         return self._client._get(
             f"/v1/accounts/{account_id}/tracking-tags/{tag_id}/install", params=params
@@ -249,9 +293,11 @@ class TrackingTagsResource:
         ad_account_id: str | None = None,
     ) -> dict[str, Any]:
         """Remove from a Shopify, WordPress, Wix or Webflow site"""
-        params = self._build_params(
-            store_account_id=store_account_id,
-            ad_account_id=ad_account_id,
+        params = self._build_query(
+            {
+                "storeAccountId": store_account_id,
+                "adAccountId": ad_account_id,
+            }
         )
         return self._client._delete(
             f"/v1/accounts/{account_id}/tracking-tags/{tag_id}/install", params=params
@@ -261,8 +307,10 @@ class TrackingTagsResource:
         self, account_id: str, tag_id: str, *, ad_account_id: str | None = None
     ) -> dict[str, Any]:
         """List conversion events"""
-        params = self._build_params(
-            ad_account_id=ad_account_id,
+        params = self._build_query(
+            {
+                "adAccountId": ad_account_id,
+            }
         )
         return self._client._get(
             f"/v1/accounts/{account_id}/tracking-tags/{tag_id}/events", params=params
@@ -285,17 +333,19 @@ class TrackingTagsResource:
         url_contains: str | None = None,
     ) -> dict[str, Any]:
         """Create a conversion event"""
-        payload = self._build_payload(
-            ad_account_id=ad_account_id,
-            name=name,
-            type=type,
-            site_event=site_event,
-            enabled=enabled,
-            default_value=default_value,
-            currency=currency,
-            click_window_days=click_window_days,
-            view_window_days=view_window_days,
-            url_contains=url_contains,
+        payload = self._build_body(
+            {
+                "adAccountId": ad_account_id,
+                "name": name,
+                "type": type,
+                "siteEvent": site_event,
+                "enabled": enabled,
+                "defaultValue": default_value,
+                "currency": currency,
+                "clickWindowDays": click_window_days,
+                "viewWindowDays": view_window_days,
+                "urlContains": url_contains,
+            }
         )
         return self._client._post(
             f"/v1/accounts/{account_id}/tracking-tags/{tag_id}/events", data=payload
@@ -319,17 +369,19 @@ class TrackingTagsResource:
         url_contains: str | None = None,
     ) -> dict[str, Any]:
         """Update a conversion event"""
-        payload = self._build_payload(
-            ad_account_id=ad_account_id,
-            name=name,
-            type=type,
-            site_event=site_event,
-            enabled=enabled,
-            default_value=default_value,
-            currency=currency,
-            click_window_days=click_window_days,
-            view_window_days=view_window_days,
-            url_contains=url_contains,
+        payload = self._build_body(
+            {
+                "adAccountId": ad_account_id,
+                "name": name,
+                "type": type,
+                "siteEvent": site_event,
+                "enabled": enabled,
+                "defaultValue": default_value,
+                "currency": currency,
+                "clickWindowDays": click_window_days,
+                "viewWindowDays": view_window_days,
+                "urlContains": url_contains,
+            }
         )
         return self._client._patch(
             f"/v1/accounts/{account_id}/tracking-tags/{tag_id}/events/{event_id}",
@@ -345,8 +397,10 @@ class TrackingTagsResource:
         ad_account_id: str | None = None,
     ) -> dict[str, Any]:
         """Delete a conversion event"""
-        params = self._build_params(
-            ad_account_id=ad_account_id,
+        params = self._build_query(
+            {
+                "adAccountId": ad_account_id,
+            }
         )
         return self._client._delete(
             f"/v1/accounts/{account_id}/tracking-tags/{tag_id}/events/{event_id}",
@@ -363,9 +417,11 @@ class TrackingTagsResource:
         self, account_id: str, tag_id: str, user_id: str, tasks: list[str]
     ) -> dict[str, Any]:
         """Assign a user to a tag"""
-        payload = self._build_payload(
-            user_id=user_id,
-            tasks=tasks,
+        payload = self._build_body(
+            {
+                "userId": user_id,
+                "tasks": tasks,
+            }
         )
         return self._client._post(
             f"/v1/accounts/{account_id}/tracking-tags/{tag_id}/users", data=payload
@@ -406,11 +462,13 @@ class TrackingTagsResource:
         end_time: int | None = None,
     ) -> dict[str, Any]:
         """Get aggregated event stats"""
-        params = self._build_params(
-            ad_account_id=ad_account_id,
-            aggregation=aggregation,
-            start_time=start_time,
-            end_time=end_time,
+        params = self._build_query(
+            {
+                "adAccountId": ad_account_id,
+                "aggregation": aggregation,
+                "startTime": start_time,
+                "endTime": end_time,
+            }
         )
         return self._client._get(
             f"/v1/accounts/{account_id}/tracking-tags/{tag_id}/stats", params=params
@@ -432,13 +490,15 @@ class TrackingTagsResource:
         custom_value_parameters: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Set ad tracking tags (async)"""
-        payload = self._build_payload(
-            url_tags=url_tags,
-            creative=creative,
-            tracking_url_template=tracking_url_template,
-            final_url_suffix=final_url_suffix,
-            dynamic_value_parameters=dynamic_value_parameters,
-            custom_value_parameters=custom_value_parameters,
+        payload = self._build_body(
+            {
+                "urlTags": url_tags,
+                "creative": creative,
+                "trackingUrlTemplate": tracking_url_template,
+                "finalUrlSuffix": final_url_suffix,
+                "dynamicValueParameters": dynamic_value_parameters,
+                "customValueParameters": custom_value_parameters,
+            }
         )
         return await self._client._apatch(
             f"/v1/ads/{ad_id}/tracking-tags", data=payload
@@ -448,8 +508,10 @@ class TrackingTagsResource:
         self, account_id: str, *, ad_account_id: str | None = None
     ) -> dict[str, Any]:
         """List tracking tags (async)"""
-        params = self._build_params(
-            ad_account_id=ad_account_id,
+        params = self._build_query(
+            {
+                "adAccountId": ad_account_id,
+            }
         )
         return await self._client._aget(
             f"/v1/accounts/{account_id}/tracking-tags", params=params
@@ -465,11 +527,13 @@ class TrackingTagsResource:
         automatic_matching_fields: list[str] | None = None,
     ) -> dict[str, Any]:
         """Create a tracking tag (async)"""
-        payload = self._build_payload(
-            ad_account_id=ad_account_id,
-            name=name,
-            default_event_type=default_event_type,
-            automatic_matching_fields=automatic_matching_fields,
+        payload = self._build_body(
+            {
+                "adAccountId": ad_account_id,
+                "name": name,
+                "defaultEventType": default_event_type,
+                "automaticMatchingFields": automatic_matching_fields,
+            }
         )
         return await self._client._apost(
             f"/v1/accounts/{account_id}/tracking-tags", data=payload
@@ -479,8 +543,10 @@ class TrackingTagsResource:
         self, account_id: str, tag_id: str, *, ad_account_id: str | None = None
     ) -> dict[str, Any]:
         """Get a tracking tag (async)"""
-        params = self._build_params(
-            ad_account_id=ad_account_id,
+        params = self._build_query(
+            {
+                "adAccountId": ad_account_id,
+            }
         )
         return await self._client._aget(
             f"/v1/accounts/{account_id}/tracking-tags/{tag_id}", params=params
@@ -501,15 +567,17 @@ class TrackingTagsResource:
         auto_tagging: bool | None = None,
     ) -> dict[str, Any]:
         """Update a tracking tag (async)"""
-        payload = self._build_payload(
-            ad_account_id=ad_account_id,
-            name=name,
-            enable_automatic_matching=enable_automatic_matching,
-            automatic_matching_fields=automatic_matching_fields,
-            first_party_cookie_status=first_party_cookie_status,
-            data_use_setting=data_use_setting,
-            enable_first_party_cookies=enable_first_party_cookies,
-            auto_tagging=auto_tagging,
+        payload = self._build_body(
+            {
+                "adAccountId": ad_account_id,
+                "name": name,
+                "enableAutomaticMatching": enable_automatic_matching,
+                "automaticMatchingFields": automatic_matching_fields,
+                "firstPartyCookieStatus": first_party_cookie_status,
+                "dataUseSetting": data_use_setting,
+                "enableFirstPartyCookies": enable_first_party_cookies,
+                "autoTagging": auto_tagging,
+            }
         )
         return await self._client._apatch(
             f"/v1/accounts/{account_id}/tracking-tags/{tag_id}", data=payload
@@ -527,8 +595,10 @@ class TrackingTagsResource:
         self, account_id: str, tag_id: str, ad_account_id: str
     ) -> dict[str, Any]:
         """Share with an ad account (async)"""
-        payload = self._build_payload(
-            ad_account_id=ad_account_id,
+        payload = self._build_body(
+            {
+                "adAccountId": ad_account_id,
+            }
         )
         return await self._client._apost(
             f"/v1/accounts/{account_id}/tracking-tags/{tag_id}/shared-accounts",
@@ -539,8 +609,10 @@ class TrackingTagsResource:
         self, account_id: str, tag_id: str, *, ad_account_id: str | None = None
     ) -> dict[str, Any]:
         """Stop sharing with an account (async)"""
-        params = self._build_params(
-            ad_account_id=ad_account_id,
+        params = self._build_query(
+            {
+                "adAccountId": ad_account_id,
+            }
         )
         return await self._client._adelete(
             f"/v1/accounts/{account_id}/tracking-tags/{tag_id}/shared-accounts",
@@ -558,11 +630,13 @@ class TrackingTagsResource:
         verify_homepage: bool | None = True,
     ) -> dict[str, Any]:
         """Install on a Shopify, WordPress, Wix or Webflow site (async)"""
-        payload = self._build_payload(
-            store_account_id=store_account_id,
-            ad_account_id=ad_account_id,
-            sidebar_id=sidebar_id,
-            verify_homepage=verify_homepage,
+        payload = self._build_body(
+            {
+                "storeAccountId": store_account_id,
+                "adAccountId": ad_account_id,
+                "sidebarId": sidebar_id,
+                "verifyHomepage": verify_homepage,
+            }
         )
         return await self._client._apost(
             f"/v1/accounts/{account_id}/tracking-tags/{tag_id}/install", data=payload
@@ -577,9 +651,11 @@ class TrackingTagsResource:
         ad_account_id: str | None = None,
     ) -> dict[str, Any]:
         """Get store install status (async)"""
-        params = self._build_params(
-            store_account_id=store_account_id,
-            ad_account_id=ad_account_id,
+        params = self._build_query(
+            {
+                "storeAccountId": store_account_id,
+                "adAccountId": ad_account_id,
+            }
         )
         return await self._client._aget(
             f"/v1/accounts/{account_id}/tracking-tags/{tag_id}/install", params=params
@@ -594,9 +670,11 @@ class TrackingTagsResource:
         ad_account_id: str | None = None,
     ) -> dict[str, Any]:
         """Remove from a Shopify, WordPress, Wix or Webflow site (async)"""
-        params = self._build_params(
-            store_account_id=store_account_id,
-            ad_account_id=ad_account_id,
+        params = self._build_query(
+            {
+                "storeAccountId": store_account_id,
+                "adAccountId": ad_account_id,
+            }
         )
         return await self._client._adelete(
             f"/v1/accounts/{account_id}/tracking-tags/{tag_id}/install", params=params
@@ -606,8 +684,10 @@ class TrackingTagsResource:
         self, account_id: str, tag_id: str, *, ad_account_id: str | None = None
     ) -> dict[str, Any]:
         """List conversion events (async)"""
-        params = self._build_params(
-            ad_account_id=ad_account_id,
+        params = self._build_query(
+            {
+                "adAccountId": ad_account_id,
+            }
         )
         return await self._client._aget(
             f"/v1/accounts/{account_id}/tracking-tags/{tag_id}/events", params=params
@@ -630,17 +710,19 @@ class TrackingTagsResource:
         url_contains: str | None = None,
     ) -> dict[str, Any]:
         """Create a conversion event (async)"""
-        payload = self._build_payload(
-            ad_account_id=ad_account_id,
-            name=name,
-            type=type,
-            site_event=site_event,
-            enabled=enabled,
-            default_value=default_value,
-            currency=currency,
-            click_window_days=click_window_days,
-            view_window_days=view_window_days,
-            url_contains=url_contains,
+        payload = self._build_body(
+            {
+                "adAccountId": ad_account_id,
+                "name": name,
+                "type": type,
+                "siteEvent": site_event,
+                "enabled": enabled,
+                "defaultValue": default_value,
+                "currency": currency,
+                "clickWindowDays": click_window_days,
+                "viewWindowDays": view_window_days,
+                "urlContains": url_contains,
+            }
         )
         return await self._client._apost(
             f"/v1/accounts/{account_id}/tracking-tags/{tag_id}/events", data=payload
@@ -664,17 +746,19 @@ class TrackingTagsResource:
         url_contains: str | None = None,
     ) -> dict[str, Any]:
         """Update a conversion event (async)"""
-        payload = self._build_payload(
-            ad_account_id=ad_account_id,
-            name=name,
-            type=type,
-            site_event=site_event,
-            enabled=enabled,
-            default_value=default_value,
-            currency=currency,
-            click_window_days=click_window_days,
-            view_window_days=view_window_days,
-            url_contains=url_contains,
+        payload = self._build_body(
+            {
+                "adAccountId": ad_account_id,
+                "name": name,
+                "type": type,
+                "siteEvent": site_event,
+                "enabled": enabled,
+                "defaultValue": default_value,
+                "currency": currency,
+                "clickWindowDays": click_window_days,
+                "viewWindowDays": view_window_days,
+                "urlContains": url_contains,
+            }
         )
         return await self._client._apatch(
             f"/v1/accounts/{account_id}/tracking-tags/{tag_id}/events/{event_id}",
@@ -690,8 +774,10 @@ class TrackingTagsResource:
         ad_account_id: str | None = None,
     ) -> dict[str, Any]:
         """Delete a conversion event (async)"""
-        params = self._build_params(
-            ad_account_id=ad_account_id,
+        params = self._build_query(
+            {
+                "adAccountId": ad_account_id,
+            }
         )
         return await self._client._adelete(
             f"/v1/accounts/{account_id}/tracking-tags/{tag_id}/events/{event_id}",
@@ -710,9 +796,11 @@ class TrackingTagsResource:
         self, account_id: str, tag_id: str, user_id: str, tasks: list[str]
     ) -> dict[str, Any]:
         """Assign a user to a tag (async)"""
-        payload = self._build_payload(
-            user_id=user_id,
-            tasks=tasks,
+        payload = self._build_body(
+            {
+                "userId": user_id,
+                "tasks": tasks,
+            }
         )
         return await self._client._apost(
             f"/v1/accounts/{account_id}/tracking-tags/{tag_id}/users", data=payload
@@ -753,11 +841,13 @@ class TrackingTagsResource:
         end_time: int | None = None,
     ) -> dict[str, Any]:
         """Get aggregated event stats (async)"""
-        params = self._build_params(
-            ad_account_id=ad_account_id,
-            aggregation=aggregation,
-            start_time=start_time,
-            end_time=end_time,
+        params = self._build_query(
+            {
+                "adAccountId": ad_account_id,
+                "aggregation": aggregation,
+                "startTime": start_time,
+                "endTime": end_time,
+            }
         )
         return await self._client._aget(
             f"/v1/accounts/{account_id}/tracking-tags/{tag_id}/stats", params=params

@@ -41,10 +41,9 @@ def _generator():
         sys.path.remove(str(ROOT / "scripts"))
 
 
-def _idempotency_key_param(operation: dict[str, Any], spec: dict[str, Any]) -> dict[str, Any] | None:
-    for param in operation.get("parameters", []):
-        if "$ref" in param:
-            param = spec["components"]["parameters"][param["$ref"].rsplit("/", 1)[-1]]
+def _idempotency_key_param(gen, path_item, operation, spec) -> dict[str, Any] | None:
+    # Path-level and operation-level parameters, merged as the generator does.
+    for param in gen.merge_parameters(path_item, operation, spec):
         if param.get("in") == "header" and param.get("name", "").lower() == "idempotency-key":
             return param
     return None
@@ -63,7 +62,7 @@ def _idempotent_tools() -> dict[str, bool]:
             operation_id = operation.get("operationId")
             if not operation_id or operation_id in gen.SKIP_OPERATIONS:
                 continue
-            key_param = _idempotency_key_param(operation, spec)
+            key_param = _idempotency_key_param(gen, path_item, operation, spec)
             if key_param is None:
                 continue
             tag = operation.get("tags", ["Other"])[0]
@@ -213,3 +212,43 @@ def test_sdk_create_post_sends_the_header() -> None:
         )
 
     assert route.calls.last.request.headers["Idempotency-Key"] == CALLER_KEY
+
+
+# The SDK used to forward headers only on GET/POST, so PUT/PATCH/DELETE
+# operations took Idempotency-Key / If-Match and silently dropped them.
+
+
+@respx.mock
+def test_sdk_sends_idempotency_key_on_put() -> None:
+    route = respx.put(url__regex=rf"{API}/v1/ads/campaigns/c_1/status.*").mock(
+        return_value=httpx.Response(200, json={})
+    )
+    Late(api_key="k", base_url=API).ad_campaigns.update_ad_campaign_status(
+        "c_1", status="paused", platform="facebook", idempotency_key=CALLER_KEY
+    )
+
+    assert route.calls.last.request.headers["Idempotency-Key"] == CALLER_KEY
+
+
+@respx.mock
+async def test_sdk_sends_idempotency_key_on_async_delete() -> None:
+    route = respx.delete(url__regex=rf"{API}/v1/ads/accounts/negative-keyword-lists/l_1.*").mock(
+        return_value=httpx.Response(200, json={})
+    )
+    await Late(api_key="k", base_url=API).ad_accounts.adelete_ad_negative_keyword_list(
+        "l_1", account_id="a_1", idempotency_key=CALLER_KEY
+    )
+
+    assert route.calls.last.request.headers["Idempotency-Key"] == CALLER_KEY
+
+
+@respx.mock
+def test_sdk_sends_if_match_on_patch() -> None:
+    route = respx.patch(url__regex=rf"{API}/v1/email/drafts/d_1.*").mock(
+        return_value=httpx.Response(200, json={})
+    )
+    Late(api_key="k", base_url=API).email.update_email_draft(
+        "d_1", account_id="a_1", if_match='"v3"'
+    )
+
+    assert route.calls.last.request.headers["If-Match"] == '"v3"'

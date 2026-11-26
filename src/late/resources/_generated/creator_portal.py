@@ -21,13 +21,16 @@ class CreatorPortalResource:
     def __init__(self, client: BaseClient) -> None:
         self._client = client
 
-    def _build_params(self, **kwargs: Any) -> dict[str, Any]:
-        """Build query parameters, filtering None and empty-string values.
+    def _build_query(self, fields: dict[str, Any]) -> dict[str, Any]:
+        """Build query parameters keyed by their wire names, as given.
 
-        Empty strings are filtered because MCP tool wrappers pass ``""`` as the
-        default for optional string args, and the API rejects empty query
-        values (e.g. ``platform=``) with a 400. Filtering here keeps both direct
-        SDK callers and MCP tool callers safe.
+        Generated methods pass the parameter names exactly as the OpenAPI
+        spec declares them, so no casing rule is applied here.
+
+        None and empty strings are filtered because MCP tool wrappers pass
+        ``""`` as the default for optional string args, and the API rejects
+        empty query values (e.g. ``platform=``) with a 400. Filtering here
+        keeps both direct SDK callers and MCP tool callers safe.
 
         Enum members are unwrapped to their value: httpx serializes params
         via str(), which yields "ClassName.MEMBER" for Enum members, so
@@ -36,108 +39,142 @@ class CreatorPortalResource:
         """
         from enum import Enum
 
-        def to_camel(s: str) -> str:
-            parts = s.split("_")
-            return parts[0] + "".join(p.title() for p in parts[1:])
-
         result: dict[str, Any] = {}
-        for k, v in kwargs.items():
+        for k, v in fields.items():
             if isinstance(v, Enum):
                 v = v.value
             if v is None or v == "":
                 continue
-            result[to_camel(k)] = v
+            result[k] = v
         return result
 
-    def _build_payload(self, **kwargs: Any) -> dict[str, Any]:
-        """Build request payload, filtering None values. Enum members are
-        unwrapped to their value so JSON bodies carry e.g. "failed" rather
-        than a raw Enum member (plain Enum members are not JSON-serializable).
+    def _build_body(self, fields: dict[str, Any]) -> dict[str, Any]:
+        """Build a JSON request body keyed by its wire names, as given.
+
+        Generated methods pass the property names exactly as the request
+        body schema declares them: most are camelCase, but some routes read
+        snake_case (``ice_breakers``, ``message_send_ttl_seconds``), so no
+        casing rule is applied here. None values are dropped, Enum members
+        are unwrapped to their value (e.g. "failed") and datetimes are sent
+        as ISO 8601 strings.
         """
         from datetime import datetime
         from enum import Enum
 
-        def to_camel(s: str) -> str:
-            parts = s.split("_")
-            return parts[0] + "".join(p.title() for p in parts[1:])
-
         result: dict[str, Any] = {}
-        for k, v in kwargs.items():
+        for k, v in fields.items():
             if isinstance(v, Enum):
                 v = v.value
             if v is None:
                 continue
             if isinstance(v, datetime):
-                result[to_camel(k)] = v.isoformat()
+                result[k] = v.isoformat()
             else:
-                result[to_camel(k)] = v
+                result[k] = v
         return result
+
+    def _build_params(self, **kwargs: Any) -> dict[str, Any]:
+        """Build query parameters from snake_case kwargs, camelCasing each key.
+
+        For hand-written resource methods, whose endpoints take camelCase
+        names. Generated methods use _build_query with the spec's names.
+        """
+
+        def to_camel(s: str) -> str:
+            parts = s.split("_")
+            return parts[0] + "".join(p.title() for p in parts[1:])
+
+        return self._build_query({to_camel(k): v for k, v in kwargs.items()})
+
+    def _build_payload(self, **kwargs: Any) -> dict[str, Any]:
+        """Build a request body from snake_case kwargs, camelCasing each key.
+
+        For hand-written resource methods, whose endpoints take camelCase
+        names. Generated methods use _build_body with the spec's names.
+        """
+
+        def to_camel(s: str) -> str:
+            parts = s.split("_")
+            return parts[0] + "".join(p.title() for p in parts[1:])
+
+        return self._build_body({to_camel(k): v for k, v in kwargs.items()})
 
     def recover_creator_portal_links(
         self, email: str, *, campaign_id: str | None = None
     ) -> dict[str, Any]:
         """Email a creator their campaign links"""
-        payload = self._build_payload(
-            email=email,
-            campaign_id=campaign_id,
+        payload = self._build_body(
+            {
+                "email": email,
+                "campaignId": campaign_id,
+            }
         )
         return self._client._post(
             "/public/creator-campaigns/recover-link", data=payload
         )
 
-    def get_creator_portal(self) -> dict[str, Any]:
+    def get_creator_portal(self, token: str) -> dict[str, Any]:
         """Read a creator invite or participant page"""
-        return self._client._get("/public/creator-campaigns/{token}")
+        return self._client._get(f"/public/creator-campaigns/{token}")
 
     def join_creator_campaign(
-        self, *, display_name: str | None = None, email: str | None = None
+        self, token: str, *, display_name: str | None = None, email: str | None = None
     ) -> dict[str, Any]:
         """Join a campaign"""
-        payload = self._build_payload(
-            display_name=display_name,
-            email=email,
+        payload = self._build_body(
+            {
+                "displayName": display_name,
+                "email": email,
+            }
         )
-        return self._client._post("/public/creator-campaigns/{token}", data=payload)
+        return self._client._post(f"/public/creator-campaigns/{token}", data=payload)
 
     def start_creator_connect(
-        self, platform: str, *, window_url: str | None = None
+        self, token: str, platform: str, *, window_url: str | None = None
     ) -> dict[str, Any]:
         """Start connecting a creator account"""
-        payload = self._build_payload(
-            platform=platform,
-            window_url=window_url,
+        payload = self._build_body(
+            {
+                "platform": platform,
+                "windowUrl": window_url,
+            }
         )
         return self._client._post(
-            "/public/creator-campaigns/{token}/connect", data=payload
+            f"/public/creator-campaigns/{token}/connect", data=payload
         )
 
     def submit_creator_post(
-        self, url: str, *, draft_id: str | None = None
+        self, token: str, url: str, *, draft_id: str | None = None
     ) -> dict[str, Any]:
         """Submit a post"""
-        payload = self._build_payload(
-            url=url,
-            draft_id=draft_id,
+        payload = self._build_body(
+            {
+                "url": url,
+                "draftId": draft_id,
+            }
         )
         return self._client._post(
-            "/public/creator-campaigns/{token}/submissions", data=payload
+            f"/public/creator-campaigns/{token}/submissions", data=payload
         )
 
     def presign_creator_draft_upload(
-        self, filename: str, content_type: str, *, size: int | None = None
+        self, token: str, filename: str, content_type: str, *, size: int | None = None
     ) -> dict[str, Any]:
         """Get an upload URL for a draft"""
-        payload = self._build_payload(
-            filename=filename,
-            content_type=content_type,
-            size=size,
+        payload = self._build_body(
+            {
+                "filename": filename,
+                "contentType": content_type,
+                "size": size,
+            }
         )
         return self._client._post(
-            "/public/creator-campaigns/{token}/drafts/upload", data=payload
+            f"/public/creator-campaigns/{token}/drafts/upload", data=payload
         )
 
     def submit_creator_draft(
         self,
+        token: str,
         media_url: str,
         media_type: str,
         *,
@@ -145,18 +182,21 @@ class CreatorPortalResource:
         revision_of: str | None = None,
     ) -> dict[str, Any]:
         """Submit a draft for review"""
-        payload = self._build_payload(
-            media_url=media_url,
-            media_type=media_type,
-            caption=caption,
-            revision_of=revision_of,
+        payload = self._build_body(
+            {
+                "mediaUrl": media_url,
+                "mediaType": media_type,
+                "caption": caption,
+                "revisionOf": revision_of,
+            }
         )
         return self._client._post(
-            "/public/creator-campaigns/{token}/drafts", data=payload
+            f"/public/creator-campaigns/{token}/drafts", data=payload
         )
 
     def request_creator_sample(
         self,
+        token: str,
         product_id: str,
         shipping_address: Any,
         *,
@@ -164,133 +204,156 @@ class CreatorPortalResource:
         note: str | None = None,
     ) -> dict[str, Any]:
         """Request a product sample"""
-        payload = self._build_payload(
-            product_id=product_id,
-            variant_id=variant_id,
-            shipping_address=shipping_address,
-            note=note,
+        payload = self._build_body(
+            {
+                "productId": product_id,
+                "variantId": variant_id,
+                "shippingAddress": shipping_address,
+                "note": note,
+            }
         )
         return self._client._post(
-            "/public/creator-campaigns/{token}/samples", data=payload
+            f"/public/creator-campaigns/{token}/samples", data=payload
         )
 
-    def remove_creator_account(self) -> dict[str, Any]:
+    def remove_creator_account(self, token: str, account_id: str) -> dict[str, Any]:
         """Remove a connected account"""
         return self._client._delete(
-            "/public/creator-campaigns/{token}/accounts/{accountId}"
+            f"/public/creator-campaigns/{token}/accounts/{account_id}"
         )
 
-    def set_creator_spark_code(self, spark_auth_code: Any) -> dict[str, Any]:
+    def set_creator_spark_code(
+        self, token: str, submission_id: str, spark_auth_code: Any
+    ) -> dict[str, Any]:
         """Set a post's Spark code"""
-        payload = self._build_payload(
-            spark_auth_code=spark_auth_code,
+        payload = self._build_body(
+            {
+                "sparkAuthCode": spark_auth_code,
+            }
         )
         return self._client._put(
-            "/public/creator-campaigns/{token}/submissions/{submissionId}/spark-code",
+            f"/public/creator-campaigns/{token}/submissions/{submission_id}/spark-code",
             data=payload,
         )
 
     def get_creator_payouts(
-        self, *, limit: int | None = 50, skip: int | None = 0
+        self, token: str, *, limit: int | None = 50, skip: int | None = 0
     ) -> dict[str, Any]:
         """List a creator's earnings history"""
-        params = self._build_params(
-            limit=limit,
-            skip=skip,
+        params = self._build_query(
+            {
+                "limit": limit,
+                "skip": skip,
+            }
         )
         return self._client._get(
-            "/public/creator-campaigns/{token}/payouts", params=params
+            f"/public/creator-campaigns/{token}/payouts", params=params
         )
 
     def start_creator_payouts(
-        self, action: str, *, country: str | None = None
+        self, token: str, action: str, *, country: str | None = None
     ) -> dict[str, Any]:
         """Start payout onboarding"""
-        payload = self._build_payload(
-            action=action,
-            country=country,
+        payload = self._build_body(
+            {
+                "action": action,
+                "country": country,
+            }
         )
         return self._client._post(
-            "/public/creator-campaigns/{token}/payouts", data=payload
+            f"/public/creator-campaigns/{token}/payouts", data=payload
         )
 
-    def create_creator_payout_login(self) -> dict[str, Any]:
+    def create_creator_payout_login(self, token: str) -> dict[str, Any]:
         """Open the creator's Stripe dashboard"""
-        return self._client._post("/public/creator-campaigns/{token}/payout-login")
+        return self._client._post(f"/public/creator-campaigns/{token}/payout-login")
 
-    def get_creator_payout_statement(self) -> dict[str, Any]:
+    def get_creator_payout_statement(
+        self, token: str, transfer_id: str
+    ) -> dict[str, Any]:
         """Download a payout statement"""
         return self._client._get(
-            "/public/creator-campaigns/{token}/payouts/{transferId}/statement"
+            f"/public/creator-campaigns/{token}/payouts/{transfer_id}/statement"
         )
 
     async def arecover_creator_portal_links(
         self, email: str, *, campaign_id: str | None = None
     ) -> dict[str, Any]:
         """Email a creator their campaign links (async)"""
-        payload = self._build_payload(
-            email=email,
-            campaign_id=campaign_id,
+        payload = self._build_body(
+            {
+                "email": email,
+                "campaignId": campaign_id,
+            }
         )
         return await self._client._apost(
             "/public/creator-campaigns/recover-link", data=payload
         )
 
-    async def aget_creator_portal(self) -> dict[str, Any]:
+    async def aget_creator_portal(self, token: str) -> dict[str, Any]:
         """Read a creator invite or participant page (async)"""
-        return await self._client._aget("/public/creator-campaigns/{token}")
+        return await self._client._aget(f"/public/creator-campaigns/{token}")
 
     async def ajoin_creator_campaign(
-        self, *, display_name: str | None = None, email: str | None = None
+        self, token: str, *, display_name: str | None = None, email: str | None = None
     ) -> dict[str, Any]:
         """Join a campaign (async)"""
-        payload = self._build_payload(
-            display_name=display_name,
-            email=email,
+        payload = self._build_body(
+            {
+                "displayName": display_name,
+                "email": email,
+            }
         )
         return await self._client._apost(
-            "/public/creator-campaigns/{token}", data=payload
+            f"/public/creator-campaigns/{token}", data=payload
         )
 
     async def astart_creator_connect(
-        self, platform: str, *, window_url: str | None = None
+        self, token: str, platform: str, *, window_url: str | None = None
     ) -> dict[str, Any]:
         """Start connecting a creator account (async)"""
-        payload = self._build_payload(
-            platform=platform,
-            window_url=window_url,
+        payload = self._build_body(
+            {
+                "platform": platform,
+                "windowUrl": window_url,
+            }
         )
         return await self._client._apost(
-            "/public/creator-campaigns/{token}/connect", data=payload
+            f"/public/creator-campaigns/{token}/connect", data=payload
         )
 
     async def asubmit_creator_post(
-        self, url: str, *, draft_id: str | None = None
+        self, token: str, url: str, *, draft_id: str | None = None
     ) -> dict[str, Any]:
         """Submit a post (async)"""
-        payload = self._build_payload(
-            url=url,
-            draft_id=draft_id,
+        payload = self._build_body(
+            {
+                "url": url,
+                "draftId": draft_id,
+            }
         )
         return await self._client._apost(
-            "/public/creator-campaigns/{token}/submissions", data=payload
+            f"/public/creator-campaigns/{token}/submissions", data=payload
         )
 
     async def apresign_creator_draft_upload(
-        self, filename: str, content_type: str, *, size: int | None = None
+        self, token: str, filename: str, content_type: str, *, size: int | None = None
     ) -> dict[str, Any]:
         """Get an upload URL for a draft (async)"""
-        payload = self._build_payload(
-            filename=filename,
-            content_type=content_type,
-            size=size,
+        payload = self._build_body(
+            {
+                "filename": filename,
+                "contentType": content_type,
+                "size": size,
+            }
         )
         return await self._client._apost(
-            "/public/creator-campaigns/{token}/drafts/upload", data=payload
+            f"/public/creator-campaigns/{token}/drafts/upload", data=payload
         )
 
     async def asubmit_creator_draft(
         self,
+        token: str,
         media_url: str,
         media_type: str,
         *,
@@ -298,18 +361,21 @@ class CreatorPortalResource:
         revision_of: str | None = None,
     ) -> dict[str, Any]:
         """Submit a draft for review (async)"""
-        payload = self._build_payload(
-            media_url=media_url,
-            media_type=media_type,
-            caption=caption,
-            revision_of=revision_of,
+        payload = self._build_body(
+            {
+                "mediaUrl": media_url,
+                "mediaType": media_type,
+                "caption": caption,
+                "revisionOf": revision_of,
+            }
         )
         return await self._client._apost(
-            "/public/creator-campaigns/{token}/drafts", data=payload
+            f"/public/creator-campaigns/{token}/drafts", data=payload
         )
 
     async def arequest_creator_sample(
         self,
+        token: str,
         product_id: str,
         shipping_address: Any,
         *,
@@ -317,64 +383,78 @@ class CreatorPortalResource:
         note: str | None = None,
     ) -> dict[str, Any]:
         """Request a product sample (async)"""
-        payload = self._build_payload(
-            product_id=product_id,
-            variant_id=variant_id,
-            shipping_address=shipping_address,
-            note=note,
+        payload = self._build_body(
+            {
+                "productId": product_id,
+                "variantId": variant_id,
+                "shippingAddress": shipping_address,
+                "note": note,
+            }
         )
         return await self._client._apost(
-            "/public/creator-campaigns/{token}/samples", data=payload
+            f"/public/creator-campaigns/{token}/samples", data=payload
         )
 
-    async def aremove_creator_account(self) -> dict[str, Any]:
+    async def aremove_creator_account(
+        self, token: str, account_id: str
+    ) -> dict[str, Any]:
         """Remove a connected account (async)"""
         return await self._client._adelete(
-            "/public/creator-campaigns/{token}/accounts/{accountId}"
+            f"/public/creator-campaigns/{token}/accounts/{account_id}"
         )
 
-    async def aset_creator_spark_code(self, spark_auth_code: Any) -> dict[str, Any]:
+    async def aset_creator_spark_code(
+        self, token: str, submission_id: str, spark_auth_code: Any
+    ) -> dict[str, Any]:
         """Set a post's Spark code (async)"""
-        payload = self._build_payload(
-            spark_auth_code=spark_auth_code,
+        payload = self._build_body(
+            {
+                "sparkAuthCode": spark_auth_code,
+            }
         )
         return await self._client._aput(
-            "/public/creator-campaigns/{token}/submissions/{submissionId}/spark-code",
+            f"/public/creator-campaigns/{token}/submissions/{submission_id}/spark-code",
             data=payload,
         )
 
     async def aget_creator_payouts(
-        self, *, limit: int | None = 50, skip: int | None = 0
+        self, token: str, *, limit: int | None = 50, skip: int | None = 0
     ) -> dict[str, Any]:
         """List a creator's earnings history (async)"""
-        params = self._build_params(
-            limit=limit,
-            skip=skip,
+        params = self._build_query(
+            {
+                "limit": limit,
+                "skip": skip,
+            }
         )
         return await self._client._aget(
-            "/public/creator-campaigns/{token}/payouts", params=params
+            f"/public/creator-campaigns/{token}/payouts", params=params
         )
 
     async def astart_creator_payouts(
-        self, action: str, *, country: str | None = None
+        self, token: str, action: str, *, country: str | None = None
     ) -> dict[str, Any]:
         """Start payout onboarding (async)"""
-        payload = self._build_payload(
-            action=action,
-            country=country,
+        payload = self._build_body(
+            {
+                "action": action,
+                "country": country,
+            }
         )
         return await self._client._apost(
-            "/public/creator-campaigns/{token}/payouts", data=payload
+            f"/public/creator-campaigns/{token}/payouts", data=payload
         )
 
-    async def acreate_creator_payout_login(self) -> dict[str, Any]:
+    async def acreate_creator_payout_login(self, token: str) -> dict[str, Any]:
         """Open the creator's Stripe dashboard (async)"""
         return await self._client._apost(
-            "/public/creator-campaigns/{token}/payout-login"
+            f"/public/creator-campaigns/{token}/payout-login"
         )
 
-    async def aget_creator_payout_statement(self) -> dict[str, Any]:
+    async def aget_creator_payout_statement(
+        self, token: str, transfer_id: str
+    ) -> dict[str, Any]:
         """Download a payout statement (async)"""
         return await self._client._aget(
-            "/public/creator-campaigns/{token}/payouts/{transferId}/statement"
+            f"/public/creator-campaigns/{token}/payouts/{transfer_id}/statement"
         )

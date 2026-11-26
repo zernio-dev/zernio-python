@@ -12,6 +12,7 @@ from ._generated.ad_accounts import AdAccountsResource
 from ._generated.ad_audiences import AdAudiencesResource
 from ._generated.ad_campaign_results import AdCampaignResultsResource
 from ._generated.ad_campaigns import AdCampaignsResource
+from ._generated.ad_changes import AdChangesResource
 from ._generated.ad_creatives import AdCreativesResource
 from ._generated.ad_insights import AdInsightsResource
 from ._generated.ad_library import AdLibraryResource
@@ -33,9 +34,11 @@ from ._generated.connect import ConnectResource
 from ._generated.connected_apps import ConnectedAppsResource
 from ._generated.contacts import ContactsResource
 from ._generated.content_retention import ContentRetentionResource
+from ._generated.conversion_audit import ConversionAuditResource
 from ._generated.conversions import ConversionsResource
 from ._generated.creator_campaigns import CreatorCampaignsResource
 from ._generated.creator_portal import CreatorPortalResource
+from ._generated.crm import CrmResource
 from ._generated.custom_fields import CustomFieldsResource
 from ._generated.discord import DiscordResource
 from ._generated.email import EmailResource
@@ -53,6 +56,7 @@ from ._generated.logs import LogsResource
 from ._generated.mentions import MentionsResource
 from ._generated.messages import MessagesResource
 from ._generated.messaging_ads import MessagingAdsResource
+from ._generated.metrics import MetricsResource
 from ._generated.phone_numbers import PhoneNumbersResource
 from ._generated.product_catalogs import ProductCatalogsResource
 from ._generated.products import ProductsResource
@@ -64,6 +68,7 @@ from ._generated.sequences import SequencesResource
 from ._generated.slack import SlackResource
 from ._generated.sms import SmsResource
 from ._generated.support_assistant import SupportAssistantResource
+from ._generated.tracking_links import TrackingLinksResource
 from ._generated.tracking_tags import TrackingTagsResource
 from ._generated.treasury import TreasuryResource
 from ._generated.twitter_engagement import TwitterEngagementResource
@@ -79,6 +84,7 @@ from ._generated.whatsapp_phone_numbers import WhatsappPhoneNumbersResource
 from ._generated.whatsapp_sandbox import WhatsappSandboxResource
 from ._generated.whatsapp_templates import WhatsappTemplatesResource
 from ._generated.workflows import WorkflowsResource
+from ._generated.workspaces import WorkspacesResource
 from .accounts import AccountsResource
 from .ads import AdsResource
 from .analytics import AnalyticsResource
@@ -97,6 +103,7 @@ __all__ = [
     "AdAudiencesResource",
     "AdCampaignResultsResource",
     "AdCampaignsResource",
+    "AdChangesResource",
     "AdCreativesResource",
     "AdInsightsResource",
     "AdLibraryResource",
@@ -120,9 +127,11 @@ __all__ = [
     "ConnectedAppsResource",
     "ContactsResource",
     "ContentRetentionResource",
+    "ConversionAuditResource",
     "ConversionsResource",
     "CreatorCampaignsResource",
     "CreatorPortalResource",
+    "CrmResource",
     "CustomFieldsResource",
     "DiscordResource",
     "EmailResource",
@@ -141,6 +150,7 @@ __all__ = [
     "MentionsResource",
     "MessagesResource",
     "MessagingAdsResource",
+    "MetricsResource",
     "PhoneNumbersResource",
     "PostsResource",
     "ProductCatalogsResource",
@@ -156,6 +166,7 @@ __all__ = [
     "SmsResource",
     "SupportAssistantResource",
     "ToolsResource",
+    "TrackingLinksResource",
     "TrackingTagsResource",
     "TreasuryResource",
     "TwitterEngagementResource",
@@ -172,4 +183,5 @@ __all__ = [
     "WhatsappSandboxResource",
     "WhatsappTemplatesResource",
     "WorkflowsResource",
+    "WorkspacesResource",
 ]

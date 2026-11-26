@@ -1,0 +1,28 @@
+{
+  "name": "zernio-mcp-app",
+  "private": true,
+  "type": "module",
+  "description": "The Zernio MCP App (the interactive view Claude and ChatGPT render). Built into ../src/late/mcp/apps/bundle/app.html, which the Python server serves.",
+  "scripts": {
+    "build": "tsc --noEmit && vite build",
+    "dev": "vite build --watch",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/client": "2.4.0",
+    "@modelcontextprotocol/core": "2.4.0",
+    "@modelcontextprotocol/ext-apps": "2.0.4",
+    "pixelarticons": "2.4.2",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@vitejs/plugin-react": "6.3.0",
+    "typescript": "7.0.2",
+    "vite": "8.3.8",
+    "vite-plugin-singlefile": "2.3.4"
+  }
+}

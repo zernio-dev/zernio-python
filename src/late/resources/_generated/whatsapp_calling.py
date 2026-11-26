@@ -23,13 +23,16 @@ class WhatsappCallingResource:
     def __init__(self, client: BaseClient) -> None:
         self._client = client
 
-    def _build_params(self, **kwargs: Any) -> dict[str, Any]:
-        """Build query parameters, filtering None and empty-string values.
+    def _build_query(self, fields: dict[str, Any]) -> dict[str, Any]:
+        """Build query parameters keyed by their wire names, as given.
 
-        Empty strings are filtered because MCP tool wrappers pass ``""`` as the
-        default for optional string args, and the API rejects empty query
-        values (e.g. ``platform=``) with a 400. Filtering here keeps both direct
-        SDK callers and MCP tool callers safe.
+        Generated methods pass the parameter names exactly as the OpenAPI
+        spec declares them, so no casing rule is applied here.
+
+        None and empty strings are filtered because MCP tool wrappers pass
+        ``""`` as the default for optional string args, and the API rejects
+        empty query values (e.g. ``platform=``) with a 400. Filtering here
+        keeps both direct SDK callers and MCP tool callers safe.
 
         Enum members are unwrapped to their value: httpx serializes params
         via str(), which yields "ClassName.MEMBER" for Enum members, so
@@ -38,47 +41,72 @@ class WhatsappCallingResource:
         """
         from enum import Enum
 
-        def to_camel(s: str) -> str:
-            parts = s.split("_")
-            return parts[0] + "".join(p.title() for p in parts[1:])
-
         result: dict[str, Any] = {}
-        for k, v in kwargs.items():
+        for k, v in fields.items():
             if isinstance(v, Enum):
                 v = v.value
             if v is None or v == "":
                 continue
-            result[to_camel(k)] = v
+            result[k] = v
         return result
 
-    def _build_payload(self, **kwargs: Any) -> dict[str, Any]:
-        """Build request payload, filtering None values. Enum members are
-        unwrapped to their value so JSON bodies carry e.g. "failed" rather
-        than a raw Enum member (plain Enum members are not JSON-serializable).
+    def _build_body(self, fields: dict[str, Any]) -> dict[str, Any]:
+        """Build a JSON request body keyed by its wire names, as given.
+
+        Generated methods pass the property names exactly as the request
+        body schema declares them: most are camelCase, but some routes read
+        snake_case (``ice_breakers``, ``message_send_ttl_seconds``), so no
+        casing rule is applied here. None values are dropped, Enum members
+        are unwrapped to their value (e.g. "failed") and datetimes are sent
+        as ISO 8601 strings.
         """
         from datetime import datetime
         from enum import Enum
 
-        def to_camel(s: str) -> str:
-            parts = s.split("_")
-            return parts[0] + "".join(p.title() for p in parts[1:])
-
         result: dict[str, Any] = {}
-        for k, v in kwargs.items():
+        for k, v in fields.items():
             if isinstance(v, Enum):
                 v = v.value
             if v is None:
                 continue
             if isinstance(v, datetime):
-                result[to_camel(k)] = v.isoformat()
+                result[k] = v.isoformat()
             else:
-                result[to_camel(k)] = v
+                result[k] = v
         return result
+
+    def _build_params(self, **kwargs: Any) -> dict[str, Any]:
+        """Build query parameters from snake_case kwargs, camelCasing each key.
+
+        For hand-written resource methods, whose endpoints take camelCase
+        names. Generated methods use _build_query with the spec's names.
+        """
+
+        def to_camel(s: str) -> str:
+            parts = s.split("_")
+            return parts[0] + "".join(p.title() for p in parts[1:])
+
+        return self._build_query({to_camel(k): v for k, v in kwargs.items()})
+
+    def _build_payload(self, **kwargs: Any) -> dict[str, Any]:
+        """Build a request body from snake_case kwargs, camelCasing each key.
+
+        For hand-written resource methods, whose endpoints take camelCase
+        names. Generated methods use _build_body with the spec's names.
+        """
+
+        def to_camel(s: str) -> str:
+            parts = s.split("_")
+            return parts[0] + "".join(p.title() for p in parts[1:])
+
+        return self._build_body({to_camel(k): v for k, v in kwargs.items()})
 
     def get_whats_app_calling_config(self, account_id: str) -> dict[str, Any]:
         """Get calling config for an account"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return self._client._get("/v1/whatsapp/calling", params=params)
 
@@ -96,15 +124,17 @@ class WhatsappCallingResource:
         forward_caller_id: str | None = "business",
     ) -> dict[str, Any]:
         """Enable calling on a number"""
-        payload = self._build_payload(
-            account_id=account_id,
-            forward_to=forward_to,
-            sip_auth_username=sip_auth_username,
-            sip_auth_password=sip_auth_password,
-            recording_enabled=recording_enabled,
-            call_icon_countries=call_icon_countries,
-            max_call_duration_seconds=max_call_duration_seconds,
-            forward_caller_id=forward_caller_id,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "forwardTo": forward_to,
+                "sipAuthUsername": sip_auth_username,
+                "sipAuthPassword": sip_auth_password,
+                "recordingEnabled": recording_enabled,
+                "callIconCountries": call_icon_countries,
+                "maxCallDurationSeconds": max_call_duration_seconds,
+                "forwardCallerId": forward_caller_id,
+            }
         )
         return self._client._post(
             f"/v1/whatsapp/phone-numbers/{id}/calling", data=payload
@@ -124,15 +154,17 @@ class WhatsappCallingResource:
         forward_caller_id: str | None = None,
     ) -> dict[str, Any]:
         """Update calling config"""
-        payload = self._build_payload(
-            account_id=account_id,
-            forward_to=forward_to,
-            sip_auth_username=sip_auth_username,
-            sip_auth_password=sip_auth_password,
-            recording_enabled=recording_enabled,
-            call_icon_countries=call_icon_countries,
-            max_call_duration_seconds=max_call_duration_seconds,
-            forward_caller_id=forward_caller_id,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "forwardTo": forward_to,
+                "sipAuthUsername": sip_auth_username,
+                "sipAuthPassword": sip_auth_password,
+                "recordingEnabled": recording_enabled,
+                "callIconCountries": call_icon_countries,
+                "maxCallDurationSeconds": max_call_duration_seconds,
+                "forwardCallerId": forward_caller_id,
+            }
         )
         return self._client._patch(
             f"/v1/whatsapp/phone-numbers/{id}/calling", data=payload
@@ -142,8 +174,10 @@ class WhatsappCallingResource:
         self, id: str, account_id: str
     ) -> dict[str, Any]:
         """Disable calling on a number"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return self._client._delete(
             f"/v1/whatsapp/phone-numbers/{id}/calling", params=params
@@ -153,9 +187,11 @@ class WhatsappCallingResource:
         self, account_id: str, to: str
     ) -> dict[str, Any]:
         """Check call permission"""
-        params = self._build_params(
-            account_id=account_id,
-            to=to,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "to": to,
+            }
         )
         return self._client._get("/v1/whatsapp/call-permissions", params=params)
 
@@ -172,14 +208,16 @@ class WhatsappCallingResource:
         biz_opaque_callback_data: str | None = None,
     ) -> dict[str, Any]:
         """Initiate outbound call"""
-        payload = self._build_payload(
-            account_id=account_id,
-            to=to,
-            action=action,
-            body_text=body_text,
-            forward_to=forward_to,
-            record_override=record_override,
-            biz_opaque_callback_data=biz_opaque_callback_data,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "to": to,
+                "action": action,
+                "bodyText": body_text,
+                "forwardTo": forward_to,
+                "recordOverride": record_override,
+                "biz_opaque_callback_data": biz_opaque_callback_data,
+            }
         )
         headers: dict[str, str] = {}
         if idempotency_key is not None:
@@ -198,21 +236,25 @@ class WhatsappCallingResource:
         limit: int | None = None,
     ) -> dict[str, Any]:
         """List call history for an account"""
-        params = self._build_params(
-            account_id=account_id,
-            status=status,
-            direction=direction,
-            since=since,
-            until=until,
-            before=before,
-            limit=limit,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "status": status,
+                "direction": direction,
+                "since": since,
+                "until": until,
+                "before": before,
+                "limit": limit,
+            }
         )
         return self._client._get("/v1/whatsapp/calls", params=params)
 
     def get_whats_app_call(self, id: str, account_id: str) -> dict[str, Any]:
         """Get a single call"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return self._client._get(f"/v1/whatsapp/calls/{id}", params=params)
 
@@ -220,9 +262,11 @@ class WhatsappCallingResource:
         self, id: str, account_id: str, *, as_: str | None = None
     ) -> dict[str, Any]:
         """Get a call recording"""
-        params = self._build_params(
-            account_id=account_id,
-            as_=as_,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "as": as_,
+            }
         )
         return self._client._get(f"/v1/whatsapp/calls/{id}/recording", params=params)
 
@@ -235,11 +279,13 @@ class WhatsappCallingResource:
         recording: bool | None = None,
     ) -> dict[str, Any]:
         """Estimate per-minute cost"""
-        params = self._build_params(
-            account_id=account_id,
-            to=to,
-            minutes=minutes,
-            recording=recording,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "to": to,
+                "minutes": minutes,
+                "recording": recording,
+            }
         )
         return self._client._get("/v1/whatsapp/calls/estimate", params=params)
 
@@ -261,15 +307,17 @@ class WhatsappCallingResource:
         forward_caller_id: str | None = "business",
     ) -> dict[str, Any]:
         """Enable calling on a number"""
-        payload = self._build_payload(
-            account_id=account_id,
-            forward_to=forward_to,
-            sip_auth_username=sip_auth_username,
-            sip_auth_password=sip_auth_password,
-            recording_enabled=recording_enabled,
-            call_icon_countries=call_icon_countries,
-            max_call_duration_seconds=max_call_duration_seconds,
-            forward_caller_id=forward_caller_id,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "forwardTo": forward_to,
+                "sipAuthUsername": sip_auth_username,
+                "sipAuthPassword": sip_auth_password,
+                "recordingEnabled": recording_enabled,
+                "callIconCountries": call_icon_countries,
+                "maxCallDurationSeconds": max_call_duration_seconds,
+                "forwardCallerId": forward_caller_id,
+            }
         )
         return self._client._post(
             f"/v1/phone-numbers/{id}/whatsapp/calling", data=payload
@@ -289,15 +337,17 @@ class WhatsappCallingResource:
         forward_caller_id: str | None = None,
     ) -> dict[str, Any]:
         """Update calling config"""
-        payload = self._build_payload(
-            account_id=account_id,
-            forward_to=forward_to,
-            sip_auth_username=sip_auth_username,
-            sip_auth_password=sip_auth_password,
-            recording_enabled=recording_enabled,
-            call_icon_countries=call_icon_countries,
-            max_call_duration_seconds=max_call_duration_seconds,
-            forward_caller_id=forward_caller_id,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "forwardTo": forward_to,
+                "sipAuthUsername": sip_auth_username,
+                "sipAuthPassword": sip_auth_password,
+                "recordingEnabled": recording_enabled,
+                "callIconCountries": call_icon_countries,
+                "maxCallDurationSeconds": max_call_duration_seconds,
+                "forwardCallerId": forward_caller_id,
+            }
         )
         return self._client._patch(
             f"/v1/phone-numbers/{id}/whatsapp/calling", data=payload
@@ -305,8 +355,10 @@ class WhatsappCallingResource:
 
     def disable_whats_app_calling(self, id: str, account_id: str) -> dict[str, Any]:
         """Disable calling on a number"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return self._client._delete(
             f"/v1/phone-numbers/{id}/whatsapp/calling", params=params
@@ -316,8 +368,10 @@ class WhatsappCallingResource:
         self, id: str, *, method: str | None = "sms"
     ) -> dict[str, Any]:
         """Start caller-ID verification for a customer-brought number"""
-        payload = self._build_payload(
-            method=method,
+        payload = self._build_body(
+            {
+                "method": method,
+            }
         )
         return self._client._post(
             f"/v1/phone-numbers/{id}/whatsapp/caller-id-verification", data=payload
@@ -325,8 +379,10 @@ class WhatsappCallingResource:
 
     def verify_whats_app_caller_id(self, id: str, code: str) -> dict[str, Any]:
         """Confirm the caller-ID verification code"""
-        payload = self._build_payload(
-            code=code,
+        payload = self._build_body(
+            {
+                "code": code,
+            }
         )
         return self._client._post(
             f"/v1/phone-numbers/{id}/whatsapp/caller-id-verification/verify",
@@ -335,8 +391,10 @@ class WhatsappCallingResource:
 
     async def aget_whats_app_calling_config(self, account_id: str) -> dict[str, Any]:
         """Get calling config for an account (async)"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return await self._client._aget("/v1/whatsapp/calling", params=params)
 
@@ -354,15 +412,17 @@ class WhatsappCallingResource:
         forward_caller_id: str | None = "business",
     ) -> dict[str, Any]:
         """Enable calling on a number (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            forward_to=forward_to,
-            sip_auth_username=sip_auth_username,
-            sip_auth_password=sip_auth_password,
-            recording_enabled=recording_enabled,
-            call_icon_countries=call_icon_countries,
-            max_call_duration_seconds=max_call_duration_seconds,
-            forward_caller_id=forward_caller_id,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "forwardTo": forward_to,
+                "sipAuthUsername": sip_auth_username,
+                "sipAuthPassword": sip_auth_password,
+                "recordingEnabled": recording_enabled,
+                "callIconCountries": call_icon_countries,
+                "maxCallDurationSeconds": max_call_duration_seconds,
+                "forwardCallerId": forward_caller_id,
+            }
         )
         return await self._client._apost(
             f"/v1/whatsapp/phone-numbers/{id}/calling", data=payload
@@ -382,15 +442,17 @@ class WhatsappCallingResource:
         forward_caller_id: str | None = None,
     ) -> dict[str, Any]:
         """Update calling config (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            forward_to=forward_to,
-            sip_auth_username=sip_auth_username,
-            sip_auth_password=sip_auth_password,
-            recording_enabled=recording_enabled,
-            call_icon_countries=call_icon_countries,
-            max_call_duration_seconds=max_call_duration_seconds,
-            forward_caller_id=forward_caller_id,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "forwardTo": forward_to,
+                "sipAuthUsername": sip_auth_username,
+                "sipAuthPassword": sip_auth_password,
+                "recordingEnabled": recording_enabled,
+                "callIconCountries": call_icon_countries,
+                "maxCallDurationSeconds": max_call_duration_seconds,
+                "forwardCallerId": forward_caller_id,
+            }
         )
         return await self._client._apatch(
             f"/v1/whatsapp/phone-numbers/{id}/calling", data=payload
@@ -400,8 +462,10 @@ class WhatsappCallingResource:
         self, id: str, account_id: str
     ) -> dict[str, Any]:
         """Disable calling on a number (async)"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return await self._client._adelete(
             f"/v1/whatsapp/phone-numbers/{id}/calling", params=params
@@ -411,9 +475,11 @@ class WhatsappCallingResource:
         self, account_id: str, to: str
     ) -> dict[str, Any]:
         """Check call permission (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            to=to,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "to": to,
+            }
         )
         return await self._client._aget("/v1/whatsapp/call-permissions", params=params)
 
@@ -430,14 +496,16 @@ class WhatsappCallingResource:
         biz_opaque_callback_data: str | None = None,
     ) -> dict[str, Any]:
         """Initiate outbound call (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            to=to,
-            action=action,
-            body_text=body_text,
-            forward_to=forward_to,
-            record_override=record_override,
-            biz_opaque_callback_data=biz_opaque_callback_data,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "to": to,
+                "action": action,
+                "bodyText": body_text,
+                "forwardTo": forward_to,
+                "recordOverride": record_override,
+                "biz_opaque_callback_data": biz_opaque_callback_data,
+            }
         )
         headers: dict[str, str] = {}
         if idempotency_key is not None:
@@ -458,21 +526,25 @@ class WhatsappCallingResource:
         limit: int | None = None,
     ) -> dict[str, Any]:
         """List call history for an account (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            status=status,
-            direction=direction,
-            since=since,
-            until=until,
-            before=before,
-            limit=limit,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "status": status,
+                "direction": direction,
+                "since": since,
+                "until": until,
+                "before": before,
+                "limit": limit,
+            }
         )
         return await self._client._aget("/v1/whatsapp/calls", params=params)
 
     async def aget_whats_app_call(self, id: str, account_id: str) -> dict[str, Any]:
         """Get a single call (async)"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return await self._client._aget(f"/v1/whatsapp/calls/{id}", params=params)
 
@@ -480,9 +552,11 @@ class WhatsappCallingResource:
         self, id: str, account_id: str, *, as_: str | None = None
     ) -> dict[str, Any]:
         """Get a call recording (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            as_=as_,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "as": as_,
+            }
         )
         return await self._client._aget(
             f"/v1/whatsapp/calls/{id}/recording", params=params
@@ -497,11 +571,13 @@ class WhatsappCallingResource:
         recording: bool | None = None,
     ) -> dict[str, Any]:
         """Estimate per-minute cost (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            to=to,
-            minutes=minutes,
-            recording=recording,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "to": to,
+                "minutes": minutes,
+                "recording": recording,
+            }
         )
         return await self._client._aget("/v1/whatsapp/calls/estimate", params=params)
 
@@ -523,15 +599,17 @@ class WhatsappCallingResource:
         forward_caller_id: str | None = "business",
     ) -> dict[str, Any]:
         """Enable calling on a number (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            forward_to=forward_to,
-            sip_auth_username=sip_auth_username,
-            sip_auth_password=sip_auth_password,
-            recording_enabled=recording_enabled,
-            call_icon_countries=call_icon_countries,
-            max_call_duration_seconds=max_call_duration_seconds,
-            forward_caller_id=forward_caller_id,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "forwardTo": forward_to,
+                "sipAuthUsername": sip_auth_username,
+                "sipAuthPassword": sip_auth_password,
+                "recordingEnabled": recording_enabled,
+                "callIconCountries": call_icon_countries,
+                "maxCallDurationSeconds": max_call_duration_seconds,
+                "forwardCallerId": forward_caller_id,
+            }
         )
         return await self._client._apost(
             f"/v1/phone-numbers/{id}/whatsapp/calling", data=payload
@@ -551,15 +629,17 @@ class WhatsappCallingResource:
         forward_caller_id: str | None = None,
     ) -> dict[str, Any]:
         """Update calling config (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            forward_to=forward_to,
-            sip_auth_username=sip_auth_username,
-            sip_auth_password=sip_auth_password,
-            recording_enabled=recording_enabled,
-            call_icon_countries=call_icon_countries,
-            max_call_duration_seconds=max_call_duration_seconds,
-            forward_caller_id=forward_caller_id,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "forwardTo": forward_to,
+                "sipAuthUsername": sip_auth_username,
+                "sipAuthPassword": sip_auth_password,
+                "recordingEnabled": recording_enabled,
+                "callIconCountries": call_icon_countries,
+                "maxCallDurationSeconds": max_call_duration_seconds,
+                "forwardCallerId": forward_caller_id,
+            }
         )
         return await self._client._apatch(
             f"/v1/phone-numbers/{id}/whatsapp/calling", data=payload
@@ -569,8 +649,10 @@ class WhatsappCallingResource:
         self, id: str, account_id: str
     ) -> dict[str, Any]:
         """Disable calling on a number (async)"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return await self._client._adelete(
             f"/v1/phone-numbers/{id}/whatsapp/calling", params=params
@@ -580,8 +662,10 @@ class WhatsappCallingResource:
         self, id: str, *, method: str | None = "sms"
     ) -> dict[str, Any]:
         """Start caller-ID verification for a customer-brought number (async)"""
-        payload = self._build_payload(
-            method=method,
+        payload = self._build_body(
+            {
+                "method": method,
+            }
         )
         return await self._client._apost(
             f"/v1/phone-numbers/{id}/whatsapp/caller-id-verification", data=payload
@@ -589,8 +673,10 @@ class WhatsappCallingResource:
 
     async def averify_whats_app_caller_id(self, id: str, code: str) -> dict[str, Any]:
         """Confirm the caller-ID verification code (async)"""
-        payload = self._build_payload(
-            code=code,
+        payload = self._build_body(
+            {
+                "code": code,
+            }
         )
         return await self._client._apost(
             f"/v1/phone-numbers/{id}/whatsapp/caller-id-verification/verify",

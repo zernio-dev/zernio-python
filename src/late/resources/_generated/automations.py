@@ -23,13 +23,16 @@ class AutomationsResource:
     def __init__(self, client: BaseClient) -> None:
         self._client = client
 
-    def _build_params(self, **kwargs: Any) -> dict[str, Any]:
-        """Build query parameters, filtering None and empty-string values.
+    def _build_query(self, fields: dict[str, Any]) -> dict[str, Any]:
+        """Build query parameters keyed by their wire names, as given.
 
-        Empty strings are filtered because MCP tool wrappers pass ``""`` as the
-        default for optional string args, and the API rejects empty query
-        values (e.g. ``platform=``) with a 400. Filtering here keeps both direct
-        SDK callers and MCP tool callers safe.
+        Generated methods pass the parameter names exactly as the OpenAPI
+        spec declares them, so no casing rule is applied here.
+
+        None and empty strings are filtered because MCP tool wrappers pass
+        ``""`` as the default for optional string args, and the API rejects
+        empty query values (e.g. ``platform=``) with a 400. Filtering here
+        keeps both direct SDK callers and MCP tool callers safe.
 
         Enum members are unwrapped to their value: httpx serializes params
         via str(), which yields "ClassName.MEMBER" for Enum members, so
@@ -38,57 +41,86 @@ class AutomationsResource:
         """
         from enum import Enum
 
-        def to_camel(s: str) -> str:
-            parts = s.split("_")
-            return parts[0] + "".join(p.title() for p in parts[1:])
-
         result: dict[str, Any] = {}
-        for k, v in kwargs.items():
+        for k, v in fields.items():
             if isinstance(v, Enum):
                 v = v.value
             if v is None or v == "":
                 continue
-            result[to_camel(k)] = v
+            result[k] = v
         return result
 
-    def _build_payload(self, **kwargs: Any) -> dict[str, Any]:
-        """Build request payload, filtering None values. Enum members are
-        unwrapped to their value so JSON bodies carry e.g. "failed" rather
-        than a raw Enum member (plain Enum members are not JSON-serializable).
+    def _build_body(self, fields: dict[str, Any]) -> dict[str, Any]:
+        """Build a JSON request body keyed by its wire names, as given.
+
+        Generated methods pass the property names exactly as the request
+        body schema declares them: most are camelCase, but some routes read
+        snake_case (``ice_breakers``, ``message_send_ttl_seconds``), so no
+        casing rule is applied here. None values are dropped, Enum members
+        are unwrapped to their value (e.g. "failed") and datetimes are sent
+        as ISO 8601 strings.
         """
         from datetime import datetime
         from enum import Enum
 
-        def to_camel(s: str) -> str:
-            parts = s.split("_")
-            return parts[0] + "".join(p.title() for p in parts[1:])
-
         result: dict[str, Any] = {}
-        for k, v in kwargs.items():
+        for k, v in fields.items():
             if isinstance(v, Enum):
                 v = v.value
             if v is None:
                 continue
             if isinstance(v, datetime):
-                result[to_camel(k)] = v.isoformat()
+                result[k] = v.isoformat()
             else:
-                result[to_camel(k)] = v
+                result[k] = v
         return result
+
+    def _build_params(self, **kwargs: Any) -> dict[str, Any]:
+        """Build query parameters from snake_case kwargs, camelCasing each key.
+
+        For hand-written resource methods, whose endpoints take camelCase
+        names. Generated methods use _build_query with the spec's names.
+        """
+
+        def to_camel(s: str) -> str:
+            parts = s.split("_")
+            return parts[0] + "".join(p.title() for p in parts[1:])
+
+        return self._build_query({to_camel(k): v for k, v in kwargs.items()})
+
+    def _build_payload(self, **kwargs: Any) -> dict[str, Any]:
+        """Build a request body from snake_case kwargs, camelCasing each key.
+
+        For hand-written resource methods, whose endpoints take camelCase
+        names. Generated methods use _build_body with the spec's names.
+        """
+
+        def to_camel(s: str) -> str:
+            parts = s.split("_")
+            return parts[0] + "".join(p.title() for p in parts[1:])
+
+        return self._build_body({to_camel(k): v for k, v in kwargs.items()})
 
     def list_automations(
         self,
         *,
         account_id: str | None = None,
         ad_account_id: str | None = None,
+        q: str | None = None,
+        kind: str | None = None,
         limit: int | None = 50,
         cursor: str | None = None,
     ) -> dict[str, Any]:
         """List automations"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            limit=limit,
-            cursor=cursor,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "q": q,
+                "kind": kind,
+                "limit": limit,
+                "cursor": cursor,
+            }
         )
         return self._client._get("/v1/automations", params=params)
 
@@ -117,14 +149,16 @@ class AutomationsResource:
         cursor: str | None = None,
     ) -> dict[str, Any]:
         """List automation actions"""
-        params = self._build_params(
-            automation_id=automation_id,
-            account_id=account_id,
-            type=type,
-            from_=from_,
-            to=to,
-            limit=limit,
-            cursor=cursor,
+        params = self._build_query(
+            {
+                "automationId": automation_id,
+                "accountId": account_id,
+                "type": type,
+                "from": from_,
+                "to": to,
+                "limit": limit,
+                "cursor": cursor,
+            }
         )
         return self._client._get("/v1/automations/actions", params=params)
 
@@ -132,58 +166,120 @@ class AutomationsResource:
         self, automation_id: str, *, limit: int | None = 20, cursor: str | None = None
     ) -> dict[str, Any]:
         """List an automation's checks"""
-        params = self._build_params(
-            limit=limit,
-            cursor=cursor,
+        params = self._build_query(
+            {
+                "limit": limit,
+                "cursor": cursor,
+            }
         )
         return self._client._get(
             f"/v1/automations/{automation_id}/checks", params=params
         )
 
+    def list_automation_runs(
+        self,
+        automation_id: str,
+        *,
+        status: str | None = None,
+        since: datetime | str | None = None,
+        limit: int | None = 20,
+        cursor: str | None = None,
+    ) -> dict[str, Any]:
+        """List an automation's runs"""
+        params = self._build_query(
+            {
+                "status": status,
+                "since": since,
+                "limit": limit,
+                "cursor": cursor,
+            }
+        )
+        return self._client._get(f"/v1/automations/{automation_id}/runs", params=params)
+
+    def get_automation_run(self, automation_id: str, run_id: str) -> dict[str, Any]:
+        """Get one run of an automation"""
+        return self._client._get(f"/v1/automations/{automation_id}/runs/{run_id}")
+
+    def test_automation(
+        self,
+        automation_id: str,
+        *,
+        event: dict[str, Any] | None = None,
+        subject_id: str | None = None,
+    ) -> dict[str, Any]:
+        """Test an automation on a sample event"""
+        payload = self._build_body(
+            {
+                "event": event,
+                "subjectId": subject_id,
+            }
+        )
+        return self._client._post(f"/v1/automations/{automation_id}/test", data=payload)
+
+    def get_automation_test_sample(self, automation_id: str) -> dict[str, Any]:
+        """Get a sample test body for an automation"""
+        return self._client._get(f"/v1/automations/{automation_id}/test/sample")
+
     def preview_automation_draft(
         self, body: dict[str, Any], *, limit: int | None = 100
     ) -> dict[str, Any]:
         """Preview an unsaved automation"""
-        params = self._build_params(
-            limit=limit,
+        params = self._build_query(
+            {
+                "limit": limit,
+            }
         )
         return self._client._post("/v1/automations/preview", data=body, params=params)
 
-    def get_automation(self) -> dict[str, Any]:
+    def get_automation(self, automation_id: str) -> dict[str, Any]:
         """Get an automation"""
-        return self._client._get("/v1/automations/{automationId}")
+        return self._client._get(f"/v1/automations/{automation_id}")
 
     def update_automation(
         self,
+        automation_id: str,
         *,
         if_match: str | None = None,
         name: str | None = None,
+        description: str | None = None,
         status: str | None = None,
-        trigger: Any | None = None,
+        trigger: dict[str, Any] | None = None,
+        or_triggers: list[dict[str, Any]] | None = None,
+        graph: dict[str, Any] | None = None,
         subjects: Any | None = None,
         filter: Any | None = None,
         conditions: Any | None = None,
         alert: Any | None = None,
         steps: list[Any] | None = None,
-        limits: Any | None = None,
+        limits: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Edit an automation"""
-        payload = self._build_payload(
-            name=name,
-            status=status,
-            trigger=trigger,
-            subjects=subjects,
-            filter=filter,
-            conditions=conditions,
-            alert=alert,
-            steps=steps,
-            limits=limits,
+        payload = self._build_body(
+            {
+                "name": name,
+                "description": description,
+                "status": status,
+                "trigger": trigger,
+                "orTriggers": or_triggers,
+                "graph": graph,
+                "subjects": subjects,
+                "filter": filter,
+                "conditions": conditions,
+                "alert": alert,
+                "steps": steps,
+                "limits": limits,
+            }
         )
-        return self._client._patch("/v1/automations/{automationId}", data=payload)
+        headers: dict[str, str] = {}
+        if if_match is not None:
+            headers["If-Match"] = if_match
+        return self._client._patch(
+            f"/v1/automations/{automation_id}", data=payload, headers=headers
+        )
 
-    def delete_automation(self) -> dict[str, Any]:
+    def delete_automation(self, automation_id: str) -> dict[str, Any]:
         """Delete an automation"""
-        return self._client._delete("/v1/automations/{automationId}")
+        return self._client._delete(f"/v1/automations/{automation_id}")
 
     def activate_automation(self, automation_id: str) -> dict[str, Any]:
         """Turn an automation on"""
@@ -193,12 +289,18 @@ class AutomationsResource:
         """Turn an automation off"""
         return self._client._post(f"/v1/automations/{automation_id}/pause")
 
+    def take_over_automation(self, automation_id: str) -> dict[str, Any]:
+        """Take over an automation"""
+        return self._client._post(f"/v1/automations/{automation_id}/take-over")
+
     def preview_automation(
         self, automation_id: str, *, limit: int | None = 100
     ) -> dict[str, Any]:
         """Preview a saved automation"""
-        params = self._build_params(
-            limit=limit,
+        params = self._build_query(
+            {
+                "limit": limit,
+            }
         )
         return self._client._post(
             f"/v1/automations/{automation_id}/preview", params=params
@@ -208,8 +310,10 @@ class AutomationsResource:
         self, *, scope: str | None = "team"
     ) -> dict[str, Any]:
         """List automation templates"""
-        params = self._build_params(
-            scope=scope,
+        params = self._build_query(
+            {
+                "scope": scope,
+            }
         )
         return self._client._get("/v1/automations/templates", params=params)
 
@@ -223,11 +327,13 @@ class AutomationsResource:
         automations: list[Any] | None = None,
     ) -> dict[str, Any]:
         """Create an automation template"""
-        payload = self._build_payload(
-            name=name,
-            description=description,
-            from_=from_,
-            automations=automations,
+        payload = self._build_body(
+            {
+                "name": name,
+                "description": description,
+                "from": from_,
+                "automations": automations,
+            }
         )
         headers: dict[str, str] = {}
         if idempotency_key is not None:
@@ -251,12 +357,14 @@ class AutomationsResource:
         automations: list[Any] | None = None,
     ) -> dict[str, Any]:
         """Update an automation template"""
-        payload = self._build_payload(
-            name=name,
-            description=description,
-            visibility=visibility,
-            from_=from_,
-            automations=automations,
+        payload = self._build_body(
+            {
+                "name": name,
+                "description": description,
+                "visibility": visibility,
+                "from": from_,
+                "automations": automations,
+            }
         )
         return self._client._patch(
             f"/v1/automations/templates/{template_id}", data=payload
@@ -276,10 +384,12 @@ class AutomationsResource:
         status: str | None = "paused",
     ) -> dict[str, Any]:
         """Install an automation template"""
-        payload = self._build_payload(
-            inputs=inputs,
-            targets=targets,
-            status=status,
+        payload = self._build_body(
+            {
+                "inputs": inputs,
+                "targets": targets,
+                "status": status,
+            }
         )
         headers: dict[str, str] = {}
         if idempotency_key is not None:
@@ -304,10 +414,12 @@ class AutomationsResource:
         status: str | None = "paused",
     ) -> dict[str, Any]:
         """Install a shared automation template"""
-        payload = self._build_payload(
-            inputs=inputs,
-            targets=targets,
-            status=status,
+        payload = self._build_body(
+            {
+                "inputs": inputs,
+                "targets": targets,
+                "status": status,
+            }
         )
         headers: dict[str, str] = {}
         if idempotency_key is not None:
@@ -332,10 +444,12 @@ class AutomationsResource:
         status: str | None = "paused",
     ) -> dict[str, Any]:
         """Install a Zernio automation template"""
-        payload = self._build_payload(
-            inputs=inputs,
-            targets=targets,
-            status=status,
+        payload = self._build_body(
+            {
+                "inputs": inputs,
+                "targets": targets,
+                "status": status,
+            }
         )
         headers: dict[str, str] = {}
         if idempotency_key is not None:
@@ -352,8 +466,10 @@ class AutomationsResource:
 
     def update_automation_controls(self, paused: bool) -> dict[str, Any]:
         """Turn every ad automation off or on"""
-        payload = self._build_payload(
-            paused=paused,
+        payload = self._build_body(
+            {
+                "paused": paused,
+            }
         )
         return self._client._patch("/v1/automations/controls", data=payload)
 
@@ -366,11 +482,13 @@ class AutomationsResource:
         daily_raise_limit: Any | None = None,
     ) -> dict[str, Any]:
         """Update one ad account's controls"""
-        payload = self._build_payload(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            paused=paused,
-            daily_raise_limit=daily_raise_limit,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "paused": paused,
+                "dailyRaiseLimit": daily_raise_limit,
+            }
         )
         return self._client._patch("/v1/automations/controls/ad-accounts", data=payload)
 
@@ -378,9 +496,11 @@ class AutomationsResource:
         self, automation_id: str, *, status: str | None = None, limit: int | None = 20
     ) -> dict[str, Any]:
         """List an automation's approval requests"""
-        params = self._build_params(
-            status=status,
-            limit=limit,
+        params = self._build_query(
+            {
+                "status": status,
+                "limit": limit,
+            }
         )
         return self._client._get(
             f"/v1/automations/{automation_id}/approvals", params=params
@@ -398,8 +518,10 @@ class AutomationsResource:
         self, automation_id: str, approval_id: str, *, token: str | None = None
     ) -> dict[str, Any]:
         """Approve an approval request"""
-        payload = self._build_payload(
-            token=token,
+        payload = self._build_body(
+            {
+                "token": token,
+            }
         )
         return self._client._post(
             f"/v1/automations/{automation_id}/approvals/{approval_id}/approve",
@@ -410,8 +532,10 @@ class AutomationsResource:
         self, automation_id: str, approval_id: str, *, token: str | None = None
     ) -> dict[str, Any]:
         """Reject an approval request"""
-        payload = self._build_payload(
-            token=token,
+        payload = self._build_body(
+            {
+                "token": token,
+            }
         )
         return self._client._post(
             f"/v1/automations/{automation_id}/approvals/{approval_id}/reject",
@@ -422,8 +546,10 @@ class AutomationsResource:
         self, body: dict[str, Any], *, days: int | None = 30
     ) -> dict[str, Any]:
         """Backtest an unsaved automation"""
-        params = self._build_params(
-            days=days,
+        params = self._build_query(
+            {
+                "days": days,
+            }
         )
         return self._client._post("/v1/automations/backtest", data=body, params=params)
 
@@ -431,8 +557,10 @@ class AutomationsResource:
         self, automation_id: str, *, days: int | None = 30
     ) -> dict[str, Any]:
         """Backtest a saved automation"""
-        params = self._build_params(
-            days=days,
+        params = self._build_query(
+            {
+                "days": days,
+            }
         )
         return self._client._post(
             f"/v1/automations/{automation_id}/backtest", params=params
@@ -443,15 +571,21 @@ class AutomationsResource:
         *,
         account_id: str | None = None,
         ad_account_id: str | None = None,
+        q: str | None = None,
+        kind: str | None = None,
         limit: int | None = 50,
         cursor: str | None = None,
     ) -> dict[str, Any]:
         """List automations (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            limit=limit,
-            cursor=cursor,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "q": q,
+                "kind": kind,
+                "limit": limit,
+                "cursor": cursor,
+            }
         )
         return await self._client._aget("/v1/automations", params=params)
 
@@ -480,14 +614,16 @@ class AutomationsResource:
         cursor: str | None = None,
     ) -> dict[str, Any]:
         """List automation actions (async)"""
-        params = self._build_params(
-            automation_id=automation_id,
-            account_id=account_id,
-            type=type,
-            from_=from_,
-            to=to,
-            limit=limit,
-            cursor=cursor,
+        params = self._build_query(
+            {
+                "automationId": automation_id,
+                "accountId": account_id,
+                "type": type,
+                "from": from_,
+                "to": to,
+                "limit": limit,
+                "cursor": cursor,
+            }
         )
         return await self._client._aget("/v1/automations/actions", params=params)
 
@@ -495,62 +631,130 @@ class AutomationsResource:
         self, automation_id: str, *, limit: int | None = 20, cursor: str | None = None
     ) -> dict[str, Any]:
         """List an automation's checks (async)"""
-        params = self._build_params(
-            limit=limit,
-            cursor=cursor,
+        params = self._build_query(
+            {
+                "limit": limit,
+                "cursor": cursor,
+            }
         )
         return await self._client._aget(
             f"/v1/automations/{automation_id}/checks", params=params
         )
 
+    async def alist_automation_runs(
+        self,
+        automation_id: str,
+        *,
+        status: str | None = None,
+        since: datetime | str | None = None,
+        limit: int | None = 20,
+        cursor: str | None = None,
+    ) -> dict[str, Any]:
+        """List an automation's runs (async)"""
+        params = self._build_query(
+            {
+                "status": status,
+                "since": since,
+                "limit": limit,
+                "cursor": cursor,
+            }
+        )
+        return await self._client._aget(
+            f"/v1/automations/{automation_id}/runs", params=params
+        )
+
+    async def aget_automation_run(
+        self, automation_id: str, run_id: str
+    ) -> dict[str, Any]:
+        """Get one run of an automation (async)"""
+        return await self._client._aget(
+            f"/v1/automations/{automation_id}/runs/{run_id}"
+        )
+
+    async def atest_automation(
+        self,
+        automation_id: str,
+        *,
+        event: dict[str, Any] | None = None,
+        subject_id: str | None = None,
+    ) -> dict[str, Any]:
+        """Test an automation on a sample event (async)"""
+        payload = self._build_body(
+            {
+                "event": event,
+                "subjectId": subject_id,
+            }
+        )
+        return await self._client._apost(
+            f"/v1/automations/{automation_id}/test", data=payload
+        )
+
+    async def aget_automation_test_sample(self, automation_id: str) -> dict[str, Any]:
+        """Get a sample test body for an automation (async)"""
+        return await self._client._aget(f"/v1/automations/{automation_id}/test/sample")
+
     async def apreview_automation_draft(
         self, body: dict[str, Any], *, limit: int | None = 100
     ) -> dict[str, Any]:
         """Preview an unsaved automation (async)"""
-        params = self._build_params(
-            limit=limit,
+        params = self._build_query(
+            {
+                "limit": limit,
+            }
         )
         return await self._client._apost(
             "/v1/automations/preview", data=body, params=params
         )
 
-    async def aget_automation(self) -> dict[str, Any]:
+    async def aget_automation(self, automation_id: str) -> dict[str, Any]:
         """Get an automation (async)"""
-        return await self._client._aget("/v1/automations/{automationId}")
+        return await self._client._aget(f"/v1/automations/{automation_id}")
 
     async def aupdate_automation(
         self,
+        automation_id: str,
         *,
         if_match: str | None = None,
         name: str | None = None,
+        description: str | None = None,
         status: str | None = None,
-        trigger: Any | None = None,
+        trigger: dict[str, Any] | None = None,
+        or_triggers: list[dict[str, Any]] | None = None,
+        graph: dict[str, Any] | None = None,
         subjects: Any | None = None,
         filter: Any | None = None,
         conditions: Any | None = None,
         alert: Any | None = None,
         steps: list[Any] | None = None,
-        limits: Any | None = None,
+        limits: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Edit an automation (async)"""
-        payload = self._build_payload(
-            name=name,
-            status=status,
-            trigger=trigger,
-            subjects=subjects,
-            filter=filter,
-            conditions=conditions,
-            alert=alert,
-            steps=steps,
-            limits=limits,
+        payload = self._build_body(
+            {
+                "name": name,
+                "description": description,
+                "status": status,
+                "trigger": trigger,
+                "orTriggers": or_triggers,
+                "graph": graph,
+                "subjects": subjects,
+                "filter": filter,
+                "conditions": conditions,
+                "alert": alert,
+                "steps": steps,
+                "limits": limits,
+            }
         )
+        headers: dict[str, str] = {}
+        if if_match is not None:
+            headers["If-Match"] = if_match
         return await self._client._apatch(
-            "/v1/automations/{automationId}", data=payload
+            f"/v1/automations/{automation_id}", data=payload, headers=headers
         )
 
-    async def adelete_automation(self) -> dict[str, Any]:
+    async def adelete_automation(self, automation_id: str) -> dict[str, Any]:
         """Delete an automation (async)"""
-        return await self._client._adelete("/v1/automations/{automationId}")
+        return await self._client._adelete(f"/v1/automations/{automation_id}")
 
     async def aactivate_automation(self, automation_id: str) -> dict[str, Any]:
         """Turn an automation on (async)"""
@@ -560,12 +764,18 @@ class AutomationsResource:
         """Turn an automation off (async)"""
         return await self._client._apost(f"/v1/automations/{automation_id}/pause")
 
+    async def atake_over_automation(self, automation_id: str) -> dict[str, Any]:
+        """Take over an automation (async)"""
+        return await self._client._apost(f"/v1/automations/{automation_id}/take-over")
+
     async def apreview_automation(
         self, automation_id: str, *, limit: int | None = 100
     ) -> dict[str, Any]:
         """Preview a saved automation (async)"""
-        params = self._build_params(
-            limit=limit,
+        params = self._build_query(
+            {
+                "limit": limit,
+            }
         )
         return await self._client._apost(
             f"/v1/automations/{automation_id}/preview", params=params
@@ -575,8 +785,10 @@ class AutomationsResource:
         self, *, scope: str | None = "team"
     ) -> dict[str, Any]:
         """List automation templates (async)"""
-        params = self._build_params(
-            scope=scope,
+        params = self._build_query(
+            {
+                "scope": scope,
+            }
         )
         return await self._client._aget("/v1/automations/templates", params=params)
 
@@ -590,11 +802,13 @@ class AutomationsResource:
         automations: list[Any] | None = None,
     ) -> dict[str, Any]:
         """Create an automation template (async)"""
-        payload = self._build_payload(
-            name=name,
-            description=description,
-            from_=from_,
-            automations=automations,
+        payload = self._build_body(
+            {
+                "name": name,
+                "description": description,
+                "from": from_,
+                "automations": automations,
+            }
         )
         headers: dict[str, str] = {}
         if idempotency_key is not None:
@@ -618,12 +832,14 @@ class AutomationsResource:
         automations: list[Any] | None = None,
     ) -> dict[str, Any]:
         """Update an automation template (async)"""
-        payload = self._build_payload(
-            name=name,
-            description=description,
-            visibility=visibility,
-            from_=from_,
-            automations=automations,
+        payload = self._build_body(
+            {
+                "name": name,
+                "description": description,
+                "visibility": visibility,
+                "from": from_,
+                "automations": automations,
+            }
         )
         return await self._client._apatch(
             f"/v1/automations/templates/{template_id}", data=payload
@@ -643,10 +859,12 @@ class AutomationsResource:
         status: str | None = "paused",
     ) -> dict[str, Any]:
         """Install an automation template (async)"""
-        payload = self._build_payload(
-            inputs=inputs,
-            targets=targets,
-            status=status,
+        payload = self._build_body(
+            {
+                "inputs": inputs,
+                "targets": targets,
+                "status": status,
+            }
         )
         headers: dict[str, str] = {}
         if idempotency_key is not None:
@@ -673,10 +891,12 @@ class AutomationsResource:
         status: str | None = "paused",
     ) -> dict[str, Any]:
         """Install a shared automation template (async)"""
-        payload = self._build_payload(
-            inputs=inputs,
-            targets=targets,
-            status=status,
+        payload = self._build_body(
+            {
+                "inputs": inputs,
+                "targets": targets,
+                "status": status,
+            }
         )
         headers: dict[str, str] = {}
         if idempotency_key is not None:
@@ -703,10 +923,12 @@ class AutomationsResource:
         status: str | None = "paused",
     ) -> dict[str, Any]:
         """Install a Zernio automation template (async)"""
-        payload = self._build_payload(
-            inputs=inputs,
-            targets=targets,
-            status=status,
+        payload = self._build_body(
+            {
+                "inputs": inputs,
+                "targets": targets,
+                "status": status,
+            }
         )
         headers: dict[str, str] = {}
         if idempotency_key is not None:
@@ -723,8 +945,10 @@ class AutomationsResource:
 
     async def aupdate_automation_controls(self, paused: bool) -> dict[str, Any]:
         """Turn every ad automation off or on (async)"""
-        payload = self._build_payload(
-            paused=paused,
+        payload = self._build_body(
+            {
+                "paused": paused,
+            }
         )
         return await self._client._apatch("/v1/automations/controls", data=payload)
 
@@ -737,11 +961,13 @@ class AutomationsResource:
         daily_raise_limit: Any | None = None,
     ) -> dict[str, Any]:
         """Update one ad account's controls (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            paused=paused,
-            daily_raise_limit=daily_raise_limit,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "paused": paused,
+                "dailyRaiseLimit": daily_raise_limit,
+            }
         )
         return await self._client._apatch(
             "/v1/automations/controls/ad-accounts", data=payload
@@ -751,9 +977,11 @@ class AutomationsResource:
         self, automation_id: str, *, status: str | None = None, limit: int | None = 20
     ) -> dict[str, Any]:
         """List an automation's approval requests (async)"""
-        params = self._build_params(
-            status=status,
-            limit=limit,
+        params = self._build_query(
+            {
+                "status": status,
+                "limit": limit,
+            }
         )
         return await self._client._aget(
             f"/v1/automations/{automation_id}/approvals", params=params
@@ -771,8 +999,10 @@ class AutomationsResource:
         self, automation_id: str, approval_id: str, *, token: str | None = None
     ) -> dict[str, Any]:
         """Approve an approval request (async)"""
-        payload = self._build_payload(
-            token=token,
+        payload = self._build_body(
+            {
+                "token": token,
+            }
         )
         return await self._client._apost(
             f"/v1/automations/{automation_id}/approvals/{approval_id}/approve",
@@ -783,8 +1013,10 @@ class AutomationsResource:
         self, automation_id: str, approval_id: str, *, token: str | None = None
     ) -> dict[str, Any]:
         """Reject an approval request (async)"""
-        payload = self._build_payload(
-            token=token,
+        payload = self._build_body(
+            {
+                "token": token,
+            }
         )
         return await self._client._apost(
             f"/v1/automations/{automation_id}/approvals/{approval_id}/reject",
@@ -795,8 +1027,10 @@ class AutomationsResource:
         self, body: dict[str, Any], *, days: int | None = 30
     ) -> dict[str, Any]:
         """Backtest an unsaved automation (async)"""
-        params = self._build_params(
-            days=days,
+        params = self._build_query(
+            {
+                "days": days,
+            }
         )
         return await self._client._apost(
             "/v1/automations/backtest", data=body, params=params
@@ -806,8 +1040,10 @@ class AutomationsResource:
         self, automation_id: str, *, days: int | None = 30
     ) -> dict[str, Any]:
         """Backtest a saved automation (async)"""
-        params = self._build_params(
-            days=days,
+        params = self._build_query(
+            {
+                "days": days,
+            }
         )
         return await self._client._apost(
             f"/v1/automations/{automation_id}/backtest", params=params

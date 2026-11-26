@@ -5,7 +5,7 @@ import json
 import logging
 from datetime import datetime
 from types import SimpleNamespace
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 import httpx
 import pytest
@@ -18,10 +18,10 @@ from fastmcp.server.transforms.search import BM25SearchTransform
 from sentry_sdk.transport import Transport
 
 from late.client.exceptions import LateAPIError
-from late.mcp import telemetry
+from late.mcp import telemetry, user_agent
+from late.mcp.middleware import ToolTelemetryMiddleware, tool_telemetry
 from late.mcp.telemetry import (
     ServerErrorAccessLogFilter,
-    ToolTelemetryMiddleware,
     init_sentry,
     quiet_routine_logs,
 )
@@ -125,6 +125,66 @@ async def test_every_tool_call_logs_its_outcome_and_latency(
     assert fields.items() <= line.items()
 
 
+async def test_rejected_arguments_log_which_fields_failed_without_values(
+    caplog,
+) -> None:
+    caplog.set_level(logging.INFO, logger="late.mcp.tools")
+    server = _server()
+
+    @server.tool
+    def filtered(status: Literal["active", "paused"], limit: int = 10) -> str:
+        return f"{status} {limit}"
+
+    async with Client(server) as client:
+        await client.call_tool(
+            "filtered", {"status": "not_deleted", "limit": "many"}, raise_on_error=False
+        )
+
+    [line] = _logged(caplog)
+    assert line["outcome"] == "error"
+    assert line["error_type"] == "InvalidArguments"
+    assert line["invalid_arguments"] == "status: literal_error, limit: int_parsing"
+    assert "status_code" not in line
+    assert "not_deleted" not in json.dumps(line)
+
+
+async def test_an_sdk_model_rejecting_a_response_keeps_its_validation_error_type(
+    caplog,
+) -> None:
+    caplog.set_level(logging.INFO, logger="late.mcp.tools")
+    server = _server()
+
+    @server.tool
+    def rejects_response() -> str:
+        AccountsListResponse.model_validate({"accounts": "nope"})
+        return "unreachable"
+
+    async with Client(server) as client:
+        await client.call_tool("rejects_response", {}, raise_on_error=False)
+
+    [line] = _logged(caplog)
+    assert line["error_type"] == "ValidationError"
+    assert "invalid_arguments" not in line
+
+
+async def test_rejected_arguments_tag_the_sentry_transaction(sentry_events) -> None:
+    server = _server()
+
+    @server.tool
+    def takes_a_number(value: int) -> int:
+        return value
+
+    async with Client(server) as client:
+        await client.call_tool(
+            "takes_a_number", {"value": "nope"}, raise_on_error=False
+        )
+
+    [transaction] = sentry_events.payloads("transaction")
+    assert transaction["tags"]["mcp.error_type"] == "InvalidArguments"
+    assert transaction["tags"]["mcp.invalid_arguments"] == "value: int_parsing"
+    assert sentry_events.payloads("event") == []
+
+
 def test_sentry_stays_off_without_a_dsn(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.delenv("SENTRY_DSN", raising=False)
     assert init_sentry() is False
@@ -207,11 +267,20 @@ async def test_expected_failures_open_no_sentry_issue(sentry_events) -> None:
         raise ToolError("Post not found")
 
     @server.tool
+    def rewrapped_tool_error() -> str:
+        # How a generated tool refuses a file too large to return.
+        try:
+            raise ToolError("clip.mp4 is larger than the 10 MB")
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @server.tool
     def takes_a_number(value: int) -> int:
         return value
 
     async with Client(server) as client:
         await client.call_tool("bare_tool_error", {}, raise_on_error=False)
+        await client.call_tool("rewrapped_tool_error", {}, raise_on_error=False)
         await client.call_tool(
             "takes_a_number", {"value": "nope"}, raise_on_error=False
         )
@@ -270,10 +339,26 @@ async def test_a_tool_behind_call_tool_is_one_sentry_transaction(sentry_events) 
     assert transaction["tags"]["mcp.via"] == "call_tool"
 
 
+async def test_a_guessed_name_through_call_tool_opens_no_sentry_issue(
+    sentry_events, quieted_fastmcp_logs
+) -> None:
+    # FastMCP 4's call_tool checks the name itself and re-wraps its NotFoundError
+    # in a ToolError: 8 Cursor guesses became Sentry issue ZERNIO-MCP-S.
+    async with Client(_proxied_server()) as client:
+        await client.call_tool(
+            "call_tool",
+            {"name": "lead_gen_list_forms", "arguments": {}},
+            raise_on_error=False,
+        )
+
+    assert sentry_events.payloads("event") == []
+    assert quieted_fastmcp_logs.records == []
+
+
 async def test_a_direct_call_is_tagged_direct_with_its_caller(
     sentry_events, monkeypatch
 ) -> None:
-    monkeypatch.setattr(telemetry, "_caller_key", lambda: "a1b2c3d4e5f6")
+    monkeypatch.setattr(tool_telemetry, "_caller_key", lambda: "a1b2c3d4e5f6")
 
     async with Client(_server()) as client:
         await client.call_tool("fine", {})
@@ -293,7 +378,7 @@ async def test_a_call_records_whether_its_request_waited_on_token_verification(
         scopes=[],
         claims={"resolved_by": "upstream", "waited_ms": 312},
     )
-    monkeypatch.setattr(telemetry, "get_access_token", lambda: token)
+    monkeypatch.setattr(tool_telemetry, "get_access_token", lambda: token)
 
     async with Client(_server()) as client:
         await client.call_tool("fine", {})
@@ -414,7 +499,7 @@ async def test_invalid_arguments_name_the_field_but_never_log_its_value(
 
     [record] = quieted_fastmcp_logs.records
     assert record.getMessage() == (
-        "Invalid arguments for tool 'takes_a_number': count: int_parsing"
+        "Invalid arguments for tool 'takes_a_number': int_parsing"
     )
 
 
@@ -433,6 +518,8 @@ async def test_an_sdk_model_that_rejects_a_response_stays_in_the_logs(
 
     [record] = quieted_fastmcp_logs.records
     assert "accounts: list_type" in record.getMessage()
+    assert "nope" not in record.getMessage()
+    assert record.exc_info is None
 
 
 @pytest.mark.usefixtures("quieted_fastmcp_logs")
@@ -459,3 +546,59 @@ def test_access_lines_survive_only_for_server_errors(status_code, kept) -> None:
     )
 
     assert ServerErrorAccessLogFilter().filter(record) is kept
+
+
+async def test_a_call_logs_the_user_and_the_full_user_agent_of_its_caller(
+    caplog, monkeypatch
+) -> None:
+    caplog.set_level(logging.INFO, logger="late.mcp.tools")
+    token = AccessToken(
+        token="sk_live",
+        client_id="zernio",
+        scopes=[],
+        claims={"resolved_by": "cache", "waited_ms": 0, "user_id": "u" * 24},
+    )
+    monkeypatch.setattr(tool_telemetry, "get_access_token", lambda: token)
+    monkeypatch.setattr(
+        user_agent, "get_http_headers", lambda: {"user-agent": "Cursor/1.7.0 (linux)"}
+    )
+
+    async with Client(_server()) as client:
+        await client.call_tool("fine", {})
+
+    [line] = _logged(caplog)
+    assert line["user_id"] == "u" * 24
+    assert line["user_agent"] == "Cursor/1.7.0 (linux)"
+    assert line["client"] == "Cursor"
+
+
+async def test_a_call_without_a_known_user_logs_no_user_id(caplog) -> None:
+    caplog.set_level(logging.INFO, logger="late.mcp.tools")
+
+    async with Client(_server()) as client:
+        await client.call_tool("fine", {})
+
+    [line] = _logged(caplog)
+    assert "user_id" not in line
+    assert "user_agent" not in line
+
+
+async def test_sentry_names_the_user_on_the_transaction_and_its_errors_only(
+    sentry_events, monkeypatch
+) -> None:
+    token = AccessToken(
+        token="sk_live",
+        client_id="zernio",
+        scopes=[],
+        claims={"resolved_by": "upstream", "waited_ms": 0, "user_id": "u" * 24},
+    )
+    monkeypatch.setattr(tool_telemetry, "get_access_token", lambda: token)
+
+    async with Client(_server()) as client:
+        await client.call_tool("bug", {}, raise_on_error=False)
+
+    [transaction] = sentry_events.payloads("transaction")
+    [error] = sentry_events.payloads("event")
+    assert transaction["user"]["id"] == "u" * 24
+    assert error["user"]["id"] == "u" * 24
+    assert sentry_sdk.get_isolation_scope()._user is None

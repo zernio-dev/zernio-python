@@ -19,11 +19,28 @@ import httpx
 from fastmcp import FastMCP
 from fastmcp.exceptions import ToolError
 from fastmcp.server.dependencies import get_access_token
-from fastmcp.tools.tool import ToolResult
+from fastmcp.tools import ToolResult
 from mcp.types import TextContent, ToolAnnotations
 from pydantic import BaseModel, Field
 
+from late.client.base import _retry_after_seconds
 from late.mcp.auth import build_auth_provider, forget_rejected_token
+from late.mcp.chatgpt_tools import (
+    CHATGPT_GENERATED_TOOLS,
+    oauth_scopes_of,
+    register_chatgpt_generated_tools,
+)
+from late.mcp.generated_tools import TOOL_OAUTH_SCOPES
+from late.mcp.media_items import media_item
+from late.mcp.middleware import (
+    MissingScopeMiddleware,
+    RateLimitGuidanceMiddleware,
+    WellFormedOutputMiddleware,
+    WellFormedOutputTransform,
+)
+from late.mcp.middleware.rate_limit import wait_hint
+from late.mcp.server import _get_client
+from late.mcp.user_agent import mcp_user_agent
 
 API_BASE = (
     os.getenv("ZERNIO_BASE_URL")
@@ -43,10 +60,15 @@ _DAY_NAMES = [
     "Saturday",
     "Sunday",
 ]
-_VIDEO_EXT = (".mp4", ".mov", ".avi", ".webm", ".m4v")
-# Everything this surface can do fits these four; ChatGPT asks the user to
-# grant every scope the discovery document advertises.
-CHATGPT_SCOPES = ["posts:read", "posts:write", "accounts:read", "analytics:read"]
+# The hand-shaped tools need the first four; the generated ones add theirs.
+# ChatGPT asks the user to grant every scope the discovery document advertises,
+# so a scope no listed tool needs must not be here.
+CHATGPT_SCOPES = list(
+    dict.fromkeys(
+        ["posts:read", "posts:write", "accounts:read", "analytics:read"]
+        + oauth_scopes_of(CHATGPT_GENERATED_TOOLS)
+    )
+)
 
 PostStatus = Literal["draft", "scheduled", "published", "failed"]
 
@@ -213,11 +235,16 @@ def _bearer() -> str:
     raise ToolError("Sign in to Zernio to use this tool.")
 
 
-def _error_message(response: httpx.Response) -> str:
+def _json_object(response: httpx.Response) -> dict[str, Any]:
     try:
         body = response.json()
     except ValueError:
-        body = {}
+        return {}
+    return body if isinstance(body, dict) else {}
+
+
+def _error_message(response: httpx.Response) -> str:
+    body = _json_object(response)
     error = body.get("error") if isinstance(body, dict) else None
     if isinstance(error, dict):
         message = error.get("message") or error.get("code")
@@ -232,13 +259,26 @@ async def _api(
     method: str, path: str, *, params: dict[str, Any] | None = None, json: Any = None
 ) -> Any:
     bearer = _bearer()
-    headers = {"Authorization": f"Bearer {bearer}", "Accept": "application/json"}
+    headers = {
+        "Authorization": f"Bearer {bearer}",
+        "Accept": "application/json",
+        "User-Agent": mcp_user_agent(),
+    }
     async with httpx.AsyncClient(base_url=API_BASE, timeout=_TIMEOUT) as client:
         response = await client.request(
             method, path, params=params, json=json, headers=headers
         )
     if response.status_code == 401:
         forget_rejected_token(bearer)
+    if response.status_code == 429:
+        body = _json_object(response)
+        details = body.get("details")
+        hint = wait_hint(
+            _retry_after_seconds(response.headers.get("Retry-After")),
+            platform=body.get("platform"),
+            resets_at=details.get("resetsAt") if isinstance(details, dict) else None,
+        )
+        raise ToolError(f"{_error_message(response).rstrip('.')}. {hint}")
     if response.status_code >= 400:
         raise ToolError(_error_message(response))
     return response.json() if response.content else {}
@@ -333,7 +373,9 @@ async def _posting_accounts_page(
 
 async def _find_posting_account(account_id: str) -> dict[str, Any] | None:
     data = await _api(
-        "GET", "/v1/accounts", params={"search": account_id, "limit": _ACCOUNT_LOOKUP_LIMIT}
+        "GET",
+        "/v1/accounts",
+        params={"search": account_id, "limit": _ACCOUNT_LOOKUP_LIMIT},
     )
     return next(
         (
@@ -421,25 +463,12 @@ async def _usernames(posts: list[dict[str, Any]]) -> dict[str, str]:
     except (ToolError, httpx.HTTPError):
         return {}
     return {
-        str(a["_id"]): a.get("username") or a.get("displayName") or ""
-        for a in accounts
+        str(a["_id"]): a.get("username") or a.get("displayName") or "" for a in accounts
     }
 
 
 def _media_items(media_urls: list[str] | None) -> list[dict[str, str]]:
-    items = []
-    for url in media_urls or []:
-        lower = url.lower().split("?")[0]
-        if lower.endswith(_VIDEO_EXT):
-            media_type = "video"
-        elif lower.endswith(".gif"):
-            media_type = "gif"
-        elif lower.endswith(".pdf"):
-            media_type = "document"
-        else:
-            media_type = "image"
-        items.append({"type": media_type, "url": url})
-    return items
+    return [media_item(url) for url in media_urls or []]
 
 
 def _schedule_fields(scheduled_for: str, tz: str | None) -> dict[str, str]:
@@ -525,6 +554,10 @@ chatgpt_mcp = FastMCP(
     website_url="https://zernio.com",
     auth=build_auth_provider(scopes=CHATGPT_SCOPES),
 )
+chatgpt_mcp.add_middleware(WellFormedOutputMiddleware())
+chatgpt_mcp.add_middleware(RateLimitGuidanceMiddleware())
+chatgpt_mcp.add_middleware(MissingScopeMiddleware(scopes_by_tool=TOOL_OAUTH_SCOPES))
+chatgpt_mcp.add_transform(WellFormedOutputTransform())
 
 
 @chatgpt_mcp.tool(
@@ -1114,3 +1147,6 @@ async def get_best_time_to_post(
         for s in slots[:5]
     ]
     return _result(best, "Best times to post (UTC):\n" + "\n".join(lines))
+
+
+register_chatgpt_generated_tools(chatgpt_mcp, _get_client)

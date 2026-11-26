@@ -87,7 +87,7 @@ def test_mcp_generator_exposes_required_headers_and_idempotency_key(mcp_generato
 
     names = [p["name"] for p in mcp_generator.extract_parameters(operation, {})]
 
-    assert names == ["x_connect_token", "idempotency_key", "profile_id"]
+    assert names == ["x_connect_token", "profile_id", "idempotency_key"]
 
 
 def test_mcp_generator_maps_octet_stream_body_to_base64(mcp_generator) -> None:

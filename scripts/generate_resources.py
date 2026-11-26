@@ -22,7 +22,7 @@ from pathlib import Path
 from typing import Any
 
 import yaml
-from openapi_body import flatten_request_body_schema, resolve_parameter_ref
+from openapi_body import flatten_request_body_schema, merge_parameters
 
 # Map OpenAPI tags to resource class names
 TAG_TO_RESOURCE: dict[str, str] = {
@@ -83,8 +83,8 @@ def camel_to_snake(name: str) -> str:
     name = re.sub(r"([a-z\d])([A-Z])", r"\1_\2", name)
     result = name.lower()
     # Reserved keywords (e.g. `from`) can't be Python identifiers; suffix with
-    # `_` per PEP 8. snake_to_camel / _build_params' to_camel strip the trailing
-    # underscore, so the wire name (`from`) round-trips unchanged.
+    # `_` per PEP 8. Only the kwarg is renamed: generated methods send the
+    # spec's original name (`from`) as the wire key.
     if keyword.iskeyword(result):
         result += "_"
     return result
@@ -129,15 +129,15 @@ def get_python_type(schema: dict[str, Any], required: bool = True) -> str:
 
 
 def extract_parameters(
-    operation: dict[str, Any], spec: dict[str, Any]
+    operation: dict[str, Any],
+    spec: dict[str, Any],
+    path_item: dict[str, Any] | None = None,
 ) -> list[dict[str, Any]]:
-    """Extract parameters from an operation."""
+    """Extract parameters from an operation (and its path item's shared ones)."""
     params = []
 
     # Query/path parameters
-    for param in operation.get("parameters", []):
-        param = resolve_parameter_ref(param, spec)
-
+    for param in merge_parameters(path_item, operation, spec):
         if "name" not in param:
             continue
 
@@ -197,8 +197,8 @@ def extract_parameters(
     # Path/query params and body props share one kwarg list; two spec names that
     # snake_case to the same kwarg would emit a "duplicate argument" SyntaxError
     # in the generated file, discovered only at pytest collection. Fail here with
-    # the operation and field names instead (fix is spec-side: rename one field;
-    # a generator-side rename would corrupt the wire key via _build_payload).
+    # the operation and field names instead (fix is spec-side: rename one field).
+    # Only the kwarg name collides; the wire key is always `original_name`.
     seen: dict[str, dict[str, Any]] = {}
     for param in params:
         clash = seen.get(param["name"])
@@ -304,27 +304,26 @@ def generate_method_body(
     use_query_params = http_method.upper() in ("GET", "DELETE") and query_params
     use_body_params = http_method.upper() in ("POST", "PUT", "PATCH", "DELETE") and body_params
     use_query_on_post = http_method.upper() in ("POST", "PUT", "PATCH") and query_params
-    # Only _get and _post accept a `headers` kwarg (see BaseClient); no
-    # operation on PUT/PATCH/DELETE currently has a header param.
-    use_headers = http_method.upper() in ("GET", "POST") and header_params
+    # Every BaseClient verb accepts `headers`; Idempotency-Key and If-Match
+    # also appear on PUT/PATCH/DELETE operations.
+    use_headers = bool(header_params)
 
     # Build params dict if needed
     if use_query_params or use_query_on_post:
-        lines.append("        params = self._build_params(")
+        lines.append("        params = self._build_query({")
         for p in query_params:
-            lines.append(f"            {p['name']}={p['name']},")
-        lines.append("        )")
+            lines.append(f'            "{p["original_name"]}": {p["name"]},')
+        lines.append("        })")
 
     # Build payload dict if needed
     if use_body_params:
-        lines.append("        payload = self._build_payload(")
+        lines.append("        payload = self._build_body({")
         for p in body_params:
-            lines.append(f"            {p['name']}={p['name']},")
-        lines.append("        )")
+            lines.append(f'            "{p["original_name"]}": {p["name"]},')
+        lines.append("        })")
 
     # Build headers dict if needed. Keyed on original_name, never the snake_case
-    # param name: the wire name is `x-request-id`, and _build_params would have
-    # camelCased it to `xRequestId`.
+    # param name: the wire name is `x-request-id`, like the query and body keys.
     if use_headers:
         if all(p["required"] for p in header_params):
             entries = ", ".join(
@@ -364,6 +363,8 @@ def generate_method_body(
             call_args.append("data=payload")
         elif raw_body_params:
             call_args.append(f"data={raw_body_params[0]['name']}")
+        if use_headers:
+            call_args.append("headers=headers")
         lines.append(
             f"        return {await_prefix}self._client.{client_method}({', '.join(call_args)})"
         )
@@ -435,13 +436,16 @@ def generate_resource_class(
         "    def __init__(self, client: BaseClient) -> None:",
         "        self._client = client",
         "",
-        "    def _build_params(self, **kwargs: Any) -> dict[str, Any]:",
-        '        """Build query parameters, filtering None and empty-string values.',
+        "    def _build_query(self, fields: dict[str, Any]) -> dict[str, Any]:",
+        '        """Build query parameters keyed by their wire names, as given.',
         "",
-        "        Empty strings are filtered because MCP tool wrappers pass ``\"\"`` as the",
-        "        default for optional string args, and the API rejects empty query",
-        "        values (e.g. ``platform=``) with a 400. Filtering here keeps both direct",
-        "        SDK callers and MCP tool callers safe.",
+        "        Generated methods pass the parameter names exactly as the OpenAPI",
+        "        spec declares them, so no casing rule is applied here.",
+        "",
+        "        None and empty strings are filtered because MCP tool wrappers pass",
+        "        ``\"\"`` as the default for optional string args, and the API rejects",
+        "        empty query values (e.g. ``platform=``) with a 400. Filtering here",
+        "        keeps both direct SDK callers and MCP tool callers safe.",
         "",
         "        Enum members are unwrapped to their value: httpx serializes params",
         '        via str(), which yields "ClassName.MEMBER" for Enum members, so',
@@ -449,39 +453,60 @@ def generate_resource_class(
         "        ``status=PostStatus.FAILED`` instead of ``status=failed``.",
         '        """',
         "        from enum import Enum",
-        "        def to_camel(s: str) -> str:",
-        '            parts = s.split("_")',
-        '            return parts[0] + "".join(p.title() for p in parts[1:])',
         "        result: dict[str, Any] = {}",
-        "        for k, v in kwargs.items():",
+        "        for k, v in fields.items():",
         "            if isinstance(v, Enum):",
         "                v = v.value",
         '            if v is None or v == "":',
         "                continue",
-        "            result[to_camel(k)] = v",
+        "            result[k] = v",
         "        return result",
         "",
-        "    def _build_payload(self, **kwargs: Any) -> dict[str, Any]:",
-        '        """Build request payload, filtering None values. Enum members are',
-        '        unwrapped to their value so JSON bodies carry e.g. "failed" rather',
-        "        than a raw Enum member (plain Enum members are not JSON-serializable).",
+        "    def _build_body(self, fields: dict[str, Any]) -> dict[str, Any]:",
+        '        """Build a JSON request body keyed by its wire names, as given.',
+        "",
+        "        Generated methods pass the property names exactly as the request",
+        "        body schema declares them: most are camelCase, but some routes read",
+        "        snake_case (``ice_breakers``, ``message_send_ttl_seconds``), so no",
+        "        casing rule is applied here. None values are dropped, Enum members",
+        '        are unwrapped to their value (e.g. "failed") and datetimes are sent',
+        "        as ISO 8601 strings.",
         '        """',
         "        from datetime import datetime",
         "        from enum import Enum",
-        "        def to_camel(s: str) -> str:",
-        '            parts = s.split("_")',
-        '            return parts[0] + "".join(p.title() for p in parts[1:])',
         "        result: dict[str, Any] = {}",
-        "        for k, v in kwargs.items():",
+        "        for k, v in fields.items():",
         "            if isinstance(v, Enum):",
         "                v = v.value",
         "            if v is None:",
         "                continue",
         "            if isinstance(v, datetime):",
-        "                result[to_camel(k)] = v.isoformat()",
+        "                result[k] = v.isoformat()",
         "            else:",
-        "                result[to_camel(k)] = v",
+        "                result[k] = v",
         "        return result",
+        "",
+        "    def _build_params(self, **kwargs: Any) -> dict[str, Any]:",
+        '        """Build query parameters from snake_case kwargs, camelCasing each key.',
+        "",
+        "        For hand-written resource methods, whose endpoints take camelCase",
+        "        names. Generated methods use _build_query with the spec's names.",
+        '        """',
+        "        def to_camel(s: str) -> str:",
+        '            parts = s.split("_")',
+        '            return parts[0] + "".join(p.title() for p in parts[1:])',
+        "        return self._build_query({to_camel(k): v for k, v in kwargs.items()})",
+        "",
+        "    def _build_payload(self, **kwargs: Any) -> dict[str, Any]:",
+        '        """Build a request body from snake_case kwargs, camelCasing each key.',
+        "",
+        "        For hand-written resource methods, whose endpoints take camelCase",
+        "        names. Generated methods use _build_body with the spec's names.",
+        '        """',
+        "        def to_camel(s: str) -> str:",
+        '            parts = s.split("_")',
+        '            return parts[0] + "".join(p.title() for p in parts[1:])',
+        "        return self._build_body({to_camel(k): v for k, v in kwargs.items()})",
     ])
 
     # Generate sync methods
@@ -652,7 +677,7 @@ def main() -> int:
                 "path": path,
                 "summary": operation.get("summary", ""),
                 "description": operation.get("description", ""),
-                "params": extract_parameters(operation, spec),
+                "params": extract_parameters(operation, spec, path_item),
             })
 
     # Paths

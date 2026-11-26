@@ -98,6 +98,40 @@ def test_a_value_outside_a_string_enum_is_rejected_before_the_api_is_called(gene
         )
 
 
+ADS_LIST_OPERATION = {
+    "summary": "List campaigns",
+    "x-platforms": ["meta", "google", "x"],
+    "parameters": [
+        {
+            "name": "platform",
+            "in": "query",
+            "schema": {"type": "string", "enum": ["facebook", "instagram", "google", "twitter"]},
+        },
+    ],
+}
+
+
+def test_platforms_line_lists_the_platform_enum_when_x_platforms_disagrees(generator):
+    mcp = _register_probe(generator, ADS_LIST_OPERATION)
+    tool = asyncio.run(mcp.list_tools())[0]
+
+    assert tool.description.startswith(
+        "List campaigns\n\n"
+        "Platforms (the platform parameter takes): facebook, instagram, google, twitter\n\n"
+        "Args:"
+    )
+    with pytest.raises(Exception, match="Input should be 'facebook'"):
+        asyncio.run(mcp.call_tool("probe_tool", {"platform": "meta"}))
+
+
+def test_platforms_line_keeps_x_platforms_without_a_platform_enum(generator):
+    operation = {"summary": "List leads", "x-platforms": ["meta", "linkedin"], "parameters": []}
+    mcp = _register_probe(generator, operation)
+    tool = asyncio.run(mcp.list_tools())[0]
+
+    assert tool.description == "List leads\n\nPlatforms: meta, linkedin"
+
+
 def test_long_operation_descriptions_are_capped(generator):
     lines = generator.build_tool_description_lines("Summary", "word " * 1000, [])
 

@@ -14,6 +14,7 @@ Usage:
 
 from __future__ import annotations
 
+import ast
 import keyword
 import re
 import sys
@@ -21,7 +22,7 @@ from pathlib import Path
 from typing import Any
 
 import yaml
-from openapi_body import flatten_request_body_schema, resolve_parameter_ref
+from openapi_body import flatten_request_body_schema, merge_parameters
 
 # Map OpenAPI tags to SDK resource names
 TAG_TO_RESOURCE: dict[str, str] = {
@@ -105,6 +106,56 @@ IDEMPOTENCY_KEY_PARAM: dict[str, Any] = {
     "sdk_name": "idempotency_key",
 }
 
+# POSTs that only read (queries, reports, previews, validations, estimates), so their
+# tools are annotated read-only instead of as writes.
+READ_ONLY_OPERATIONS = {
+    "validatePostLength",
+    "validatePost",
+    "validateMedia",
+    "queryMetaAds",
+    "queryGoogleAds",
+    "queryTikTokAds",
+    "queryGoogleAnalytics",
+    "runGoogleAnalyticsReport",
+    "runGoogleAnalyticsRealtimeReport",
+    "queryGoogleSearchConsoleSearchAnalytics",
+    "inspectGoogleSearchConsoleUrl",
+    "batchGetGoogleBusinessReviews",
+    "searchGoogleBusinessLocations",
+    "fetchGoogleBusinessVerificationOptions",
+    "previewAutomationDraft",
+    "previewAutomation",
+    "previewAdRule",
+    "generateAdPreviews",
+    "generateKeywordIdeas",
+    "generateKeywordHistoricalMetrics",
+    "estimateAdReach",
+    "getLinkedInBidPricing",
+    "getLinkedInSupplyForecast",
+    "previewTopup",
+    "previewCampaignPayoutBatch",
+    "validatePhoneNumberKycAddress",
+    "validateWhatsAppNumberKycAddress",
+    "checkPhoneNumberPortability",
+}
+
+# Reads of public content outside the user's own workspace. OpenAI's plugin
+# guidelines ask for openWorldHint true on these ("public or open-ended
+# entities, including read-only web search"); every other read stays false.
+OPEN_WORLD_READ_OPERATIONS = {
+    "searchReddit",
+    "getRedditFeed",
+    "getRedditPostComments",
+    "searchTweets",
+    "getTweet",
+    "getInstagramBusinessDiscovery",
+    "searchAdLibrary",
+    "searchAdTargeting",
+    "searchAdInterests",
+    "searchInstagramAudio",
+    "listTikTokCommercialMusic",
+}
+
 # Operations to SKIP (not useful for MCP)
 SKIP_OPERATIONS = {
     # OAuth redirect endpoints
@@ -168,7 +219,8 @@ def _resolve_schema(schema: dict[str, Any], spec: dict[str, Any] | None) -> dict
         `type` (we mostly see single-element allOf as a "ref + description"
         pattern, but this generalises safely).
       - `{"oneOf"|"anyOf": [...]}` -> if every non-null branch resolves to the
-        same scalar/object/array `type`, return that branch; otherwise leave the
+        same scalar/object/array `type`, return that branch (string branches
+        merge their enums, or drop the enum if any branch has none); otherwise leave the
         schema alone so the caller falls back to `str`. A deliberately
         over-broad type is worse than no type for the LLM.
 
@@ -202,6 +254,16 @@ def _resolve_schema(schema: dict[str, Any], spec: dict[str, Any] | None) -> dict
             types.discard("null")
             if len(types) == 1:
                 only = types.pop()
+                if only == "string":
+                    # `anyOf: [$ref AdStatus, {type: string, enum: [not_deleted]}]`
+                    # accepts every branch's values, so merge the enums. One
+                    # branch without an enum means any string goes: an
+                    # over-narrow Literal rejects valid calls before the API.
+                    strings = [b for b in resolved_branches if b.get("type") == "string"]
+                    if all(b.get("enum") for b in strings):
+                        merged = list(dict.fromkeys(v for b in strings for v in b["enum"]))
+                        return {**strings[0], "enum": merged}
+                    return {"type": "string"}
                 for b in resolved_branches:
                     if b.get("type") == only:
                         return b
@@ -530,12 +592,25 @@ def _with_agent_view(operation_id: str, params: list[dict[str, Any]]) -> list[di
 def extract_parameters(
     operation: dict[str, Any],
     spec: dict[str, Any] | None = None,
+    path_item: dict[str, Any] | None = None,
+) -> list[dict[str, Any]]:
+    """Extract parameters from operation, with idempotency_key listed last so
+    an agent reads the operation's own arguments first."""
+    params = _extract_parameters(operation, spec, path_item)
+    return sorted(params, key=lambda p: p["name"] == "idempotency_key")
+
+
+def _extract_parameters(
+    operation: dict[str, Any],
+    spec: dict[str, Any] | None = None,
+    path_item: dict[str, Any] | None = None,
 ) -> list[dict[str, Any]]:
     """Extract parameters from operation.
 
     `spec` is threaded through so `get_python_type` can dereference
     `$ref`/`allOf` schemas to read the underlying type. A `$ref` parameter
-    without `spec` raises ValueError.
+    without `spec` raises ValueError. `path_item` supplies the parameters its
+    operations share (see `merge_parameters`).
 
     Dedupes by Python name: when the same parameter appears in both the path
     and the request body (e.g. `accountId` as a path param and also in the
@@ -552,9 +627,7 @@ def extract_parameters(
         seen_names.add(entry["name"])
         params.append(entry)
 
-    for param in operation.get("parameters", []):
-        param = resolve_parameter_ref(param, spec)
-
+    for param in merge_parameters(path_item, operation, spec):
         if "name" not in param:
             continue
 
@@ -677,16 +750,35 @@ def _escape_docstring_text(text: str) -> str:
     return text.replace("\\", "\\\\").replace('"', '\\"')
 
 
+def _platform_param_values(params: list[dict[str, Any]]) -> tuple[str, list[str]] | None:
+    """Name and allowed values of the tool's `platform`/`platforms` argument
+    when it is typed as a string enum, read off its generated `Literal[...]`."""
+    for p in params:
+        if p["name"] not in ("platform", "platforms"):
+            continue
+        match = re.search(r"Literal\[([^\]]*)\]", p["type"])
+        if match:
+            return p["name"], list(ast.literal_eval(f"({match.group(1)},)"))
+    return None
+
+
 def build_tool_description_lines(
     summary: str,
     description: str,
     platforms: list[str],
+    params: list[dict[str, Any]] | None = None,
 ) -> list[str]:
-    """Summary, then the operation description and its `x-platforms`.
+    """Summary, then the operation description and its supported platforms.
 
     The MCP tool description is all an agent sees when picking a tool, so the
     spec's operation description (e.g. "Google only; every other platform
     returns 501") and supported platforms must reach it, not just the summary.
+
+    `x-platforms` holds product names ("meta", "x") while a `platform` enum
+    holds stored values ("facebook", "twitter"); agents copy the docstring into
+    the argument, so when the enum rejects an `x-platforms` value the line
+    lists the enum instead. A narrower `x-platforms` (e.g. "google" against a
+    wider enum) is kept: it is valid and says more.
     """
     lines = [summary.rstrip()]
     if description.strip():
@@ -694,7 +786,12 @@ def build_tool_description_lines(
         lines.extend(_escape_docstring_text(_truncate_description(description)).split("\n"))
     if platforms:
         lines.append("")
-        lines.append(f"Platforms: {', '.join(platforms)}")
+        platform_param = _platform_param_values(params or [])
+        if platform_param and not set(platforms) <= set(platform_param[1]):
+            name, values = platform_param
+            lines.append(f"Platforms (the {name} parameter takes): {', '.join(values)}")
+        else:
+            lines.append(f"Platforms: {', '.join(platforms)}")
     return lines
 
 
@@ -709,6 +806,8 @@ def generate_tool_handler(
     description: str = "",
     platforms: list[str] | None = None,
     idempotency_scope: str | None = None,
+    *,
+    open_world: bool | None = None,
 ) -> str:
     """Generate a complete tool handler function."""
     lines = []
@@ -727,7 +826,7 @@ def generate_tool_handler(
     sig = ", ".join(sig_params)
 
     # Docstring - strip trailing whitespace from all lines
-    doc_lines = build_tool_description_lines(summary, description, platforms or [])
+    doc_lines = build_tool_description_lines(summary, description, platforms or [], params)
     if idempotency_scope:
         doc_lines.extend(["", SAME_ARGUMENTS_IDEMPOTENT_NOTE])
     if params:
@@ -748,15 +847,17 @@ def generate_tool_handler(
     docstring = "\n    ".join(line.rstrip() for line in doc_lines)
 
     # Tool annotation (required by the Anthropic Connectors Directory AND the
-    # ChatGPT Apps submission, which needs all three hints set explicitly).
+    # ChatGPT plugin review, which needs all three hints set explicitly).
     # title is rendered via repr() so quotes/specials in the summary are
-    # escaped safely. openWorldHint mirrors read_only: write tools act on
-    # external social platforms (publish/send/etc.) so they touch the open
-    # world; GET tools only read, so they don't change external state.
+    # escaped safely. Every write counts as destructive and open-world: it
+    # publishes, sends, spends or changes a connected platform, and OpenAI
+    # reads "can be undone" as no reason for destructiveHint false.
+    if open_world is None:
+        open_world = not read_only
     annotation = (
         f"annotations=ToolAnnotations(title={title!r}, "
         f"readOnlyHint={read_only}, destructiveHint={not read_only}, "
-        f"openWorldHint={not read_only})"
+        f"openWorldHint={open_world})"
     )
 
     lines.append("")
@@ -786,6 +887,30 @@ def generate_tool_handler(
     lines.append("        raise ToolError(f'Error: {e}') from e")
 
     return "\n".join(lines)
+
+
+def declared_oauth_scopes(scopes: list[str], read_only: bool) -> list[str]:
+    """The spec's x-oauth-scopes (any one of which reaches the operation), the one to declare first.
+
+    A read declares a :read scope and a write a :write one, so ChatGPT asks for
+    the narrowest permission the operation needs.
+    """
+    preferred = ":read" if read_only else ":write"
+    declared = next((s for s in scopes if s.endswith(preferred)), scopes[0] if scopes else None)
+    return [declared, *(s for s in scopes if s != declared)] if declared else []
+
+
+def oauth_scope_table(operations: list[dict[str, Any]]) -> list[str]:
+    scoped = sorted((op["tool_name"], op["oauth_scopes"]) for op in operations if op["oauth_scopes"])
+    return [
+        "",
+        "",
+        "# The OAuth scopes any one of which reaches each tool, from the spec's x-oauth-scopes;",
+        "# the first is the one the tool declares (securitySchemes).",
+        "TOOL_OAUTH_SCOPES: dict[str, tuple[str, ...]] = {",
+        *(f'    "{name}": ({", ".join(repr(s) for s in scopes)},),' for name, scopes in scoped),
+        "}",
+    ]
 
 
 def main() -> int:
@@ -838,6 +963,7 @@ def main() -> int:
             seen_tool_names.add(tool_name)
 
             summary = operation.get("summary", operation_id)
+            read_only = method == "get" or operation_id in READ_ONLY_OPERATIONS
             operations.append({
                 "tool_name": tool_name,
                 "resource": resource,
@@ -845,21 +971,25 @@ def main() -> int:
                 "summary": summary,
                 "description": operation.get("description", ""),
                 "platforms": operation.get("x-platforms", []),
-                # HTTP method drives the tool annotation: GET is read-only,
-                # everything else (POST/PUT/PATCH/DELETE) is treated as a
-                # destructive write. Required by Anthropic's Connectors
-                # Directory (every tool must carry readOnlyHint or
-                # destructiveHint).
-                "read_only": method == "get",
+                "read_only": read_only,
+                "open_world": not read_only or operation_id in OPEN_WORLD_READ_OPERATIONS,
+                "oauth_scopes": declared_oauth_scopes(operation.get("x-oauth-scopes") or [], read_only),
                 # Human-readable title for the annotation. First line of the
                 # OpenAPI summary, capped so it stays a short label.
                 "title": summary.split("\n")[0].strip()[:80],
                 "params": _with_agent_view(
                     operation_id,
-                    _with_page_size(operation_id, _with_bounded_limit(operation_id, extract_parameters(operation, spec))),
+                    _with_page_size(operation_id, _with_bounded_limit(operation_id, extract_parameters(operation, spec, path_item))),
                 ),
                 "idempotency_scope": tool_name if operation_id in SAME_ARGUMENTS_IDEMPOTENT_OPERATIONS else None,
             })
+
+    # The ChatGPT surface declares each listed tool's OAuth scope from this
+    # table: a spec without any x-oauth-scopes (fetched before the API served
+    # them) would empty it, so refuse to generate rather than ship that.
+    if operations and not any(op["oauth_scopes"] for op in operations):
+        print("Error: the spec carries no x-oauth-scopes; not regenerating.", file=sys.stderr)
+        return 1
 
     # Generate output file
     lines = [
@@ -872,13 +1002,19 @@ def main() -> int:
         "from __future__ import annotations",
         "",
         "import base64",
-        "from typing import Any, Literal",
+        "from typing import TYPE_CHECKING, Any, Literal",
         "",
         "from fastmcp.exceptions import ToolError",
         "from mcp.types import ToolAnnotations",
         "",
+        "from late.client.binary_response import BinaryResponse",
+        "",
+        "from .binary_content import binary_tool_result",
         "from .idempotency import same_arguments_key",
         "from .response_format import format_payload",
+        "",
+        "if TYPE_CHECKING:",
+        "    from fastmcp.tools import ToolResult",
         "",
         "",
         "def _decode_base64(value: str) -> bytes:",
@@ -904,10 +1040,13 @@ def main() -> int:
         "    return str(value)",
         "",
         "",
-        "def _format_response(response: Any) -> str:",
+        "def _format_response(response: Any) -> str | ToolResult:",
         '    """Format SDK response for MCP output."""',
         "    if response is None:",
         '        return "Success"',
+        "    if isinstance(response, BinaryResponse):",
+        "        # A file the API streamed as raw bytes (media, attachment, receipt).",
+        "        return binary_tool_result(response)",
         "    if hasattr(response, '__dict__'):",
         "        # Handle response objects",
         "        if hasattr(response, 'posts') and response.posts:",
@@ -977,6 +1116,7 @@ def main() -> int:
                 op["description"],
                 op["platforms"],
                 op["idempotency_scope"],
+                open_world=op["open_world"],
             )
             # Indent for being inside register function
             handler_lines = handler.split("\n")
@@ -985,6 +1125,8 @@ def main() -> int:
                     lines.append(f"    {hl}")
                 else:
                     lines.append("")
+
+    lines.extend(oauth_scope_table(operations))
 
     # Output
     output_file = project_root / "src" / "late" / "mcp" / "generated_tools.py"

@@ -4,6 +4,7 @@ Custom exceptions for Late SDK.
 
 from __future__ import annotations
 
+import math
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
@@ -61,7 +62,13 @@ class LateAuthenticationError(LateAPIError):
 
 
 class LateRateLimitError(LateAPIError):
-    """Exception raised when rate limit is exceeded (429)."""
+    """Exception raised when rate limit is exceeded (429).
+
+    `retry_after` is the API's Retry-After in seconds. It covers every 429:
+    the Zernio API limit and platform quotas (Meta, Google, Reddit, ...),
+    where `reset_time` (the Zernio API window) says nothing about when the
+    platform accepts requests again.
+    """
 
     def __init__(
         self,
@@ -69,16 +76,22 @@ class LateRateLimitError(LateAPIError):
         reset_time: datetime | None = None,
         limit: int | None = None,
         remaining: int | None = None,
+        retry_after: float | None = None,
+        details: dict[str, Any] | None = None,
     ) -> None:
-        super().__init__(message, status_code=429)
+        super().__init__(message, status_code=429, details=details)
         self.reset_time = reset_time
         self.limit = limit
         self.remaining = remaining
+        self.retry_after = retry_after
 
     def __str__(self) -> str:
-        base = f"[429] {self.message}"
-        if self.reset_time:
-            base += f" (resets at {self.reset_time.isoformat()})"
+        base = super().__str__()
+        if self.retry_after is not None:
+            return f"{base} (retry after {math.ceil(self.retry_after)}s)"
+        # The Zernio API window only times a 429 from the Zernio API itself.
+        if self.reset_time and not self.details.get("platform"):
+            return f"{base} (resets at {self.reset_time.isoformat()})"
         return base
 
 

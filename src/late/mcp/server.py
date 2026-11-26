@@ -39,20 +39,30 @@ from typing import TYPE_CHECKING, Any
 
 import httpx
 from fastmcp import FastMCP
-from fastmcp.server.dependencies import get_access_token
+from fastmcp.exceptions import McpError
+from fastmcp.server.dependencies import get_access_token, get_http_request
 from fastmcp.server.transforms.search import BM25SearchTransform
 from fastmcp.server.transforms.search.base import serialize_tools_for_output_markdown
-from mcp.types import ToolAnnotations
+from mcp.types import INVALID_PARAMS, ToolAnnotations
 
-from late import Late, MediaType, PostStatus
+from late import Late, PostStatus
 from late.client.exceptions import LateAPIError, LateError, LateRateLimitError
 
+from .apps import APP_TOOLS, apps_enabled, register_apps
 from .auth import build_auth_provider, forget_rejected_token
-from .feedback_source import FEEDBACK_TOOL, FeedbackSourceMiddleware
 from .idempotency import same_arguments_key
+from .media_items import media_item
+from .middleware import (
+    FEEDBACK_TOOL,
+    FeedbackSourceMiddleware,
+    RateLimitGuidanceMiddleware,
+    ToolGuidanceMiddleware,
+    WellFormedOutputMiddleware,
+    WellFormedOutputTransform,
+)
 from .resources import register_resources
 from .tool_definitions import TOOL_DEFINITIONS
-from .tool_guidance import ToolGuidanceMiddleware
+from .user_agent import mcp_user_agent
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -141,18 +151,39 @@ _PINNED_TOOLS = [
     "mentions_list_inbox_mentions",
     # Report bugs and missing features to Zernio
     FEEDBACK_TOOL,
+    # MCP Apps display tools, while the ZERNIO_MCP_APPS trial is on
+    *(APP_TOOLS if apps_enabled() else []),
 ]
 
 _SEARCH_TOOL = "search_tools"
 _CALL_TOOL = "call_tool"
 _MAX_TOOL_SUGGESTIONS = 3
+# `?tools=` on the server URL replaces the default listing: `all` lists every
+# tool, a comma-separated list of names lists exactly those. For integrators
+# that run their own tool discovery and need full definitions from tools/list.
+_TOOLS_QUERY_PARAM = "tools"
+_ALL_TOOLS = "all"
+# tools/list page size. The default listing fits on one page with room to grow;
+# `?tools=all` is paginated, and clients follow nextCursor.
+_TOOLS_PAGE_SIZE = 100
+
+
+def _requested_tools() -> list[str] | None:
+    """Tool names from the request's `?tools=`, or None when absent or not HTTP."""
+    try:
+        request = get_http_request()
+    except RuntimeError:
+        return None
+    raw = request.query_params.get(_TOOLS_QUERY_PARAM, "")
+    names = [name.strip() for name in raw.split(",") if name.strip()]
+    return list(dict.fromkeys(names)) or None
 
 
 class _AnnotatedBM25SearchTransform(BM25SearchTransform):
     """BM25SearchTransform whose synthetic tools carry ToolAnnotations.
 
     fastmcp builds search_tools/call_tool without annotations (still true in
-    4.0.0b1). Clients that gate approval on hints treat an unannotated tool as
+    4.2.1). Clients that gate approval on hints treat an unannotated tool as
     needing confirmation, so codex-cli auto-denies both in non-interactive
     `codex exec` runs and reports "user cancelled MCP tool call".
 
@@ -220,10 +251,30 @@ class _AnnotatedBM25SearchTransform(BM25SearchTransform):
             self._visible_tools = await super()._get_visible_tools(ctx)
         return self._visible_tools
 
+    async def transform_tools(self, tools: Sequence[Tool]) -> Sequence[Tool]:
+        requested = _requested_tools()
+        if requested is None:
+            return await super().transform_tools(tools)
+        if requested == [_ALL_TOOLS]:
+            return tools
+        by_name = {t.name: t for t in tools}
+        unknown = [name for name in requested if name not in by_name]
+        if unknown:
+            message = _unknown_tools_message(unknown, list(by_name))
+            raise McpError(code=INVALID_PARAMS, message=message)
+        return [by_name[name] for name in requested]
+
+    # The catalog last passed to FastMCP's _search, whose index is still current.
+    _indexed_tools: Sequence[Tool] = ()
+
     async def _search(self, tools: Sequence[Tool], query: str) -> Sequence[Tool]:
         if tools is not self._indexed_tools:
-            return await super()._search(tools, query)
-        return [tools[i] for i in self._index.query(query, self._max_results)]
+            results = await super()._search(tools, query)
+            self._indexed_tools = tools
+            self._indexed_by_name = {t.name: t for t in tools}
+            return results
+        indices = self._index.query(query, self._max_results)
+        return [self._indexed_by_name[self._indexed_names[i]] for i in indices]
 
     async def closest_tools(self, name: str, ctx: Context | None) -> list[str]:
         """Real tool names nearest a mistyped or guessed one, pinned tools included."""
@@ -254,12 +305,51 @@ def _names_sharing_words(guess: str, names: Sequence[str]) -> list[str]:
     return ranked[:_MAX_TOOL_SUGGESTIONS]
 
 
+def _unknown_tools_message(unknown: Sequence[str], names: Sequence[str]) -> str:
+    parts = []
+    for name in unknown:
+        # Spelling leads: a configured name that stopped matching is usually a
+        # typo or a rename, not a guess from intent.
+        closest = list(
+            dict.fromkeys(
+                difflib.get_close_matches(name, names, n=_MAX_TOOL_SUGGESTIONS)
+                + _names_sharing_words(name, names)
+            )
+        )[:_MAX_TOOL_SUGGESTIONS]
+        hint = f" (closest: {', '.join(closest)})" if closest else ""
+        parts.append(f"{name}{hint}")
+    return (
+        f"Unknown tools in ?{_TOOLS_QUERY_PARAM}=: {'; '.join(parts)}. "
+        f"Use ?{_TOOLS_QUERY_PARAM}={_ALL_TOOLS} to list every tool."
+    )
+
+
+_DESCRIPTION_HEADING = re.compile(r"^[ \t]*#{1,6}[ \t]+(.+?)[ \t#]*$", re.MULTILINE)
+
+
+def _serialize_search_results(tools: Sequence[Tool]) -> str:
+    """Markdown search results where `### <name>` only ever starts a tool.
+
+    Descriptions carry their own headings ("### Platform support", "### Email threads"); in the flat result
+    text a client splitting on headings read those as tools and pinned the next tool's parameters on the wrong
+    name (a Grok client saw messages_create_inbox_conversation's participant_id under
+    messages_send_inbox_message, 2026-11-17). Demoting them to bold keeps the text and removes the ambiguity.
+    """
+    demoted = [
+        tool.model_copy(update={"description": _DESCRIPTION_HEADING.sub(r"**\1**", tool.description)})
+        if tool.description
+        else tool
+        for tool in tools
+    ]
+    return serialize_tools_for_output_markdown(demoted)
+
+
 _search_transform = _AnnotatedBM25SearchTransform(
     always_visible=_PINNED_TOOLS,
     max_results=8,
     search_tool_name=_SEARCH_TOOL,
     call_tool_name=_CALL_TOOL,
-    search_result_serializer=serialize_tools_for_output_markdown,
+    search_result_serializer=_serialize_search_results,
 )
 
 
@@ -315,9 +405,12 @@ details.
     auth=build_auth_provider(),
     # Collapse the ~383 generated tools behind search_tools/call_tool; the
     # pinned ergonomic tools remain always-visible.
-    transforms=[_search_transform],
+    transforms=[_search_transform, WellFormedOutputTransform()],
+    list_page_size=_TOOLS_PAGE_SIZE,
 )
 
+mcp.add_middleware(WellFormedOutputMiddleware())
+mcp.add_middleware(RateLimitGuidanceMiddleware())
 mcp.add_middleware(
     ToolGuidanceMiddleware(
         search_tool=_SEARCH_TOOL,
@@ -436,6 +529,7 @@ def _get_client() -> Late:
         base_url=base_url,
         max_retries=_UPSTREAM_MAX_ATTEMPTS,
         transport=_api_transport(),
+        user_agent=mcp_user_agent(),
     )
 
 
@@ -712,8 +806,8 @@ def profiles_delete(profile_id: str) -> str:
 # ============================================================================
 
 
-def _platform_errors(post: Any) -> list[str]:
-    """One "Error (platform): message" line per platform that did not publish.
+def _failed_targets(post: Any) -> list[tuple[str | None, str]]:
+    """(platform, error message) for each platform that did not publish.
 
     A post holds one entry in post.platforms[] per target platform, and each
     entry tracks its own status and errorMessage. The API never populates
@@ -738,8 +832,16 @@ def _platform_errors(post: Any) -> list[str]:
             continue
         message = (target.errorMessage or "").strip()
         if message:
-            errors.append(f"Error ({target.platform or '?'}): {message}")
+            errors.append((target.platform, message))
     return errors
+
+
+def _platform_errors(post: Any) -> list[str]:
+    """One "Error (platform): message" line per platform that did not publish."""
+    return [
+        f"Error ({platform or '?'}): {message}"
+        for platform, message in _failed_targets(post)
+    ]
 
 
 @tool_def("posts_list")
@@ -838,19 +940,9 @@ def posts_create(
     if title:
         params["title"] = title
 
-    # Add media items if provided
     if media_urls:
         urls = [u.strip() for u in media_urls.split(",") if u.strip()]
-        media_items = []
-        for url in urls:
-            media_type: MediaType | str = MediaType.IMAGE
-            if any(
-                ext in url.lower() for ext in [".mp4", ".mov", ".avi", ".webm", ".m4v"]
-            ):
-                media_type = MediaType.VIDEO
-            elif any(ext in url.lower() for ext in [".gif"]):
-                media_type = MediaType.GIF
-            media_items.append({"type": media_type, "url": url})
+        media_items = [media_item(url) for url in urls]
         params["media_items"] = media_items
 
     if is_draft:
@@ -952,16 +1044,7 @@ def posts_cross_post(
 
     if media_urls:
         urls = [u.strip() for u in media_urls.split(",") if u.strip()]
-        media_items = []
-        for url in urls:
-            media_type: MediaType | str = MediaType.IMAGE
-            if any(
-                ext in url.lower() for ext in [".mp4", ".mov", ".avi", ".webm", ".m4v"]
-            ):
-                media_type = MediaType.VIDEO
-            elif any(ext in url.lower() for ext in [".gif"]):
-                media_type = MediaType.GIF
-            media_items.append({"type": media_type, "url": url})
+        media_items = [media_item(url) for url in urls]
         params["media_items"] = media_items
 
     if is_draft:
@@ -1210,7 +1293,9 @@ def _get_docs_content() -> str:
 
     # Fetch fresh content
     try:
-        response = httpx.get(_DOCS_URL, timeout=30.0)
+        response = httpx.get(
+            _DOCS_URL, headers={"User-Agent": mcp_user_agent()}, timeout=30.0
+        )
         response.raise_for_status()
         content = response.text
         _docs_cache[cache_key] = (content, datetime.now())
@@ -1373,6 +1458,9 @@ try:
 except ImportError:
     # generated_tools.py not yet created - run scripts/generate_mcp_tools.py
     pass
+
+if apps_enabled():
+    register_apps(mcp)
 
 
 # ============================================================================

@@ -21,13 +21,16 @@ class FilesResource:
     def __init__(self, client: BaseClient) -> None:
         self._client = client
 
-    def _build_params(self, **kwargs: Any) -> dict[str, Any]:
-        """Build query parameters, filtering None and empty-string values.
+    def _build_query(self, fields: dict[str, Any]) -> dict[str, Any]:
+        """Build query parameters keyed by their wire names, as given.
 
-        Empty strings are filtered because MCP tool wrappers pass ``""`` as the
-        default for optional string args, and the API rejects empty query
-        values (e.g. ``platform=``) with a 400. Filtering here keeps both direct
-        SDK callers and MCP tool callers safe.
+        Generated methods pass the parameter names exactly as the OpenAPI
+        spec declares them, so no casing rule is applied here.
+
+        None and empty strings are filtered because MCP tool wrappers pass
+        ``""`` as the default for optional string args, and the API rejects
+        empty query values (e.g. ``platform=``) with a 400. Filtering here
+        keeps both direct SDK callers and MCP tool callers safe.
 
         Enum members are unwrapped to their value: httpx serializes params
         via str(), which yields "ClassName.MEMBER" for Enum members, so
@@ -36,42 +39,65 @@ class FilesResource:
         """
         from enum import Enum
 
-        def to_camel(s: str) -> str:
-            parts = s.split("_")
-            return parts[0] + "".join(p.title() for p in parts[1:])
-
         result: dict[str, Any] = {}
-        for k, v in kwargs.items():
+        for k, v in fields.items():
             if isinstance(v, Enum):
                 v = v.value
             if v is None or v == "":
                 continue
-            result[to_camel(k)] = v
+            result[k] = v
         return result
 
-    def _build_payload(self, **kwargs: Any) -> dict[str, Any]:
-        """Build request payload, filtering None values. Enum members are
-        unwrapped to their value so JSON bodies carry e.g. "failed" rather
-        than a raw Enum member (plain Enum members are not JSON-serializable).
+    def _build_body(self, fields: dict[str, Any]) -> dict[str, Any]:
+        """Build a JSON request body keyed by its wire names, as given.
+
+        Generated methods pass the property names exactly as the request
+        body schema declares them: most are camelCase, but some routes read
+        snake_case (``ice_breakers``, ``message_send_ttl_seconds``), so no
+        casing rule is applied here. None values are dropped, Enum members
+        are unwrapped to their value (e.g. "failed") and datetimes are sent
+        as ISO 8601 strings.
         """
         from datetime import datetime
         from enum import Enum
 
-        def to_camel(s: str) -> str:
-            parts = s.split("_")
-            return parts[0] + "".join(p.title() for p in parts[1:])
-
         result: dict[str, Any] = {}
-        for k, v in kwargs.items():
+        for k, v in fields.items():
             if isinstance(v, Enum):
                 v = v.value
             if v is None:
                 continue
             if isinstance(v, datetime):
-                result[to_camel(k)] = v.isoformat()
+                result[k] = v.isoformat()
             else:
-                result[to_camel(k)] = v
+                result[k] = v
         return result
+
+    def _build_params(self, **kwargs: Any) -> dict[str, Any]:
+        """Build query parameters from snake_case kwargs, camelCasing each key.
+
+        For hand-written resource methods, whose endpoints take camelCase
+        names. Generated methods use _build_query with the spec's names.
+        """
+
+        def to_camel(s: str) -> str:
+            parts = s.split("_")
+            return parts[0] + "".join(p.title() for p in parts[1:])
+
+        return self._build_query({to_camel(k): v for k, v in kwargs.items()})
+
+    def _build_payload(self, **kwargs: Any) -> dict[str, Any]:
+        """Build a request body from snake_case kwargs, camelCasing each key.
+
+        For hand-written resource methods, whose endpoints take camelCase
+        names. Generated methods use _build_body with the spec's names.
+        """
+
+        def to_camel(s: str) -> str:
+            parts = s.split("_")
+            return parts[0] + "".join(p.title() for p in parts[1:])
+
+        return self._build_body({to_camel(k): v for k, v in kwargs.items()})
 
     def list_files(
         self,
@@ -83,12 +109,14 @@ class FilesResource:
         limit: int | None = 50,
     ) -> dict[str, Any]:
         """List files in a folder or search the drive"""
-        params = self._build_params(
-            account_id=account_id,
-            folder_id=folder_id,
-            q=q,
-            cursor=cursor,
-            limit=limit,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "folderId": folder_id,
+                "q": q,
+                "cursor": cursor,
+                "limit": limit,
+            }
         )
         return self._client._get("/v1/files", params=params)
 
@@ -103,13 +131,15 @@ class FilesResource:
         convert_to: str | None = None,
     ) -> dict[str, Any]:
         """Upload a file"""
-        payload = self._build_payload(
-            account_id=account_id,
-            name=name,
-            content_type=content_type,
-            parent_id=parent_id,
-            url=url,
-            convert_to=convert_to,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "name": name,
+                "contentType": content_type,
+                "parentId": parent_id,
+                "url": url,
+                "convertTo": convert_to,
+            }
         )
         return self._client._post("/v1/files", data=payload)
 
@@ -117,10 +147,12 @@ class FilesResource:
         self, account_id: str, name: str, *, parent_id: str | None = None
     ) -> dict[str, Any]:
         """Create a folder"""
-        payload = self._build_payload(
-            account_id=account_id,
-            name=name,
-            parent_id=parent_id,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "name": name,
+                "parentId": parent_id,
+            }
         )
         return self._client._post("/v1/files/folders", data=payload)
 
@@ -134,19 +166,23 @@ class FilesResource:
         multiselect: bool | None = True,
     ) -> dict[str, Any]:
         """Create a hosted Google Picker session"""
-        payload = self._build_payload(
-            account_id=account_id,
-            redirect_url=redirect_url,
-            file_ids=file_ids,
-            mime_types=mime_types,
-            multiselect=multiselect,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "redirectUrl": redirect_url,
+                "fileIds": file_ids,
+                "mimeTypes": mime_types,
+                "multiselect": multiselect,
+            }
         )
         return self._client._post("/v1/files/picker-sessions", data=payload)
 
     def get_file(self, file_id: str, account_id: str) -> dict[str, Any]:
         """Get a file or folder"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return self._client._get(f"/v1/files/{file_id}", params=params)
 
@@ -159,31 +195,39 @@ class FilesResource:
         parent_id: str | None = None,
     ) -> dict[str, Any]:
         """Rename or move a file"""
-        payload = self._build_payload(
-            account_id=account_id,
-            name=name,
-            parent_id=parent_id,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "name": name,
+                "parentId": parent_id,
+            }
         )
         return self._client._patch(f"/v1/files/{file_id}", data=payload)
 
     def trash_file(self, file_id: str, account_id: str) -> dict[str, Any]:
         """Move a file to the trash"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return self._client._delete(f"/v1/files/{file_id}", params=params)
 
     def download_file(self, file_id: str, account_id: str) -> dict[str, Any]:
         """Download a file"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return self._client._get(f"/v1/files/{file_id}/download", params=params)
 
     def get_file_share_link(self, file_id: str, account_id: str) -> dict[str, Any]:
         """Get an anyone-with-the-link share link"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return self._client._get(f"/v1/files/{file_id}/share-link", params=params)
 
@@ -197,12 +241,14 @@ class FilesResource:
         limit: int | None = 50,
     ) -> dict[str, Any]:
         """List files in a folder or search the drive (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            folder_id=folder_id,
-            q=q,
-            cursor=cursor,
-            limit=limit,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "folderId": folder_id,
+                "q": q,
+                "cursor": cursor,
+                "limit": limit,
+            }
         )
         return await self._client._aget("/v1/files", params=params)
 
@@ -217,13 +263,15 @@ class FilesResource:
         convert_to: str | None = None,
     ) -> dict[str, Any]:
         """Upload a file (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            name=name,
-            content_type=content_type,
-            parent_id=parent_id,
-            url=url,
-            convert_to=convert_to,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "name": name,
+                "contentType": content_type,
+                "parentId": parent_id,
+                "url": url,
+                "convertTo": convert_to,
+            }
         )
         return await self._client._apost("/v1/files", data=payload)
 
@@ -231,10 +279,12 @@ class FilesResource:
         self, account_id: str, name: str, *, parent_id: str | None = None
     ) -> dict[str, Any]:
         """Create a folder (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            name=name,
-            parent_id=parent_id,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "name": name,
+                "parentId": parent_id,
+            }
         )
         return await self._client._apost("/v1/files/folders", data=payload)
 
@@ -248,19 +298,23 @@ class FilesResource:
         multiselect: bool | None = True,
     ) -> dict[str, Any]:
         """Create a hosted Google Picker session (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            redirect_url=redirect_url,
-            file_ids=file_ids,
-            mime_types=mime_types,
-            multiselect=multiselect,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "redirectUrl": redirect_url,
+                "fileIds": file_ids,
+                "mimeTypes": mime_types,
+                "multiselect": multiselect,
+            }
         )
         return await self._client._apost("/v1/files/picker-sessions", data=payload)
 
     async def aget_file(self, file_id: str, account_id: str) -> dict[str, Any]:
         """Get a file or folder (async)"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return await self._client._aget(f"/v1/files/{file_id}", params=params)
 
@@ -273,24 +327,30 @@ class FilesResource:
         parent_id: str | None = None,
     ) -> dict[str, Any]:
         """Rename or move a file (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            name=name,
-            parent_id=parent_id,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "name": name,
+                "parentId": parent_id,
+            }
         )
         return await self._client._apatch(f"/v1/files/{file_id}", data=payload)
 
     async def atrash_file(self, file_id: str, account_id: str) -> dict[str, Any]:
         """Move a file to the trash (async)"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return await self._client._adelete(f"/v1/files/{file_id}", params=params)
 
     async def adownload_file(self, file_id: str, account_id: str) -> dict[str, Any]:
         """Download a file (async)"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return await self._client._aget(f"/v1/files/{file_id}/download", params=params)
 
@@ -298,8 +358,10 @@ class FilesResource:
         self, file_id: str, account_id: str
     ) -> dict[str, Any]:
         """Get an anyone-with-the-link share link (async)"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return await self._client._aget(
             f"/v1/files/{file_id}/share-link", params=params

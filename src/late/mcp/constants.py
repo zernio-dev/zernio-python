@@ -5,12 +5,10 @@ import os
 # Server information
 SERVICE_NAME = "Zernio MCP Server"
 SERVICE_VERSION = "1.2.9"
-# Streamable HTTP is the primary transport (single endpoint, request/response
+# Streamable HTTP is the only transport (single endpoint, request/response
 # with optional chunked streaming — no long-idle connection for proxies or
-# bridges like mcp-remote to kill). Legacy SSE is still served for backwards
-# compatibility: production continues to receive GET /sse connections from
-# older client configs. New clients should use Streamable HTTP.
-TRANSPORT_TYPE = "sse+streamable-http"
+# bridges like mcp-remote to kill). The legacy SSE transport is retired.
+TRANSPORT_TYPE = "streamable-http"
 
 # Default server configuration
 DEFAULT_HOST = "0.0.0.0"
@@ -24,8 +22,8 @@ ENV_PORT = "PORT"
 ENDPOINT_ROOT = "/"
 ENDPOINT_HEALTH = "/health"
 ENDPOINT_MCP = "/mcp"
-# Legacy SSE transport (two-endpoint protocol: GET /sse + POST /messages/),
-# deprecated but kept for backwards compatibility with older client configs.
+# The retired SSE transport's paths. /sse serves Streamable HTTP for clients
+# that saved the old URL; the SSE handshake and /messages/ answer 410.
 ENDPOINT_SSE = "/sse"
 ENDPOINT_MESSAGES = "/messages/"
 # ChatGPT plugin surface (late.mcp.chatgpt_server): a curated tool set on its
@@ -81,6 +79,9 @@ OAUTH_SCOPES = [
     "files:write",
     "campaigns:write",
     "money:write",
+    "ads:read",
+    "contacts:read",
+    "messaging:read",
 ]
 
 # Documentation

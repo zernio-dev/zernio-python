@@ -10,6 +10,8 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
+    from datetime import datetime
+
     from ..client.base import BaseClient
 
 
@@ -21,13 +23,16 @@ class LeadGenResource:
     def __init__(self, client: BaseClient) -> None:
         self._client = client
 
-    def _build_params(self, **kwargs: Any) -> dict[str, Any]:
-        """Build query parameters, filtering None and empty-string values.
+    def _build_query(self, fields: dict[str, Any]) -> dict[str, Any]:
+        """Build query parameters keyed by their wire names, as given.
 
-        Empty strings are filtered because MCP tool wrappers pass ``""`` as the
-        default for optional string args, and the API rejects empty query
-        values (e.g. ``platform=``) with a 400. Filtering here keeps both direct
-        SDK callers and MCP tool callers safe.
+        Generated methods pass the parameter names exactly as the OpenAPI
+        spec declares them, so no casing rule is applied here.
+
+        None and empty strings are filtered because MCP tool wrappers pass
+        ``""`` as the default for optional string args, and the API rejects
+        empty query values (e.g. ``platform=``) with a 400. Filtering here
+        keeps both direct SDK callers and MCP tool callers safe.
 
         Enum members are unwrapped to their value: httpx serializes params
         via str(), which yields "ClassName.MEMBER" for Enum members, so
@@ -36,42 +41,65 @@ class LeadGenResource:
         """
         from enum import Enum
 
-        def to_camel(s: str) -> str:
-            parts = s.split("_")
-            return parts[0] + "".join(p.title() for p in parts[1:])
-
         result: dict[str, Any] = {}
-        for k, v in kwargs.items():
+        for k, v in fields.items():
             if isinstance(v, Enum):
                 v = v.value
             if v is None or v == "":
                 continue
-            result[to_camel(k)] = v
+            result[k] = v
         return result
 
-    def _build_payload(self, **kwargs: Any) -> dict[str, Any]:
-        """Build request payload, filtering None values. Enum members are
-        unwrapped to their value so JSON bodies carry e.g. "failed" rather
-        than a raw Enum member (plain Enum members are not JSON-serializable).
+    def _build_body(self, fields: dict[str, Any]) -> dict[str, Any]:
+        """Build a JSON request body keyed by its wire names, as given.
+
+        Generated methods pass the property names exactly as the request
+        body schema declares them: most are camelCase, but some routes read
+        snake_case (``ice_breakers``, ``message_send_ttl_seconds``), so no
+        casing rule is applied here. None values are dropped, Enum members
+        are unwrapped to their value (e.g. "failed") and datetimes are sent
+        as ISO 8601 strings.
         """
         from datetime import datetime
         from enum import Enum
 
-        def to_camel(s: str) -> str:
-            parts = s.split("_")
-            return parts[0] + "".join(p.title() for p in parts[1:])
-
         result: dict[str, Any] = {}
-        for k, v in kwargs.items():
+        for k, v in fields.items():
             if isinstance(v, Enum):
                 v = v.value
             if v is None:
                 continue
             if isinstance(v, datetime):
-                result[to_camel(k)] = v.isoformat()
+                result[k] = v.isoformat()
             else:
-                result[to_camel(k)] = v
+                result[k] = v
         return result
+
+    def _build_params(self, **kwargs: Any) -> dict[str, Any]:
+        """Build query parameters from snake_case kwargs, camelCasing each key.
+
+        For hand-written resource methods, whose endpoints take camelCase
+        names. Generated methods use _build_query with the spec's names.
+        """
+
+        def to_camel(s: str) -> str:
+            parts = s.split("_")
+            return parts[0] + "".join(p.title() for p in parts[1:])
+
+        return self._build_query({to_camel(k): v for k, v in kwargs.items()})
+
+    def _build_payload(self, **kwargs: Any) -> dict[str, Any]:
+        """Build a request body from snake_case kwargs, camelCasing each key.
+
+        For hand-written resource methods, whose endpoints take camelCase
+        names. Generated methods use _build_body with the spec's names.
+        """
+
+        def to_camel(s: str) -> str:
+            parts = s.split("_")
+            return parts[0] + "".join(p.title() for p in parts[1:])
+
+        return self._build_body({to_camel(k): v for k, v in kwargs.items()})
 
     def list_leads(
         self,
@@ -89,18 +117,20 @@ class LeadGenResource:
         cursor: str | None = None,
     ) -> dict[str, Any]:
         """List submitted leads"""
-        params = self._build_params(
-            form_id=form_id,
-            account_id=account_id,
-            account_ids=account_ids,
-            status=status,
-            campaign_id=campaign_id,
-            platform=platform,
-            q=q,
-            ad_account_id=ad_account_id,
-            limit=limit,
-            since=since,
-            cursor=cursor,
+        params = self._build_query(
+            {
+                "formId": form_id,
+                "accountId": account_id,
+                "accountIds": account_ids,
+                "status": status,
+                "campaignId": campaign_id,
+                "platform": platform,
+                "q": q,
+                "adAccountId": ad_account_id,
+                "limit": limit,
+                "since": since,
+                "cursor": cursor,
+            }
         )
         return self._client._get("/v1/ads/leads", params=params)
 
@@ -108,9 +138,11 @@ class LeadGenResource:
         self, *, account_id: str | None = None, campaign_id: str | None = None
     ) -> dict[str, Any]:
         """Count leads by status"""
-        params = self._build_params(
-            account_id=account_id,
-            campaign_id=campaign_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "campaignId": campaign_id,
+            }
         )
         return self._client._get("/v1/ads/leads/counts", params=params)
 
@@ -124,13 +156,50 @@ class LeadGenResource:
         account_id: str | None = None,
     ) -> dict[str, Any]:
         """Update a lead's status"""
-        payload = self._build_payload(
-            status=status,
-            value=value,
-            currency=currency,
-            account_id=account_id,
+        payload = self._build_body(
+            {
+                "status": status,
+                "value": value,
+                "currency": currency,
+                "accountId": account_id,
+            }
         )
         return self._client._patch(f"/v1/ads/leads/{id}", data=payload)
+
+    def create_lead(
+        self,
+        profile_id: str,
+        *,
+        email: str | None = None,
+        phone: str | None = None,
+        fields: dict[str, Any] | None = None,
+        form_id: str | None = None,
+        form_name: str | None = None,
+        lead_id: str | None = None,
+        submitted_at: datetime | str | None = None,
+        source_url: str | None = None,
+        visitor_id: str | None = None,
+        click_ids: dict[str, Any] | None = None,
+        utm: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        """Create a lead from your own form"""
+        payload = self._build_body(
+            {
+                "profileId": profile_id,
+                "email": email,
+                "phone": phone,
+                "fields": fields,
+                "formId": form_id,
+                "formName": form_name,
+                "leadId": lead_id,
+                "submittedAt": submitted_at,
+                "sourceUrl": source_url,
+                "visitorId": visitor_id,
+                "clickIds": click_ids,
+                "utm": utm,
+            }
+        )
+        return self._client._post("/v1/leads", data=payload)
 
     def list_lead_forms(
         self,
@@ -141,11 +210,13 @@ class LeadGenResource:
         cursor: str | None = None,
     ) -> dict[str, Any]:
         """List lead forms"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            limit=limit,
-            cursor=cursor,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "limit": limit,
+                "cursor": cursor,
+            }
         )
         return self._client._get("/v1/ads/lead-forms", params=params)
 
@@ -168,21 +239,23 @@ class LeadGenResource:
         platform_specific_data: Any | None = None,
     ) -> dict[str, Any]:
         """Create a lead form"""
-        payload = self._build_payload(
-            account_id=account_id,
-            name=name,
-            questions=questions,
-            privacy_policy_url=privacy_policy_url,
-            privacy_policy_link_text=privacy_policy_link_text,
-            follow_up_action_url=follow_up_action_url,
-            locale=locale,
-            thank_you_title=thank_you_title,
-            thank_you_body=thank_you_body,
-            thank_you_button_text=thank_you_button_text,
-            thank_you_button_type=thank_you_button_type,
-            thank_you_website_url=thank_you_website_url,
-            is_optimized_for_quality=is_optimized_for_quality,
-            platform_specific_data=platform_specific_data,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "name": name,
+                "questions": questions,
+                "privacyPolicyUrl": privacy_policy_url,
+                "privacyPolicyLinkText": privacy_policy_link_text,
+                "followUpActionUrl": follow_up_action_url,
+                "locale": locale,
+                "thankYouTitle": thank_you_title,
+                "thankYouBody": thank_you_body,
+                "thankYouButtonText": thank_you_button_text,
+                "thankYouButtonType": thank_you_button_type,
+                "thankYouWebsiteUrl": thank_you_website_url,
+                "isOptimizedForQuality": is_optimized_for_quality,
+                "platformSpecificData": platform_specific_data,
+            }
         )
         return self._client._post("/v1/ads/lead-forms", data=payload)
 
@@ -190,16 +263,20 @@ class LeadGenResource:
         self, form_id: str, account_id: str, *, fields: str | None = None
     ) -> dict[str, Any]:
         """Get a lead form"""
-        params = self._build_params(
-            account_id=account_id,
-            fields=fields,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "fields": fields,
+            }
         )
         return self._client._get(f"/v1/ads/lead-forms/{form_id}", params=params)
 
     def archive_lead_form(self, form_id: str, account_id: str) -> dict[str, Any]:
         """Archive a lead form"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return self._client._delete(f"/v1/ads/lead-forms/{form_id}", params=params)
 
@@ -213,11 +290,13 @@ class LeadGenResource:
         since: int | None = None,
     ) -> dict[str, Any]:
         """List leads for a single form"""
-        params = self._build_params(
-            account_id=account_id,
-            limit=limit,
-            cursor=cursor,
-            since=since,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "limit": limit,
+                "cursor": cursor,
+                "since": since,
+            }
         )
         return self._client._get(f"/v1/ads/lead-forms/{form_id}/leads", params=params)
 
@@ -225,9 +304,11 @@ class LeadGenResource:
         self, form_id: str, account_id: str, field_data: list[dict[str, Any]]
     ) -> dict[str, Any]:
         """Create a test lead"""
-        payload = self._build_payload(
-            account_id=account_id,
-            field_data=field_data,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "fieldData": field_data,
+            }
         )
         return self._client._post(
             f"/v1/ads/lead-forms/{form_id}/test-leads", data=payload
@@ -237,9 +318,11 @@ class LeadGenResource:
         self, form_id: str, account_id: str, *, lead_id: str | None = None
     ) -> dict[str, Any]:
         """Delete a test lead"""
-        params = self._build_params(
-            account_id=account_id,
-            lead_id=lead_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "leadId": lead_id,
+            }
         )
         return self._client._delete(
             f"/v1/ads/lead-forms/{form_id}/test-leads", params=params
@@ -261,18 +344,20 @@ class LeadGenResource:
         cursor: str | None = None,
     ) -> dict[str, Any]:
         """List submitted leads (async)"""
-        params = self._build_params(
-            form_id=form_id,
-            account_id=account_id,
-            account_ids=account_ids,
-            status=status,
-            campaign_id=campaign_id,
-            platform=platform,
-            q=q,
-            ad_account_id=ad_account_id,
-            limit=limit,
-            since=since,
-            cursor=cursor,
+        params = self._build_query(
+            {
+                "formId": form_id,
+                "accountId": account_id,
+                "accountIds": account_ids,
+                "status": status,
+                "campaignId": campaign_id,
+                "platform": platform,
+                "q": q,
+                "adAccountId": ad_account_id,
+                "limit": limit,
+                "since": since,
+                "cursor": cursor,
+            }
         )
         return await self._client._aget("/v1/ads/leads", params=params)
 
@@ -280,9 +365,11 @@ class LeadGenResource:
         self, *, account_id: str | None = None, campaign_id: str | None = None
     ) -> dict[str, Any]:
         """Count leads by status (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            campaign_id=campaign_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "campaignId": campaign_id,
+            }
         )
         return await self._client._aget("/v1/ads/leads/counts", params=params)
 
@@ -296,13 +383,50 @@ class LeadGenResource:
         account_id: str | None = None,
     ) -> dict[str, Any]:
         """Update a lead's status (async)"""
-        payload = self._build_payload(
-            status=status,
-            value=value,
-            currency=currency,
-            account_id=account_id,
+        payload = self._build_body(
+            {
+                "status": status,
+                "value": value,
+                "currency": currency,
+                "accountId": account_id,
+            }
         )
         return await self._client._apatch(f"/v1/ads/leads/{id}", data=payload)
+
+    async def acreate_lead(
+        self,
+        profile_id: str,
+        *,
+        email: str | None = None,
+        phone: str | None = None,
+        fields: dict[str, Any] | None = None,
+        form_id: str | None = None,
+        form_name: str | None = None,
+        lead_id: str | None = None,
+        submitted_at: datetime | str | None = None,
+        source_url: str | None = None,
+        visitor_id: str | None = None,
+        click_ids: dict[str, Any] | None = None,
+        utm: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        """Create a lead from your own form (async)"""
+        payload = self._build_body(
+            {
+                "profileId": profile_id,
+                "email": email,
+                "phone": phone,
+                "fields": fields,
+                "formId": form_id,
+                "formName": form_name,
+                "leadId": lead_id,
+                "submittedAt": submitted_at,
+                "sourceUrl": source_url,
+                "visitorId": visitor_id,
+                "clickIds": click_ids,
+                "utm": utm,
+            }
+        )
+        return await self._client._apost("/v1/leads", data=payload)
 
     async def alist_lead_forms(
         self,
@@ -313,11 +437,13 @@ class LeadGenResource:
         cursor: str | None = None,
     ) -> dict[str, Any]:
         """List lead forms (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            limit=limit,
-            cursor=cursor,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "limit": limit,
+                "cursor": cursor,
+            }
         )
         return await self._client._aget("/v1/ads/lead-forms", params=params)
 
@@ -340,21 +466,23 @@ class LeadGenResource:
         platform_specific_data: Any | None = None,
     ) -> dict[str, Any]:
         """Create a lead form (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            name=name,
-            questions=questions,
-            privacy_policy_url=privacy_policy_url,
-            privacy_policy_link_text=privacy_policy_link_text,
-            follow_up_action_url=follow_up_action_url,
-            locale=locale,
-            thank_you_title=thank_you_title,
-            thank_you_body=thank_you_body,
-            thank_you_button_text=thank_you_button_text,
-            thank_you_button_type=thank_you_button_type,
-            thank_you_website_url=thank_you_website_url,
-            is_optimized_for_quality=is_optimized_for_quality,
-            platform_specific_data=platform_specific_data,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "name": name,
+                "questions": questions,
+                "privacyPolicyUrl": privacy_policy_url,
+                "privacyPolicyLinkText": privacy_policy_link_text,
+                "followUpActionUrl": follow_up_action_url,
+                "locale": locale,
+                "thankYouTitle": thank_you_title,
+                "thankYouBody": thank_you_body,
+                "thankYouButtonText": thank_you_button_text,
+                "thankYouButtonType": thank_you_button_type,
+                "thankYouWebsiteUrl": thank_you_website_url,
+                "isOptimizedForQuality": is_optimized_for_quality,
+                "platformSpecificData": platform_specific_data,
+            }
         )
         return await self._client._apost("/v1/ads/lead-forms", data=payload)
 
@@ -362,16 +490,20 @@ class LeadGenResource:
         self, form_id: str, account_id: str, *, fields: str | None = None
     ) -> dict[str, Any]:
         """Get a lead form (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            fields=fields,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "fields": fields,
+            }
         )
         return await self._client._aget(f"/v1/ads/lead-forms/{form_id}", params=params)
 
     async def aarchive_lead_form(self, form_id: str, account_id: str) -> dict[str, Any]:
         """Archive a lead form (async)"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return await self._client._adelete(
             f"/v1/ads/lead-forms/{form_id}", params=params
@@ -387,11 +519,13 @@ class LeadGenResource:
         since: int | None = None,
     ) -> dict[str, Any]:
         """List leads for a single form (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            limit=limit,
-            cursor=cursor,
-            since=since,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "limit": limit,
+                "cursor": cursor,
+                "since": since,
+            }
         )
         return await self._client._aget(
             f"/v1/ads/lead-forms/{form_id}/leads", params=params
@@ -401,9 +535,11 @@ class LeadGenResource:
         self, form_id: str, account_id: str, field_data: list[dict[str, Any]]
     ) -> dict[str, Any]:
         """Create a test lead (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            field_data=field_data,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "fieldData": field_data,
+            }
         )
         return await self._client._apost(
             f"/v1/ads/lead-forms/{form_id}/test-leads", data=payload
@@ -413,9 +549,11 @@ class LeadGenResource:
         self, form_id: str, account_id: str, *, lead_id: str | None = None
     ) -> dict[str, Any]:
         """Delete a test lead (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            lead_id=lead_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "leadId": lead_id,
+            }
         )
         return await self._client._adelete(
             f"/v1/ads/lead-forms/{form_id}/test-leads", params=params

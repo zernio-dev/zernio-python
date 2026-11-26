@@ -12,12 +12,8 @@ from urllib.parse import urlparse
 
 import httpx
 from fastmcp.server.auth import AccessToken, RemoteAuthProvider, TokenVerifier
-from mcp.server.auth.routes import build_resource_metadata_url, cors_middleware
-from mcp.shared.auth import ProtectedResourceMetadata
 from starlette.authentication import AuthenticationError
 from starlette.requests import Request
-from starlette.responses import JSONResponse
-from starlette.routing import Route
 
 from late.mcp.constants import (
     DOCS_URL,
@@ -26,6 +22,7 @@ from late.mcp.constants import (
     OAUTH_SCOPES,
     SERVICE_NAME,
 )
+from late.mcp.user_agent import mcp_user_agent
 
 # Origin allowlist for DNS-rebinding protection (MCP spec / Anthropic Connectors
 # Directory requirement). Matched as exact host or subdomain suffix. Extend at
@@ -92,7 +89,21 @@ _VERIFY_TIMEOUT = 10.0
 _VERIFIED_AT: OrderedDict[str, float] = OrderedDict()
 _VERIFIED_CACHE_LOCK = threading.Lock()
 _VERIFIED_CACHE_MAX = 10_000
+# sha256(token) -> what the verify answer said about the credential: the Zernio
+# user id and, for an OAuth token, its granted scope. Kept so a grant served
+# from cache still says whose token it is and what it may reach.
+_IDENTITY_BY_TOKEN: OrderedDict[str, dict[str, str]] = OrderedDict()
+# How long a confirmed answer stands before the next request asks upstream
+# again. An API key is revoked by hand in the dashboard and an MCP session
+# re-presents it for hours, so 10 minutes of reuse is the right trade. An
+# OAuth access token can be revoked by the client (RFC 7009, /api/oauth/revoke)
+# and the user expects that to land at once, so it is re-asked every minute:
+# a revoked token keeps working here for at most this long.
 _FRESH_TTL_SECONDS = 600.0
+_OAUTH_FRESH_TTL_SECONDS = 60.0
+# Prefix the Zernio authorization server gives every OAuth access token
+# (Schedule-Posts-API app/api/oauth/token/route.ts generateToken("late_at_")).
+_OAUTH_ACCESS_TOKEN_PREFIX = "late_at_"
 _VERIFY_KEEPALIVE_SECONDS = 60.0
 _IN_FLIGHT: dict[str, "asyncio.Task[Verification]"] = {}
 # Only used when upstream could not answer. Blast radius is bounded to
@@ -137,6 +148,12 @@ def _classify(status_code: int) -> Verification:
     return Verification.UNKNOWN
 
 
+def _fresh_ttl(token: str) -> float:
+    if token.startswith(_OAUTH_ACCESS_TOKEN_PREFIX):
+        return _OAUTH_FRESH_TTL_SECONDS
+    return _FRESH_TTL_SECONDS
+
+
 def token_cache_key(token: str) -> str:
     return hashlib.sha256(token.encode()).hexdigest()
 
@@ -153,11 +170,38 @@ def _touch(token_key: str) -> None:
     with _VERIFIED_CACHE_LOCK:
         if token_key in _VERIFIED_AT:
             _VERIFIED_AT.move_to_end(token_key)
+        if token_key in _IDENTITY_BY_TOKEN:
+            _IDENTITY_BY_TOKEN.move_to_end(token_key)
 
 
 def _forget(token_key: str) -> None:
     with _VERIFIED_CACHE_LOCK:
         _VERIFIED_AT.pop(token_key, None)
+        _IDENTITY_BY_TOKEN.pop(token_key, None)
+
+
+def _remember_identity(token_key: str, identity: dict[str, str]) -> None:
+    with _VERIFIED_CACHE_LOCK:
+        _IDENTITY_BY_TOKEN[token_key] = identity
+        _IDENTITY_BY_TOKEN.move_to_end(token_key)
+        while len(_IDENTITY_BY_TOKEN) > _VERIFIED_CACHE_MAX:
+            _IDENTITY_BY_TOKEN.popitem(last=False)
+
+
+def _identity_in(response: httpx.Response) -> dict[str, str]:
+    """The user id and OAuth scope a verify answer names, as grant claims."""
+    try:
+        body = response.json()
+    except ValueError:
+        return {}
+    if not isinstance(body, dict):
+        return {}
+    named = {"user_id": body.get("userId"), "scope": body.get("scope")}
+    return {
+        claim: value
+        for claim, value in named.items()
+        if isinstance(value, str) and value
+    }
 
 
 def forget_rejected_token(token: str) -> None:
@@ -187,7 +231,10 @@ async def verify_late_api_key(
     try:
         response = await client.get(
             _VERIFY_URL,
-            headers={"Authorization": f"Bearer {api_key}"},
+            headers={
+                "Authorization": f"Bearer {api_key}",
+                "User-Agent": mcp_user_agent(),
+            },
             timeout=_VERIFY_TIMEOUT,
         )
     except Exception as exc:
@@ -201,6 +248,9 @@ async def verify_late_api_key(
             await client.aclose()
 
     verdict = _classify(response.status_code)
+    identity = _identity_in(response) if response.status_code == 200 else {}
+    if identity:
+        _remember_identity(token_cache_key(api_key), identity)
     if verdict is Verification.UNKNOWN:
         logger.warning(
             "Zernio token verification inconclusive: HTTP %s",
@@ -229,7 +279,7 @@ class ZernioTokenVerifier(TokenVerifier):
         now = time.monotonic()
         verified_at = _VERIFIED_AT.get(token_key)
 
-        if verified_at is not None and now - verified_at < _FRESH_TTL_SECONDS:
+        if verified_at is not None and now - verified_at < _fresh_ttl(token):
             _touch(token_key)
             return self._grant(token, resolved_by="cache")
 
@@ -279,63 +329,22 @@ class ZernioTokenVerifier(TokenVerifier):
     def _grant(
         self, token: str, *, resolved_by: str, waited_ms: int = 0
     ) -> AccessToken:
+        claims: dict[str, str | int] = {
+            "resolved_by": resolved_by,
+            "waited_ms": waited_ms,
+        }
+        claims.update(_IDENTITY_BY_TOKEN.get(token_cache_key(token), {}))
         return AccessToken(
             token=token,
             client_id="zernio",
             scopes=list(OAUTH_SCOPES),
-            claims={"resolved_by": resolved_by, "waited_ms": waited_ms},
+            claims=claims,
         )
 
 
 def _release_in_flight(token_key: str, task: "asyncio.Task[Verification]") -> None:
     if _IN_FLIGHT.get(token_key) is task:
         del _IN_FLIGHT[token_key]
-
-
-class VerbatimIssuerRemoteAuthProvider(RemoteAuthProvider):
-    """RemoteAuthProvider whose metadata names the authorization server verbatim.
-
-    The SDK model types `authorization_servers` as AnyHttpUrl, and pydantic
-    renders a bare origin with a trailing slash ("https://zernio.com/"). MCP
-    SDK 2.x clients (Hermes Agent 0.21+) compare that string byte for byte with
-    the `issuer` in zernio.com/.well-known/oauth-authorization-server
-    ("https://zernio.com", SEP-2468) and abort the whole OAuth flow on mismatch.
-    Upstream fixed the model in mcp 2.0 (url_preserve_empty_path), which
-    fastmcp 3.x cannot resolve to, so the document is rendered here instead.
-    """
-
-    def get_routes(self, mcp_path: str | None = None) -> list[Route]:
-        self.set_mcp_path(mcp_path)
-        resource_url = self._get_resource_url(mcp_path)
-        if not resource_url:
-            return []
-        metadata = ProtectedResourceMetadata(
-            resource=resource_url,
-            authorization_servers=self.authorization_servers,
-            scopes_supported=(
-                self._scopes_supported
-                if self._scopes_supported is not None
-                else self.token_verifier.scopes_supported
-            ),
-            resource_name=self.resource_name,
-            resource_documentation=self.resource_documentation,
-        )
-        payload = metadata.model_dump(mode="json", exclude_none=True)
-        payload["authorization_servers"] = [str(s) for s in self.authorization_servers]
-
-        async def handle(_request: Request) -> JSONResponse:
-            return JSONResponse(
-                payload, headers={"Cache-Control": "public, max-age=3600"}
-            )
-
-        path = urlparse(str(build_resource_metadata_url(resource_url))).path
-        return [
-            Route(
-                path,
-                endpoint=cors_middleware(handle, ["GET", "OPTIONS"]),
-                methods=["GET", "OPTIONS"],
-            )
-        ]
 
 
 def build_auth_provider(scopes: list[str] | None = None) -> RemoteAuthProvider:
@@ -351,7 +360,7 @@ def build_auth_provider(scopes: list[str] | None = None) -> RemoteAuthProvider:
     request every advertised scope, so a surface that only publishes posts
     must not advertise ads or messaging scopes on its consent screen.
     """
-    return VerbatimIssuerRemoteAuthProvider(
+    return RemoteAuthProvider(
         token_verifier=ZernioTokenVerifier(),
         authorization_servers=[OAUTH_AUTHORIZATION_SERVER],
         base_url=MCP_PUBLIC_URL,

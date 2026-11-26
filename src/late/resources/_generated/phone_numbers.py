@@ -23,13 +23,16 @@ class PhoneNumbersResource:
     def __init__(self, client: BaseClient) -> None:
         self._client = client
 
-    def _build_params(self, **kwargs: Any) -> dict[str, Any]:
-        """Build query parameters, filtering None and empty-string values.
+    def _build_query(self, fields: dict[str, Any]) -> dict[str, Any]:
+        """Build query parameters keyed by their wire names, as given.
 
-        Empty strings are filtered because MCP tool wrappers pass ``""`` as the
-        default for optional string args, and the API rejects empty query
-        values (e.g. ``platform=``) with a 400. Filtering here keeps both direct
-        SDK callers and MCP tool callers safe.
+        Generated methods pass the parameter names exactly as the OpenAPI
+        spec declares them, so no casing rule is applied here.
+
+        None and empty strings are filtered because MCP tool wrappers pass
+        ``""`` as the default for optional string args, and the API rejects
+        empty query values (e.g. ``platform=``) with a 400. Filtering here
+        keeps both direct SDK callers and MCP tool callers safe.
 
         Enum members are unwrapped to their value: httpx serializes params
         via str(), which yields "ClassName.MEMBER" for Enum members, so
@@ -38,50 +41,75 @@ class PhoneNumbersResource:
         """
         from enum import Enum
 
-        def to_camel(s: str) -> str:
-            parts = s.split("_")
-            return parts[0] + "".join(p.title() for p in parts[1:])
-
         result: dict[str, Any] = {}
-        for k, v in kwargs.items():
+        for k, v in fields.items():
             if isinstance(v, Enum):
                 v = v.value
             if v is None or v == "":
                 continue
-            result[to_camel(k)] = v
+            result[k] = v
         return result
 
-    def _build_payload(self, **kwargs: Any) -> dict[str, Any]:
-        """Build request payload, filtering None values. Enum members are
-        unwrapped to their value so JSON bodies carry e.g. "failed" rather
-        than a raw Enum member (plain Enum members are not JSON-serializable).
+    def _build_body(self, fields: dict[str, Any]) -> dict[str, Any]:
+        """Build a JSON request body keyed by its wire names, as given.
+
+        Generated methods pass the property names exactly as the request
+        body schema declares them: most are camelCase, but some routes read
+        snake_case (``ice_breakers``, ``message_send_ttl_seconds``), so no
+        casing rule is applied here. None values are dropped, Enum members
+        are unwrapped to their value (e.g. "failed") and datetimes are sent
+        as ISO 8601 strings.
         """
         from datetime import datetime
         from enum import Enum
 
-        def to_camel(s: str) -> str:
-            parts = s.split("_")
-            return parts[0] + "".join(p.title() for p in parts[1:])
-
         result: dict[str, Any] = {}
-        for k, v in kwargs.items():
+        for k, v in fields.items():
             if isinstance(v, Enum):
                 v = v.value
             if v is None:
                 continue
             if isinstance(v, datetime):
-                result[to_camel(k)] = v.isoformat()
+                result[k] = v.isoformat()
             else:
-                result[to_camel(k)] = v
+                result[k] = v
         return result
+
+    def _build_params(self, **kwargs: Any) -> dict[str, Any]:
+        """Build query parameters from snake_case kwargs, camelCasing each key.
+
+        For hand-written resource methods, whose endpoints take camelCase
+        names. Generated methods use _build_query with the spec's names.
+        """
+
+        def to_camel(s: str) -> str:
+            parts = s.split("_")
+            return parts[0] + "".join(p.title() for p in parts[1:])
+
+        return self._build_query({to_camel(k): v for k, v in kwargs.items()})
+
+    def _build_payload(self, **kwargs: Any) -> dict[str, Any]:
+        """Build a request body from snake_case kwargs, camelCasing each key.
+
+        For hand-written resource methods, whose endpoints take camelCase
+        names. Generated methods use _build_body with the spec's names.
+        """
+
+        def to_camel(s: str) -> str:
+            parts = s.split("_")
+            return parts[0] + "".join(p.title() for p in parts[1:])
+
+        return self._build_body({to_camel(k): v for k, v in kwargs.items()})
 
     def list_phone_numbers(
         self, *, status: str | None = None, profile_id: str | None = None
     ) -> dict[str, Any]:
         """List phone numbers"""
-        params = self._build_params(
-            status=status,
-            profile_id=profile_id,
+        params = self._build_query(
+            {
+                "status": status,
+                "profileId": profile_id,
+            }
         )
         return self._client._get("/v1/phone-numbers", params=params)
 
@@ -109,18 +137,20 @@ class PhoneNumbersResource:
         allow_multiple: bool | None = False,
     ) -> dict[str, Any]:
         """Purchase phone number"""
-        payload = self._build_payload(
-            profile_id=profile_id,
-            country=country,
-            number_type=number_type,
-            area_code=area_code,
-            claim_id=claim_id,
-            phone_number=phone_number,
-            connect_whatsapp=connect_whatsapp,
-            wants_sms=wants_sms,
-            wants_whatsapp=wants_whatsapp,
-            purchase_intent_id=purchase_intent_id,
-            allow_multiple=allow_multiple,
+        payload = self._build_body(
+            {
+                "profileId": profile_id,
+                "country": country,
+                "numberType": number_type,
+                "areaCode": area_code,
+                "claimId": claim_id,
+                "phoneNumber": phone_number,
+                "connectWhatsapp": connect_whatsapp,
+                "wantsSms": wants_sms,
+                "wantsWhatsapp": wants_whatsapp,
+                "purchaseIntentId": purchase_intent_id,
+                "allowMultiple": allow_multiple,
+            }
         )
         return self._client._post("/v1/phone-numbers/purchase", data=payload)
 
@@ -147,17 +177,19 @@ class PhoneNumbersResource:
         masked: bool | None = None,
     ) -> dict[str, Any]:
         """Search available numbers"""
-        params = self._build_params(
-            country=country,
-            number_type=number_type,
-            area_code=area_code,
-            type=type,
-            prefix=prefix,
-            locality=locality,
-            contains=contains,
-            sms=sms,
-            limit=limit,
-            masked=masked,
+        params = self._build_query(
+            {
+                "country": country,
+                "numberType": number_type,
+                "areaCode": area_code,
+                "type": type,
+                "prefix": prefix,
+                "locality": locality,
+                "contains": contains,
+                "sms": sms,
+                "limit": limit,
+                "masked": masked,
+            }
         )
         return self._client._get("/v1/phone-numbers/available", params=params)
 
@@ -165,20 +197,29 @@ class PhoneNumbersResource:
         self, country: str, *, number_type: str | None = None, sms: bool | None = None
     ) -> dict[str, Any]:
         """Check country availability"""
-        params = self._build_params(
-            country=country,
-            number_type=number_type,
-            sms=sms,
+        params = self._build_query(
+            {
+                "country": country,
+                "numberType": number_type,
+                "sms": sms,
+            }
         )
         return self._client._get("/v1/phone-numbers/availability", params=params)
 
     def get_phone_number_kyc_form(
-        self, country: str, *, number_type: str | None = None
+        self,
+        country: str,
+        *,
+        number_type: str | None = None,
+        profile_id: str | None = None,
     ) -> dict[str, Any]:
         """Get KYC form spec"""
-        params = self._build_params(
-            country=country,
-            number_type=number_type,
+        params = self._build_query(
+            {
+                "country": country,
+                "numberType": number_type,
+                "profileId": profile_id,
+            }
         )
         return self._client._get("/v1/phone-numbers/kyc", params=params)
 
@@ -193,6 +234,7 @@ class PhoneNumbersResource:
         reuse_option_id: str | None = None,
         reuse_from: str | None = None,
         area_code: str | None = None,
+        purchase_intent_id: str | None = None,
         phone_number: str | None = None,
         pre_order: bool | None = None,
         end_user_first_name: str | None = None,
@@ -202,22 +244,25 @@ class PhoneNumbersResource:
         address: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Submit KYC"""
-        payload = self._build_payload(
-            profile_id=profile_id,
-            country=country,
-            submission_id=submission_id,
-            quantity=quantity,
-            reuse=reuse,
-            reuse_option_id=reuse_option_id,
-            reuse_from=reuse_from,
-            area_code=area_code,
-            phone_number=phone_number,
-            pre_order=pre_order,
-            end_user_first_name=end_user_first_name,
-            end_user_last_name=end_user_last_name,
-            values=values,
-            documents=documents,
-            address=address,
+        payload = self._build_body(
+            {
+                "profileId": profile_id,
+                "country": country,
+                "submissionId": submission_id,
+                "quantity": quantity,
+                "reuse": reuse,
+                "reuseOptionId": reuse_option_id,
+                "reuseFrom": reuse_from,
+                "areaCode": area_code,
+                "purchaseIntentId": purchase_intent_id,
+                "phoneNumber": phone_number,
+                "preOrder": pre_order,
+                "endUserFirstName": end_user_first_name,
+                "endUserLastName": end_user_last_name,
+                "values": values,
+                "documents": documents,
+                "address": address,
+            }
         )
         return self._client._post("/v1/phone-numbers/kyc", data=payload)
 
@@ -245,13 +290,15 @@ class PhoneNumbersResource:
         administrative_area: str | None = None,
     ) -> dict[str, Any]:
         """Pre-validate KYC address"""
-        payload = self._build_payload(
-            country=country,
-            street_address=street_address,
-            extended_address=extended_address,
-            locality=locality,
-            administrative_area=administrative_area,
-            postal_code=postal_code,
+        payload = self._build_body(
+            {
+                "country": country,
+                "street_address": street_address,
+                "extended_address": extended_address,
+                "locality": locality,
+                "administrative_area": administrative_area,
+                "postal_code": postal_code,
+            }
         )
         return self._client._post(
             "/v1/phone-numbers/kyc/validate-address", data=payload
@@ -263,18 +310,22 @@ class PhoneNumbersResource:
         country: str,
         *,
         area_code: str | None = None,
+        purchase_intent_id: str | None = None,
         language: str | None = None,
         branding: dict[str, Any] | None = None,
         redirect_url: str | None = None,
     ) -> dict[str, Any]:
         """Create a hosted KYC link"""
-        payload = self._build_payload(
-            profile_id=profile_id,
-            country=country,
-            area_code=area_code,
-            language=language,
-            branding=branding,
-            redirect_url=redirect_url,
+        payload = self._build_body(
+            {
+                "profileId": profile_id,
+                "country": country,
+                "areaCode": area_code,
+                "purchaseIntentId": purchase_intent_id,
+                "language": language,
+                "branding": branding,
+                "redirect_url": redirect_url,
+            }
         )
         return self._client._post("/v1/phone-numbers/kyc/share", data=payload)
 
@@ -288,18 +339,22 @@ class PhoneNumbersResource:
         foc_datetime_requested: datetime | str | None = None,
         customer_reference: str | None = None,
         port_type: str | None = "full",
+        profile_id: str | None = None,
         requirements: list[dict[str, Any]] | None = None,
     ) -> dict[str, Any]:
         """Port numbers in"""
-        payload = self._build_payload(
-            phone_numbers=phone_numbers,
-            end_user=end_user,
-            loa_document_id=loa_document_id,
-            invoice_document_id=invoice_document_id,
-            foc_datetime_requested=foc_datetime_requested,
-            customer_reference=customer_reference,
-            port_type=port_type,
-            requirements=requirements,
+        payload = self._build_body(
+            {
+                "phoneNumbers": phone_numbers,
+                "endUser": end_user,
+                "loaDocumentId": loa_document_id,
+                "invoiceDocumentId": invoice_document_id,
+                "focDatetimeRequested": foc_datetime_requested,
+                "customerReference": customer_reference,
+                "portType": port_type,
+                "profileId": profile_id,
+                "requirements": requirements,
+            }
         )
         return self._client._post("/v1/phone-numbers/port-in", data=payload)
 
@@ -311,9 +366,11 @@ class PhoneNumbersResource:
         self, phone_numbers: list[str], *, claim_links: bool | None = None
     ) -> dict[str, Any]:
         """Check portability"""
-        payload = self._build_payload(
-            phone_numbers=phone_numbers,
-            claim_links=claim_links,
+        payload = self._build_body(
+            {
+                "phoneNumbers": phone_numbers,
+                "claimLinks": claim_links,
+            }
         )
         return self._client._post("/v1/phone-numbers/port-in/check", data=payload)
 
@@ -329,9 +386,11 @@ class PhoneNumbersResource:
         self, country: str, *, number_type: str | None = "local"
     ) -> dict[str, Any]:
         """Country porting requirements"""
-        params = self._build_params(
-            country=country,
-            number_type=number_type,
+        params = self._build_query(
+            {
+                "country": country,
+                "numberType": number_type,
+            }
         )
         return self._client._get(
             "/v1/phone-numbers/port-in/requirements", params=params
@@ -355,12 +414,14 @@ class PhoneNumbersResource:
         address: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Pre-review a KYC packet"""
-        payload = self._build_payload(
-            country=country,
-            number_type=number_type,
-            values=values,
-            address=address,
-            docs=docs,
+        payload = self._build_body(
+            {
+                "country": country,
+                "numberType": number_type,
+                "values": values,
+                "address": address,
+                "docs": docs,
+            }
         )
         return self._client._post("/v1/phone-numbers/kyc/review-packet", data=payload)
 
@@ -377,10 +438,12 @@ class PhoneNumbersResource:
         address: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Resubmit a declined number"""
-        payload = self._build_payload(
-            values=values,
-            documents=documents,
-            address=address,
+        payload = self._build_body(
+            {
+                "values": values,
+                "documents": documents,
+                "address": address,
+            }
         )
         return self._client._post(f"/v1/phone-numbers/{id}/remediate", data=payload)
 
@@ -392,9 +455,11 @@ class PhoneNumbersResource:
         attachments: list[dict[str, Any]] | None = None,
     ) -> dict[str, Any]:
         """Reply to the regulatory reviewer"""
-        payload = self._build_payload(
-            text=text,
-            attachments=attachments,
+        payload = self._build_body(
+            {
+                "text": text,
+                "attachments": attachments,
+            }
         )
         return self._client._post(
             f"/v1/phone-numbers/{id}/remediate/reply", data=payload
@@ -411,12 +476,14 @@ class PhoneNumbersResource:
         attachments: list[dict[str, Any]] | None = None,
     ) -> dict[str, Any]:
         """Respond to the regulatory reviewer (message + corrections)"""
-        payload = self._build_payload(
-            message=message,
-            documents=documents,
-            address=address,
-            entity_type=entity_type,
-            attachments=attachments,
+        payload = self._build_body(
+            {
+                "message": message,
+                "documents": documents,
+                "address": address,
+                "entityType": entity_type,
+                "attachments": attachments,
+            }
         )
         return self._client._post(
             f"/v1/phone-numbers/{id}/remediate/respond", data=payload
@@ -430,10 +497,12 @@ class PhoneNumbersResource:
         area_code: str | None = None,
     ) -> dict[str, Any]:
         """Watch an out-of-stock country"""
-        payload = self._build_payload(
-            country=country,
-            number_type=number_type,
-            area_code=area_code,
+        payload = self._build_body(
+            {
+                "country": country,
+                "numberType": number_type,
+                "areaCode": area_code,
+            }
         )
         return self._client._post("/v1/phone-numbers/stock-watches", data=payload)
 
@@ -449,8 +518,10 @@ class PhoneNumbersResource:
         self, id: str, *, method: str | None = None
     ) -> dict[str, Any]:
         """Request the WhatsApp verification code for a number"""
-        payload = self._build_payload(
-            method=method,
+        payload = self._build_body(
+            {
+                "method": method,
+            }
         )
         return self._client._post(
             f"/v1/phone-numbers/{id}/whatsapp/request-code", data=payload
@@ -460,9 +531,11 @@ class PhoneNumbersResource:
         self, *, status: str | None = None, profile_id: str | None = None
     ) -> dict[str, Any]:
         """List phone numbers (async)"""
-        params = self._build_params(
-            status=status,
-            profile_id=profile_id,
+        params = self._build_query(
+            {
+                "status": status,
+                "profileId": profile_id,
+            }
         )
         return await self._client._aget("/v1/phone-numbers", params=params)
 
@@ -490,18 +563,20 @@ class PhoneNumbersResource:
         allow_multiple: bool | None = False,
     ) -> dict[str, Any]:
         """Purchase phone number (async)"""
-        payload = self._build_payload(
-            profile_id=profile_id,
-            country=country,
-            number_type=number_type,
-            area_code=area_code,
-            claim_id=claim_id,
-            phone_number=phone_number,
-            connect_whatsapp=connect_whatsapp,
-            wants_sms=wants_sms,
-            wants_whatsapp=wants_whatsapp,
-            purchase_intent_id=purchase_intent_id,
-            allow_multiple=allow_multiple,
+        payload = self._build_body(
+            {
+                "profileId": profile_id,
+                "country": country,
+                "numberType": number_type,
+                "areaCode": area_code,
+                "claimId": claim_id,
+                "phoneNumber": phone_number,
+                "connectWhatsapp": connect_whatsapp,
+                "wantsSms": wants_sms,
+                "wantsWhatsapp": wants_whatsapp,
+                "purchaseIntentId": purchase_intent_id,
+                "allowMultiple": allow_multiple,
+            }
         )
         return await self._client._apost("/v1/phone-numbers/purchase", data=payload)
 
@@ -528,17 +603,19 @@ class PhoneNumbersResource:
         masked: bool | None = None,
     ) -> dict[str, Any]:
         """Search available numbers (async)"""
-        params = self._build_params(
-            country=country,
-            number_type=number_type,
-            area_code=area_code,
-            type=type,
-            prefix=prefix,
-            locality=locality,
-            contains=contains,
-            sms=sms,
-            limit=limit,
-            masked=masked,
+        params = self._build_query(
+            {
+                "country": country,
+                "numberType": number_type,
+                "areaCode": area_code,
+                "type": type,
+                "prefix": prefix,
+                "locality": locality,
+                "contains": contains,
+                "sms": sms,
+                "limit": limit,
+                "masked": masked,
+            }
         )
         return await self._client._aget("/v1/phone-numbers/available", params=params)
 
@@ -546,20 +623,29 @@ class PhoneNumbersResource:
         self, country: str, *, number_type: str | None = None, sms: bool | None = None
     ) -> dict[str, Any]:
         """Check country availability (async)"""
-        params = self._build_params(
-            country=country,
-            number_type=number_type,
-            sms=sms,
+        params = self._build_query(
+            {
+                "country": country,
+                "numberType": number_type,
+                "sms": sms,
+            }
         )
         return await self._client._aget("/v1/phone-numbers/availability", params=params)
 
     async def aget_phone_number_kyc_form(
-        self, country: str, *, number_type: str | None = None
+        self,
+        country: str,
+        *,
+        number_type: str | None = None,
+        profile_id: str | None = None,
     ) -> dict[str, Any]:
         """Get KYC form spec (async)"""
-        params = self._build_params(
-            country=country,
-            number_type=number_type,
+        params = self._build_query(
+            {
+                "country": country,
+                "numberType": number_type,
+                "profileId": profile_id,
+            }
         )
         return await self._client._aget("/v1/phone-numbers/kyc", params=params)
 
@@ -574,6 +660,7 @@ class PhoneNumbersResource:
         reuse_option_id: str | None = None,
         reuse_from: str | None = None,
         area_code: str | None = None,
+        purchase_intent_id: str | None = None,
         phone_number: str | None = None,
         pre_order: bool | None = None,
         end_user_first_name: str | None = None,
@@ -583,22 +670,25 @@ class PhoneNumbersResource:
         address: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Submit KYC (async)"""
-        payload = self._build_payload(
-            profile_id=profile_id,
-            country=country,
-            submission_id=submission_id,
-            quantity=quantity,
-            reuse=reuse,
-            reuse_option_id=reuse_option_id,
-            reuse_from=reuse_from,
-            area_code=area_code,
-            phone_number=phone_number,
-            pre_order=pre_order,
-            end_user_first_name=end_user_first_name,
-            end_user_last_name=end_user_last_name,
-            values=values,
-            documents=documents,
-            address=address,
+        payload = self._build_body(
+            {
+                "profileId": profile_id,
+                "country": country,
+                "submissionId": submission_id,
+                "quantity": quantity,
+                "reuse": reuse,
+                "reuseOptionId": reuse_option_id,
+                "reuseFrom": reuse_from,
+                "areaCode": area_code,
+                "purchaseIntentId": purchase_intent_id,
+                "phoneNumber": phone_number,
+                "preOrder": pre_order,
+                "endUserFirstName": end_user_first_name,
+                "endUserLastName": end_user_last_name,
+                "values": values,
+                "documents": documents,
+                "address": address,
+            }
         )
         return await self._client._apost("/v1/phone-numbers/kyc", data=payload)
 
@@ -626,13 +716,15 @@ class PhoneNumbersResource:
         administrative_area: str | None = None,
     ) -> dict[str, Any]:
         """Pre-validate KYC address (async)"""
-        payload = self._build_payload(
-            country=country,
-            street_address=street_address,
-            extended_address=extended_address,
-            locality=locality,
-            administrative_area=administrative_area,
-            postal_code=postal_code,
+        payload = self._build_body(
+            {
+                "country": country,
+                "street_address": street_address,
+                "extended_address": extended_address,
+                "locality": locality,
+                "administrative_area": administrative_area,
+                "postal_code": postal_code,
+            }
         )
         return await self._client._apost(
             "/v1/phone-numbers/kyc/validate-address", data=payload
@@ -644,18 +736,22 @@ class PhoneNumbersResource:
         country: str,
         *,
         area_code: str | None = None,
+        purchase_intent_id: str | None = None,
         language: str | None = None,
         branding: dict[str, Any] | None = None,
         redirect_url: str | None = None,
     ) -> dict[str, Any]:
         """Create a hosted KYC link (async)"""
-        payload = self._build_payload(
-            profile_id=profile_id,
-            country=country,
-            area_code=area_code,
-            language=language,
-            branding=branding,
-            redirect_url=redirect_url,
+        payload = self._build_body(
+            {
+                "profileId": profile_id,
+                "country": country,
+                "areaCode": area_code,
+                "purchaseIntentId": purchase_intent_id,
+                "language": language,
+                "branding": branding,
+                "redirect_url": redirect_url,
+            }
         )
         return await self._client._apost("/v1/phone-numbers/kyc/share", data=payload)
 
@@ -669,18 +765,22 @@ class PhoneNumbersResource:
         foc_datetime_requested: datetime | str | None = None,
         customer_reference: str | None = None,
         port_type: str | None = "full",
+        profile_id: str | None = None,
         requirements: list[dict[str, Any]] | None = None,
     ) -> dict[str, Any]:
         """Port numbers in (async)"""
-        payload = self._build_payload(
-            phone_numbers=phone_numbers,
-            end_user=end_user,
-            loa_document_id=loa_document_id,
-            invoice_document_id=invoice_document_id,
-            foc_datetime_requested=foc_datetime_requested,
-            customer_reference=customer_reference,
-            port_type=port_type,
-            requirements=requirements,
+        payload = self._build_body(
+            {
+                "phoneNumbers": phone_numbers,
+                "endUser": end_user,
+                "loaDocumentId": loa_document_id,
+                "invoiceDocumentId": invoice_document_id,
+                "focDatetimeRequested": foc_datetime_requested,
+                "customerReference": customer_reference,
+                "portType": port_type,
+                "profileId": profile_id,
+                "requirements": requirements,
+            }
         )
         return await self._client._apost("/v1/phone-numbers/port-in", data=payload)
 
@@ -692,9 +792,11 @@ class PhoneNumbersResource:
         self, phone_numbers: list[str], *, claim_links: bool | None = None
     ) -> dict[str, Any]:
         """Check portability (async)"""
-        payload = self._build_payload(
-            phone_numbers=phone_numbers,
-            claim_links=claim_links,
+        payload = self._build_body(
+            {
+                "phoneNumbers": phone_numbers,
+                "claimLinks": claim_links,
+            }
         )
         return await self._client._apost(
             "/v1/phone-numbers/port-in/check", data=payload
@@ -712,9 +814,11 @@ class PhoneNumbersResource:
         self, country: str, *, number_type: str | None = "local"
     ) -> dict[str, Any]:
         """Country porting requirements (async)"""
-        params = self._build_params(
-            country=country,
-            number_type=number_type,
+        params = self._build_query(
+            {
+                "country": country,
+                "numberType": number_type,
+            }
         )
         return await self._client._aget(
             "/v1/phone-numbers/port-in/requirements", params=params
@@ -740,12 +844,14 @@ class PhoneNumbersResource:
         address: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Pre-review a KYC packet (async)"""
-        payload = self._build_payload(
-            country=country,
-            number_type=number_type,
-            values=values,
-            address=address,
-            docs=docs,
+        payload = self._build_body(
+            {
+                "country": country,
+                "numberType": number_type,
+                "values": values,
+                "address": address,
+                "docs": docs,
+            }
         )
         return await self._client._apost(
             "/v1/phone-numbers/kyc/review-packet", data=payload
@@ -764,10 +870,12 @@ class PhoneNumbersResource:
         address: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Resubmit a declined number (async)"""
-        payload = self._build_payload(
-            values=values,
-            documents=documents,
-            address=address,
+        payload = self._build_body(
+            {
+                "values": values,
+                "documents": documents,
+                "address": address,
+            }
         )
         return await self._client._apost(
             f"/v1/phone-numbers/{id}/remediate", data=payload
@@ -781,9 +889,11 @@ class PhoneNumbersResource:
         attachments: list[dict[str, Any]] | None = None,
     ) -> dict[str, Any]:
         """Reply to the regulatory reviewer (async)"""
-        payload = self._build_payload(
-            text=text,
-            attachments=attachments,
+        payload = self._build_body(
+            {
+                "text": text,
+                "attachments": attachments,
+            }
         )
         return await self._client._apost(
             f"/v1/phone-numbers/{id}/remediate/reply", data=payload
@@ -800,12 +910,14 @@ class PhoneNumbersResource:
         attachments: list[dict[str, Any]] | None = None,
     ) -> dict[str, Any]:
         """Respond to the regulatory reviewer (message + corrections) (async)"""
-        payload = self._build_payload(
-            message=message,
-            documents=documents,
-            address=address,
-            entity_type=entity_type,
-            attachments=attachments,
+        payload = self._build_body(
+            {
+                "message": message,
+                "documents": documents,
+                "address": address,
+                "entityType": entity_type,
+                "attachments": attachments,
+            }
         )
         return await self._client._apost(
             f"/v1/phone-numbers/{id}/remediate/respond", data=payload
@@ -819,10 +931,12 @@ class PhoneNumbersResource:
         area_code: str | None = None,
     ) -> dict[str, Any]:
         """Watch an out-of-stock country (async)"""
-        payload = self._build_payload(
-            country=country,
-            number_type=number_type,
-            area_code=area_code,
+        payload = self._build_body(
+            {
+                "country": country,
+                "numberType": number_type,
+                "areaCode": area_code,
+            }
         )
         return await self._client._apost(
             "/v1/phone-numbers/stock-watches", data=payload
@@ -840,8 +954,10 @@ class PhoneNumbersResource:
         self, id: str, *, method: str | None = None
     ) -> dict[str, Any]:
         """Request the WhatsApp verification code for a number (async)"""
-        payload = self._build_payload(
-            method=method,
+        payload = self._build_body(
+            {
+                "method": method,
+            }
         )
         return await self._client._apost(
             f"/v1/phone-numbers/{id}/whatsapp/request-code", data=payload
