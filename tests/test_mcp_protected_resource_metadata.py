@@ -61,8 +61,10 @@ def test_metadata_advertises_the_area_read_scopes_at_the_end() -> None:
     assert _metadata()["scopes_supported"][-6:] == AREA_READ_SCOPES
 
 
-def test_every_area_read_scope_has_a_relink_purpose() -> None:
-    for scope in AREA_READ_SCOPES:
+def test_every_area_scope_has_a_relink_purpose() -> None:
+    # A token narrowed to an area's :read reaches its write tools, whose first declared scope is the :write.
+    area_write_scopes = [scope.replace(":read", ":write") for scope in AREA_READ_SCOPES]
+    for scope in AREA_READ_SCOPES + area_write_scopes:
         assert f"use this ({scope})" not in relink_instructions(scope)
 
 

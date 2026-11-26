@@ -45,6 +45,12 @@ _SCOPE_PURPOSE = {
     "campaigns:read": "read your creator campaigns, creators and payouts",
     "money:read": "read your balance, ledger and transfers",
     "automations:read": "read your contacts and webhooks",
+    "commerce:write": "fulfil orders, handle returns and refunds, and manage your shop's catalog and promotions",
+    "calendar:write": "create, edit and RSVP to events on your calendars",
+    "files:write": "upload and share files in your Drive and OneDrive",
+    "campaigns:write": "create and run creator campaigns, invite creators and record payouts",
+    "money:write": "add funds to your balance and transfer money to creators and other payees",
+    "automations:write": "create, edit and delete contacts and leads, and manage SMS opt-outs and webhooks",
 }
 
 
