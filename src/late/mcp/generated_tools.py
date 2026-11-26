@@ -53802,6 +53802,10 @@ def register_generated_tools(mcp, _get_client):
 
         Returns a Stripe-hosted link where the payee completes identity and bank details so they can receive payouts.
 
+        Only for a payee that has not submitted their details yet: after that, only the payee changes them, from their own payouts page.
+
+        Needs an owner, admin or billing admin, signed in or through a full-access key they created.
+
         Args:
             payee_id: (required)"""
         client = _get_client()

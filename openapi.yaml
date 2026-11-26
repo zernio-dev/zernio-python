@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.834.0"
+  version: "1.834.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -42424,7 +42424,12 @@ paths:
       operationId: createPayeeOnboardingLink
       tags: [Treasury]
       summary: Create a payee onboarding link
-      description: Returns a Stripe-hosted link where the payee completes identity and bank details so they can receive payouts.
+      description: |
+        Returns a Stripe-hosted link where the payee completes identity and bank details so they can receive payouts.
+
+        Only for a payee that has not submitted their details yet: after that, only the payee changes them, from their own payouts page.
+
+        Needs an owner, admin or billing admin, signed in or through a full-access key they created.
       parameters:
         - name: payeeId
           in: path
@@ -42444,9 +42449,14 @@ paths:
           $ref: '#/components/responses/BadRequest'
         '402':
           $ref: '#/components/responses/PaymentRequired'
-        '403': { $ref: '#/components/responses/ResourceGroupForbidden' }
+        '403': { $ref: '#/components/responses/MoneyForbidden' }
         '404':
           $ref: '#/components/responses/NotFound'
+        '409':
+          description: 'The payee has already submitted their payout details (code `invalid_resource_state`). Only the payee can change them.'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
   /v1/transfers:
     post:
       x-resource-group: "money"
