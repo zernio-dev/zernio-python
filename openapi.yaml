@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.836.0"
+  version: "1.837.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -85454,6 +85454,7 @@ paths:
             - `whatsapp_number_in_use`: Meta reports the number is registered to another WhatsApp account.
             - `META_INVALID_NUMBER`: Meta refused a never-live number and no replacement could be sourced.
             - `PENDING_REGULATORY`: the number is still in carrier regulatory review.
+            - `whatsapp_number_already_connected`: the number is already connected to WhatsApp, so there is no code to request.
           content:
             application/json:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
