@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.847.0"
+  version: "1.848.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -25780,7 +25780,7 @@ components:
         graph:
           description: >-
             The same automation as the graph the editor opens and saves, input references kept in place. Read only:
-            always present in responses, null only for a definition whose kind cannot be told.
+            always present in responses, null only for an automation that cannot be read as a graph.
           oneOf:
             - $ref: '#/components/schemas/AutomationGraph'
             - type: 'null'
