@@ -7911,6 +7911,7 @@ def register_generated_tools(mcp, _get_client):
             "tradedesk",
             "snapchat",
         ],
+        account_id: str | None = None,
         stage: bool | None = None,
     ) -> str:
         """Pause or resume a campaign
@@ -7940,11 +7941,16 @@ def register_generated_tools(mcp, _get_client):
             campaign_id: Platform campaign ID (required)
             status: (required)
             platform: (required)
+            account_id: A Zernio Meta Ads or Facebook connection id (also accepted in the query). Changes the status of a campaign created in Ads Manager that Zernio has not synced, by numeric Meta id. Ignored when Zernio has the campaign. It echoes the requested status; `stage: true` answers 400.
             stage: Send true to stage this change instead of applying it. Nothing is written to the ad network; the response is `202` with the staged change and its diff. Apply it with POST /v1/ads/changes/{changeId}/confirm. Meta, Google, TikTok, X, Snapchat and Reddit; cannot be combined with `validateOnly` or `dryRun`."""
         client = _get_client()
         try:
             response = client.ad_campaigns.update_ad_campaign_status(
-                campaign_id=campaign_id, status=status, platform=platform, stage=stage
+                campaign_id=campaign_id,
+                status=status,
+                platform=platform,
+                account_id=account_id,
+                stage=stage,
             )
             return _format_response(response)
         except Exception as e:
@@ -9398,6 +9404,7 @@ def register_generated_tools(mcp, _get_client):
             "tradedesk",
             "snapchat",
         ],
+        account_id: str | None = None,
         stage: bool | None = None,
     ) -> str:
         """Pause or resume a single ad set
@@ -9435,11 +9442,16 @@ def register_generated_tools(mcp, _get_client):
             ad_set_id: Platform ad set ID (required)
             status: (required)
             platform: (required)
+            account_id: A Zernio Meta Ads or Facebook connection id (also accepted in the query). Changes the status of an ad set created in Ads Manager that Zernio has not synced, by numeric Meta id. Ignored when Zernio has the ad set. It echoes the requested status; `stage: true` answers 400.
             stage: Send true to stage this change instead of applying it. Nothing is written to the ad network; the response is `202` with the staged change and its diff. Apply it with POST /v1/ads/changes/{changeId}/confirm. Meta, Google, TikTok, X, Snapchat and Reddit; cannot be combined with `validateOnly` or `dryRun`."""
         client = _get_client()
         try:
             response = client.ad_campaigns.update_ad_set_status(
-                ad_set_id=ad_set_id, status=status, platform=platform, stage=stage
+                ad_set_id=ad_set_id,
+                status=status,
+                platform=platform,
+                account_id=account_id,
+                stage=stage,
             )
             return _format_response(response)
         except Exception as e:
@@ -9968,7 +9980,10 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def ad_campaigns_update_ad_status(
-        ad_id: str, status: Literal["active", "paused"], stage: bool | None = None
+        ad_id: str,
+        status: Literal["active", "paused"],
+        account_id: str | None = None,
+        stage: bool | None = None,
     ) -> str:
         """Pause or resume a single ad
 
@@ -10003,11 +10018,12 @@ def register_generated_tools(mcp, _get_client):
         Args:
             ad_id: Zernio `_id` (hex), Meta `platformAdId` (numeric), or one of the creative's effective story/media IDs. (required)
             status: (required)
+            account_id: A Zernio Meta Ads or Facebook connection id (also accepted in the query). Changes the status of an ad created in Ads Manager that Zernio has not synced, by numeric Meta id. Ignored when Zernio has the ad. It echoes the requested status; `stage: true` answers 400.
             stage: Send true to stage this change instead of applying it. Nothing is written to the ad network; the response is `202` with the staged change and its diff. Apply it with POST /v1/ads/changes/{changeId}/confirm. Meta, Google, TikTok, X, Snapchat and Reddit; cannot be combined with `validateOnly` or `dryRun`."""
         client = _get_client()
         try:
             response = client.ad_campaigns.update_ad_status(
-                ad_id=ad_id, status=status, stage=stage
+                ad_id=ad_id, status=status, account_id=account_id, stage=stage
             )
             return _format_response(response)
         except Exception as e:

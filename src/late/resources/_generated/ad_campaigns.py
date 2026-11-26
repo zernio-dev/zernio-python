@@ -510,6 +510,7 @@ class AdCampaignsResource:
         platform: str,
         *,
         idempotency_key: str | None = None,
+        account_id: str | None = None,
         stage: bool | None = None,
     ) -> dict[str, Any]:
         """Pause or resume a campaign"""
@@ -517,6 +518,7 @@ class AdCampaignsResource:
             {
                 "status": status,
                 "platform": platform,
+                "accountId": account_id,
                 "stage": stage,
             }
         )
@@ -1046,6 +1048,7 @@ class AdCampaignsResource:
         platform: str,
         *,
         idempotency_key: str | None = None,
+        account_id: str | None = None,
         stage: bool | None = None,
     ) -> dict[str, Any]:
         """Pause or resume a single ad set"""
@@ -1053,6 +1056,7 @@ class AdCampaignsResource:
             {
                 "status": status,
                 "platform": platform,
+                "accountId": account_id,
                 "stage": stage,
             }
         )
@@ -1226,12 +1230,14 @@ class AdCampaignsResource:
         status: str,
         *,
         idempotency_key: str | None = None,
+        account_id: str | None = None,
         stage: bool | None = None,
     ) -> dict[str, Any]:
         """Pause or resume a single ad"""
         payload = self._build_body(
             {
                 "status": status,
+                "accountId": account_id,
                 "stage": stage,
             }
         )
@@ -2506,6 +2512,7 @@ class AdCampaignsResource:
         platform: str,
         *,
         idempotency_key: str | None = None,
+        account_id: str | None = None,
         stage: bool | None = None,
     ) -> dict[str, Any]:
         """Pause or resume a campaign (async)"""
@@ -2513,6 +2520,7 @@ class AdCampaignsResource:
             {
                 "status": status,
                 "platform": platform,
+                "accountId": account_id,
                 "stage": stage,
             }
         )
@@ -3050,6 +3058,7 @@ class AdCampaignsResource:
         platform: str,
         *,
         idempotency_key: str | None = None,
+        account_id: str | None = None,
         stage: bool | None = None,
     ) -> dict[str, Any]:
         """Pause or resume a single ad set (async)"""
@@ -3057,6 +3066,7 @@ class AdCampaignsResource:
             {
                 "status": status,
                 "platform": platform,
+                "accountId": account_id,
                 "stage": stage,
             }
         )
@@ -3232,12 +3242,14 @@ class AdCampaignsResource:
         status: str,
         *,
         idempotency_key: str | None = None,
+        account_id: str | None = None,
         stage: bool | None = None,
     ) -> dict[str, Any]:
         """Pause or resume a single ad (async)"""
         payload = self._build_body(
             {
                 "status": status,
+                "accountId": account_id,
                 "stage": stage,
             }
         )
