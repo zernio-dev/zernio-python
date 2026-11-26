@@ -608,7 +608,12 @@ class EmailResource:
                 "signatureId": signature_id,
             }
         )
-        return self._client._patch(f"/v1/email/drafts/{draft_id}", data=payload)
+        headers: dict[str, str] = {}
+        if if_match is not None:
+            headers["If-Match"] = if_match
+        return self._client._patch(
+            f"/v1/email/drafts/{draft_id}", data=payload, headers=headers
+        )
 
     def delete_email_draft(self, draft_id: str, account_id: str) -> dict[str, Any]:
         """Delete a draft"""
@@ -1381,7 +1386,12 @@ class EmailResource:
                 "signatureId": signature_id,
             }
         )
-        return await self._client._apatch(f"/v1/email/drafts/{draft_id}", data=payload)
+        headers: dict[str, str] = {}
+        if if_match is not None:
+            headers["If-Match"] = if_match
+        return await self._client._apatch(
+            f"/v1/email/drafts/{draft_id}", data=payload, headers=headers
+        )
 
     async def adelete_email_draft(
         self, draft_id: str, account_id: str

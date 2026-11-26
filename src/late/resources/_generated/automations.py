@@ -270,7 +270,12 @@ class AutomationsResource:
                 "limits": limits,
             }
         )
-        return self._client._patch(f"/v1/automations/{automation_id}", data=payload)
+        headers: dict[str, str] = {}
+        if if_match is not None:
+            headers["If-Match"] = if_match
+        return self._client._patch(
+            f"/v1/automations/{automation_id}", data=payload, headers=headers
+        )
 
     def delete_automation(self, automation_id: str) -> dict[str, Any]:
         """Delete an automation"""
@@ -740,8 +745,11 @@ class AutomationsResource:
                 "limits": limits,
             }
         )
+        headers: dict[str, str] = {}
+        if if_match is not None:
+            headers["If-Match"] = if_match
         return await self._client._apatch(
-            f"/v1/automations/{automation_id}", data=payload
+            f"/v1/automations/{automation_id}", data=payload, headers=headers
         )
 
     async def adelete_automation(self, automation_id: str) -> dict[str, Any]:

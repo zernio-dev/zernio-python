@@ -304,9 +304,9 @@ def generate_method_body(
     use_query_params = http_method.upper() in ("GET", "DELETE") and query_params
     use_body_params = http_method.upper() in ("POST", "PUT", "PATCH", "DELETE") and body_params
     use_query_on_post = http_method.upper() in ("POST", "PUT", "PATCH") and query_params
-    # Only _get and _post accept a `headers` kwarg (see BaseClient); no
-    # operation on PUT/PATCH/DELETE currently has a header param.
-    use_headers = http_method.upper() in ("GET", "POST") and header_params
+    # Every BaseClient verb accepts `headers`; Idempotency-Key and If-Match
+    # also appear on PUT/PATCH/DELETE operations.
+    use_headers = bool(header_params)
 
     # Build params dict if needed
     if use_query_params or use_query_on_post:
@@ -363,6 +363,8 @@ def generate_method_body(
             call_args.append("data=payload")
         elif raw_body_params:
             call_args.append(f"data={raw_body_params[0]['name']}")
+        if use_headers:
+            call_args.append("headers=headers")
         lines.append(
             f"        return {await_prefix}self._client.{client_method}({', '.join(call_args)})"
         )

@@ -733,8 +733,13 @@ class AdAccountsResource:
                 "name": name,
             }
         )
+        headers: dict[str, str] = {}
+        if idempotency_key is not None:
+            headers["Idempotency-Key"] = idempotency_key
         return self._client._put(
-            f"/v1/ads/accounts/negative-keyword-lists/{list_id}", data=payload
+            f"/v1/ads/accounts/negative-keyword-lists/{list_id}",
+            data=payload,
+            headers=headers,
         )
 
     def delete_ad_negative_keyword_list(
@@ -756,8 +761,13 @@ class AdAccountsResource:
                 "platform": platform,
             }
         )
+        headers: dict[str, str] = {}
+        if idempotency_key is not None:
+            headers["Idempotency-Key"] = idempotency_key
         return self._client._delete(
-            f"/v1/ads/accounts/negative-keyword-lists/{list_id}", params=params
+            f"/v1/ads/accounts/negative-keyword-lists/{list_id}",
+            params=params,
+            headers=headers,
         )
 
     def replace_ad_negative_keyword_list_keywords(
@@ -781,8 +791,13 @@ class AdAccountsResource:
                 "keywords": keywords,
             }
         )
+        headers: dict[str, str] = {}
+        if idempotency_key is not None:
+            headers["Idempotency-Key"] = idempotency_key
         return self._client._put(
-            f"/v1/ads/accounts/negative-keyword-lists/{list_id}/keywords", data=payload
+            f"/v1/ads/accounts/negative-keyword-lists/{list_id}/keywords",
+            data=payload,
+            headers=headers,
         )
 
     def edit_ad_negative_keyword_list_keywords(
@@ -808,8 +823,13 @@ class AdAccountsResource:
                 "remove": remove,
             }
         )
+        headers: dict[str, str] = {}
+        if idempotency_key is not None:
+            headers["Idempotency-Key"] = idempotency_key
         return self._client._patch(
-            f"/v1/ads/accounts/negative-keyword-lists/{list_id}/keywords", data=payload
+            f"/v1/ads/accounts/negative-keyword-lists/{list_id}/keywords",
+            data=payload,
+            headers=headers,
         )
 
     def list_account_callouts(
@@ -2068,8 +2088,13 @@ class AdAccountsResource:
                 "name": name,
             }
         )
+        headers: dict[str, str] = {}
+        if idempotency_key is not None:
+            headers["Idempotency-Key"] = idempotency_key
         return await self._client._aput(
-            f"/v1/ads/accounts/negative-keyword-lists/{list_id}", data=payload
+            f"/v1/ads/accounts/negative-keyword-lists/{list_id}",
+            data=payload,
+            headers=headers,
         )
 
     async def adelete_ad_negative_keyword_list(
@@ -2091,8 +2116,13 @@ class AdAccountsResource:
                 "platform": platform,
             }
         )
+        headers: dict[str, str] = {}
+        if idempotency_key is not None:
+            headers["Idempotency-Key"] = idempotency_key
         return await self._client._adelete(
-            f"/v1/ads/accounts/negative-keyword-lists/{list_id}", params=params
+            f"/v1/ads/accounts/negative-keyword-lists/{list_id}",
+            params=params,
+            headers=headers,
         )
 
     async def areplace_ad_negative_keyword_list_keywords(
@@ -2116,8 +2146,13 @@ class AdAccountsResource:
                 "keywords": keywords,
             }
         )
+        headers: dict[str, str] = {}
+        if idempotency_key is not None:
+            headers["Idempotency-Key"] = idempotency_key
         return await self._client._aput(
-            f"/v1/ads/accounts/negative-keyword-lists/{list_id}/keywords", data=payload
+            f"/v1/ads/accounts/negative-keyword-lists/{list_id}/keywords",
+            data=payload,
+            headers=headers,
         )
 
     async def aedit_ad_negative_keyword_list_keywords(
@@ -2143,8 +2178,13 @@ class AdAccountsResource:
                 "remove": remove,
             }
         )
+        headers: dict[str, str] = {}
+        if idempotency_key is not None:
+            headers["Idempotency-Key"] = idempotency_key
         return await self._client._apatch(
-            f"/v1/ads/accounts/negative-keyword-lists/{list_id}/keywords", data=payload
+            f"/v1/ads/accounts/negative-keyword-lists/{list_id}/keywords",
+            data=payload,
+            headers=headers,
         )
 
     async def alist_account_callouts(

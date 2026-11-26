@@ -414,7 +414,7 @@ class BaseClient:
         self,
         path: str,
         data: dict[str, Any] | None = None,
-        params: dict[str, Any] | None = None,
+        params: dict[str, Any] | None = None,        headers: dict[str, str] | None = None,
     ) -> dict[str, Any]:
         """Make a sync PUT request.
 
@@ -431,6 +431,7 @@ class BaseClient:
                 path,
                 json=data,
                 params=params,
+                headers=headers,
                 timeout=self._resolve_timeout("PUT", path, data),
             )
 
@@ -438,7 +439,7 @@ class BaseClient:
         self,
         path: str,
         data: dict[str, Any] | None = None,
-        params: dict[str, Any] | None = None,
+        params: dict[str, Any] | None = None,        headers: dict[str, str] | None = None,
     ) -> dict[str, Any]:
         """Make a sync PATCH request.
 
@@ -453,6 +454,7 @@ class BaseClient:
                 path,
                 json=data,
                 params=params,
+                headers=headers,
                 timeout=self._resolve_timeout("PATCH", path, data),
             )
 
@@ -460,7 +462,7 @@ class BaseClient:
         self,
         path: str,
         params: dict[str, Any] | None = None,
-        data: dict[str, Any] | None = None,
+        data: dict[str, Any] | None = None,        headers: dict[str, str] | None = None,
     ) -> dict[str, Any]:
         """Make a sync DELETE request.
 
@@ -469,7 +471,7 @@ class BaseClient:
         """
         with self._sync_client() as client:
             return self._request_with_retry(
-                client, "DELETE", path, params=params, json=data
+                client, "DELETE", path, params=params, json=data, headers=headers
             )
 
     # =========================================================================
@@ -612,7 +614,7 @@ class BaseClient:
         self,
         path: str,
         data: dict[str, Any] | None = None,
-        params: dict[str, Any] | None = None,
+        params: dict[str, Any] | None = None,        headers: dict[str, str] | None = None,
     ) -> dict[str, Any]:
         """Make an async PUT request.
 
@@ -629,6 +631,7 @@ class BaseClient:
                 path,
                 json=data,
                 params=params,
+                headers=headers,
                 timeout=self._resolve_timeout("PUT", path, data),
             )
 
@@ -636,7 +639,7 @@ class BaseClient:
         self,
         path: str,
         data: dict[str, Any] | None = None,
-        params: dict[str, Any] | None = None,
+        params: dict[str, Any] | None = None,        headers: dict[str, str] | None = None,
     ) -> dict[str, Any]:
         """Make an async PATCH request.
 
@@ -651,6 +654,7 @@ class BaseClient:
                 path,
                 json=data,
                 params=params,
+                headers=headers,
                 timeout=self._resolve_timeout("PATCH", path, data),
             )
 
@@ -658,10 +662,10 @@ class BaseClient:
         self,
         path: str,
         params: dict[str, Any] | None = None,
-        data: dict[str, Any] | None = None,
+        data: dict[str, Any] | None = None,        headers: dict[str, str] | None = None,
     ) -> dict[str, Any]:
         """Make an async DELETE request (``data`` is the JSON body, see ``_delete``)."""
         async with self._async_client() as client:
             return await self._arequest_with_retry(
-                client, "DELETE", path, params=params, json=data
+                client, "DELETE", path, params=params, json=data, headers=headers
             )

@@ -4322,6 +4322,7 @@ def register_generated_tools(mcp, _get_client):
         ]
         | None = None,
         keywords: list[Any] | None = None,
+        idempotency_key: str | None = None,
     ) -> str:
         """Create a negative keyword list
 
@@ -4337,7 +4338,8 @@ def register_generated_tools(mcp, _get_client):
             customer_id: Alias of adAccountId, kept for existing callers
             platform: Optional courtesy field. The resolved account or campaign determines support; other platforms return 501.
             name: Nonempty list name, trimmed before use. (required)
-            keywords: Full desired keyword set. Bare strings use broad match. Send [] to clear the list."""
+            keywords: Full desired keyword set. Bare strings use broad match. Send [] to clear the list.
+            idempotency_key: Optional key you choose (e.g. a UUID), one per logical action, up to 255 characters. Sent as the Idempotency-Key header. If this call times out or the chat stops, retry with the same key: within 24 hours you get the original result instead of a second copy, or 409 while the first call is still processing (retry shortly). Use a new key for a new action."""
         client = _get_client()
         try:
             response = client.ad_accounts.create_ad_negative_keyword_list(
@@ -4347,6 +4349,7 @@ def register_generated_tools(mcp, _get_client):
                 platform=platform,
                 name=name,
                 keywords=keywords,
+                idempotency_key=idempotency_key,
             )
             return _format_response(response)
         except Exception as e:
@@ -4431,6 +4434,7 @@ def register_generated_tools(mcp, _get_client):
             "reddit",
         ]
         | None = None,
+        idempotency_key: str | None = None,
     ) -> str:
         """Rename a negative keyword list
 
@@ -4446,7 +4450,8 @@ def register_generated_tools(mcp, _get_client):
             ad_account_id: Platform ad account ID (Google customer ID, digits only). Required when the connection has multiple customers.
             customer_id: Alias of adAccountId, kept for existing callers
             platform: Optional courtesy field. The resolved account or campaign determines support; other platforms return 501.
-            name: Nonempty list name, trimmed before use. (required)"""
+            name: Nonempty list name, trimmed before use. (required)
+            idempotency_key: Optional key you choose (e.g. a UUID), one per logical action, up to 255 characters. Sent as the Idempotency-Key header. If this call times out or the chat stops, retry with the same key: within 24 hours you get the original result instead of a second copy, or 409 while the first call is still processing (retry shortly). Use a new key for a new action."""
         client = _get_client()
         try:
             response = client.ad_accounts.update_ad_negative_keyword_list(
@@ -4456,6 +4461,7 @@ def register_generated_tools(mcp, _get_client):
                 customer_id=customer_id,
                 platform=platform,
                 name=name,
+                idempotency_key=idempotency_key,
             )
             return _format_response(response)
         except Exception as e:
@@ -4486,6 +4492,7 @@ def register_generated_tools(mcp, _get_client):
             "reddit",
         ]
         | None = None,
+        idempotency_key: str | None = None,
     ) -> str:
         """Delete a negative keyword list
 
@@ -4500,7 +4507,8 @@ def register_generated_tools(mcp, _get_client):
             account_id: (required)
             ad_account_id
             customer_id
-            platform"""
+            platform
+            idempotency_key: Optional key you choose (e.g. a UUID), one per logical action, up to 255 characters. Sent as the Idempotency-Key header. If this call times out or the chat stops, retry with the same key: within 24 hours you get the original result instead of a second copy, or 409 while the first call is still processing (retry shortly). Use a new key for a new action."""
         client = _get_client()
         try:
             response = client.ad_accounts.delete_ad_negative_keyword_list(
@@ -4509,6 +4517,7 @@ def register_generated_tools(mcp, _get_client):
                 ad_account_id=ad_account_id,
                 customer_id=customer_id,
                 platform=platform,
+                idempotency_key=idempotency_key,
             )
             return _format_response(response)
         except Exception as e:
@@ -4540,6 +4549,7 @@ def register_generated_tools(mcp, _get_client):
             "reddit",
         ]
         | None = None,
+        idempotency_key: str | None = None,
     ) -> str:
         """Replace negative list keywords
 
@@ -4562,7 +4572,8 @@ def register_generated_tools(mcp, _get_client):
             ad_account_id: Platform ad account ID (Google customer ID, digits only). Required when the connection has multiple customers.
             customer_id: Alias of adAccountId, kept for existing callers
             platform: Optional courtesy field. The resolved account or campaign determines support; other platforms return 501.
-            keywords: Full desired keyword set. Bare strings use broad match. Send [] to clear the list. (required)"""
+            keywords: Full desired keyword set. Bare strings use broad match. Send [] to clear the list. (required)
+            idempotency_key: Optional key you choose (e.g. a UUID), one per logical action, up to 255 characters. Sent as the Idempotency-Key header. If this call times out or the chat stops, retry with the same key: within 24 hours you get the original result instead of a second copy, or 409 while the first call is still processing (retry shortly). Use a new key for a new action."""
         client = _get_client()
         try:
             response = client.ad_accounts.replace_ad_negative_keyword_list_keywords(
@@ -4572,6 +4583,7 @@ def register_generated_tools(mcp, _get_client):
                 customer_id=customer_id,
                 platform=platform,
                 keywords=keywords,
+                idempotency_key=idempotency_key,
             )
             return _format_response(response)
         except Exception as e:
@@ -4604,6 +4616,7 @@ def register_generated_tools(mcp, _get_client):
         | None = None,
         add: list[Any] | None = None,
         remove: list[Any] | None = None,
+        idempotency_key: str | None = None,
     ) -> str:
         """Add or remove negative list keywords
 
@@ -4626,7 +4639,8 @@ def register_generated_tools(mcp, _get_client):
             customer_id: Alias of adAccountId, kept for existing callers
             platform: Optional courtesy field. The resolved account or campaign determines support; other platforms return 501.
             add: Keywords to add. Send at least one entry in add or remove.
-            remove: Keywords to remove. Bare strings mean broad match."""
+            remove: Keywords to remove. Bare strings mean broad match.
+            idempotency_key: Optional key you choose (e.g. a UUID), one per logical action, up to 255 characters. Sent as the Idempotency-Key header. If this call times out or the chat stops, retry with the same key: within 24 hours you get the original result instead of a second copy, or 409 while the first call is still processing (retry shortly). Use a new key for a new action."""
         client = _get_client()
         try:
             response = client.ad_accounts.edit_ad_negative_keyword_list_keywords(
@@ -4637,6 +4651,7 @@ def register_generated_tools(mcp, _get_client):
                 platform=platform,
                 add=add,
                 remove=remove,
+                idempotency_key=idempotency_key,
             )
             return _format_response(response)
         except Exception as e:
@@ -5810,7 +5825,9 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=True,
         )
     )
-    def ad_accounts_create_ad_account(body: dict[str, Any]) -> str:
+    def ad_accounts_create_ad_account(
+        body: dict[str, Any], idempotency_key: str | None = None
+    ) -> str:
         """Create ad account
 
         Creates a new Meta ad account in the user's own business portfolio, or a Google Ads client account under a manager (MCC) account the connection reaches. Billing must then be set up on the platform.
@@ -5837,10 +5854,13 @@ def register_generated_tools(mcp, _get_client):
         Platforms: meta, google
 
         Args:
-            body: Full request body as documented in the API reference. (required)"""
+            body: Full request body as documented in the API reference. (required)
+            idempotency_key: Optional key you choose (e.g. a UUID), one per logical action, up to 255 characters. Sent as the Idempotency-Key header. If this call times out or the chat stops, retry with the same key: within 24 hours you get the original result instead of a second copy, or 409 while the first call is still processing (retry shortly). Use a new key for a new action."""
         client = _get_client()
         try:
-            response = client.ad_accounts.create_ad_account(body=body)
+            response = client.ad_accounts.create_ad_account(
+                body=body, idempotency_key=idempotency_key
+            )
             return _format_response(response)
         except Exception as e:
             raise ToolError(f"Error: {e}") from e
@@ -6506,7 +6526,7 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def ad_campaign_results_upload_campaign_results(
-        rows: list[dict[str, Any]] | None,
+        rows: list[dict[str, Any]] | None, idempotency_key: str | None = None
     ) -> str:
         """Upload your results per campaign
 
@@ -6519,10 +6539,13 @@ def register_generated_tools(mcp, _get_client):
         Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit
 
         Args:
-            rows: Each item is an object with keys: date (string, required) - The day, at most 400 days ago.; campaignId (string) - The platform campaign id.; utmCampaign (string) - The `utm_campaign` value on the campaign's ads.; campaignName (string) - The campaign's name, matched case-insensitively.; adAccountId (string) - Platform ad account id. Narrows matching to one ad account.; values (object, required) - Metric key (snake_case, up to 40 characters) to a non-negative number. 1 to 20 per row. (required)"""
+            rows: Each item is an object with keys: date (string, required) - The day, at most 400 days ago.; campaignId (string) - The platform campaign id.; utmCampaign (string) - The `utm_campaign` value on the campaign's ads.; campaignName (string) - The campaign's name, matched case-insensitively.; adAccountId (string) - Platform ad account id. Narrows matching to one ad account.; values (object, required) - Metric key (snake_case, up to 40 characters) to a non-negative number. 1 to 20 per row. (required)
+            idempotency_key: Optional key you choose (e.g. a UUID), one per logical action, up to 255 characters. Sent as the Idempotency-Key header. If this call times out or the chat stops, retry with the same key: within 24 hours you get the original result instead of a second copy, or 409 while the first call is still processing (retry shortly). Use a new key for a new action."""
         client = _get_client()
         try:
-            response = client.ad_campaign_results.upload_campaign_results(rows=rows)
+            response = client.ad_campaign_results.upload_campaign_results(
+                rows=rows, idempotency_key=idempotency_key
+            )
             return _format_response(response)
         except Exception as e:
             raise ToolError(f"Error: {e}") from e
@@ -7485,6 +7508,7 @@ def register_generated_tools(mcp, _get_client):
         ad_set_id: str,
         keywords: list[Any] | None,
         negative: bool = False,
+        idempotency_key: str | None = None,
     ) -> str:
         """Add Search ad-group keywords
 
@@ -7506,7 +7530,8 @@ def register_generated_tools(mcp, _get_client):
             account_id: Account ID (Google Ads) (required)
             ad_set_id: Google ad group ID to add the keywords to (required)
             keywords: (required)
-            negative: Add as ad-group-level negatives instead of positive keywords"""
+            negative: Add as ad-group-level negatives instead of positive keywords
+            idempotency_key: Optional key you choose (e.g. a UUID), one per logical action, up to 255 characters. Sent as the Idempotency-Key header. If this call times out or the chat stops, retry with the same key: within 24 hours you get the original result instead of a second copy, or 409 while the first call is still processing (retry shortly). Use a new key for a new action."""
         client = _get_client()
         try:
             response = client.ad_campaigns.add_ad_keywords(
@@ -7514,6 +7539,7 @@ def register_generated_tools(mcp, _get_client):
                 ad_set_id=ad_set_id,
                 keywords=keywords,
                 negative=negative,
+                idempotency_key=idempotency_key,
             )
             return _format_response(response)
         except Exception as e:
@@ -7531,6 +7557,7 @@ def register_generated_tools(mcp, _get_client):
         keyword_id: str,
         status: Literal["active", "paused"] | None = None,
         cpc_bid: float | None = None,
+        idempotency_key: str | None = None,
     ) -> str:
         """Update a Search keyword
 
@@ -7551,11 +7578,15 @@ def register_generated_tools(mcp, _get_client):
         Args:
             keyword_id: Zernio keyword ID (`id`), or Google's native `{adSetId}~{platformCriterionId}` (the tail of `resourceName`, e.g. 1234567890~987654321). A bare criterion id is rejected because it is only unique within its ad group. (required)
             status
-            cpc_bid: Max CPC bid for this keyword, in the ad account currency. Takes effect only under Manual CPC bidding."""
+            cpc_bid: Max CPC bid for this keyword, in the ad account currency. Takes effect only under Manual CPC bidding.
+            idempotency_key: Optional key you choose (e.g. a UUID), one per logical action, up to 255 characters. Sent as the Idempotency-Key header. If this call times out or the chat stops, retry with the same key: within 24 hours you get the original result instead of a second copy, or 409 while the first call is still processing (retry shortly). Use a new key for a new action."""
         client = _get_client()
         try:
             response = client.ad_campaigns.update_ad_keyword(
-                keyword_id=keyword_id, status=status, cpc_bid=cpc_bid
+                keyword_id=keyword_id,
+                status=status,
+                cpc_bid=cpc_bid,
+                idempotency_key=idempotency_key,
             )
             return _format_response(response)
         except Exception as e:
@@ -7569,7 +7600,9 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=True,
         )
     )
-    def ad_campaigns_remove_ad_keyword(keyword_id: str) -> str:
+    def ad_campaigns_remove_ad_keyword(
+        keyword_id: str, idempotency_key: str | None = None
+    ) -> str:
         """Remove a Search keyword
 
         Removes a single keyword or negative keyword from a Google Search ad group.
@@ -7583,10 +7616,13 @@ def register_generated_tools(mcp, _get_client):
         Platforms: google, amazon
 
         Args:
-            keyword_id: Zernio keyword ID (`id`), or Google's native `{adSetId}~{platformCriterionId}` (the tail of `resourceName`, e.g. 1234567890~987654321). A bare criterion id is rejected because it is only unique within its ad group. (required)"""
+            keyword_id: Zernio keyword ID (`id`), or Google's native `{adSetId}~{platformCriterionId}` (the tail of `resourceName`, e.g. 1234567890~987654321). A bare criterion id is rejected because it is only unique within its ad group. (required)
+            idempotency_key: Optional key you choose (e.g. a UUID), one per logical action, up to 255 characters. Sent as the Idempotency-Key header. If this call times out or the chat stops, retry with the same key: within 24 hours you get the original result instead of a second copy, or 409 while the first call is still processing (retry shortly). Use a new key for a new action."""
         client = _get_client()
         try:
-            response = client.ad_campaigns.remove_ad_keyword(keyword_id=keyword_id)
+            response = client.ad_campaigns.remove_ad_keyword(
+                keyword_id=keyword_id, idempotency_key=idempotency_key
+            )
             return _format_response(response)
         except Exception as e:
             raise ToolError(f"Error: {e}") from e
@@ -7784,6 +7820,7 @@ def register_generated_tools(mcp, _get_client):
         target_impression_share: dict[str, Any] | None = None,
         manual_cpc: dict[str, Any] | None = None,
         network_settings: dict[str, Any] | None = None,
+        idempotency_key: str | None = None,
     ) -> str:
         """Create a standalone campaign
 
@@ -7849,7 +7886,8 @@ def register_generated_tools(mcp, _get_client):
                 portfolio_bid_strategy_id: Google only. Attach an existing portfolio bid strategy (numeric id from GET /v1/ads/bid-strategies) to the new campaign instead of a standard one. Exclusive with bidStrategy.
                 target_impression_share: Google Search only. Target impression share bidding. Exclusive with bidStrategy, portfolioBidStrategyId and manualCpc; bidAmount is refused alongside it (the ceiling is maxCpc). Object with keys: location (one of: ANYWHERE_ON_PAGE, TOP_OF_PAGE, ABSOLUTE_TOP_OF_PAGE; required); percent (number, required) - Target share of impressions, in percent (65 = 65%). Sent to Google as location_fraction_micros (1% = 10,000).; maxCpc (number, required) - Max CPC bid limit, in the account's currency units. Google requires it.
                 manual_cpc: Object with keys: maxCpc (number, required) - Max CPC of the ad groups, in the account's currency units: set on the ad group created with the campaign, and on every ad group of the campaign when an update ...
-                network_settings: Object with keys: searchPartners (boolean) - campaign.network_settings.target_search_network; displayNetwork (boolean) - campaign.network_settings.target_content_network (Search with Display expansion)"""
+                network_settings: Object with keys: searchPartners (boolean) - campaign.network_settings.target_search_network; displayNetwork (boolean) - campaign.network_settings.target_content_network (Search with Display expansion)
+                idempotency_key: Optional key you choose (e.g. a UUID), one per logical action, up to 255 characters. Sent as the Idempotency-Key header. If this call times out or the chat stops, retry with the same key: within 24 hours you get the original result instead of a second copy, or 409 while the first call is still processing (retry shortly). Use a new key for a new action."""
         client = _get_client()
         try:
             response = client.ad_campaigns.create_ad_campaign(
@@ -7880,6 +7918,7 @@ def register_generated_tools(mcp, _get_client):
                 target_impression_share=target_impression_share,
                 manual_cpc=manual_cpc,
                 network_settings=network_settings,
+                idempotency_key=idempotency_key,
             )
             return _format_response(response)
         except Exception as e:
@@ -7913,6 +7952,7 @@ def register_generated_tools(mcp, _get_client):
         ],
         account_id: str | None = None,
         stage: bool | None = None,
+        idempotency_key: str | None = None,
     ) -> str:
         """Pause or resume a campaign
 
@@ -7942,7 +7982,8 @@ def register_generated_tools(mcp, _get_client):
             status: (required)
             platform: (required)
             account_id: A Zernio Meta Ads or Facebook connection id (also accepted in the query). Changes the status of a campaign created in Ads Manager that Zernio has not synced, by numeric Meta id. Ignored when Zernio has the campaign. It echoes the requested status; `stage: true` answers 400.
-            stage: Send true to stage this change instead of applying it. Nothing is written to the ad network; the response is `202` with the staged change and its diff. Apply it with POST /v1/ads/changes/{changeId}/confirm. Meta, Google, TikTok, X, Snapchat and Reddit; cannot be combined with `validateOnly` or `dryRun`."""
+            stage: Send true to stage this change instead of applying it. Nothing is written to the ad network; the response is `202` with the staged change and its diff. Apply it with POST /v1/ads/changes/{changeId}/confirm. Meta, Google, TikTok, X, Snapchat and Reddit; cannot be combined with `validateOnly` or `dryRun`.
+            idempotency_key: Optional key you choose (e.g. a UUID), one per logical action, up to 255 characters. Sent as the Idempotency-Key header. If this call times out or the chat stops, retry with the same key: within 24 hours you get the original result instead of a second copy, or 409 while the first call is still processing (retry shortly). Use a new key for a new action."""
         client = _get_client()
         try:
             response = client.ad_campaigns.update_ad_campaign_status(
@@ -7951,6 +7992,7 @@ def register_generated_tools(mcp, _get_client):
                 platform=platform,
                 account_id=account_id,
                 stage=stage,
+                idempotency_key=idempotency_key,
             )
             return _format_response(response)
         except Exception as e:
@@ -8206,6 +8248,7 @@ def register_generated_tools(mcp, _get_client):
         budget: dict[str, Any] | None = None,
         name: str | None = None,
         platform_specific_data: dict[str, Any] | None = None,
+        idempotency_key: str | None = None,
     ) -> str:
         """Update a campaign
 
@@ -8252,7 +8295,8 @@ def register_generated_tools(mcp, _get_client):
                 shared_budget_id: **Google only.** Move the campaign onto this shared budget (id from GET /v1/ads/shared-budgets), or null to move it back onto a budget of its own sized by `budget`.
                 budget: Meta CBO, Google daily, or OpenAI Ads or Reddit Ads daily or lifetime campaign budget, in whole currency units. Object with keys: amount (number, required) - Budget amount in the ad account's currency; type (one of: daily, lifetime; required)
                 name: **Meta, Reddit and AppLovin.** Rename the campaign.
-                platform_specific_data: **Meta only.** Platform implied by the `platform` body param, same convention as POST /v1/ads/create. Object with keys: spendCap (number) - Campaign lifetime spend cap, in the ad account's currency (Meta `spend_cap`). Pass null to remove the cap; 0 is rejected by Meta."""
+                platform_specific_data: **Meta only.** Platform implied by the `platform` body param, same convention as POST /v1/ads/create. Object with keys: spendCap (number) - Campaign lifetime spend cap, in the ad account's currency (Meta `spend_cap`). Pass null to remove the cap; 0 is rejected by Meta.
+                idempotency_key: Optional key you choose (e.g. a UUID), one per logical action, up to 255 characters. Sent as the Idempotency-Key header. If this call times out or the chat stops, retry with the same key: within 24 hours you get the original result instead of a second copy, or 409 while the first call is still processing (retry shortly). Use a new key for a new action."""
         client = _get_client()
         try:
             response = client.ad_campaigns.update_ad_campaign(
@@ -8274,6 +8318,7 @@ def register_generated_tools(mcp, _get_client):
                 budget=budget,
                 name=name,
                 platform_specific_data=platform_specific_data,
+                idempotency_key=idempotency_key,
             )
             return _format_response(response)
         except Exception as e:
@@ -8426,6 +8471,7 @@ def register_generated_tools(mcp, _get_client):
             "reddit",
         ]
         | None = None,
+        idempotency_key: str | None = None,
     ) -> str:
         """Replace campaign-level negative keywords
 
@@ -8452,11 +8498,15 @@ def register_generated_tools(mcp, _get_client):
         Args:
             campaign_id: Platform campaign ID (required)
             platform: Optional and NOT authoritative: the resolved campaign's own platform decides 200 vs 501, never this hint.
-            keywords: (required)"""
+            keywords: (required)
+            idempotency_key: Optional key you choose (e.g. a UUID), one per logical action, up to 255 characters. Sent as the Idempotency-Key header. If this call times out or the chat stops, retry with the same key: within 24 hours you get the original result instead of a second copy, or 409 while the first call is still processing (retry shortly). Use a new key for a new action."""
         client = _get_client()
         try:
             response = client.ad_campaigns.replace_campaign_negative_keywords(
-                campaign_id=campaign_id, platform=platform, keywords=keywords
+                campaign_id=campaign_id,
+                platform=platform,
+                keywords=keywords,
+                idempotency_key=idempotency_key,
             )
             return _format_response(response)
         except Exception as e:
@@ -8486,6 +8536,7 @@ def register_generated_tools(mcp, _get_client):
         | None = None,
         add: list[Any] | None = None,
         remove: list[Any] | None = None,
+        idempotency_key: str | None = None,
     ) -> str:
         """Add or remove campaign-level negative keywords
 
@@ -8508,11 +8559,16 @@ def register_generated_tools(mcp, _get_client):
             campaign_id: Platform campaign ID (required)
             platform: Optional and NOT authoritative: the resolved campaign's own platform decides 200 vs 501, never this hint.
             add: Negative keywords to add. Send at least one entry in add or remove.
-            remove: Negative keywords to remove. Bare strings mean broad match."""
+            remove: Negative keywords to remove. Bare strings mean broad match.
+            idempotency_key: Optional key you choose (e.g. a UUID), one per logical action, up to 255 characters. Sent as the Idempotency-Key header. If this call times out or the chat stops, retry with the same key: within 24 hours you get the original result instead of a second copy, or 409 while the first call is still processing (retry shortly). Use a new key for a new action."""
         client = _get_client()
         try:
             response = client.ad_campaigns.edit_campaign_negative_keywords(
-                campaign_id=campaign_id, platform=platform, add=add, remove=remove
+                campaign_id=campaign_id,
+                platform=platform,
+                add=add,
+                remove=remove,
+                idempotency_key=idempotency_key,
             )
             return _format_response(response)
         except Exception as e:
@@ -8527,7 +8583,9 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def ad_campaigns_bulk_update_ad_campaign_status(
-        status: Literal["active", "paused"], campaigns: list[dict[str, Any]] | None
+        status: Literal["active", "paused"],
+        campaigns: list[dict[str, Any]] | None,
+        idempotency_key: str | None = None,
     ) -> str:
         """Pause or resume many campaigns
 
@@ -8543,11 +8601,12 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             status: (required)
-            campaigns: Each item is an object with keys: platformCampaignId (string, required) - The campaign id on the ad platform (e.g. the numeric Google campaign id), not a Zernio id.; platform (one of: facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit, microsoft, googleads, tiktokads, linkedinads, pinterestads, xads, openaiads, redditads, microsoftads, snapchat, snapchatads; required) - The ad platform, e.g. `google` for Google Ads. The ads connection slug (`googleads`, `tiktokads`, ...) is accepted as an alias. `metaads` is not: send ... (required)"""
+            campaigns: Each item is an object with keys: platformCampaignId (string, required) - The campaign id on the ad platform (e.g. the numeric Google campaign id), not a Zernio id.; platform (one of: facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit, microsoft, googleads, tiktokads, linkedinads, pinterestads, xads, openaiads, redditads, microsoftads, snapchat, snapchatads; required) - The ad platform, e.g. `google` for Google Ads. The ads connection slug (`googleads`, `tiktokads`, ...) is accepted as an alias. `metaads` is not: send ... (required)
+            idempotency_key: Optional key you choose (e.g. a UUID), one per logical action, up to 255 characters. Sent as the Idempotency-Key header. If this call times out or the chat stops, retry with the same key: within 24 hours you get the original result instead of a second copy, or 409 while the first call is still processing (retry shortly). Use a new key for a new action."""
         client = _get_client()
         try:
             response = client.ad_campaigns.bulk_update_ad_campaign_status(
-                status=status, campaigns=campaigns
+                status=status, campaigns=campaigns, idempotency_key=idempotency_key
             )
             return _format_response(response)
         except Exception as e:
@@ -8573,6 +8632,7 @@ def register_generated_tools(mcp, _get_client):
         rename_prefix: str | None = None,
         rename_suffix: str | None = None,
         sync_after: bool = True,
+        idempotency_key: str | None = None,
     ) -> str:
         """Duplicate a campaign
 
@@ -8617,7 +8677,8 @@ def register_generated_tools(mcp, _get_client):
         With no rename option at all, Meta appends its own ` - Copy` suffix; LinkedIn defaults to `DEEP_RENAME` (its campaign group and campaigns are renamed). Ignored on TikTok, where `renamePrefix` / `renameSuffix` apply to every copied object.
                 rename_prefix: Text prepended to each renamed object's name.
                 rename_suffix: Text appended to each renamed object's name. On LinkedIn and Google an omitted suffix defaults to ` (Copy)` when no prefix is sent.
-                sync_after: Trigger ads discovery on the owning account after the copy succeeds"""
+                sync_after: Trigger ads discovery on the owning account after the copy succeeds
+                idempotency_key: Optional key you choose (e.g. a UUID), one per logical action, up to 255 characters. Sent as the Idempotency-Key header. If this call times out or the chat stops, retry with the same key: within 24 hours you get the original result instead of a second copy, or 409 while the first call is still processing (retry shortly). Use a new key for a new action."""
         client = _get_client()
         try:
             response = client.ad_campaigns.duplicate_ad_campaign(
@@ -8631,6 +8692,7 @@ def register_generated_tools(mcp, _get_client):
                 rename_prefix=rename_prefix,
                 rename_suffix=rename_suffix,
                 sync_after=sync_after,
+                idempotency_key=idempotency_key,
             )
             return _format_response(response)
         except Exception as e:
@@ -8876,6 +8938,7 @@ def register_generated_tools(mcp, _get_client):
         ]
         | None = None,
         bid_amount: float | None = None,
+        idempotency_key: str | None = None,
     ) -> str:
         """Create a standalone ad group
 
@@ -8910,7 +8973,8 @@ def register_generated_tools(mcp, _get_client):
             promoted_object: Reddit only. The pixel and the conversion event the ad group optimizes toward. Object with keys: pixelId (string) - Reddit pixel id. Defaults to the ad account's first pixel.; customEventType (string) - Conversion event (PURCHASE, LEAD, SIGN_UP, ADD_TO_CART, PAGE_VISIT). Required on a conversions campaign.
             optimization_goal: Reddit only. VIDEO_VIEW_6S (default) or VIDEO_VIEW_15S on a video views campaign.
             bid_strategy: Reddit only. Defaults to LOWEST_COST_WITHOUT_CAP. Not accepted under campaign budget optimization.
-            bid_amount: Reddit only. Bid cap in currency units, sent with bidStrategy."""
+            bid_amount: Reddit only. Bid cap in currency units, sent with bidStrategy.
+            idempotency_key: Optional key you choose (e.g. a UUID), one per logical action, up to 255 characters. Sent as the Idempotency-Key header. If this call times out or the chat stops, retry with the same key: within 24 hours you get the original result instead of a second copy, or 409 while the first call is still processing (retry shortly). Use a new key for a new action."""
         client = _get_client()
         try:
             response = client.ad_campaigns.create_ad_set(
@@ -8932,6 +8996,7 @@ def register_generated_tools(mcp, _get_client):
                 optimization_goal=optimization_goal,
                 bid_strategy=bid_strategy,
                 bid_amount=bid_amount,
+                idempotency_key=idempotency_key,
             )
             return _format_response(response)
         except Exception as e:
@@ -8959,6 +9024,7 @@ def register_generated_tools(mcp, _get_client):
         rename_suffix: str | None = None,
         sync_after: bool = True,
         website_only: bool | None = None,
+        idempotency_key: str | None = None,
     ) -> str:
         """Duplicate an ad set
 
@@ -8999,7 +9065,8 @@ def register_generated_tools(mcp, _get_client):
 
         - Omitted or false: keeps the native copy.
         - 400 with `deepCopy: false`, and when an ad runs an existing post (its creative cannot be rebuilt).
-        - Meta rejects it when the campaign uses Website and App conversion locations."""
+        - Meta rejects it when the campaign uses Website and App conversion locations.
+                idempotency_key: Optional key you choose (e.g. a UUID), one per logical action, up to 255 characters. Sent as the Idempotency-Key header. If this call times out or the chat stops, retry with the same key: within 24 hours you get the original result instead of a second copy, or 409 while the first call is still processing (retry shortly). Use a new key for a new action."""
         client = _get_client()
         try:
             response = client.ad_campaigns.duplicate_ad_set(
@@ -9015,6 +9082,7 @@ def register_generated_tools(mcp, _get_client):
                 rename_suffix=rename_suffix,
                 sync_after=sync_after,
                 website_only=website_only,
+                idempotency_key=idempotency_key,
             )
             return _format_response(response)
         except Exception as e:
@@ -9038,6 +9106,7 @@ def register_generated_tools(mcp, _get_client):
         rename_suffix: str | None = None,
         sync_after: bool = True,
         reuse_source_creative: bool = False,
+        idempotency_key: str | None = None,
     ) -> str:
         """Duplicate an ad
 
@@ -9071,7 +9140,8 @@ def register_generated_tools(mcp, _get_client):
 
         This is what Ads Manager's "show existing reactions, comments and shares" does; Meta's native copy always publishes new posts.
 
-        A creative belongs to one ad account, so `adSetId` must be in the source ad's account. 400 when the source ad has no creative yet."""
+        A creative belongs to one ad account, so `adSetId` must be in the source ad's account. 400 when the source ad has no creative yet.
+                idempotency_key: Optional key you choose (e.g. a UUID), one per logical action, up to 255 characters. Sent as the Idempotency-Key header. If this call times out or the chat stops, retry with the same key: within 24 hours you get the original result instead of a second copy, or 409 while the first call is still processing (retry shortly). Use a new key for a new action."""
         client = _get_client()
         try:
             response = client.ad_campaigns.duplicate_ad(
@@ -9083,6 +9153,7 @@ def register_generated_tools(mcp, _get_client):
                 rename_suffix=rename_suffix,
                 sync_after=sync_after,
                 reuse_source_creative=reuse_source_creative,
+                idempotency_key=idempotency_key,
             )
             return _format_response(response)
         except Exception as e:
@@ -9174,6 +9245,7 @@ def register_generated_tools(mcp, _get_client):
         value_rule_set_id: str | None = None,
         value_rules_applied: bool | None = None,
         platform_specific_data: dict[str, Any] | None = None,
+        idempotency_key: str | None = None,
     ) -> str:
         """Update an ad set
 
@@ -9274,7 +9346,8 @@ def register_generated_tools(mcp, _get_client):
         rule set and must be sent WITHOUT `valueRuleSetId`; the combination returns
         400. `true` is optional when attaching, since attachment is driven by
         `valueRuleSetId`, and requires it to be present.
-                platform_specific_data: Platform-specific post-launch delivery settings. The platform is implied by the `platform` body param. Meta only; other platforms return 400. Unknown keys are rejected. Object with keys: optimizationGoal (string) - Meta ad-set optimization_goal (e.g. OFFSITE_CONVERSIONS, LANDING_PAGE_VIEWS). Meta fixes an ad set's attribution window (`attribution_spec`) at creation. A ...; billingEvent (string) - Meta ad-set billing_event (e.g. IMPRESSIONS, LINK_CLICKS, THRUPLAY).; startDate (string) - Ad set start_time (ISO 8601). A value without an offset (`YYYY-MM-DD`, `YYYY-MM-DD HH:MM:SS` or `YYYY-MM-DDTHH:MM:SS`) is read in the ad account timezone.; endDate (string) - Ad set end_time (ISO 8601). A value without an offset (`YYYY-MM-DD`, `YYYY-MM-DD HH:MM:SS` or `YYYY-MM-DDTHH:MM:SS`) is read in the ad account timezone.; dailyMinSpendTarget (number) - Meta `daily_min_spend_target`: the least this ad set should spend per day, in whole currency units of the ad account. It reserves a share of a CAMPAIGN budget ...; lifetimeMinSpendTarget (number) - Meta `lifetime_min_spend_target`: the lifetime-budget flavour of `dailyMinSpendTarget`, in whole currency units. Send this one when the campaign budget is a ...; customerLifecycle (object with keys strategy, existingCustomerAudienceIds, engagedAudienceIds); adSchedule (list of objects with keys dayOfWeek, startHour, endHour, timezoneType) - Replaces the ad set's dayparting (Meta `adset_schedule`, `pacing_type: [\"day_parting\"]`). An empty array removes the schedule (`pacing_type: [\"standard\"]`). ...; promotedObject (object with keys pixelId, customEventType, customEventStr, pageId, applicationId, objectStoreUrl, customConversionId, productCatalogId, productSetId, offlineConversionDataSetId, whatsappPhoneNumber) - Meta ad-set promoted_object (same shape as /v1/ads/create). Meta makes promoted_object immutable once the ad set exists, so only `pixelId`, `customEventType`, ..."""
+                platform_specific_data: Platform-specific post-launch delivery settings. The platform is implied by the `platform` body param. Meta only; other platforms return 400. Unknown keys are rejected. Object with keys: optimizationGoal (string) - Meta ad-set optimization_goal (e.g. OFFSITE_CONVERSIONS, LANDING_PAGE_VIEWS). Meta fixes an ad set's attribution window (`attribution_spec`) at creation. A ...; billingEvent (string) - Meta ad-set billing_event (e.g. IMPRESSIONS, LINK_CLICKS, THRUPLAY).; startDate (string) - Ad set start_time (ISO 8601). A value without an offset (`YYYY-MM-DD`, `YYYY-MM-DD HH:MM:SS` or `YYYY-MM-DDTHH:MM:SS`) is read in the ad account timezone.; endDate (string) - Ad set end_time (ISO 8601). A value without an offset (`YYYY-MM-DD`, `YYYY-MM-DD HH:MM:SS` or `YYYY-MM-DDTHH:MM:SS`) is read in the ad account timezone.; dailyMinSpendTarget (number) - Meta `daily_min_spend_target`: the least this ad set should spend per day, in whole currency units of the ad account. It reserves a share of a CAMPAIGN budget ...; lifetimeMinSpendTarget (number) - Meta `lifetime_min_spend_target`: the lifetime-budget flavour of `dailyMinSpendTarget`, in whole currency units. Send this one when the campaign budget is a ...; customerLifecycle (object with keys strategy, existingCustomerAudienceIds, engagedAudienceIds); adSchedule (list of objects with keys dayOfWeek, startHour, endHour, timezoneType) - Replaces the ad set's dayparting (Meta `adset_schedule`, `pacing_type: [\"day_parting\"]`). An empty array removes the schedule (`pacing_type: [\"standard\"]`). ...; promotedObject (object with keys pixelId, customEventType, customEventStr, pageId, applicationId, objectStoreUrl, customConversionId, productCatalogId, productSetId, offlineConversionDataSetId, whatsappPhoneNumber) - Meta ad-set promoted_object (same shape as /v1/ads/create). Meta makes promoted_object immutable once the ad set exists, so only `pixelId`, `customEventType`, ...
+                idempotency_key: Optional key you choose (e.g. a UUID), one per logical action, up to 255 characters. Sent as the Idempotency-Key header. If this call times out or the chat stops, retry with the same key: within 24 hours you get the original result instead of a second copy, or 409 while the first call is still processing (retry shortly). Use a new key for a new action."""
         client = _get_client()
         try:
             response = client.ad_campaigns.update_ad_set(
@@ -9299,6 +9372,7 @@ def register_generated_tools(mcp, _get_client):
                 value_rule_set_id=value_rule_set_id,
                 value_rules_applied=value_rules_applied,
                 platform_specific_data=platform_specific_data,
+                idempotency_key=idempotency_key,
             )
             return _format_response(response)
         except Exception as e:
@@ -9406,6 +9480,7 @@ def register_generated_tools(mcp, _get_client):
         ],
         account_id: str | None = None,
         stage: bool | None = None,
+        idempotency_key: str | None = None,
     ) -> str:
         """Pause or resume a single ad set
 
@@ -9443,7 +9518,8 @@ def register_generated_tools(mcp, _get_client):
             status: (required)
             platform: (required)
             account_id: A Zernio Meta Ads or Facebook connection id (also accepted in the query). Changes the status of an ad set created in Ads Manager that Zernio has not synced, by numeric Meta id. Ignored when Zernio has the ad set. It echoes the requested status; `stage: true` answers 400.
-            stage: Send true to stage this change instead of applying it. Nothing is written to the ad network; the response is `202` with the staged change and its diff. Apply it with POST /v1/ads/changes/{changeId}/confirm. Meta, Google, TikTok, X, Snapchat and Reddit; cannot be combined with `validateOnly` or `dryRun`."""
+            stage: Send true to stage this change instead of applying it. Nothing is written to the ad network; the response is `202` with the staged change and its diff. Apply it with POST /v1/ads/changes/{changeId}/confirm. Meta, Google, TikTok, X, Snapchat and Reddit; cannot be combined with `validateOnly` or `dryRun`.
+            idempotency_key: Optional key you choose (e.g. a UUID), one per logical action, up to 255 characters. Sent as the Idempotency-Key header. If this call times out or the chat stops, retry with the same key: within 24 hours you get the original result instead of a second copy, or 409 while the first call is still processing (retry shortly). Use a new key for a new action."""
         client = _get_client()
         try:
             response = client.ad_campaigns.update_ad_set_status(
@@ -9452,6 +9528,7 @@ def register_generated_tools(mcp, _get_client):
                 platform=platform,
                 account_id=account_id,
                 stage=stage,
+                idempotency_key=idempotency_key,
             )
             return _format_response(response)
         except Exception as e:
@@ -9868,6 +9945,7 @@ def register_generated_tools(mcp, _get_client):
         targeting: dict[str, Any] | None = None,
         creative: dict[str, Any] | None = None,
         name: str | None = None,
+        idempotency_key: str | None = None,
     ) -> str:
         """Update ad
 
@@ -9906,7 +9984,8 @@ def register_generated_tools(mcp, _get_client):
             budget: Object with keys: amount (number) - Minimum varies by platform: TikTok=$20, Pinterest=$5, others=$1; type (one of: daily, lifetime) - OpenAI Ads accepts both and sets the campaign's single spend cap, replacing the previous daily or lifetime cap. A daily cap cannot go back to lifetime (422).
             targeting: Targeting update. - Meta + TikTok: demographics/interests. - Google: keyword and device bid adjustment edits only. - LinkedIn: locations, B2B facets, audiences. - Pinterest / X: return 501. **Partial update** on Meta, TikTok and LinkedIn: every targeting setting you do not send is preserved. - Meta: Advantage+ audience, placements, custom audiences, exclusions, interests, languages. - TikTok: languages, interest keywords, devices, behaviours. - LinkedIn: skills, member traits, interface locales, and any facet set in Campaign Manager. A field you send replaces its platform counterpart, and an empty or null value (for example `audienceInclude: []`, `industries: []` or `gender: "all"`) clears only that field. Any location field (countries, regions, cities, zips, ...) replaces the whole included location set; an update with no location keeps the current locations. Object with keys: keywords (list of any) - Google only. The FULL desired set of positive keywords for the entire ad group. Omit to leave positives unchanged; [] removes all positives. Negatives are ...; negativeKeywords (list of any) - Google only. The FULL desired set of negative keywords for the entire ad group, independent of positives. - Omit to leave negatives unchanged; [] removes all ...; devices (list of any) - Google only. The FULL new set of device bid modifiers for the campaign. Entries are a device name alone (targeted, bid modifier reset to 1) or { device, ...; ageMin (integer); ageMax (integer); countries (list of string) - ISO 3166-1 alpha-2 codes. On Google this is the FULL new country set for the campaign (same contract as `locations`); on LinkedIn it replaces the campaign's ...; locations (any) - Google and LinkedIn. The FULL new location set for the campaign. Bare country-code array, or an object with countries/regions/cities/zips/metros key lists ...; languages (list of string) - Google only. The FULL new language set for the campaign, as Google language codes (ISO 639-1, plus variants such as `zh_CN`). An unknown code returns 400.; interests (list of objects with keys id, name) - Interest objects from /v1/ads/interests. Each must include id and name.; advantage_audience (one of: 0, 1) - Meta only. Omit to preserve the existing setting on update. 0 = disabled, 1 = enabled.
             creative: Replace or patch the ad's creative. Meta, TikTok, and LinkedIn. **Meta**: patch-style. - Pass any subset: omitted fields are preserved from the live creative, including media (`image_hash`/`video_id` reused, no re-upload) and `url_tags`. Sending the full set (`headline`, `body`, `callToAction`, `linkUrl`, `imageUrl`) rebuilds the creative from scratch. - On lead ads, the instant form is kept through every edit, and `linkUrl` is ignored: Meta requires a lead ad's links to stay on its instant-form link. An edit that changes only `linkUrl` leaves the ad's creative as it is. - Partial patching reads the live `object_story_spec`, which Meta strips on SHARE / page-post / dark post creatives; those return 422 asking for the full set. A `videoUrl`/`videoId` on an image creative is a type change and also needs the full set. - Creatives with an `asset_feed_spec` (several text options, placement or language rules) take text, link, tracking and enhancement edits in place. The new creative is built from the live asset feed with the edited text, and every video, image, label and rule is kept. - On those, `body`, `headline` and `description` replace the one option of that kind. When the feed has several, send `bodies`, `headlines` or `descriptions` with one text per option, in order. `linkUrl` replaces the feed's only destination link. - Image, video and call-to-action changes on asset_feed creatives apply to the story spec (Multiple Text Options creatives). They return 422 when the feed itself holds the images, videos or call-to-action options. - The live creative's deprecated `standard_enhancements` setting (Meta subcode 3858504) is never sent back; every other enhancement setting is kept. - `existingCreativeId` repoints the ad at a creative from GET /v1/ads/creatives and ignores every other field. - `leadGenFormId` moves a lead ad to another instant form. `caption` sets the display link of a link ad. - In a dynamic creative ad set (`is_dynamic_creative`), only asset feed creatives run: a full rebuild, or `existingCreativeId` pointing at a creative without an asset feed, returns 422. Text edits update the feed. - Meta creatives are immutable: any change creates a new creative and repoints the ad. The old creative stays on the ad account for historical reporting. - `creativeFeatures` is Meta-only. Omitted settings are preserved from the live creative, including on full rebuilds; a supplied creativeFeatures map overrides individual existing keys. - A `creative` object with no recognised field (`promotion` alone does not count) is a 400 `missing_required_field` when it is the only update, and is ignored (no creative rebuild) next to another updatable field. **TikTok**: patch-style. Pass any subset. - `headline` is ignored (no headline slot). - `body` becomes the in-feed `ad_text`; `linkUrl` becomes `landing_page_url`; `videoUrl` triggers a fresh upload. - `description`, `videoId` and `existingCreativeId` are Meta-only and return 400. **LinkedIn**: requires new media (image via `imageUrl` or video via `videoUrl`); a text-only update returns 400. - Uploads the media, creates a new inline media creative on the same campaign, and removes the old creative. `platformAdId` and `creative.creativeId` move to the new one. - The new creative keeps the old one's state. A `DRAFT` or `PAUSED` creative is re-created `DRAFT`, because LinkedIn refuses `PAUSED` before review is `APPROVED`. - If the old creative cannot be removed, the new one is deleted and the LinkedIn error is returned. - `videoId` and `existingCreativeId` are Meta-only and return 400. Object with keys: promotion (object) - Not supported. Send null or omit the field, and set the Promotion on the ad in Ads Manager. Any object is rejected with 400 invalid_field_value. Meta ...; creativeFeatures (object); catalogFormat (one of: single_image, carousel_images_multi_items, carousel_images_single_item, carousel_slideshows) - Meta catalog template ads only. Rebuilds the creative with this `template_data.format_option` (same mapping as on create) and repoints the ad at the new ...; headline (string) - Meta and LinkedIn (TikTok has no headline slot); longHeadline (string) - Google Display only. Replaces the responsive display ad's long headline.; businessName (string) - Google Display only. Replaces the responsive display ad's business name.; squareImageUrl (string) - Google Display only. Uploaded as a new square (1:1) marketing image asset that replaces the current one.; body (string) - Primary text. On a Meta asset_feed creative it replaces the feed's only body option and the story text (422 when it has several: send `bodies`). Sent with ...; bodies (list of string) - Meta only. The primary text options of an asset_feed creative, one text per option in the order GET /v1/ads/{adId} returns them. Each replaces the option in ...; headlines (list of string) - Meta only. Same as `bodies`, for the headline options (Meta `asset_feed_spec.titles`). Add `headline` to set the story's fallback title. Not the top-level ...; description (string) - Link description slot (Meta `link_data.description` / `video_data.link_description`, LinkedIn creative description).; descriptions (list of string) - Meta only. Same as `bodies`, for the description options. Add `description` to set the story's fallback description. Not the top-level Google `descriptions`.; callToAction (string); linkUrl (string); imageUrl (string); videoUrl (string); videoId (string) - Meta only. Reuse an already-uploaded ad video (from POST /v1/ads/videos or GET /v1/ads/videos) instead of re-uploading via videoUrl.; existingCreativeId (string) - Meta only. Repoint the ad at an existing library creative (from GET /v1/ads/creatives); all other creative fields are ignored.; leadGenFormId (string) - Meta only. Moves a lead ad to another instant form (from GET /v1/ads/lead-forms), keeping the rest of the creative. Returns 422 on an ad that does not open an ...; caption (string) - Meta only. The display link shown on link (image) ads, Meta link_data.caption. Returns 422 on video creatives and on asset feeds without a link.; callToActionLink (string) - Meta only. The map location the `GET_DIRECTIONS` button opens, while the ad link stays as it is. Send it with `callToAction: GET_DIRECTIONS`. - 400 with any ...
-            name: Rename the ad. Now propagated to Meta (POST /{ad-id}); non-Meta platforms return 501."""
+            name: Rename the ad. Now propagated to Meta (POST /{ad-id}); non-Meta platforms return 501.
+            idempotency_key: Optional key you choose (e.g. a UUID), one per logical action, up to 255 characters. Sent as the Idempotency-Key header. If this call times out or the chat stops, retry with the same key: within 24 hours you get the original result instead of a second copy, or 409 while the first call is still processing (retry shortly). Use a new key for a new action."""
         client = _get_client()
         try:
             response = client.ad_campaigns.update_ad(
@@ -9924,6 +10003,7 @@ def register_generated_tools(mcp, _get_client):
                 targeting=targeting,
                 creative=creative,
                 name=name,
+                idempotency_key=idempotency_key,
             )
             return _format_response(response)
         except Exception as e:
@@ -9984,6 +10064,7 @@ def register_generated_tools(mcp, _get_client):
         status: Literal["active", "paused"],
         account_id: str | None = None,
         stage: bool | None = None,
+        idempotency_key: str | None = None,
     ) -> str:
         """Pause or resume a single ad
 
@@ -10019,11 +10100,16 @@ def register_generated_tools(mcp, _get_client):
             ad_id: Zernio `_id` (hex), Meta `platformAdId` (numeric), or one of the creative's effective story/media IDs. (required)
             status: (required)
             account_id: A Zernio Meta Ads or Facebook connection id (also accepted in the query). Changes the status of an ad created in Ads Manager that Zernio has not synced, by numeric Meta id. Ignored when Zernio has the ad. It echoes the requested status; `stage: true` answers 400.
-            stage: Send true to stage this change instead of applying it. Nothing is written to the ad network; the response is `202` with the staged change and its diff. Apply it with POST /v1/ads/changes/{changeId}/confirm. Meta, Google, TikTok, X, Snapchat and Reddit; cannot be combined with `validateOnly` or `dryRun`."""
+            stage: Send true to stage this change instead of applying it. Nothing is written to the ad network; the response is `202` with the staged change and its diff. Apply it with POST /v1/ads/changes/{changeId}/confirm. Meta, Google, TikTok, X, Snapchat and Reddit; cannot be combined with `validateOnly` or `dryRun`.
+            idempotency_key: Optional key you choose (e.g. a UUID), one per logical action, up to 255 characters. Sent as the Idempotency-Key header. If this call times out or the chat stops, retry with the same key: within 24 hours you get the original result instead of a second copy, or 409 while the first call is still processing (retry shortly). Use a new key for a new action."""
         client = _get_client()
         try:
             response = client.ad_campaigns.update_ad_status(
-                ad_id=ad_id, status=status, account_id=account_id, stage=stage
+                ad_id=ad_id,
+                status=status,
+                account_id=account_id,
+                stage=stage,
+                idempotency_key=idempotency_key,
             )
             return _format_response(response)
         except Exception as e:
@@ -10664,6 +10750,7 @@ def register_generated_tools(mcp, _get_client):
             "reddit",
         ]
         | None = None,
+        idempotency_key: str | None = None,
     ) -> str:
         """Replace campaign negative lists
 
@@ -10676,11 +10763,15 @@ def register_generated_tools(mcp, _get_client):
         Args:
             campaign_id: (required)
             platform: Optional courtesy field. The resolved account or campaign determines support; other platforms return 501.
-            list_ids: (required)"""
+            list_ids: (required)
+            idempotency_key: Optional key you choose (e.g. a UUID), one per logical action, up to 255 characters. Sent as the Idempotency-Key header. If this call times out or the chat stops, retry with the same key: within 24 hours you get the original result instead of a second copy, or 409 while the first call is still processing (retry shortly). Use a new key for a new action."""
         client = _get_client()
         try:
             response = client.ad_campaigns.replace_campaign_negative_keyword_lists(
-                campaign_id=campaign_id, platform=platform, list_ids=list_ids
+                campaign_id=campaign_id,
+                platform=platform,
+                list_ids=list_ids,
+                idempotency_key=idempotency_key,
             )
             return _format_response(response)
         except Exception as e:
@@ -10710,6 +10801,7 @@ def register_generated_tools(mcp, _get_client):
         | None = None,
         add: list[str] | None = None,
         remove: list[str] | None = None,
+        idempotency_key: str | None = None,
     ) -> str:
         """Attach or detach campaign negative lists
 
@@ -10725,11 +10817,16 @@ def register_generated_tools(mcp, _get_client):
             campaign_id: (required)
             platform: Optional courtesy field. The resolved account or campaign determines support; other platforms return 501.
             add: Shared negative keyword list ids to attach. Send at least one entry in add or remove.
-            remove: Shared negative keyword list ids to detach."""
+            remove: Shared negative keyword list ids to detach.
+            idempotency_key: Optional key you choose (e.g. a UUID), one per logical action, up to 255 characters. Sent as the Idempotency-Key header. If this call times out or the chat stops, retry with the same key: within 24 hours you get the original result instead of a second copy, or 409 while the first call is still processing (retry shortly). Use a new key for a new action."""
         client = _get_client()
         try:
             response = client.ad_campaigns.edit_campaign_negative_keyword_lists(
-                campaign_id=campaign_id, platform=platform, add=add, remove=remove
+                campaign_id=campaign_id,
+                platform=platform,
+                add=add,
+                remove=remove,
+                idempotency_key=idempotency_key,
             )
             return _format_response(response)
         except Exception as e:
@@ -10838,6 +10935,7 @@ def register_generated_tools(mcp, _get_client):
         optimization_goal: str | None = None,
         meta_objective: Literal["OUTCOME_ENGAGEMENT"] | None = None,
         validate_only: bool | None = None,
+        idempotency_key: str | None = None,
     ) -> str:
         """Boost post as ad
 
@@ -11101,7 +11199,8 @@ def register_generated_tools(mcp, _get_client):
         - With `adSetId`, only the ad is dry-run.
         - An Instagram video Meta refuses as a direct reference (subcode 1815279) comes back as `unverified` nodes, because the copy a real boost makes cannot be dry-run.
 
-        `true` on any other platform returns 400 naming `validateOnly` and creates nothing; `false` is ignored. `dryRun` is not a field: sending it returns 400 instead of creating the ad."""
+        `true` on any other platform returns 400 naming `validateOnly` and creates nothing; `false` is ignored. `dryRun` is not a field: sending it returns 400 instead of creating the ad.
+                idempotency_key: Optional key you choose (e.g. a UUID), one per logical action, up to 255 characters. Sent as the Idempotency-Key header. If this call times out or the chat stops, retry with the same key: within 24 hours you get the original result instead of a second copy, or 409 while the first call is still processing (retry shortly). Use a new key for a new action."""
         client = _get_client()
         try:
             response = client.ad_campaigns.boost_post(
@@ -11165,6 +11264,7 @@ def register_generated_tools(mcp, _get_client):
                 optimization_goal=optimization_goal,
                 meta_objective=meta_objective,
                 validate_only=validate_only,
+                idempotency_key=idempotency_key,
             )
             return _format_response(response)
         except Exception as e:
@@ -11797,6 +11897,7 @@ def register_generated_tools(mcp, _get_client):
         is_skadnetwork_attribution: bool | None = None,
         campaign_attribution: Literal["AEM", "SKADNETWORK"] | None = None,
         promoted_object: dict[str, Any] | None = None,
+        idempotency_key: str | None = None,
     ) -> str:
         """Create standalone ad
 
@@ -12396,7 +12497,8 @@ def register_generated_tools(mcp, _get_client):
                 user_device: Meta only. Device models such as iPhone. Emitted as user_device. May also be supplied inside targeting.
                 is_skadnetwork_attribution: Meta app promotion only. Immutable campaign flag. Set true for iOS 14+ SKAdNetwork campaigns and supply promotedObject.applicationId plus promotedObject.objectStoreUrl. The campaign receives promotedObject only when this flag is true. Cannot be changed on an existing campaign.
                 campaign_attribution: Meta ad-set attribution. SKADNETWORK for a SKAdNetwork campaign, AEM for an iOS 14+ AEM campaign without isSkadnetworkAttribution. With existingCampaignId, omit it to follow the campaign; a value that conflicts with the campaign is rejected. Requires AUCTION buying. Use this field on /v1/ads/create.
-                promoted_object: Object with keys: pixelId (string) - Pixel ID. - **Meta:** Facebook Pixel ID, required for `goal: conversions`. Requires `customEventType` alongside it: Meta rejects any promoted_object carrying ...; customEventType (string) - The event the campaign/ad group optimises against. **Meta:** a standard event like `PURCHASE`, `LEAD`, `COMPLETE_REGISTRATION`, `ADD_TO_CART`. Uppercased ...; customEventStr (string) - Meta only. Pixel custom-event name to optimise against (Meta's `custom_event_str`), exactly as it appears in Events Manager and your CAPI payloads ...; pageId (string) - Facebook Page ID. Used by `goal: lead_generation`. Auto-filled from the connected Page when omitted.; applicationId (string) - App ID. Required for `goal: app_promotion`.; objectStoreUrl (string) - App Store / Play Store listing URL. Required for `goal: app_promotion`.; customConversionId (string) - Custom Conversion ID, when optimising against one instead of a standard event. Accepted alone by this API, without `pixelId` or `customEventType`. If ...; productCatalogId (string) - Optional catalog ID. If supplied with productSetId, the set must belong to this catalog (checked by Zernio when the Meta login carries catalog_management, by ...; productSetId (string) - Meta product SET ID, for example from GET /v1/ads/catalogs/{catalogId}/product-sets. Creating catalog ads needs only ads_management on the Meta login, not ...; offlineConversionDataSetId (string) - Meta only. Offline event set (dataset) to optimise toward. Post-merger these are datasets: the id is the dataset id (for pixel-backed datasets, the pixel id).; whatsappPhoneNumber (string) - Meta only. WhatsApp number on messaging-destination ad sets."""
+                promoted_object: Object with keys: pixelId (string) - Pixel ID. - **Meta:** Facebook Pixel ID, required for `goal: conversions`. Requires `customEventType` alongside it: Meta rejects any promoted_object carrying ...; customEventType (string) - The event the campaign/ad group optimises against. **Meta:** a standard event like `PURCHASE`, `LEAD`, `COMPLETE_REGISTRATION`, `ADD_TO_CART`. Uppercased ...; customEventStr (string) - Meta only. Pixel custom-event name to optimise against (Meta's `custom_event_str`), exactly as it appears in Events Manager and your CAPI payloads ...; pageId (string) - Facebook Page ID. Used by `goal: lead_generation`. Auto-filled from the connected Page when omitted.; applicationId (string) - App ID. Required for `goal: app_promotion`.; objectStoreUrl (string) - App Store / Play Store listing URL. Required for `goal: app_promotion`.; customConversionId (string) - Custom Conversion ID, when optimising against one instead of a standard event. Accepted alone by this API, without `pixelId` or `customEventType`. If ...; productCatalogId (string) - Optional catalog ID. If supplied with productSetId, the set must belong to this catalog (checked by Zernio when the Meta login carries catalog_management, by ...; productSetId (string) - Meta product SET ID, for example from GET /v1/ads/catalogs/{catalogId}/product-sets. Creating catalog ads needs only ads_management on the Meta login, not ...; offlineConversionDataSetId (string) - Meta only. Offline event set (dataset) to optimise toward. Post-merger these are datasets: the id is the dataset id (for pixel-backed datasets, the pixel id).; whatsappPhoneNumber (string) - Meta only. WhatsApp number on messaging-destination ad sets.
+                idempotency_key: Optional key you choose (e.g. a UUID), one per logical action, up to 255 characters. Sent as the Idempotency-Key header. If this call times out or the chat stops, retry with the same key: within 24 hours you get the original result instead of a second copy, or 409 while the first call is still processing (retry shortly). Use a new key for a new action."""
         client = _get_client()
         same_arguments: dict[str, Any] = {
             "stage": stage,
@@ -12652,7 +12754,8 @@ def register_generated_tools(mcp, _get_client):
                 is_skadnetwork_attribution=is_skadnetwork_attribution,
                 campaign_attribution=campaign_attribution,
                 promoted_object=promoted_object,
-                idempotency_key=same_arguments_key(
+                idempotency_key=idempotency_key
+                or same_arguments_key(
                     "ad_campaigns_create_standalone_ad", same_arguments
                 ),
             )
@@ -17824,7 +17927,9 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=True,
         )
     )
-    def automations_create_automation(body: dict[str, Any]) -> str:
+    def automations_create_automation(
+        body: dict[str, Any], idempotency_key: str | None = None
+    ) -> str:
         """Create an automation
 
         Creates an automation. Its trigger picks the kind:
@@ -17836,10 +17941,13 @@ def register_generated_tools(mcp, _get_client):
         - **Comment to DM**: a comment door in `trigger.type`, such as `comment.keyword`, with a `graph` of the shapes `/v1/comment-automations` holds. It is on unless `status` is `paused`, and needs what ...
 
         Args:
-            body: Full request body as documented in the API reference. (required)"""
+            body: Full request body as documented in the API reference. (required)
+            idempotency_key: Optional key you choose (e.g. a UUID), one per logical action, up to 255 characters. Sent as the Idempotency-Key header. If this call times out or the chat stops, retry with the same key: within 24 hours you get the original result instead of a second copy, or 409 while the first call is still processing (retry shortly). Use a new key for a new action."""
         client = _get_client()
         try:
-            response = client.automations.create_automation(body=body)
+            response = client.automations.create_automation(
+                body=body, idempotency_key=idempotency_key
+            )
             return _format_response(response)
         except Exception as e:
             raise ToolError(f"Error: {e}") from e
@@ -18349,6 +18457,7 @@ def register_generated_tools(mcp, _get_client):
         description: str = "",
         from_: dict[str, Any] | None = None,
         automations: list[dict[str, Any]] | None = None,
+        idempotency_key: str | None = None,
     ) -> str:
         """Create an automation template
 
@@ -18364,11 +18473,16 @@ def register_generated_tools(mcp, _get_client):
             name: (required)
             description
             from_: Copy existing automations: your own (`automationIds`), one of Zernio's templates (`templateId`, for example `stop_losers`), or a template shared by link (`shareToken`). Object with keys: automationIds (list of string, required)
-            automations: Automation definitions, each checked like a `POST /v1/automations` body. Ad accounts, a trigger's profile and accounts, and alert destinations become inputs. Each item is an object with keys: name (string, required); status (one of: active, paused) - A new ad rule stays paused unless `active`.; trigger (object with keys type, every, times, startsAt, endsAt, quietHours, required); subjects (object with keys each, adAccounts, campaignIds, filters, groups, required); conditions (object with keys all, required); alert (object with keys confirmChecks, hold, critical); steps (list of objects with keys id, type, required); limits (object with keys cooldown, maxChangesPerDay, maxChangesPerObject)"""
+            automations: Automation definitions, each checked like a `POST /v1/automations` body. Ad accounts, a trigger's profile and accounts, and alert destinations become inputs. Each item is an object with keys: name (string, required); status (one of: active, paused) - A new ad rule stays paused unless `active`.; trigger (object with keys type, every, times, startsAt, endsAt, quietHours, required); subjects (object with keys each, adAccounts, campaignIds, filters, groups, required); conditions (object with keys all, required); alert (object with keys confirmChecks, hold, critical); steps (list of objects with keys id, type, required); limits (object with keys cooldown, maxChangesPerDay, maxChangesPerObject)
+            idempotency_key: Optional key you choose (e.g. a UUID), one per logical action, up to 255 characters. Sent as the Idempotency-Key header. If this call times out or the chat stops, retry with the same key: within 24 hours you get the original result instead of a second copy, or 409 while the first call is still processing (retry shortly). Use a new key for a new action."""
         client = _get_client()
         try:
             response = client.automations.create_automation_template(
-                name=name, description=description, from_=from_, automations=automations
+                name=name,
+                description=description,
+                from_=from_,
+                automations=automations,
+                idempotency_key=idempotency_key,
             )
             return _format_response(response)
         except Exception as e:
@@ -18480,6 +18594,7 @@ def register_generated_tools(mcp, _get_client):
         inputs: dict[str, Any] | None = None,
         targets: list[dict[str, Any]] | None = None,
         status: Literal["active", "paused"] = "paused",
+        idempotency_key: str | None = None,
     ) -> str:
         """Install an automation template
 
@@ -18491,11 +18606,16 @@ def register_generated_tools(mcp, _get_client):
             template_id: The template's id. (required)
             inputs: A value for each input, by its `key`. Required inputs without a default must be sent.
             targets: Install several times in one call, for example on many ad accounts. Each target is its own install, all or nothing, and its `inputs` win over the shared `inputs`. A failed target leaves the others in place. Each item is an object with keys: inputs (object, required)
-            status: The status of every automation created."""
+            status: The status of every automation created.
+            idempotency_key: Optional key you choose (e.g. a UUID), one per logical action, up to 255 characters. Sent as the Idempotency-Key header. If this call times out or the chat stops, retry with the same key: within 24 hours you get the original result instead of a second copy, or 409 while the first call is still processing (retry shortly). Use a new key for a new action."""
         client = _get_client()
         try:
             response = client.automations.install_automation_template(
-                template_id=template_id, inputs=inputs, targets=targets, status=status
+                template_id=template_id,
+                inputs=inputs,
+                targets=targets,
+                status=status,
+                idempotency_key=idempotency_key,
             )
             return _format_response(response)
         except Exception as e:
@@ -18538,6 +18658,7 @@ def register_generated_tools(mcp, _get_client):
         inputs: dict[str, Any] | None = None,
         targets: list[dict[str, Any]] | None = None,
         status: Literal["active", "paused"] = "paused",
+        idempotency_key: str | None = None,
     ) -> str:
         """Install a shared automation template
 
@@ -18549,11 +18670,16 @@ def register_generated_tools(mcp, _get_client):
             share_token: The token from the template's `share.token`. (required)
             inputs: A value for each input, by its `key`. Required inputs without a default must be sent.
             targets: Install several times in one call, for example on many ad accounts. Each target is its own install, all or nothing, and its `inputs` win over the shared `inputs`. A failed target leaves the others in place. Each item is an object with keys: inputs (object, required)
-            status: The status of every automation created."""
+            status: The status of every automation created.
+            idempotency_key: Optional key you choose (e.g. a UUID), one per logical action, up to 255 characters. Sent as the Idempotency-Key header. If this call times out or the chat stops, retry with the same key: within 24 hours you get the original result instead of a second copy, or 409 while the first call is still processing (retry shortly). Use a new key for a new action."""
         client = _get_client()
         try:
             response = client.automations.install_shared_automation_template(
-                share_token=share_token, inputs=inputs, targets=targets, status=status
+                share_token=share_token,
+                inputs=inputs,
+                targets=targets,
+                status=status,
+                idempotency_key=idempotency_key,
             )
             return _format_response(response)
         except Exception as e:
@@ -18598,6 +18724,7 @@ def register_generated_tools(mcp, _get_client):
         inputs: dict[str, Any] | None = None,
         targets: list[dict[str, Any]] | None = None,
         status: Literal["active", "paused"] = "paused",
+        idempotency_key: str | None = None,
     ) -> str:
         """Install a Zernio automation template
 
@@ -18609,11 +18736,16 @@ def register_generated_tools(mcp, _get_client):
             template_id: The id of one of Zernio's templates, for example `stop_losers`. (required)
             inputs: A value for each input, by its `key`. Required inputs without a default must be sent.
             targets: Install several times in one call, for example on many ad accounts. Each target is its own install, all or nothing, and its `inputs` win over the shared `inputs`. A failed target leaves the others in place. Each item is an object with keys: inputs (object, required)
-            status: The status of every automation created."""
+            status: The status of every automation created.
+            idempotency_key: Optional key you choose (e.g. a UUID), one per logical action, up to 255 characters. Sent as the Idempotency-Key header. If this call times out or the chat stops, retry with the same key: within 24 hours you get the original result instead of a second copy, or 409 while the first call is still processing (retry shortly). Use a new key for a new action."""
         client = _get_client()
         try:
             response = client.automations.install_zernio_automation_template(
-                template_id=template_id, inputs=inputs, targets=targets, status=status
+                template_id=template_id,
+                inputs=inputs,
+                targets=targets,
+                status=status,
+                idempotency_key=idempotency_key,
             )
             return _format_response(response)
         except Exception as e:
@@ -19140,6 +19272,7 @@ def register_generated_tools(mcp, _get_client):
         is_published: bool | None = None,
         publish_date: str | None = None,
         field_data: dict[str, Any] | None = None,
+        idempotency_key: str | None = None,
     ) -> str:
         """Create a blog article
 
@@ -19183,7 +19316,8 @@ def register_generated_tools(mcp, _get_client):
                 publish_date: ISO 8601 datetime with offset (or Z). A future date schedules publication natively on the platform.
                 field_data: Webflow only (other platforms answer 400). The collection's own fields that the Blogs API does not map, keyed by field slug, in Webflow's value format (a Reference is an item id, an Image is { url, alt }).
 
-        Required by collections with required fields of their own: a create that leaves one empty answers 400 listing them. A slug the API already fills (name, slug, body, summary, image, tags, author, date) or one the collection lacks answers 400."""
+        Required by collections with required fields of their own: a create that leaves one empty answers 400 listing them. A slug the API already fills (name, slug, body, summary, image, tags, author, date) or one the collection lacks answers 400.
+                idempotency_key: Optional key you choose (e.g. a UUID), one per logical action, up to 255 characters. Sent as the Idempotency-Key header. If this call times out or the chat stops, retry with the same key: within 24 hours you get the original result instead of a second copy, or 409 while the first call is still processing (retry shortly). Use a new key for a new action."""
         client = _get_client()
         try:
             response = client.blogs.create_blog_article(
@@ -19200,6 +19334,7 @@ def register_generated_tools(mcp, _get_client):
                 is_published=is_published,
                 publish_date=publish_date,
                 field_data=field_data,
+                idempotency_key=idempotency_key,
             )
             return _format_response(response)
         except Exception as e:
@@ -19391,6 +19526,7 @@ def register_generated_tools(mcp, _get_client):
         billing_contact: dict[str, Any] | None,
         physical_address: dict[str, Any] | None,
         billing_address: dict[str, Any] | None,
+        idempotency_key: str | None = None,
     ) -> str:
         """Register a business for Branded Calling
 
@@ -19414,7 +19550,8 @@ def register_generated_tools(mcp, _get_client):
             organization_contact: Object with keys: firstName (string, required); lastName (string, required); email (string, required); jobTitle (string) - Required on organizationContact.; phoneNumber (string, required) - E.164 with a leading +. (required)
             billing_contact: Object with keys: firstName (string, required); lastName (string, required); email (string, required); jobTitle (string) - Required on organizationContact.; phoneNumber (string, required) - E.164 with a leading +. (required)
             physical_address: Object with keys: streetAddress (string, required); extendedAddress (string); city (string, required); administrativeArea (string, required) - State or province code (IL, ON).; postalCode (string, required); country (string, required) - ISO 3166-1 alpha-2 (US or CA). (required)
-            billing_address: Object with keys: streetAddress (string, required); extendedAddress (string); city (string, required); administrativeArea (string, required) - State or province code (IL, ON).; postalCode (string, required); country (string, required) - ISO 3166-1 alpha-2 (US or CA). (required)"""
+            billing_address: Object with keys: streetAddress (string, required); extendedAddress (string); city (string, required); administrativeArea (string, required) - State or province code (IL, ON).; postalCode (string, required); country (string, required) - ISO 3166-1 alpha-2 (US or CA). (required)
+            idempotency_key: Optional key you choose (e.g. a UUID), one per logical action, up to 255 characters. Sent as the Idempotency-Key header. If this call times out or the chat stops, retry with the same key: within 24 hours you get the original result instead of a second copy, or 409 while the first call is still processing (retry shortly). Use a new key for a new action."""
         client = _get_client()
         try:
             response = client.branded_calling.create_branded_calling_enterprise(
@@ -19432,6 +19569,7 @@ def register_generated_tools(mcp, _get_client):
                 billing_contact=billing_contact,
                 physical_address=physical_address,
                 billing_address=billing_address,
+                idempotency_key=idempotency_key,
             )
             return _format_response(response)
         except Exception as e:
@@ -19569,6 +19707,7 @@ def register_generated_tools(mcp, _get_client):
         authorizer: dict[str, Any] | None,
         references: dict[str, Any] | None,
         logo_url: str | None = None,
+        idempotency_key: str | None = None,
     ) -> str:
         """Create a caller identity
 
@@ -19595,7 +19734,8 @@ def register_generated_tools(mcp, _get_client):
             call_reasons: 1 to 10 reasons you call, each up to 64 characters. Pick from GET /v1/branded-calling/call-reasons to skip manual vetting. (required)
             logo_url: HTTPS URL of a PNG, JPEG, WebP or SVG logo. Zernio converts it to the 256x256 BMP the carriers require and hosts it.
             authorizer: Object with keys: name (string, required) - A real person at the business who authorizes the registration.; email (string, required) - The carrier emails a 6-digit code here once the identity passes review. (required)
-            references: Object with keys: business (list of objects with keys fullName, jobTitle, organization, relationshipToRegistrant, phoneNumber, email, timezone, required); financial (object with keys fullName, jobTitle, organization, relationshipToRegistrant, phoneNumber, email, timezone, required) (required)"""
+            references: Object with keys: business (list of objects with keys fullName, jobTitle, organization, relationshipToRegistrant, phoneNumber, email, timezone, required); financial (object with keys fullName, jobTitle, organization, relationshipToRegistrant, phoneNumber, email, timezone, required) (required)
+            idempotency_key: Optional key you choose (e.g. a UUID), one per logical action, up to 255 characters. Sent as the Idempotency-Key header. If this call times out or the chat stops, retry with the same key: within 24 hours you get the original result instead of a second copy, or 409 while the first call is still processing (retry shortly). Use a new key for a new action."""
         client = _get_client()
         try:
             response = client.branded_calling.create_branded_calling_identity(
@@ -19605,6 +19745,7 @@ def register_generated_tools(mcp, _get_client):
                 logo_url=logo_url,
                 authorizer=authorizer,
                 references=references,
+                idempotency_key=idempotency_key,
             )
             return _format_response(response)
         except Exception as e:
@@ -23219,6 +23360,7 @@ def register_generated_tools(mcp, _get_client):
         parent_cid: str | None = None,
         root_uri: str | None = None,
         root_cid: str | None = None,
+        idempotency_key: str | None = None,
     ) -> str:
         """Reply to comment
 
@@ -23261,7 +23403,8 @@ def register_generated_tools(mcp, _get_client):
         - If LinkedIn rejects any mention in the reply, it is posted once more with every mention as plain text.
                 parent_cid: (Bluesky only) Parent content identifier
                 root_uri: (Bluesky only) Root post URI
-                root_cid: (Bluesky only) Root post CID"""
+                root_cid: (Bluesky only) Root post CID
+                idempotency_key: Optional key you choose (e.g. a UUID), one per logical action, up to 255 characters. Sent as the Idempotency-Key header. If this call times out or the chat stops, retry with the same key: within 24 hours you get the original result instead of a second copy, or 409 while the first call is still processing (retry shortly). Use a new key for a new action."""
         client = _get_client()
         try:
             response = client.comments.reply_to_inbox_post(
@@ -23275,6 +23418,7 @@ def register_generated_tools(mcp, _get_client):
                 parent_cid=parent_cid,
                 root_uri=root_uri,
                 root_cid=root_cid,
+                idempotency_key=idempotency_key,
             )
             return _format_response(response)
         except Exception as e:
@@ -23970,6 +24114,7 @@ def register_generated_tools(mcp, _get_client):
         note: str | None = None,
         notify_customer: bool = False,
         validate_only: bool = False,
+        idempotency_key: str | None = None,
     ) -> str:
         """Refund an order
 
@@ -23990,7 +24135,8 @@ def register_generated_tools(mcp, _get_client):
             currency: The currency your amounts are in. Refused (400) unless it is the one the buyer paid in, which every refund amount uses.
             note: Kept on the refund, visible to staff.
             notify_customer: Email the buyer about the refund.
-            validate_only: Return the refund the platform would make, without refunding anything."""
+            validate_only: Return the refund the platform would make, without refunding anything.
+            idempotency_key: Optional key you choose (e.g. a UUID), one per logical action, up to 255 characters. Sent as the Idempotency-Key header. If this call times out or the chat stops, retry with the same key: within 24 hours you get the original result instead of a second copy, or 409 while the first call is still processing (retry shortly). Use a new key for a new action."""
         client = _get_client()
         try:
             response = client.commerce.create_commerce_refund(
@@ -24003,6 +24149,7 @@ def register_generated_tools(mcp, _get_client):
                 note=note,
                 notify_customer=notify_customer,
                 validate_only=validate_only,
+                idempotency_key=idempotency_key,
             )
             return _format_response(response)
         except Exception as e:
@@ -24024,6 +24171,7 @@ def register_generated_tools(mcp, _get_client):
         notify_customer: bool = False,
         staff_note: str | None = None,
         validate_only: bool = False,
+        idempotency_key: str | None = None,
     ) -> str:
         """Edit an order
 
@@ -24042,7 +24190,8 @@ def register_generated_tools(mcp, _get_client):
             quantities: Each item is an object with keys: lineItemId (string, required) - A line item id from the order.; quantity (integer, required) - The new quantity; 0 removes the line.; restock (boolean) - Put removed units back in stock.
             notify_customer
             staff_note
-            validate_only: Return the edited totals without changing the order."""
+            validate_only: Return the edited totals without changing the order.
+            idempotency_key: Optional key you choose (e.g. a UUID), one per logical action, up to 255 characters. Sent as the Idempotency-Key header. If this call times out or the chat stops, retry with the same key: within 24 hours you get the original result instead of a second copy, or 409 while the first call is still processing (retry shortly). Use a new key for a new action."""
         client = _get_client()
         try:
             response = client.commerce.create_commerce_order_edit(
@@ -24053,6 +24202,7 @@ def register_generated_tools(mcp, _get_client):
                 notify_customer=notify_customer,
                 staff_note=staff_note,
                 validate_only=validate_only,
+                idempotency_key=idempotency_key,
             )
             return _format_response(response)
         except Exception as e:
@@ -24124,6 +24274,7 @@ def register_generated_tools(mcp, _get_client):
         shipping_address: dict[str, Any] | None = None,
         note: str | None = None,
         tags: list[str] | None = None,
+        idempotency_key: str | None = None,
     ) -> str:
         """Create a draft order
 
@@ -24142,7 +24293,8 @@ def register_generated_tools(mcp, _get_client):
             shipping: Object with keys: title (string, required); price (string, required)
             shipping_address: Where to ship. Without one, the customer's default address is used. Object with keys: firstName (string); lastName (string); company (string); phone (string); line1 (string); line2 (string); city (string); region (string) - State or province code, e.g. CA.; postalCode (string); countryCode (string, required) - ISO 3166 code, e.g. US.
             note
-            tags"""
+            tags
+            idempotency_key: Optional key you choose (e.g. a UUID), one per logical action, up to 255 characters. Sent as the Idempotency-Key header. If this call times out or the chat stops, retry with the same key: within 24 hours you get the original result instead of a second copy, or 409 while the first call is still processing (retry shortly). Use a new key for a new action."""
         client = _get_client()
         try:
             response = client.commerce.create_commerce_draft_order(
@@ -24155,6 +24307,7 @@ def register_generated_tools(mcp, _get_client):
                 shipping_address=shipping_address,
                 note=note,
                 tags=tags,
+                idempotency_key=idempotency_key,
             )
             return _format_response(response)
         except Exception as e:
@@ -31197,6 +31350,7 @@ def register_generated_tools(mcp, _get_client):
         description: str | None = None,
         regular_hours: dict[str, Any] | None = None,
         validate_only: bool | None = None,
+        idempotency_key: str | None = None,
     ) -> str:
         """Create Google Business Profile location
 
@@ -31222,7 +31376,8 @@ def register_generated_tools(mcp, _get_client):
             website_uri: Website URL. Required when storefrontAddress is absent and phone is not set.
             description: Business description (Google profile.description).
             regular_hours: Google `regularHours` object (periods with openDay, openTime, closeDay, closeTime).
-            validate_only: Validate with Google without creating the listing or attaching anything."""
+            validate_only: Validate with Google without creating the listing or attaching anything.
+            idempotency_key: Optional key you choose (e.g. a UUID), one per logical action, up to 255 characters. Sent as the Idempotency-Key header. If this call times out or the chat stops, retry with the same key: within 24 hours you get the original result instead of a second copy, or 409 while the first call is still processing (retry shortly). Use a new key for a new action."""
         client = _get_client()
         try:
             response = client.connect.create_google_business_location(
@@ -31238,6 +31393,7 @@ def register_generated_tools(mcp, _get_client):
                 description=description,
                 regular_hours=regular_hours,
                 validate_only=validate_only,
+                idempotency_key=idempotency_key,
             )
             return _format_response(response)
         except Exception as e:
@@ -33237,6 +33393,7 @@ def register_generated_tools(mcp, _get_client):
         consent: dict[str, Any] | None = None,
         test_code: str | None = None,
         mode: Literal["sync", "async"] = "sync",
+        idempotency_key: str | None = None,
     ) -> str:
         """Send events to every destination
 
@@ -33262,7 +33419,8 @@ def register_generated_tools(mcp, _get_client):
             destinations: Send to these destinations instead of the saved ones (every event goes to each). A Google Analytics stream is sent to with the Measurement Protocol API secret saved on a forwarding rule for the same account and stream: the rule of this `profileId`, else the most recently changed one in your other profiles. With none saved, the destination's `error` says how to save one. Each item is an object with keys: accountId (string, required) - ID of the connected account that owns the destination (metaads, googleads, googleanalytics or any other account POST /v1/events sends to).; destinationId (string, required) - Platform destination, as listed by GET /v1/ads/conversions/destinations.
             consent: Every event's consent, unless the event sets its own (see Consent above). Object with keys: adStorage (one of: GRANTED, DENIED) - Ad cookies and click ids (`ad_storage`).; adUserData (one of: GRANTED, DENIED) - Sending personal data to ad platforms (`ad_user_data`).; adPersonalization (one of: GRANTED, DENIED) - Personalized advertising and remarketing (`ad_personalization`).; analyticsStorage (one of: GRANTED, DENIED) - Analytics cookies (`analytics_storage`): Google Analytics only.
             test_code: Forwarded as each platform test code (see POST /v1/ads/conversions). A root-level `test_event_code` is accepted as an alias. Test events are not stored.
-            mode: `sync` sends to every destination before answering (200, per-destination results). `async` stores and queues the sends, then answers 202 at once; each send is retried while the platform fails for now, and its outcome shows on GET /v1/events/{eventId}. Requests with `testCode` always send now."""
+            mode: `sync` sends to every destination before answering (200, per-destination results). `async` stores and queues the sends, then answers 202 at once; each send is retried while the platform fails for now, and its outcome shows on GET /v1/events/{eventId}. Requests with `testCode` always send now.
+            idempotency_key: Optional key you choose (e.g. a UUID), one per logical action, up to 255 characters. Sent as the Idempotency-Key header. If this call times out or the chat stops, retry with the same key: within 24 hours you get the original result instead of a second copy, or 409 while the first call is still processing (retry shortly). Use a new key for a new action."""
         client = _get_client()
         try:
             response = client.conversions.send_events(
@@ -33272,6 +33430,7 @@ def register_generated_tools(mcp, _get_client):
                 consent=consent,
                 test_code=test_code,
                 mode=mode,
+                idempotency_key=idempotency_key,
             )
             return _format_response(response)
         except Exception as e:
@@ -33863,7 +34022,7 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def conversions_create_tracking_site(
-        idempotency_key: str, body: dict[str, Any]
+        body: dict[str, Any], idempotency_key: str
     ) -> str:
         """Turn on server-side tracking for a website
 
@@ -33872,12 +34031,12 @@ def register_generated_tools(mcp, _get_client):
         The ad accounts you picked for each connection get a forwarding rule, so website conversions reach them at once. `checks` shows each step; `setup.status` turns `ready` when all have passed.
 
         Args:
-            idempotency_key: A unique key per site you create, such as a UUID. A retry with the same key and body returns the same site. (required)
-            body: Full request body as documented in the API reference. (required)"""
+            body: Full request body as documented in the API reference. (required)
+            idempotency_key: Key you choose (e.g. a UUID), one per logical action, up to 255 characters. Sent as the Idempotency-Key header. If this call times out or the chat stops, retry with the same key: within 24 hours you get the original result instead of a second copy, or 409 while the first call is still processing (retry shortly). Use a new key for a new action. (required)"""
         client = _get_client()
         try:
             response = client.conversions.create_tracking_site(
-                idempotency_key=idempotency_key, body=body
+                body=body, idempotency_key=idempotency_key
             )
             return _format_response(response)
         except Exception as e:
@@ -34000,7 +34159,7 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             site_id: (required)
-            idempotency_key: A unique key per rotation, such as a UUID. (required)"""
+            idempotency_key: Key you choose (e.g. a UUID), one per logical action, up to 255 characters. Sent as the Idempotency-Key header. If this call times out or the chat stops, retry with the same key: within 24 hours you get the original result instead of a second copy, or 409 while the first call is still processing (retry shortly). Use a new key for a new action. (required)"""
         client = _get_client()
         try:
             response = client.conversions.rotate_tracking_site_key(
@@ -35009,6 +35168,7 @@ def register_generated_tools(mcp, _get_client):
         store_account_id: str | None = None,
         sample_product_ids: list[str] | None = None,
         sample_content_due_days: int = 14,
+        idempotency_key: str | None = None,
     ) -> str:
         """Create creator campaign
 
@@ -35043,7 +35203,8 @@ def register_generated_tools(mcp, _get_client):
 
         On any campaign creators can ask for free samples of its products (`sampleProductIds`). Changing it without `sampleProductIds` clears the sample products; null removes the store and the products.
                 sample_product_ids: Product ids in the store that creators can ask a free sample of. Each is read from the store and saved as `sampleProducts`; an unknown product answers 404 `product_not_found`. Needs a store, otherwise 400 `missing_required_field` (`param: storeAccountId`).
-                sample_content_due_days: Days after a sample is approved before a creator with no post since shows as owing content."""
+                sample_content_due_days: Days after a sample is approved before a creator with no post since shows as owing content.
+                idempotency_key: Optional key you choose (e.g. a UUID), one per logical action, up to 255 characters. Sent as the Idempotency-Key header. If this call times out or the chat stops, retry with the same key: within 24 hours you get the original result instead of a second copy, or 409 while the first call is still processing (retry shortly). Use a new key for a new action."""
         client = _get_client()
         try:
             response = client.creator_campaigns.create_creator_campaign(
@@ -35069,6 +35230,7 @@ def register_generated_tools(mcp, _get_client):
                 store_account_id=store_account_id,
                 sample_product_ids=sample_product_ids,
                 sample_content_due_days=sample_content_due_days,
+                idempotency_key=idempotency_key,
             )
             return _format_response(response)
         except Exception as e:
@@ -35246,7 +35408,7 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def creator_campaigns_raise_creator_campaign_budget(
-        campaign_id: str, budget_cents: int
+        campaign_id: str, budget_cents: int, idempotency_key: str | None = None
     ) -> str:
         """Raise creator campaign budget
 
@@ -35260,11 +35422,14 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             campaign_id: Campaign ID. (required)
-            budget_cents: The new total budget in cents. (required)"""
+            budget_cents: The new total budget in cents. (required)
+            idempotency_key: Optional key you choose (e.g. a UUID), one per logical action, up to 255 characters. Sent as the Idempotency-Key header. If this call times out or the chat stops, retry with the same key: within 24 hours you get the original result instead of a second copy, or 409 while the first call is still processing (retry shortly). Use a new key for a new action."""
         client = _get_client()
         try:
             response = client.creator_campaigns.raise_creator_campaign_budget(
-                campaign_id=campaign_id, budget_cents=budget_cents
+                campaign_id=campaign_id,
+                budget_cents=budget_cents,
+                idempotency_key=idempotency_key,
             )
             return _format_response(response)
         except Exception as e:
@@ -35358,7 +35523,10 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def creator_campaigns_create_campaign_participant(
-        campaign_id: str, display_name: str, email: str | None = None
+        campaign_id: str,
+        display_name: str,
+        email: str | None = None,
+        idempotency_key: str | None = None,
     ) -> str:
         """Invite campaign participant
 
@@ -35379,11 +35547,15 @@ def register_generated_tools(mcp, _get_client):
         Args:
             campaign_id: Campaign ID. (required)
             display_name: (required)
-            email"""
+            email
+            idempotency_key: Optional key you choose (e.g. a UUID), one per logical action, up to 255 characters. Sent as the Idempotency-Key header. If this call times out or the chat stops, retry with the same key: within 24 hours you get the original result instead of a second copy, or 409 while the first call is still processing (retry shortly). Use a new key for a new action."""
         client = _get_client()
         try:
             response = client.creator_campaigns.create_campaign_participant(
-                campaign_id=campaign_id, display_name=display_name, email=email
+                campaign_id=campaign_id,
+                display_name=display_name,
+                email=email,
+                idempotency_key=idempotency_key,
             )
             return _format_response(response)
         except Exception as e:
@@ -35460,7 +35632,7 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def creator_campaigns_approve_campaign_participant(
-        campaign_id: str, participant_id: str
+        campaign_id: str, participant_id: str, idempotency_key: str | None = None
     ) -> str:
         """Approve pending campaign participant
 
@@ -35479,11 +35651,14 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             campaign_id: Campaign ID. (required)
-            participant_id: Participant ID. (required)"""
+            participant_id: Participant ID. (required)
+            idempotency_key: Optional key you choose (e.g. a UUID), one per logical action, up to 255 characters. Sent as the Idempotency-Key header. If this call times out or the chat stops, retry with the same key: within 24 hours you get the original result instead of a second copy, or 409 while the first call is still processing (retry shortly). Use a new key for a new action."""
         client = _get_client()
         try:
             response = client.creator_campaigns.approve_campaign_participant(
-                campaign_id=campaign_id, participant_id=participant_id
+                campaign_id=campaign_id,
+                participant_id=participant_id,
+                idempotency_key=idempotency_key,
             )
             return _format_response(response)
         except Exception as e:
@@ -35498,7 +35673,7 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def creator_campaigns_deny_campaign_participant(
-        campaign_id: str, participant_id: str
+        campaign_id: str, participant_id: str, idempotency_key: str | None = None
     ) -> str:
         """Deny pending campaign participant
 
@@ -35506,11 +35681,14 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             campaign_id: Campaign ID. (required)
-            participant_id: Participant ID. (required)"""
+            participant_id: Participant ID. (required)
+            idempotency_key: Optional key you choose (e.g. a UUID), one per logical action, up to 255 characters. Sent as the Idempotency-Key header. If this call times out or the chat stops, retry with the same key: within 24 hours you get the original result instead of a second copy, or 409 while the first call is still processing (retry shortly). Use a new key for a new action."""
         client = _get_client()
         try:
             response = client.creator_campaigns.deny_campaign_participant(
-                campaign_id=campaign_id, participant_id=participant_id
+                campaign_id=campaign_id,
+                participant_id=participant_id,
+                idempotency_key=idempotency_key,
             )
             return _format_response(response)
         except Exception as e:
@@ -35649,7 +35827,7 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def creator_campaigns_resend_campaign_participant_invite(
-        campaign_id: str, participant_id: str
+        campaign_id: str, participant_id: str, idempotency_key: str | None = None
     ) -> str:
         """Resend campaign participant invite
 
@@ -35662,11 +35840,14 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             campaign_id: Campaign ID. (required)
-            participant_id: Participant ID. (required)"""
+            participant_id: Participant ID. (required)
+            idempotency_key: Optional key you choose (e.g. a UUID), one per logical action, up to 255 characters. Sent as the Idempotency-Key header. If this call times out or the chat stops, retry with the same key: within 24 hours you get the original result instead of a second copy, or 409 while the first call is still processing (retry shortly). Use a new key for a new action."""
         client = _get_client()
         try:
             response = client.creator_campaigns.resend_campaign_participant_invite(
-                campaign_id=campaign_id, participant_id=participant_id
+                campaign_id=campaign_id,
+                participant_id=participant_id,
+                idempotency_key=idempotency_key,
             )
             return _format_response(response)
         except Exception as e:
@@ -35686,6 +35867,7 @@ def register_generated_tools(mcp, _get_client):
         amount_cents: int | None = None,
         external_reference: str | None = None,
         record_only: bool | None = None,
+        idempotency_key: str | None = None,
     ) -> str:
         """Settle campaign participant
 
@@ -35704,7 +35886,8 @@ def register_generated_tools(mcp, _get_client):
             participant_id: Participant ID. (required)
             amount_cents: Defaults to the whole payable balance.
             external_reference: Your payout id. Required when the campaign settles externally.
-            record_only: Treasury campaigns only, and required there: record a payout you already made outside Zernio. Ignored on other settlement modes, which always record."""
+            record_only: Treasury campaigns only, and required there: record a payout you already made outside Zernio. Ignored on other settlement modes, which always record.
+            idempotency_key: Optional key you choose (e.g. a UUID), one per logical action, up to 255 characters. Sent as the Idempotency-Key header. If this call times out or the chat stops, retry with the same key: within 24 hours you get the original result instead of a second copy, or 409 while the first call is still processing (retry shortly). Use a new key for a new action."""
         client = _get_client()
         try:
             response = client.creator_campaigns.settle_campaign_participant(
@@ -35713,6 +35896,7 @@ def register_generated_tools(mcp, _get_client):
                 amount_cents=amount_cents,
                 external_reference=external_reference,
                 record_only=record_only,
+                idempotency_key=idempotency_key,
             )
             return _format_response(response)
         except Exception as e:
@@ -35731,6 +35915,7 @@ def register_generated_tools(mcp, _get_client):
         participant_ids: list[str] | None = None,
         exclude_participant_ids: list[str] | None = None,
         payment_method_id: str | None = None,
+        idempotency_key: str | None = None,
     ) -> str:
         """Pay creators with one card payment
 
@@ -35750,7 +35935,8 @@ def register_generated_tools(mcp, _get_client):
             campaign_id: Campaign ID. (required)
             participant_ids: Pay only these participants. Defaults to every payable participant who is ready.
             exclude_participant_ids: Leave these participants out.
-            payment_method_id: A saved card of the billing owner's (`pm_...`). Defaults to the default payment method."""
+            payment_method_id: A saved card of the billing owner's (`pm_...`). Defaults to the default payment method.
+            idempotency_key: Optional key you choose (e.g. a UUID), one per logical action, up to 255 characters. Sent as the Idempotency-Key header. If this call times out or the chat stops, retry with the same key: within 24 hours you get the original result instead of a second copy, or 409 while the first call is still processing (retry shortly). Use a new key for a new action."""
         client = _get_client()
         try:
             response = client.creator_campaigns.create_campaign_payout_batch(
@@ -35758,6 +35944,7 @@ def register_generated_tools(mcp, _get_client):
                 participant_ids=participant_ids,
                 exclude_participant_ids=exclude_participant_ids,
                 payment_method_id=payment_method_id,
+                idempotency_key=idempotency_key,
             )
             return _format_response(response)
         except Exception as e:
@@ -35988,7 +36175,7 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def creator_campaigns_approve_campaign_submission(
-        campaign_id: str, submission_id: str
+        campaign_id: str, submission_id: str, idempotency_key: str | None = None
     ) -> str:
         """Approve campaign submission
 
@@ -36009,11 +36196,14 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             campaign_id: Campaign ID. (required)
-            submission_id: Submission ID. (required)"""
+            submission_id: Submission ID. (required)
+            idempotency_key: Optional key you choose (e.g. a UUID), one per logical action, up to 255 characters. Sent as the Idempotency-Key header. If this call times out or the chat stops, retry with the same key: within 24 hours you get the original result instead of a second copy, or 409 while the first call is still processing (retry shortly). Use a new key for a new action."""
         client = _get_client()
         try:
             response = client.creator_campaigns.approve_campaign_submission(
-                campaign_id=campaign_id, submission_id=submission_id
+                campaign_id=campaign_id,
+                submission_id=submission_id,
+                idempotency_key=idempotency_key,
             )
             return _format_response(response)
         except Exception as e:
@@ -36028,7 +36218,10 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def creator_campaigns_reject_campaign_submission(
-        campaign_id: str, submission_id: str, reason: str
+        campaign_id: str,
+        submission_id: str,
+        reason: str,
+        idempotency_key: str | None = None,
     ) -> str:
         """Reject campaign submission
 
@@ -36039,11 +36232,15 @@ def register_generated_tools(mcp, _get_client):
         Args:
             campaign_id: Campaign ID. (required)
             submission_id: Submission ID. (required)
-            reason: (required)"""
+            reason: (required)
+            idempotency_key: Optional key you choose (e.g. a UUID), one per logical action, up to 255 characters. Sent as the Idempotency-Key header. If this call times out or the chat stops, retry with the same key: within 24 hours you get the original result instead of a second copy, or 409 while the first call is still processing (retry shortly). Use a new key for a new action."""
         client = _get_client()
         try:
             response = client.creator_campaigns.reject_campaign_submission(
-                campaign_id=campaign_id, submission_id=submission_id, reason=reason
+                campaign_id=campaign_id,
+                submission_id=submission_id,
+                reason=reason,
+                idempotency_key=idempotency_key,
             )
             return _format_response(response)
         except Exception as e:
@@ -36058,7 +36255,7 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def creator_campaigns_reopen_campaign_submission(
-        campaign_id: str, submission_id: str
+        campaign_id: str, submission_id: str, idempotency_key: str | None = None
     ) -> str:
         """Reopen campaign submission
 
@@ -36077,11 +36274,14 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             campaign_id: Campaign ID. (required)
-            submission_id: Submission ID. (required)"""
+            submission_id: Submission ID. (required)
+            idempotency_key: Optional key you choose (e.g. a UUID), one per logical action, up to 255 characters. Sent as the Idempotency-Key header. If this call times out or the chat stops, retry with the same key: within 24 hours you get the original result instead of a second copy, or 409 while the first call is still processing (retry shortly). Use a new key for a new action."""
         client = _get_client()
         try:
             response = client.creator_campaigns.reopen_campaign_submission(
-                campaign_id=campaign_id, submission_id=submission_id
+                campaign_id=campaign_id,
+                submission_id=submission_id,
+                idempotency_key=idempotency_key,
             )
             return _format_response(response)
         except Exception as e:
@@ -36162,7 +36362,7 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def creator_campaigns_approve_campaign_draft(
-        campaign_id: str, draft_id: str
+        campaign_id: str, draft_id: str, idempotency_key: str | None = None
     ) -> str:
         """Approve campaign draft
 
@@ -36172,11 +36372,14 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             campaign_id: Campaign ID. (required)
-            draft_id: Draft version ID. (required)"""
+            draft_id: Draft version ID. (required)
+            idempotency_key: Optional key you choose (e.g. a UUID), one per logical action, up to 255 characters. Sent as the Idempotency-Key header. If this call times out or the chat stops, retry with the same key: within 24 hours you get the original result instead of a second copy, or 409 while the first call is still processing (retry shortly). Use a new key for a new action."""
         client = _get_client()
         try:
             response = client.creator_campaigns.approve_campaign_draft(
-                campaign_id=campaign_id, draft_id=draft_id
+                campaign_id=campaign_id,
+                draft_id=draft_id,
+                idempotency_key=idempotency_key,
             )
             return _format_response(response)
         except Exception as e:
@@ -36195,6 +36398,7 @@ def register_generated_tools(mcp, _get_client):
         draft_id: str,
         note: str | None = None,
         comments: list[dict[str, Any]] | None = None,
+        idempotency_key: str | None = None,
     ) -> str:
         """Request changes on a campaign draft
 
@@ -36208,11 +36412,16 @@ def register_generated_tools(mcp, _get_client):
             campaign_id: Campaign ID. (required)
             draft_id: Draft version ID. (required)
             note: What to change overall. Stored as `reviewNote`.
-            comments: Each item is an object with keys: atMs (integer) - Milliseconds into the video the comment is about. Null or omitted for a general comment.; body (string, required)"""
+            comments: Each item is an object with keys: atMs (integer) - Milliseconds into the video the comment is about. Null or omitted for a general comment.; body (string, required)
+            idempotency_key: Optional key you choose (e.g. a UUID), one per logical action, up to 255 characters. Sent as the Idempotency-Key header. If this call times out or the chat stops, retry with the same key: within 24 hours you get the original result instead of a second copy, or 409 while the first call is still processing (retry shortly). Use a new key for a new action."""
         client = _get_client()
         try:
             response = client.creator_campaigns.request_campaign_draft_revision(
-                campaign_id=campaign_id, draft_id=draft_id, note=note, comments=comments
+                campaign_id=campaign_id,
+                draft_id=draft_id,
+                note=note,
+                comments=comments,
+                idempotency_key=idempotency_key,
             )
             return _format_response(response)
         except Exception as e:
@@ -36227,7 +36436,7 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def creator_campaigns_reject_campaign_draft(
-        campaign_id: str, draft_id: str, reason: str
+        campaign_id: str, draft_id: str, reason: str, idempotency_key: str | None = None
     ) -> str:
         """Reject campaign draft
 
@@ -36238,11 +36447,15 @@ def register_generated_tools(mcp, _get_client):
         Args:
             campaign_id: Campaign ID. (required)
             draft_id: Draft version ID. (required)
-            reason: (required)"""
+            reason: (required)
+            idempotency_key: Optional key you choose (e.g. a UUID), one per logical action, up to 255 characters. Sent as the Idempotency-Key header. If this call times out or the chat stops, retry with the same key: within 24 hours you get the original result instead of a second copy, or 409 while the first call is still processing (retry shortly). Use a new key for a new action."""
         client = _get_client()
         try:
             response = client.creator_campaigns.reject_campaign_draft(
-                campaign_id=campaign_id, draft_id=draft_id, reason=reason
+                campaign_id=campaign_id,
+                draft_id=draft_id,
+                reason=reason,
+                idempotency_key=idempotency_key,
             )
             return _format_response(response)
         except Exception as e:
@@ -36295,7 +36508,7 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def creator_campaigns_approve_campaign_sample(
-        campaign_id: str, sample_id: str
+        campaign_id: str, sample_id: str, idempotency_key: str | None = None
     ) -> str:
         """Approve campaign sample request
 
@@ -36312,11 +36525,14 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             campaign_id: Campaign ID. (required)
-            sample_id: Sample request ID. (required)"""
+            sample_id: Sample request ID. (required)
+            idempotency_key: Optional key you choose (e.g. a UUID), one per logical action, up to 255 characters. Sent as the Idempotency-Key header. If this call times out or the chat stops, retry with the same key: within 24 hours you get the original result instead of a second copy, or 409 while the first call is still processing (retry shortly). Use a new key for a new action."""
         client = _get_client()
         try:
             response = client.creator_campaigns.approve_campaign_sample(
-                campaign_id=campaign_id, sample_id=sample_id
+                campaign_id=campaign_id,
+                sample_id=sample_id,
+                idempotency_key=idempotency_key,
             )
             return _format_response(response)
         except Exception as e:
@@ -36331,7 +36547,10 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def creator_campaigns_decline_campaign_sample(
-        campaign_id: str, sample_id: str, reason: str
+        campaign_id: str,
+        sample_id: str,
+        reason: str,
+        idempotency_key: str | None = None,
     ) -> str:
         """Decline campaign sample request
 
@@ -36340,11 +36559,15 @@ def register_generated_tools(mcp, _get_client):
         Args:
             campaign_id: Campaign ID. (required)
             sample_id: Sample request ID. (required)
-            reason: Shown to the creator. (required)"""
+            reason: Shown to the creator. (required)
+            idempotency_key: Optional key you choose (e.g. a UUID), one per logical action, up to 255 characters. Sent as the Idempotency-Key header. If this call times out or the chat stops, retry with the same key: within 24 hours you get the original result instead of a second copy, or 409 while the first call is still processing (retry shortly). Use a new key for a new action."""
         client = _get_client()
         try:
             response = client.creator_campaigns.decline_campaign_sample(
-                campaign_id=campaign_id, sample_id=sample_id, reason=reason
+                campaign_id=campaign_id,
+                sample_id=sample_id,
+                reason=reason,
+                idempotency_key=idempotency_key,
             )
             return _format_response(response)
         except Exception as e:
@@ -36359,7 +36582,10 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def creator_campaigns_ship_campaign_sample(
-        campaign_id: str, sample_id: str, tracking_url: str | None = None
+        campaign_id: str,
+        sample_id: str,
+        tracking_url: str | None = None,
+        idempotency_key: str | None = None,
     ) -> str:
         """Mark campaign sample shipped
 
@@ -36368,11 +36594,15 @@ def register_generated_tools(mcp, _get_client):
         Args:
             campaign_id: Campaign ID. (required)
             sample_id: Sample request ID. (required)
-            tracking_url: The carrier tracking link, shown to the creator."""
+            tracking_url: The carrier tracking link, shown to the creator.
+            idempotency_key: Optional key you choose (e.g. a UUID), one per logical action, up to 255 characters. Sent as the Idempotency-Key header. If this call times out or the chat stops, retry with the same key: within 24 hours you get the original result instead of a second copy, or 409 while the first call is still processing (retry shortly). Use a new key for a new action."""
         client = _get_client()
         try:
             response = client.creator_campaigns.ship_campaign_sample(
-                campaign_id=campaign_id, sample_id=sample_id, tracking_url=tracking_url
+                campaign_id=campaign_id,
+                sample_id=sample_id,
+                tracking_url=tracking_url,
+                idempotency_key=idempotency_key,
             )
             return _format_response(response)
         except Exception as e:
@@ -36412,7 +36642,11 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def creator_campaigns_create_campaign_adjustment(
-        campaign_id: str, participant_id: str, amount_cents: int, cause: str
+        campaign_id: str,
+        participant_id: str,
+        amount_cents: int,
+        cause: str,
+        idempotency_key: str | None = None,
     ) -> str:
         """Create campaign adjustment
 
@@ -36424,7 +36658,8 @@ def register_generated_tools(mcp, _get_client):
             campaign_id: Campaign ID. (required)
             participant_id: (required)
             amount_cents: Non-zero. Positive credits, negative claws back. (required)
-            cause: (required)"""
+            cause: (required)
+            idempotency_key: Optional key you choose (e.g. a UUID), one per logical action, up to 255 characters. Sent as the Idempotency-Key header. If this call times out or the chat stops, retry with the same key: within 24 hours you get the original result instead of a second copy, or 409 while the first call is still processing (retry shortly). Use a new key for a new action."""
         client = _get_client()
         try:
             response = client.creator_campaigns.create_campaign_adjustment(
@@ -36432,6 +36667,7 @@ def register_generated_tools(mcp, _get_client):
                 participant_id=participant_id,
                 amount_cents=amount_cents,
                 cause=cause,
+                idempotency_key=idempotency_key,
             )
             return _format_response(response)
         except Exception as e:
@@ -36588,6 +36824,7 @@ def register_generated_tools(mcp, _get_client):
         call_to_action: str | None = None,
         link_url: str | None = None,
         status: Literal["ACTIVE", "PAUSED"] = "PAUSED",
+        idempotency_key: str | None = None,
     ) -> str:
         """Launch campaign posts as ads
 
@@ -36617,7 +36854,8 @@ def register_generated_tools(mcp, _get_client):
             headline
             call_to_action: Call to action, as in `POST /v1/ads/create`.
             link_url: Destination URL (http or https).
-            status: Ads launch paused unless set to `ACTIVE`."""
+            status: Ads launch paused unless set to `ACTIVE`.
+            idempotency_key: Optional key you choose (e.g. a UUID), one per logical action, up to 255 characters. Sent as the Idempotency-Key header. If this call times out or the chat stops, retry with the same key: within 24 hours you get the original result instead of a second copy, or 409 while the first call is still processing (retry shortly). Use a new key for a new action."""
         client = _get_client()
         try:
             response = client.creator_campaigns.launch_campaign_ads(
@@ -36635,6 +36873,7 @@ def register_generated_tools(mcp, _get_client):
                 call_to_action=call_to_action,
                 link_url=link_url,
                 status=status,
+                idempotency_key=idempotency_key,
             )
             return _format_response(response)
         except Exception as e:
@@ -38909,6 +39148,7 @@ def register_generated_tools(mcp, _get_client):
         track_opens: bool | None = None,
         track_links: bool | None = None,
         track_replies: bool | None = None,
+        idempotency_key: str | None = None,
     ) -> str:
         """Send an email
 
@@ -38948,7 +39188,8 @@ def register_generated_tools(mcp, _get_client):
                 hold_as_draft: Needs `scheduledFor`. Saves the email as a draft in the mailbox now and sends that draft at `scheduledFor`, with any edits the user made in their mail app. A draft deleted or sent from the mailbox first fails the send (`email.send_failed`). Cancelling deletes the draft.
                 track_opens: Adds an open pixel to the html and fires `email.opened`. Needs `html`.
                 track_links: Rewrites every http(s) link in the html through a Zernio redirect and fires `email.link_clicked`. Needs `html`.
-                track_replies: Fires `email.thread_replied` when someone else writes in this message's thread. Works with text or html."""
+                track_replies: Fires `email.thread_replied` when someone else writes in this message's thread. Works with text or html.
+                idempotency_key: Optional key you choose (e.g. a UUID), one per logical action, up to 255 characters. Sent as the Idempotency-Key header. If this call times out or the chat stops, retry with the same key: within 24 hours you get the original result instead of a second copy, or 409 while the first call is still processing (retry shortly). Use a new key for a new action."""
         client = _get_client()
         try:
             response = client.email.send_email_message(
@@ -38972,6 +39213,7 @@ def register_generated_tools(mcp, _get_client):
                 track_opens=track_opens,
                 track_links=track_links,
                 track_replies=track_replies,
+                idempotency_key=idempotency_key,
             )
             return _format_response(response)
         except Exception as e:
@@ -39192,6 +39434,7 @@ def register_generated_tools(mcp, _get_client):
         track_links: bool | None = None,
         track_replies: bool | None = None,
         mode: Literal["reply", "replyAll"] = "reply",
+        idempotency_key: str | None = None,
     ) -> str:
         """Reply to a message
 
@@ -39225,7 +39468,8 @@ def register_generated_tools(mcp, _get_client):
                 track_opens: Adds an open pixel to the html and fires `email.opened`. Needs `html`.
                 track_links: Rewrites every http(s) link in the html through a Zernio redirect and fires `email.link_clicked`. Needs `html`.
                 track_replies: Fires `email.thread_replied` when someone else writes in this message's thread. Works with text or html.
-                mode"""
+                mode
+                idempotency_key: Optional key you choose (e.g. a UUID), one per logical action, up to 255 characters. Sent as the Idempotency-Key header. If this call times out or the chat stops, retry with the same key: within 24 hours you get the original result instead of a second copy, or 409 while the first call is still processing (retry shortly). Use a new key for a new action."""
         client = _get_client()
         try:
             response = client.email.reply_email_message(
@@ -39251,6 +39495,7 @@ def register_generated_tools(mcp, _get_client):
                 track_links=track_links,
                 track_replies=track_replies,
                 mode=mode,
+                idempotency_key=idempotency_key,
             )
             return _format_response(response)
         except Exception as e:
@@ -39285,6 +39530,7 @@ def register_generated_tools(mcp, _get_client):
         track_opens: bool | None = None,
         track_links: bool | None = None,
         track_replies: bool | None = None,
+        idempotency_key: str | None = None,
     ) -> str:
         """Forward a message
 
@@ -39314,7 +39560,8 @@ def register_generated_tools(mcp, _get_client):
             metadata
             track_opens: Adds an open pixel to the note and fires `email.opened`. Needs `html`.
             track_links: Rewrites the links of the note and fires `email.link_clicked`. Needs `html`.
-            track_replies: Fires `email.thread_replied` when someone else writes in the thread."""
+            track_replies: Fires `email.thread_replied` when someone else writes in the thread.
+            idempotency_key: Optional key you choose (e.g. a UUID), one per logical action, up to 255 characters. Sent as the Idempotency-Key header. If this call times out or the chat stops, retry with the same key: within 24 hours you get the original result instead of a second copy, or 409 while the first call is still processing (retry shortly). Use a new key for a new action."""
         client = _get_client()
         try:
             response = client.email.forward_email_message(
@@ -39338,6 +39585,7 @@ def register_generated_tools(mcp, _get_client):
                 track_opens=track_opens,
                 track_links=track_links,
                 track_replies=track_replies,
+                idempotency_key=idempotency_key,
             )
             return _format_response(response)
         except Exception as e:
@@ -39403,6 +39651,7 @@ def register_generated_tools(mcp, _get_client):
         track_opens: bool | None = None,
         track_links: bool | None = None,
         track_replies: bool | None = None,
+        idempotency_key: str | None = None,
     ) -> str:
         """Create a draft
 
@@ -39433,7 +39682,8 @@ def register_generated_tools(mcp, _get_client):
             exclude_attachment_ids: With `forwardOf`: attachment ids (from a read of the original) to leave out.
             track_opens: Puts the open pixel in the draft html now; fires `email.opened` once it is sent. Needs `html`.
             track_links: Rewrites the draft's links now; fires `email.link_clicked` once it is sent. Needs `html`.
-            track_replies: Fires `email.thread_replied` once it is sent."""
+            track_replies: Fires `email.thread_replied` once it is sent.
+            idempotency_key: Optional key you choose (e.g. a UUID), one per logical action, up to 255 characters. Sent as the Idempotency-Key header. If this call times out or the chat stops, retry with the same key: within 24 hours you get the original result instead of a second copy, or 409 while the first call is still processing (retry shortly). Use a new key for a new action."""
         client = _get_client()
         try:
             response = client.email.create_email_draft(
@@ -39460,6 +39710,7 @@ def register_generated_tools(mcp, _get_client):
                 track_opens=track_opens,
                 track_links=track_links,
                 track_replies=track_replies,
+                idempotency_key=idempotency_key,
             )
             return _format_response(response)
         except Exception as e:
@@ -39578,7 +39829,10 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def email_send_email_draft(
-        draft_id: str, account_id: str, send_at: str | None = None
+        draft_id: str,
+        account_id: str,
+        send_at: str | None = None,
+        idempotency_key: str | None = None,
     ) -> str:
         """Send a draft
 
@@ -39591,11 +39845,15 @@ def register_generated_tools(mcp, _get_client):
         Args:
             draft_id: (required)
             account_id: (required)
-            send_at: Send later, 1 minute to 30 days ahead: answers 202 with a `ScheduledEmail`. The draft stays editable in the mailbox and goes out as it stands then. Cancelling with `DELETE /v1/email/messages/scheduled/{scheduleId}` keeps the draft."""
+            send_at: Send later, 1 minute to 30 days ahead: answers 202 with a `ScheduledEmail`. The draft stays editable in the mailbox and goes out as it stands then. Cancelling with `DELETE /v1/email/messages/scheduled/{scheduleId}` keeps the draft.
+            idempotency_key: Optional key you choose (e.g. a UUID), one per logical action, up to 255 characters. Sent as the Idempotency-Key header. If this call times out or the chat stops, retry with the same key: within 24 hours you get the original result instead of a second copy, or 409 while the first call is still processing (retry shortly). Use a new key for a new action."""
         client = _get_client()
         try:
             response = client.email.send_email_draft(
-                draft_id=draft_id, account_id=account_id, send_at=send_at
+                draft_id=draft_id,
+                account_id=account_id,
+                send_at=send_at,
+                idempotency_key=idempotency_key,
             )
             return _format_response(response)
         except Exception as e:
@@ -43596,6 +43854,7 @@ def register_generated_tools(mcp, _get_client):
         reply_to: str | None = None,
         location: dict[str, Any] | None = None,
         contacts: list[dict[str, Any]] | None = None,
+        idempotency_key: str | None = None,
     ) -> str:
         """Send message
 
@@ -43667,7 +43926,8 @@ def register_generated_tools(mcp, _get_client):
         - Instagram and Facebook Messenger: no send-side quote replies. The message is sent without a quote and the successful response includes a warnings entry with code ignored_field and param replyTo.
         - Other platforms without send-side reply support ignore this field.
                 location: WhatsApp and iMessage. Send a location pin (on iMessage it renders as a native map bubble). Object with keys: latitude (number, required) - Latitude in decimal degrees.; longitude (number, required) - Longitude in decimal degrees.; name (string) - Optional location name.; address (string) - Optional street address.
-                contacts: WhatsApp-only. Send one or more contact cards. Each item is an object with keys: name (object with keys formatted_name, first_name, last_name, required); phones (list of objects with keys phone, type); emails (list of objects with keys email, type)"""
+                contacts: WhatsApp-only. Send one or more contact cards. Each item is an object with keys: name (object with keys formatted_name, first_name, last_name, required); phones (list of objects with keys phone, type); emails (list of objects with keys email, type)
+                idempotency_key: Optional key you choose (e.g. a UUID), one per logical action, up to 255 characters. Sent as the Idempotency-Key header. If this call times out or the chat stops, retry with the same key: within 24 hours you get the original result instead of a second copy, or 409 while the first call is still processing (retry shortly). Use a new key for a new action."""
         client = _get_client()
         try:
             response = client.messages.send_inbox_message(
@@ -43697,6 +43957,7 @@ def register_generated_tools(mcp, _get_client):
                 reply_to=reply_to,
                 location=location,
                 contacts=contacts,
+                idempotency_key=idempotency_key,
             )
             return _format_response(response)
         except Exception as e:
@@ -44427,6 +44688,7 @@ def register_generated_tools(mcp, _get_client):
         placement_assets: dict[str, Any] | None = None,
         workflow_id: str | None = None,
         validate_only: bool | None = None,
+        idempotency_key: str | None = None,
     ) -> str:
         """Create messaging ad
 
@@ -44671,7 +44933,8 @@ def register_generated_tools(mcp, _get_client):
         - **Supported:** one creative with `imageUrl`, image `placementAssets`, `carouselCards` (image cards or existing `video.id` cards), an existing `video.id`, or an existing post.
         - **Returns 400:** several creatives, a new `video.url` and video `placementAssets` (they need uploads first).
 
-        Success returns 200 with per-node results; a Meta rejection returns the Meta error."""
+        Success returns 200 with per-node results; a Meta rejection returns the Meta error.
+                idempotency_key: Optional key you choose (e.g. a UUID), one per logical action, up to 255 characters. Sent as the Idempotency-Key header. If this call times out or the chat stops, retry with the same key: within 24 hours you get the original result instead of a second copy, or 409 while the first call is still processing (retry shortly). Use a new key for a new action."""
         client = _get_client()
         same_arguments: dict[str, Any] = {
             "retry_on_server_error": retry_on_server_error,
@@ -44837,7 +45100,8 @@ def register_generated_tools(mcp, _get_client):
                 placement_assets=placement_assets,
                 workflow_id=workflow_id,
                 validate_only=validate_only,
-                idempotency_key=same_arguments_key(
+                idempotency_key=idempotency_key
+                or same_arguments_key(
                     "messaging_ads_create_messaging_ad", same_arguments
                 ),
             )
@@ -44971,6 +45235,7 @@ def register_generated_tools(mcp, _get_client):
         dsa_payor: str | None = None,
         regional_regulated_categories: list[str] | None = None,
         regional_regulation_identities: dict[str, Any] | None = None,
+        idempotency_key: str | None = None,
     ) -> str:
         """Create Click-to-Call ad
 
@@ -45189,7 +45454,8 @@ def register_generated_tools(mcp, _get_client):
 
         When Meta rejects the ad set for a missing verified advertiser, the error carries param regionalRegulationIdentities, details.expectedIdentityKeys (keys the declared categories expect), details.suggestedCategories (markets Meta ties to that subcode) and Meta's metaCode, metaSubcode and fbtraceId.
                 phone_number: E.164 number the CALL_NOW CTA dials (e.g. +34600111222). (required)
-                link_url: Website shown as the creative's link. Required: Meta rejects tel: as link_data.link; the phone number rides only the CTA. (required)"""
+                link_url: Website shown as the creative's link. Required: Meta rejects tel: as link_data.link; the phone number rides only the CTA. (required)
+                idempotency_key: Optional key you choose (e.g. a UUID), one per logical action, up to 255 characters. Sent as the Idempotency-Key header. If this call times out or the chat stops, retry with the same key: within 24 hours you get the original result instead of a second copy, or 409 while the first call is still processing (retry shortly). Use a new key for a new action."""
         client = _get_client()
         same_arguments: dict[str, Any] = {
             "retry_on_server_error": retry_on_server_error,
@@ -45347,9 +45613,8 @@ def register_generated_tools(mcp, _get_client):
                 regional_regulation_identities=regional_regulation_identities,
                 phone_number=phone_number,
                 link_url=link_url,
-                idempotency_key=same_arguments_key(
-                    "messaging_ads_create_call_ad", same_arguments
-                ),
+                idempotency_key=idempotency_key
+                or same_arguments_key("messaging_ads_create_call_ad", same_arguments),
             )
             return _format_response(response)
         except Exception as e:
@@ -45479,6 +45744,7 @@ def register_generated_tools(mcp, _get_client):
         dsa_payor: str | None = None,
         regional_regulated_categories: list[str] | None = None,
         regional_regulation_identities: dict[str, Any] | None = None,
+        idempotency_key: str | None = None,
     ) -> str:
         """Create CTWA ad (deprecated)
 
@@ -45691,7 +45957,8 @@ def register_generated_tools(mcp, _get_client):
         - SINGAPORE_UNIVERSAL: singapore_universal_beneficiary / singapore_universal_payer
         - AUSTRALIA_UNIVERSAL, BRAZIL_REGULATION, MALAYSIA_UNIVERSAL, THAILAND_UNIVERSAL and US_SECURITIES_LICENSING: universal_beneficiary / universal_payer
 
-        When Meta rejects the ad set for a missing verified advertiser, the error carries param regionalRegulationIdentities, details.expectedIdentityKeys (keys the declared categories expect), details.suggestedCategories (markets Meta ties to that subcode) and Meta's metaCode, metaSubcode and fbtraceId."""
+        When Meta rejects the ad set for a missing verified advertiser, the error carries param regionalRegulationIdentities, details.expectedIdentityKeys (keys the declared categories expect), details.suggestedCategories (markets Meta ties to that subcode) and Meta's metaCode, metaSubcode and fbtraceId.
+                idempotency_key: Optional key you choose (e.g. a UUID), one per logical action, up to 255 characters. Sent as the Idempotency-Key header. If this call times out or the chat stops, retry with the same key: within 24 hours you get the original result instead of a second copy, or 409 while the first call is still processing (retry shortly). Use a new key for a new action."""
         client = _get_client()
         same_arguments: dict[str, Any] = {
             "retry_on_server_error": retry_on_server_error,
@@ -45845,9 +46112,8 @@ def register_generated_tools(mcp, _get_client):
                 dsa_payor=dsa_payor,
                 regional_regulated_categories=regional_regulated_categories,
                 regional_regulation_identities=regional_regulation_identities,
-                idempotency_key=same_arguments_key(
-                    "messaging_ads_create_ctwa_ad", same_arguments
-                ),
+                idempotency_key=idempotency_key
+                or same_arguments_key("messaging_ads_create_ctwa_ad", same_arguments),
             )
             return _format_response(response)
         except Exception as e:
@@ -48039,6 +48305,7 @@ def register_generated_tools(mcp, _get_client):
         queued_from_profile: str | None = None,
         queue_id: str | None = None,
         profile_id: str | None = None,
+        idempotency_key: str | None = None,
     ) -> str:
         """Create post
 
@@ -48115,7 +48382,8 @@ def register_generated_tools(mcp, _get_client):
                 queue_id: Specific queue ID to use when scheduling via queue.
         Only used when queuedFromProfile is also provided.
         If omitted, uses the profile's default queue.
-                profile_id: Files a draft with no platforms under this profile so it lists under ?profileId= and profile-scoped API keys. Ignored when platforms are set. When promoting the draft via PUT, send platforms, isDraft false and scheduledFor again."""
+                profile_id: Files a draft with no platforms under this profile so it lists under ?profileId= and profile-scoped API keys. Ignored when platforms are set. When promoting the draft via PUT, send platforms, isDraft false and scheduledFor again.
+                idempotency_key: Optional key you choose (e.g. a UUID), one per logical action, up to 255 characters. Sent as the Idempotency-Key header. If this call times out or the chat stops, retry with the same key: within 24 hours you get the original result instead of a second copy, or 409 while the first call is still processing (retry shortly). Use a new key for a new action."""
         client = _get_client()
         try:
             response = client.posts.create_post(
@@ -48141,6 +48409,7 @@ def register_generated_tools(mcp, _get_client):
                 queued_from_profile=queued_from_profile,
                 queue_id=queue_id,
                 profile_id=profile_id,
+                idempotency_key=idempotency_key,
             )
             return _format_response(response)
         except Exception as e:
@@ -49635,6 +49904,7 @@ def register_generated_tools(mcp, _get_client):
         max_outbound_calls_per_hour: int | None = None,
         max_daily_call_spend_usd: float | None = None,
         max_forwarded_minutes_per_day: int | None = None,
+        idempotency_key: str | None = None,
     ) -> str:
         """Create profile
 
@@ -49658,7 +49928,8 @@ def register_generated_tools(mcp, _get_client):
             content_retention: Set `none` to create the profile with zero content retention, so nothing of its accounts is stored from the first sync. Only the team owner can, with a session or a full-access key; anyone else gets 403.
             max_outbound_calls_per_hour: Caps outbound calls from this profile's numbers per rolling hour, inside the team limits. Omit for no profile cap.
             max_daily_call_spend_usd: Caps billed call spend (USD) from this profile's numbers per rolling 24 hours, inside the team limits. Omit for no profile cap.
-            max_forwarded_minutes_per_day: Caps minutes forwarded to a phone from this profile's numbers per rolling 24 hours, inside the team limits. Omit for no profile cap."""
+            max_forwarded_minutes_per_day: Caps minutes forwarded to a phone from this profile's numbers per rolling 24 hours, inside the team limits. Omit for no profile cap.
+            idempotency_key: Optional key you choose (e.g. a UUID), one per logical action, up to 255 characters. Sent as the Idempotency-Key header. If this call times out or the chat stops, retry with the same key: within 24 hours you get the original result instead of a second copy, or 409 while the first call is still processing (retry shortly). Use a new key for a new action."""
         client = _get_client()
         try:
             response = client.profiles.create_profile(
@@ -49671,6 +49942,7 @@ def register_generated_tools(mcp, _get_client):
                 max_outbound_calls_per_hour=max_outbound_calls_per_hour,
                 max_daily_call_spend_usd=max_daily_call_spend_usd,
                 max_forwarded_minutes_per_day=max_forwarded_minutes_per_day,
+                idempotency_key=idempotency_key,
             )
             return _format_response(response)
         except Exception as e:
@@ -50057,6 +50329,7 @@ def register_generated_tools(mcp, _get_client):
         brand_id: str | None = None,
         brand: dict[str, Any] | None = None,
         sms_fallback_from: str | None = None,
+        idempotency_key: str | None = None,
     ) -> str:
         """Request an RCS agent
 
@@ -50074,7 +50347,8 @@ def register_generated_tools(mcp, _get_client):
             display_name: Shown as the sender name. (required)
             use_case: (required)
             profile: Object with keys: description (string, required); logoUrl (string, required) - 224x224, max 50 KB. Upload any image through POST /v1/rcs/assets to get a compliant URL.; heroUrl (string, required) - Banner, 1440x448, max 200 KB. Upload through POST /v1/rcs/assets.; brandColor (string, required) - Hex colour, e.g. #1A73E8. Needs 4.5:1 contrast against white.; privacyPolicyUrl (string, required); termsUrl (string, required); phone (object with keys number, label); website (object with keys url, label); email (object with keys address, label) (required)
-            sms_fallback_from: One of your SMS-enabled numbers. Phones without RCS get the message as SMS from it."""
+            sms_fallback_from: One of your SMS-enabled numbers. Phones without RCS get the message as SMS from it.
+            idempotency_key: Optional key you choose (e.g. a UUID), one per logical action, up to 255 characters. Sent as the Idempotency-Key header. If this call times out or the chat stops, retry with the same key: within 24 hours you get the original result instead of a second copy, or 409 while the first call is still processing (retry shortly). Use a new key for a new action."""
         client = _get_client()
         try:
             response = client.rcs.create_rcs_agent(
@@ -50085,6 +50359,7 @@ def register_generated_tools(mcp, _get_client):
                 use_case=use_case,
                 profile=profile,
                 sms_fallback_from=sms_fallback_from,
+                idempotency_key=idempotency_key,
             )
             return _format_response(response)
         except Exception as e:
@@ -50334,6 +50609,7 @@ def register_generated_tools(mcp, _get_client):
         content: dict[str, Any] | None = None,
         fallback_text: str | None = None,
         ttl_seconds: int | None = None,
+        idempotency_key: str | None = None,
     ) -> str:
         """Send an RCS message
 
@@ -50360,7 +50636,8 @@ def register_generated_tools(mcp, _get_client):
             text
             content: Object with keys: type (one of: text; required); text (string, required); suggestions (list of objects with keys type, text, postbackData)
             fallback_text
-            ttl_seconds: Seconds before an undelivered message expires."""
+            ttl_seconds: Seconds before an undelivered message expires.
+            idempotency_key: Optional key you choose (e.g. a UUID), one per logical action, up to 255 characters. Sent as the Idempotency-Key header. If this call times out or the chat stops, retry with the same key: within 24 hours you get the original result instead of a second copy, or 409 while the first call is still processing (retry shortly). Use a new key for a new action."""
         client = _get_client()
         try:
             response = client.rcs.send_rcs_message(
@@ -50370,6 +50647,7 @@ def register_generated_tools(mcp, _get_client):
                 content=content,
                 fallback_text=fallback_text,
                 ttl_seconds=ttl_seconds,
+                idempotency_key=idempotency_key,
             )
             return _format_response(response)
         except Exception as e:
@@ -50792,7 +51070,10 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def reviews_reply_to_inbox_review(
-        review_id: str, account_id: str, message: str
+        review_id: str,
+        account_id: str,
+        message: str,
+        idempotency_key: str | None = None,
     ) -> str:
         """Reply to review
 
@@ -50817,11 +51098,15 @@ def register_generated_tools(mcp, _get_client):
         Args:
             review_id: Review ID (URL-encoded for Google Business Profile) (required)
             account_id: (required)
-            message: (required)"""
+            message: (required)
+            idempotency_key: Optional key you choose (e.g. a UUID), one per logical action, up to 255 characters. Sent as the Idempotency-Key header. If this call times out or the chat stops, retry with the same key: within 24 hours you get the original result instead of a second copy, or 409 while the first call is still processing (retry shortly). Use a new key for a new action."""
         client = _get_client()
         try:
             response = client.reviews.reply_to_inbox_review(
-                review_id=review_id, account_id=account_id, message=message
+                review_id=review_id,
+                account_id=account_id,
+                message=message,
+                idempotency_key=idempotency_key,
             )
             return _format_response(response)
         except Exception as e:
@@ -51233,6 +51518,7 @@ def register_generated_tools(mcp, _get_client):
         text: str | None = None,
         media_urls: list[str] | None = None,
         send_at: str | None = None,
+        idempotency_key: str | None = None,
     ) -> str:
         """Send an SMS/MMS
 
@@ -51262,11 +51548,17 @@ def register_generated_tools(mcp, _get_client):
             to: Recipient number (E.164). (required)
             text: Message body. Required unless `mediaUrls` is set. Max 10 SMS segments (1530 GSM-7 or 670 unicode characters).
             media_urls: Public media URLs to attach (sends as MMS). Max 10.
-            send_at: Optional. Schedule the send for a future time (ISO 8601 with offset, e.g. `2026-08-01T12:00:00Z`). Must be in the future. The message is queued and the `message.delivered` webhook fires when it actually sends."""
+            send_at: Optional. Schedule the send for a future time (ISO 8601 with offset, e.g. `2026-08-01T12:00:00Z`). Must be in the future. The message is queued and the `message.delivered` webhook fires when it actually sends.
+            idempotency_key: Optional key you choose (e.g. a UUID), one per logical action, up to 255 characters. Sent as the Idempotency-Key header. If this call times out or the chat stops, retry with the same key: within 24 hours you get the original result instead of a second copy, or 409 while the first call is still processing (retry shortly). Use a new key for a new action."""
         client = _get_client()
         try:
             response = client.sms.send_sms(
-                from_=from_, to=to, text=text, media_urls=media_urls, send_at=send_at
+                from_=from_,
+                to=to,
+                text=text,
+                media_urls=media_urls,
+                send_at=send_at,
+                idempotency_key=idempotency_key,
             )
             return _format_response(response)
         except Exception as e:
@@ -52067,10 +52359,10 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def tracking_links_create_tracking_link(
-        idempotency_key: str,
         site_id: str,
         name: str,
         destinations: list[dict[str, Any]] | None,
+        idempotency_key: str,
         campaign: dict[str, Any] | None = None,
     ) -> str:
         """Create a tracking link
@@ -52078,19 +52370,19 @@ def register_generated_tools(mcp, _get_client):
         Creates a short link on a tracking site. Each click goes to one of `destinations`, picked by weight, so the link also split-tests landing pages. Put `url` in your ads and give `postbackUrl` to the network that reports conversions server to server.
 
         Args:
-            idempotency_key: A unique key per link you create, such as a UUID. A retry with the same key and body returns the same link. (required)
             site_id: The tracking site the link belongs to. The link takes its profile. (required)
             name: (required)
             destinations: Each item is an object with keys: url (string, required) - An https landing page. Each click adds its click id as `zcid`, and fills any parameter set to `{zcid}`, such as `sub1={zcid}` on an affiliate network's offer ...; weight (integer, required) - This page's share of clicks, relative to the other destinations' weights. (required)
-            campaign: Object with keys: platform (string) - The ad platform, such as `metaads` or `googleads`.; campaignId (string) - The platform's campaign id.; utmCampaign (string) - The `utm_campaign` value the campaign uses."""
+            campaign: Object with keys: platform (string) - The ad platform, such as `metaads` or `googleads`.; campaignId (string) - The platform's campaign id.; utmCampaign (string) - The `utm_campaign` value the campaign uses.
+            idempotency_key: Key you choose (e.g. a UUID), one per logical action, up to 255 characters. Sent as the Idempotency-Key header. If this call times out or the chat stops, retry with the same key: within 24 hours you get the original result instead of a second copy, or 409 while the first call is still processing (retry shortly). Use a new key for a new action. (required)"""
         client = _get_client()
         try:
             response = client.tracking_links.create_tracking_link(
-                idempotency_key=idempotency_key,
                 site_id=site_id,
                 name=name,
                 destinations=destinations,
                 campaign=campaign,
+                idempotency_key=idempotency_key,
             )
             return _format_response(response)
         except Exception as e:
@@ -52195,7 +52487,7 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             link_id: (required)
-            idempotency_key: A unique key per rotation, such as a UUID. (required)"""
+            idempotency_key: Key you choose (e.g. a UUID), one per logical action, up to 255 characters. Sent as the Idempotency-Key header. If this call times out or the chat stops, retry with the same key: within 24 hours you get the original result instead of a second copy, or 409 while the first call is still processing (retry shortly). Use a new key for a new action. (required)"""
         client = _get_client()
         try:
             response = client.tracking_links.rotate_tracking_link_postback_token(
@@ -53571,6 +53863,7 @@ def register_generated_tools(mcp, _get_client):
         amount_cents: int,
         method: Literal["card", "bank_transfer"],
         payment_method_id: str | None = None,
+        idempotency_key: str | None = None,
     ) -> str:
         """Add funds
 
@@ -53588,13 +53881,15 @@ def register_generated_tools(mcp, _get_client):
         Args:
             amount_cents: Amount to credit to your balance, in cents: $5 to $100,000. Tax is charged on top; no card fee. (required)
             method: Only card is available. bank_transfer returns 400 "Bank transfers are not available yet." (required)
-            payment_method_id: A saved card of the billing owner's (`pm_...`). Defaults to the default payment method."""
+            payment_method_id: A saved card of the billing owner's (`pm_...`). Defaults to the default payment method.
+            idempotency_key: Optional key you choose (e.g. a UUID), one per logical action, up to 255 characters. Sent as the Idempotency-Key header. If this call times out or the chat stops, retry with the same key: within 24 hours you get the original result instead of a second copy, or 409 while the first call is still processing (retry shortly). Use a new key for a new action."""
         client = _get_client()
         try:
             response = client.treasury.create_topup(
                 amount_cents=amount_cents,
                 method=method,
                 payment_method_id=payment_method_id,
+                idempotency_key=idempotency_key,
             )
             return _format_response(response)
         except Exception as e:
@@ -53844,7 +54139,10 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def treasury_create_transfer(
-        payee_id: str, amount_cents: int, reference: dict[str, Any] | None = None
+        payee_id: str,
+        amount_cents: int,
+        reference: dict[str, Any] | None = None,
+        idempotency_key: str | None = None,
     ) -> str:
         """Create a transfer (removed)
 
@@ -53855,11 +54153,15 @@ def register_generated_tools(mcp, _get_client):
         Args:
             payee_id: 24-character payee id (required)
             amount_cents: Amount the payee receives, in cents. The fee is added on top. (required)
-            reference: Object with keys: type (string, required); id (string, required)"""
+            reference: Object with keys: type (string, required); id (string, required)
+            idempotency_key: Optional key you choose (e.g. a UUID), one per logical action, up to 255 characters. Sent as the Idempotency-Key header. If this call times out or the chat stops, retry with the same key: within 24 hours you get the original result instead of a second copy, or 409 while the first call is still processing (retry shortly). Use a new key for a new action."""
         client = _get_client()
         try:
             response = client.treasury.create_transfer(
-                payee_id=payee_id, amount_cents=amount_cents, reference=reference
+                payee_id=payee_id,
+                amount_cents=amount_cents,
+                reference=reference,
+                idempotency_key=idempotency_key,
             )
             return _format_response(response)
         except Exception as e:
@@ -54908,6 +55210,7 @@ def register_generated_tools(mcp, _get_client):
         amd: bool | None = None,
         voicemail_drop_message: str | None = None,
         ring_timeout_seconds: int = 30,
+        idempotency_key: str | None = None,
     ) -> str:
         """Place an outbound phone call
 
@@ -54939,7 +55242,8 @@ def register_generated_tools(mcp, _get_client):
             transcription_language: 'auto' derives from the callee's country; 'en'/'es' force it.
             amd: Answering-machine detection; defers the bridge until human vs machine is known.
             voicemail_drop_message: Spoken to a detected machine, then hang up (implies `amd`). For outbound voicemail drops.
-            ring_timeout_seconds: Seconds to let the callee's phone ring before the call ends as no_answer. The destination carrier can end it sooner."""
+            ring_timeout_seconds: Seconds to let the callee's phone ring before the call ends as no_answer. The destination carrier can end it sooner.
+            idempotency_key: Optional key you choose (e.g. a UUID), one per logical action, up to 255 characters. Sent as the Idempotency-Key header. If this call times out or the chat stops, retry with the same key: within 24 hours you get the original result instead of a second copy, or 409 while the first call is still processing (retry shortly). Use a new key for a new action."""
         client = _get_client()
         try:
             response = client.voice.create_voice_call(
@@ -54953,6 +55257,7 @@ def register_generated_tools(mcp, _get_client):
                 amd=amd,
                 voicemail_drop_message=voicemail_drop_message,
                 ring_timeout_seconds=ring_timeout_seconds,
+                idempotency_key=idempotency_key,
             )
             return _format_response(response)
         except Exception as e:
@@ -58370,6 +58675,7 @@ def register_generated_tools(mcp, _get_client):
         forward_to: str | None = None,
         record_override: bool | None = None,
         biz_opaque_callback_data: str | None = None,
+        idempotency_key: str | None = None,
     ) -> str:
         """Initiate outbound call
 
@@ -58403,7 +58709,8 @@ def register_generated_tools(mcp, _get_client):
                 record_override
                 biz_opaque_callback_data: Accepted for forward compatibility. Not currently echoed
         back in webhook payloads (SIP-first flow does not pass
-        through Meta's Graph API where Meta would echo this)."""
+        through Meta's Graph API where Meta would echo this).
+                idempotency_key: Optional key you choose (e.g. a UUID), one per logical action, up to 255 characters. Sent as the Idempotency-Key header. If this call times out or the chat stops, retry with the same key: within 24 hours you get the original result instead of a second copy, or 409 while the first call is still processing (retry shortly). Use a new key for a new action."""
         client = _get_client()
         try:
             response = client.whatsapp_calling.initiate_whats_app_call(
@@ -58414,6 +58721,7 @@ def register_generated_tools(mcp, _get_client):
                 forward_to=forward_to,
                 record_override=record_override,
                 biz_opaque_callback_data=biz_opaque_callback_data,
+                idempotency_key=idempotency_key,
             )
             return _format_response(response)
         except Exception as e:

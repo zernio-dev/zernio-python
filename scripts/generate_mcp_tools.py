@@ -91,6 +91,21 @@ SAME_ARGUMENTS_IDEMPOTENT_NOTE = (
     "another on purpose, or if that 409 does not clear, change an argument such as the name."
 )
 
+IDEMPOTENCY_KEY_PARAM: dict[str, Any] = {
+    "name": "idempotency_key",
+    "type": "str | None",
+    "required": False,
+    "default": "None",
+    "description": (
+        "Optional key you choose (e.g. a UUID), one per logical action, up to 255 characters. "
+        "Sent as the Idempotency-Key header. If this call times out or the chat stops, retry "
+        "with the same key: within 24 hours you get the original result instead of a second "
+        "copy, or 409 while the first call is still processing (retry shortly). Use a new key "
+        "for a new action."
+    ),
+    "sdk_name": "idempotency_key",
+}
+
 # POSTs that only read (queries, reports, previews, validations, estimates), so their
 # tools are annotated read-only instead of as writes.
 READ_ONLY_OPERATIONS = {
@@ -579,6 +594,17 @@ def extract_parameters(
     spec: dict[str, Any] | None = None,
     path_item: dict[str, Any] | None = None,
 ) -> list[dict[str, Any]]:
+    """Extract parameters from operation, with idempotency_key listed last so
+    an agent reads the operation's own arguments first."""
+    params = _extract_parameters(operation, spec, path_item)
+    return sorted(params, key=lambda p: p["name"] == "idempotency_key")
+
+
+def _extract_parameters(
+    operation: dict[str, Any],
+    spec: dict[str, Any] | None = None,
+    path_item: dict[str, Any] | None = None,
+) -> list[dict[str, Any]]:
     """Extract parameters from operation.
 
     `spec` is threaded through so `get_python_type` can dereference
@@ -605,7 +631,22 @@ def extract_parameters(
         if "name" not in param:
             continue
 
-        # Optional headers (Idempotency-Key, x-request-id, ...) stay off the tool
+        # Only the caller knows that a retry is the same logical action, so
+        # Idempotency-Key is exposed wherever the spec declares it.
+        if param.get("in") == "header" and param["name"].lower() == "idempotency-key":
+            if param.get("required", False):
+                add_param({
+                    **IDEMPOTENCY_KEY_PARAM,
+                    "type": "str",
+                    "required": True,
+                    "default": '""',
+                    "description": IDEMPOTENCY_KEY_PARAM["description"].replace("Optional key", "Key", 1),
+                })
+            else:
+                add_param(IDEMPOTENCY_KEY_PARAM)
+            continue
+
+        # Other optional headers (x-request-id, If-Match, ...) stay off the tool
         # surface; required ones are SDK positional args, so the tool must pass them.
         if param.get("in") == "header" and not param.get("required", False):
             continue
@@ -830,9 +871,14 @@ def generate_tool_handler(
     sdk_args = [(p.get("sdk_name", p["name"]), p.get("sdk_value", p["name"])) for p in params]
     call_args = [f"{name}={value}" for name, value in sdk_args]
     if idempotency_scope:
+        # A caller key wins; without one, identical arguments derive the same key.
+        caller_key = any(name == "idempotency_key" for name, _ in sdk_args)
+        sdk_args = [(name, value) for name, value in sdk_args if name != "idempotency_key"]
+        call_args = [f"{name}={value}" for name, value in sdk_args]
         entries = ", ".join(f'"{name}": {value}' for name, value in sdk_args)
         lines.append(f"    same_arguments: dict[str, Any] = {{{entries}}}")
-        call_args.append(f'idempotency_key=same_arguments_key("{idempotency_scope}", same_arguments)')
+        derived = f'same_arguments_key("{idempotency_scope}", same_arguments)'
+        call_args.append(f"idempotency_key={'idempotency_key or ' if caller_key else ''}{derived}")
 
     lines.append("    try:")
     lines.append(f"        response = client.{resource}.{sdk_method}({', '.join(call_args)})")
