@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.838.0"
+  version: "1.839.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -91373,6 +91373,8 @@ paths:
         Shows what an ad rule would do if it ran now, without saving it or changing anything: every object it checks, each condition with its actual value, and the steps a match would run. It refuses what saving would refuse.
 
         Event and scheduled automations cannot be previewed yet (400, `not_supported`).
+
+        The draft can instead be sent as `name` and an automation `graph` (`AutomationGraph`), previewed exactly as its own shape would be. A comment to DM or flow graph is refused (`not_supported`).
       security:
         - bearerAuth: []
       parameters:
@@ -91384,7 +91386,10 @@ paths:
         required: true
         content:
           application/json:
-            schema: { $ref: '#/components/schemas/AutomationDefinition' }
+            schema:
+              oneOf:
+                - $ref: '#/components/schemas/AutomationDefinition'
+                - $ref: '#/components/schemas/GraphAutomationDefinition'
       responses:
         '200':
           description: Preview
@@ -92652,6 +92657,8 @@ paths:
         Each day lists what it would have done. Its own changes carry into later days, but the metrics stay what really happened. `notes` says what the replay could not know.
 
         Only ad automations can be backtested, on at most 5,000 ads.
+
+        The draft can instead be sent as `name` and an automation `graph` (`AutomationGraph`), replayed exactly as its own shape would be. A comment to DM or flow graph is refused (`not_supported`).
       security:
         - bearerAuth: []
       parameters:
@@ -92661,7 +92668,9 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/AutomationDefinition'
+              oneOf:
+                - $ref: '#/components/schemas/AutomationDefinition'
+                - $ref: '#/components/schemas/GraphAutomationDefinition'
       responses:
         '200':
           description: Backtest

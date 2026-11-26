@@ -18079,6 +18079,8 @@ def register_generated_tools(mcp, _get_client):
 
         Event and scheduled automations cannot be previewed yet (400, `not_supported`).
 
+        The draft can instead be sent as `name` and an automation `graph` (`AutomationGraph`), previewed exactly as its own shape would be. A comment to DM or flow graph is refused (`not_supported`).
+
         Args:
             limit: How many subjects to list, matches first. `evaluated` and `matched` always count them all.
             body: Full request body as documented in the API reference. (required)"""
@@ -18829,6 +18831,8 @@ def register_generated_tools(mcp, _get_client):
         Each day lists what it would have done. Its own changes carry into later days, but the metrics stay what really happened. `notes` says what the replay could not know.
 
         Only ad automations can be backtested, on at most 5,000 ads.
+
+        The draft can instead be sent as `name` and an automation `graph` (`AutomationGraph`), replayed exactly as its own shape would be. A comment to DM or flow graph is refused (`not_supported`).
 
         Args:
             days: How many whole days before today to replay. Today is not replayed.
