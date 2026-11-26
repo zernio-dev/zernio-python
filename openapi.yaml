@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.845.1"
+  version: "1.846.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -25624,9 +25624,11 @@ components:
           properties:
             type: { type: string, description: 'For example `conversation`, `contact`, `comment`, `message` or `post`.' }
             id: { type: string }
+            name: { type: [string, 'null'], description: 'The person''s display name, where the run knows it. Null for a check about a post, an ad or an order.' }
+            handle: { type: [string, 'null'], description: 'The person''s username without `@`, or their phone number in E.164 (it always starts with `+`). Null where neither is known.' }
         startedAt: { type: string, format: date-time }
         endedAt: { type: [string, 'null'], format: date-time }
-        exitReason: { type: [string, 'null'], description: 'Why an exited or failed run stopped, for example `replied`, `unsubscribed` or `skipped`.' }
+        exitReason: { type: [string, 'null'], description: 'Why an exited or failed run stopped, for example `handoff` (a flow handed the conversation to a person), `wait_expired`, `superseded`, `replied`, `unsubscribed` or `skipped`.' }
         error: { type: [string, 'null'] }
         steps:
           type: object
