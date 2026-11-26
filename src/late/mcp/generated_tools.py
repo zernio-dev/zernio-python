@@ -62370,14 +62370,32 @@ TOOL_OAUTH_SCOPES: dict[str, tuple[str, ...]] = {
     "business_agent_update_business_agent_ui_skill": ("messaging:write",),
     "business_agent_update_business_agent_website": ("messaging:write",),
     "business_agent_upload_business_agent_file": ("messaging:write",),
-    "calendar_availability": ("calendar:write",),
+    "calendar_availability": (
+        "calendar:write",
+        "calendar:read",
+    ),
     "calendar_create_calendar_event": ("calendar:write",),
     "calendar_delete_calendar_event": ("calendar:write",),
-    "calendar_free_busy": ("calendar:write",),
-    "calendar_get_calendar_event": ("calendar:write",),
-    "calendar_list_calendar_event_instances": ("calendar:write",),
-    "calendar_list_calendar_events": ("calendar:write",),
-    "calendar_list_calendars": ("calendar:write",),
+    "calendar_free_busy": (
+        "calendar:write",
+        "calendar:read",
+    ),
+    "calendar_get_calendar_event": (
+        "calendar:read",
+        "calendar:write",
+    ),
+    "calendar_list_calendar_event_instances": (
+        "calendar:read",
+        "calendar:write",
+    ),
+    "calendar_list_calendar_events": (
+        "calendar:read",
+        "calendar:write",
+    ),
+    "calendar_list_calendars": (
+        "calendar:read",
+        "calendar:write",
+    ),
     "calendar_rsvp_calendar_event": ("calendar:write",),
     "calendar_update_calendar_event": ("calendar:write",),
     "calls_get_call": (
@@ -62465,35 +62483,122 @@ TOOL_OAUTH_SCOPES: dict[str, tuple[str, ...]] = {
     "commerce_delete_commerce_product_variants": ("commerce:write",),
     "commerce_delete_commerce_redirect": ("commerce:write",),
     "commerce_duplicate_commerce_product": ("commerce:write",),
-    "commerce_get_commerce_catalog_sync": ("commerce:write",),
-    "commerce_get_commerce_collection": ("commerce:write",),
-    "commerce_get_commerce_customer": ("commerce:write",),
-    "commerce_get_commerce_discount": ("commerce:write",),
-    "commerce_get_commerce_draft_order": ("commerce:write",),
-    "commerce_get_commerce_menu": ("commerce:write",),
-    "commerce_get_commerce_metaobject": ("commerce:write",),
-    "commerce_get_commerce_order": ("commerce:write",),
-    "commerce_get_commerce_page": ("commerce:write",),
-    "commerce_get_commerce_product": ("commerce:write",),
-    "commerce_get_commerce_store": ("commerce:write",),
-    "commerce_list_commerce_catalog_syncs": ("commerce:write",),
-    "commerce_list_commerce_channels": ("commerce:write",),
-    "commerce_list_commerce_collection_metafields": ("commerce:write",),
-    "commerce_list_commerce_collections": ("commerce:write",),
-    "commerce_list_commerce_customers": ("commerce:write",),
-    "commerce_list_commerce_discounts": ("commerce:write",),
-    "commerce_list_commerce_inventory": ("commerce:write",),
-    "commerce_list_commerce_locations": ("commerce:write",),
-    "commerce_list_commerce_markets": ("commerce:write",),
-    "commerce_list_commerce_menus": ("commerce:write",),
-    "commerce_list_commerce_metaobject_definitions": ("commerce:write",),
-    "commerce_list_commerce_metaobjects": ("commerce:write",),
-    "commerce_list_commerce_orders": ("commerce:write",),
-    "commerce_list_commerce_pages": ("commerce:write",),
-    "commerce_list_commerce_price_lists": ("commerce:write",),
-    "commerce_list_commerce_product_metafields": ("commerce:write",),
-    "commerce_list_commerce_products": ("commerce:write",),
-    "commerce_list_commerce_redirects": ("commerce:write",),
+    "commerce_get_commerce_catalog_sync": (
+        "commerce:read",
+        "commerce:write",
+    ),
+    "commerce_get_commerce_collection": (
+        "commerce:read",
+        "commerce:write",
+    ),
+    "commerce_get_commerce_customer": (
+        "commerce:read",
+        "commerce:write",
+    ),
+    "commerce_get_commerce_discount": (
+        "commerce:read",
+        "commerce:write",
+    ),
+    "commerce_get_commerce_draft_order": (
+        "commerce:read",
+        "commerce:write",
+    ),
+    "commerce_get_commerce_menu": (
+        "commerce:read",
+        "commerce:write",
+    ),
+    "commerce_get_commerce_metaobject": (
+        "commerce:read",
+        "commerce:write",
+    ),
+    "commerce_get_commerce_order": (
+        "commerce:read",
+        "commerce:write",
+    ),
+    "commerce_get_commerce_page": (
+        "commerce:read",
+        "commerce:write",
+    ),
+    "commerce_get_commerce_product": (
+        "commerce:read",
+        "commerce:write",
+    ),
+    "commerce_get_commerce_store": (
+        "commerce:read",
+        "commerce:write",
+    ),
+    "commerce_list_commerce_catalog_syncs": (
+        "commerce:read",
+        "commerce:write",
+    ),
+    "commerce_list_commerce_channels": (
+        "commerce:read",
+        "commerce:write",
+    ),
+    "commerce_list_commerce_collection_metafields": (
+        "commerce:read",
+        "commerce:write",
+    ),
+    "commerce_list_commerce_collections": (
+        "commerce:read",
+        "commerce:write",
+    ),
+    "commerce_list_commerce_customers": (
+        "commerce:read",
+        "commerce:write",
+    ),
+    "commerce_list_commerce_discounts": (
+        "commerce:read",
+        "commerce:write",
+    ),
+    "commerce_list_commerce_inventory": (
+        "commerce:read",
+        "commerce:write",
+    ),
+    "commerce_list_commerce_locations": (
+        "commerce:read",
+        "commerce:write",
+    ),
+    "commerce_list_commerce_markets": (
+        "commerce:read",
+        "commerce:write",
+    ),
+    "commerce_list_commerce_menus": (
+        "commerce:read",
+        "commerce:write",
+    ),
+    "commerce_list_commerce_metaobject_definitions": (
+        "commerce:read",
+        "commerce:write",
+    ),
+    "commerce_list_commerce_metaobjects": (
+        "commerce:read",
+        "commerce:write",
+    ),
+    "commerce_list_commerce_orders": (
+        "commerce:read",
+        "commerce:write",
+    ),
+    "commerce_list_commerce_pages": (
+        "commerce:read",
+        "commerce:write",
+    ),
+    "commerce_list_commerce_price_lists": (
+        "commerce:read",
+        "commerce:write",
+    ),
+    "commerce_list_commerce_product_metafields": (
+        "commerce:read",
+        "commerce:write",
+    ),
+    "commerce_list_commerce_products": (
+        "commerce:read",
+        "commerce:write",
+    ),
+    "commerce_list_commerce_redirects": (
+        "commerce:read",
+        "commerce:write",
+    ),
     "commerce_remove_commerce_product_images": ("commerce:write",),
     "commerce_reorder_commerce_collection_products": ("commerce:write",),
     "commerce_reorder_commerce_product_images": ("commerce:write",),
@@ -62778,6 +62883,7 @@ TOOL_OAUTH_SCOPES: dict[str, tuple[str, ...]] = {
     "contacts_autocomplete_contacts": (
         "contacts:read",
         "automations:write",
+        "automations:read",
     ),
     "contacts_bulk_create_contacts": ("automations:write",),
     "contacts_create_contact": ("automations:write",),
@@ -62785,18 +62891,22 @@ TOOL_OAUTH_SCOPES: dict[str, tuple[str, ...]] = {
     "contacts_get_contact": (
         "contacts:read",
         "automations:write",
+        "automations:read",
     ),
     "contacts_get_contact_channels": (
         "contacts:read",
         "automations:write",
+        "automations:read",
     ),
     "contacts_list_contact_groups": (
         "contacts:read",
         "automations:write",
+        "automations:read",
     ),
     "contacts_list_contacts": (
         "contacts:read",
         "automations:write",
+        "automations:read",
     ),
     "contacts_update_contact": ("automations:write",),
     "content_retention_get_content_retention": (
@@ -62963,22 +63073,67 @@ TOOL_OAUTH_SCOPES: dict[str, tuple[str, ...]] = {
     "creator_campaigns_create_creator_campaign": ("campaigns:write",),
     "creator_campaigns_decline_campaign_sample": ("campaigns:write",),
     "creator_campaigns_deny_campaign_participant": ("campaigns:write",),
-    "creator_campaigns_get_campaign_ad_results": ("campaigns:write",),
-    "creator_campaigns_get_campaign_draft": ("campaigns:write",),
-    "creator_campaigns_get_campaign_participant": ("campaigns:write",),
-    "creator_campaigns_get_campaign_report": ("campaigns:write",),
-    "creator_campaigns_get_campaign_submission": ("campaigns:write",),
-    "creator_campaigns_get_creator_campaign": ("campaigns:write",),
+    "creator_campaigns_get_campaign_ad_results": (
+        "campaigns:read",
+        "campaigns:write",
+    ),
+    "creator_campaigns_get_campaign_draft": (
+        "campaigns:read",
+        "campaigns:write",
+    ),
+    "creator_campaigns_get_campaign_participant": (
+        "campaigns:read",
+        "campaigns:write",
+    ),
+    "creator_campaigns_get_campaign_report": (
+        "campaigns:read",
+        "campaigns:write",
+    ),
+    "creator_campaigns_get_campaign_submission": (
+        "campaigns:read",
+        "campaigns:write",
+    ),
+    "creator_campaigns_get_creator_campaign": (
+        "campaigns:read",
+        "campaigns:write",
+    ),
     "creator_campaigns_launch_campaign_ads": ("campaigns:write",),
-    "creator_campaigns_list_campaign_drafts": ("campaigns:write",),
-    "creator_campaigns_list_campaign_ledger": ("campaigns:write",),
-    "creator_campaigns_list_campaign_orders": ("campaigns:write",),
-    "creator_campaigns_list_campaign_participants": ("campaigns:write",),
-    "creator_campaigns_list_campaign_payables": ("campaigns:write",),
-    "creator_campaigns_list_campaign_payout_batches": ("campaigns:write",),
-    "creator_campaigns_list_campaign_samples": ("campaigns:write",),
-    "creator_campaigns_list_campaign_submissions": ("campaigns:write",),
-    "creator_campaigns_list_creator_campaigns": ("campaigns:write",),
+    "creator_campaigns_list_campaign_drafts": (
+        "campaigns:read",
+        "campaigns:write",
+    ),
+    "creator_campaigns_list_campaign_ledger": (
+        "campaigns:read",
+        "campaigns:write",
+    ),
+    "creator_campaigns_list_campaign_orders": (
+        "campaigns:read",
+        "campaigns:write",
+    ),
+    "creator_campaigns_list_campaign_participants": (
+        "campaigns:read",
+        "campaigns:write",
+    ),
+    "creator_campaigns_list_campaign_payables": (
+        "campaigns:read",
+        "campaigns:write",
+    ),
+    "creator_campaigns_list_campaign_payout_batches": (
+        "campaigns:read",
+        "campaigns:write",
+    ),
+    "creator_campaigns_list_campaign_samples": (
+        "campaigns:read",
+        "campaigns:write",
+    ),
+    "creator_campaigns_list_campaign_submissions": (
+        "campaigns:read",
+        "campaigns:write",
+    ),
+    "creator_campaigns_list_creator_campaigns": (
+        "campaigns:read",
+        "campaigns:write",
+    ),
     "creator_campaigns_move_campaign_participant": ("campaigns:write",),
     "creator_campaigns_pause_creator_campaign": ("campaigns:write",),
     "creator_campaigns_preview_campaign_payout_batch": ("campaigns:write",),
@@ -62999,22 +63154,27 @@ TOOL_OAUTH_SCOPES: dict[str, tuple[str, ...]] = {
     "crm_get_crm_contact": (
         "contacts:read",
         "automations:write",
+        "automations:read",
     ),
     "crm_get_crm_deal": (
         "contacts:read",
         "automations:write",
+        "automations:read",
     ),
     "crm_list_crm_deals": (
         "contacts:read",
         "automations:write",
+        "automations:read",
     ),
     "crm_list_crm_owners": (
         "contacts:read",
         "automations:write",
+        "automations:read",
     ),
     "crm_search_crm_contacts": (
         "contacts:read",
         "automations:write",
+        "automations:read",
     ),
     "crm_update_crm_contact": ("automations:write",),
     "crm_update_crm_deal": ("automations:write",),
@@ -63043,6 +63203,7 @@ TOOL_OAUTH_SCOPES: dict[str, tuple[str, ...]] = {
     "discord_get_discord_guild_member": (
         "contacts:read",
         "automations:write",
+        "automations:read",
     ),
     "discord_get_discord_scheduled_event": (
         "messaging:read",
@@ -63055,6 +63216,7 @@ TOOL_OAUTH_SCOPES: dict[str, tuple[str, ...]] = {
     "discord_list_discord_guild_members": (
         "contacts:read",
         "automations:write",
+        "automations:read",
     ),
     "discord_list_discord_guild_roles": (
         "messaging:read",
@@ -63073,6 +63235,7 @@ TOOL_OAUTH_SCOPES: dict[str, tuple[str, ...]] = {
     "discord_search_discord_guild_members": (
         "contacts:read",
         "automations:write",
+        "automations:read",
     ),
     "discord_send_discord_direct_message": ("messaging:write",),
     "discord_unpin_discord_message": ("messaging:write",),
@@ -63163,10 +63326,22 @@ TOOL_OAUTH_SCOPES: dict[str, tuple[str, ...]] = {
     "feedback_submit_feedback": ("accounts:write",),
     "files_create_file_picker_session": ("files:write",),
     "files_create_folder": ("files:write",),
-    "files_download_file": ("files:write",),
-    "files_get_file": ("files:write",),
-    "files_get_file_share_link": ("files:write",),
-    "files_list_files": ("files:write",),
+    "files_download_file": (
+        "files:read",
+        "files:write",
+    ),
+    "files_get_file": (
+        "files:read",
+        "files:write",
+    ),
+    "files_get_file_share_link": (
+        "files:read",
+        "files:write",
+    ),
+    "files_list_files": (
+        "files:read",
+        "files:write",
+    ),
     "files_trash_file": ("files:write",),
     "files_update_file": ("files:write",),
     "files_upload_file": ("files:write",),
@@ -63256,6 +63431,7 @@ TOOL_OAUTH_SCOPES: dict[str, tuple[str, ...]] = {
     "lead_gen_count_leads": (
         "contacts:read",
         "automations:write",
+        "automations:read",
     ),
     "lead_gen_create_lead": ("automations:write",),
     "lead_gen_create_lead_form": ("ads:write",),
@@ -63268,6 +63444,7 @@ TOOL_OAUTH_SCOPES: dict[str, tuple[str, ...]] = {
     "lead_gen_list_form_leads": (
         "contacts:read",
         "automations:write",
+        "automations:read",
     ),
     "lead_gen_list_lead_forms": (
         "ads:read",
@@ -63276,10 +63453,17 @@ TOOL_OAUTH_SCOPES: dict[str, tuple[str, ...]] = {
     "lead_gen_list_leads": (
         "contacts:read",
         "automations:write",
+        "automations:read",
     ),
     "lead_gen_update_lead": ("automations:write",),
-    "ledger_get_ledger_balances": ("money:write",),
-    "ledger_list_ledger_entries": ("money:write",),
+    "ledger_get_ledger_balances": (
+        "money:read",
+        "money:write",
+    ),
+    "ledger_list_ledger_entries": (
+        "money:read",
+        "money:write",
+    ),
     "logs_list_logs": (
         "posts:read",
         "posts:write",
@@ -63498,8 +63682,14 @@ TOOL_OAUTH_SCOPES: dict[str, tuple[str, ...]] = {
     ),
     "product_catalogs_update_ad_catalog_product": ("ads:write",),
     "product_catalogs_update_ad_catalog_product_set": ("ads:write",),
-    "products_get_product": ("commerce:write",),
-    "products_list_products": ("commerce:write",),
+    "products_get_product": (
+        "commerce:read",
+        "commerce:write",
+    ),
+    "products_list_products": (
+        "commerce:read",
+        "commerce:write",
+    ),
     "products_update_product": ("commerce:write",),
     "profiles_create_profile": ("accounts:write",),
     "profiles_delete_profile": ("accounts:write",),
@@ -63606,6 +63796,7 @@ TOOL_OAUTH_SCOPES: dict[str, tuple[str, ...]] = {
     "slack_list_slack_members": (
         "contacts:read",
         "automations:write",
+        "automations:read",
     ),
     "sms_appeal_sms_registration": ("messaging:write",),
     "sms_create_sms_opt_out": ("automations:write",),
@@ -63622,6 +63813,7 @@ TOOL_OAUTH_SCOPES: dict[str, tuple[str, ...]] = {
     "sms_list_sms_opt_outs": (
         "contacts:read",
         "automations:write",
+        "automations:read",
     ),
     "sms_list_sms_registrations": (
         "messaging:read",
@@ -63718,16 +63910,46 @@ TOOL_OAUTH_SCOPES: dict[str, tuple[str, ...]] = {
     "treasury_create_payee_onboarding_link": ("money:write",),
     "treasury_create_topup": ("money:write",),
     "treasury_create_transfer": ("money:write",),
-    "treasury_get_auto_recharge": ("money:write",),
-    "treasury_get_balance": ("money:write",),
-    "treasury_get_payout_batch": ("money:write",),
-    "treasury_get_topup_invoice": ("money:write",),
-    "treasury_get_topup_receipt": ("money:write",),
-    "treasury_get_topup_statement": ("money:write",),
-    "treasury_get_transfer": ("money:write",),
-    "treasury_list_payees": ("money:write",),
-    "treasury_list_topups": ("money:write",),
-    "treasury_list_transfers": ("money:write",),
+    "treasury_get_auto_recharge": (
+        "money:read",
+        "money:write",
+    ),
+    "treasury_get_balance": (
+        "money:read",
+        "money:write",
+    ),
+    "treasury_get_payout_batch": (
+        "money:read",
+        "money:write",
+    ),
+    "treasury_get_topup_invoice": (
+        "money:read",
+        "money:write",
+    ),
+    "treasury_get_topup_receipt": (
+        "money:read",
+        "money:write",
+    ),
+    "treasury_get_topup_statement": (
+        "money:read",
+        "money:write",
+    ),
+    "treasury_get_transfer": (
+        "money:read",
+        "money:write",
+    ),
+    "treasury_list_payees": (
+        "money:read",
+        "money:write",
+    ),
+    "treasury_list_topups": (
+        "money:read",
+        "money:write",
+    ),
+    "treasury_list_transfers": (
+        "money:read",
+        "money:write",
+    ),
     "treasury_preview_topup": ("money:write",),
     "treasury_update_auto_recharge": ("money:write",),
     "twitter_engagement_bookmark_post": ("messaging:write",),
@@ -63823,8 +64045,14 @@ TOOL_OAUTH_SCOPES: dict[str, tuple[str, ...]] = {
     "voice_transfer_voice_call": ("messaging:write",),
     "webhooks_create_webhook_settings": ("automations:write",),
     "webhooks_delete_webhook_settings": ("automations:write",),
-    "webhooks_get_webhook_logs": ("automations:write",),
-    "webhooks_get_webhook_settings": ("automations:write",),
+    "webhooks_get_webhook_logs": (
+        "automations:read",
+        "automations:write",
+    ),
+    "webhooks_get_webhook_settings": (
+        "automations:read",
+        "automations:write",
+    ),
     "webhooks_redeliver_webhook_event": ("automations:write",),
     "webhooks_test_webhook": ("automations:write",),
     "webhooks_update_webhook_settings": ("automations:write",),
@@ -63846,6 +64074,7 @@ TOOL_OAUTH_SCOPES: dict[str, tuple[str, ...]] = {
     "whatsapp_calling_get_whats_app_call_permissions": (
         "contacts:read",
         "automations:write",
+        "automations:read",
     ),
     "whatsapp_calling_get_whats_app_call_recording": (
         "messaging:read",
@@ -63916,10 +64145,12 @@ TOOL_OAUTH_SCOPES: dict[str, tuple[str, ...]] = {
     "whatsapp_get_whats_app_block_status": (
         "contacts:read",
         "automations:write",
+        "automations:read",
     ),
     "whatsapp_get_whats_app_blocked_users": (
         "contacts:read",
         "automations:write",
+        "automations:read",
     ),
     "whatsapp_get_whats_app_business_profile": (
         "accounts:read",
@@ -63998,6 +64229,7 @@ TOOL_OAUTH_SCOPES: dict[str, tuple[str, ...]] = {
     "whatsapp_phone_numbers_get_whats_app_number_info": (
         "contacts:read",
         "automations:write",
+        "automations:read",
     ),
     "whatsapp_phone_numbers_get_whats_app_number_kyc_form": (
         "messaging:read",

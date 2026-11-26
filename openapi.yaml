@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.843.0"
+  version: "1.845.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -1856,6 +1856,9 @@ components:
                   has_payment_method:
                     type: boolean
                     description: Whether the team currently has a card on file in Stripe. Set when reason=free_tier_exceeded or reason=twitter_passthrough.
+                  can_add_card:
+                    type: boolean
+                    description: 'Whether the caller can add the card themselves (the payer, or an owner, admin or billing admin of the workspace). False for a member or a viewer: the workspace owner has to add it. Set for the card reasons.'
                   verification_amount_cents:
                     type: integer
                     description: 'One-time card verification charge in USD cents, credited to usage. Only set when reason=card_verification_required.'
@@ -41920,7 +41923,7 @@ paths:
   /v1/ledger/balances:
     get:
       x-resource-group: "money"
-      x-oauth-scopes: ["money:write"]
+      x-oauth-scopes: ["money:write", "money:read"]
       operationId: getLedgerBalances
       tags: [Ledger]
       summary: Get ledger balances
@@ -41967,7 +41970,7 @@ paths:
   /v1/ledger/entries:
     get:
       x-resource-group: "money"
-      x-oauth-scopes: ["money:write"]
+      x-oauth-scopes: ["money:write", "money:read"]
       operationId: listLedgerEntries
       tags: [Ledger]
       summary: List ledger entries
@@ -42043,7 +42046,7 @@ paths:
   /v1/balance:
     get:
       x-resource-group: "money"
-      x-oauth-scopes: ["money:write"]
+      x-oauth-scopes: ["money:write", "money:read"]
       operationId: getBalance
       tags: [Treasury]
       summary: Get balance
@@ -42124,7 +42127,7 @@ paths:
   /v1/balance/auto-recharge:
     get:
       x-resource-group: "money"
-      x-oauth-scopes: ["money:write"]
+      x-oauth-scopes: ["money:write", "money:read"]
       operationId: getAutoRecharge
       tags: [Treasury]
       summary: Get auto top-up settings
@@ -42285,7 +42288,7 @@ paths:
           $ref: '#/components/responses/IdempotencyKeyReused'
     get:
       x-resource-group: "money"
-      x-oauth-scopes: ["money:write"]
+      x-oauth-scopes: ["money:write", "money:read"]
       operationId: listTopups
       tags: [Treasury]
       summary: List top-ups
@@ -42357,7 +42360,7 @@ paths:
   /v1/balance/top-ups/{topupId}/receipt:
     get:
       x-resource-group: "money"
-      x-oauth-scopes: ["money:write"]
+      x-oauth-scopes: ["money:write", "money:read"]
       operationId: getTopupReceipt
       tags: [Treasury]
       summary: Get a top-up receipt
@@ -42401,7 +42404,7 @@ paths:
   /v1/balance/top-ups/{topupId}/invoice:
     get:
       x-resource-group: "money"
-      x-oauth-scopes: ["money:write"]
+      x-oauth-scopes: ["money:write", "money:read"]
       operationId: getTopupInvoice
       tags: [Treasury]
       summary: Get a top-up invoice
@@ -42445,7 +42448,7 @@ paths:
   /v1/balance/top-ups/{topupId}/statement:
     get:
       x-resource-group: "money"
-      x-oauth-scopes: ["money:write"]
+      x-oauth-scopes: ["money:write", "money:read"]
       operationId: getTopupStatement
       tags: [Treasury]
       summary: Get a top-up invoice (alias)
@@ -42563,7 +42566,7 @@ paths:
   /v1/payees:
     get:
       x-resource-group: "money"
-      x-oauth-scopes: ["money:write"]
+      x-oauth-scopes: ["money:write", "money:read"]
       operationId: listPayees
       tags: [Treasury]
       summary: List payees
@@ -42662,7 +42665,7 @@ paths:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
     get:
       x-resource-group: "money"
-      x-oauth-scopes: ["money:write"]
+      x-oauth-scopes: ["money:write", "money:read"]
       operationId: listTransfers
       tags: [Treasury]
       summary: List transfers
@@ -42692,7 +42695,7 @@ paths:
   /v1/transfers/{transferId}:
     get:
       x-resource-group: "money"
-      x-oauth-scopes: ["money:write"]
+      x-oauth-scopes: ["money:write", "money:read"]
       operationId: getTransfer
       tags: [Treasury]
       summary: Get a transfer
@@ -43368,7 +43371,7 @@ paths:
   /v1/payout-batches/{batchId}:
     get:
       x-resource-group: "money"
-      x-oauth-scopes: ["money:write"]
+      x-oauth-scopes: ["money:write", "money:read"]
       operationId: getPayoutBatch
       tags: [Treasury]
       summary: Get a payout batch
@@ -64782,7 +64785,7 @@ paths:
   /v1/crm/{accountId}/contacts/search:
     get:
       x-resource-group: "contacts"
-      x-oauth-scopes: ["automations:write", "contacts:read"]
+      x-oauth-scopes: ["automations:write", "contacts:read", "automations:read"]
       operationId: searchCrmContacts
       tags:
         - CRM
@@ -64927,7 +64930,7 @@ paths:
   /v1/crm/{accountId}/contacts/{contactId}:
     get:
       x-resource-group: "contacts"
-      x-oauth-scopes: ["automations:write", "contacts:read"]
+      x-oauth-scopes: ["automations:write", "contacts:read", "automations:read"]
       operationId: getCrmContact
       tags:
         - CRM
@@ -65095,7 +65098,7 @@ paths:
   /v1/crm/{accountId}/deals:
     get:
       x-resource-group: "contacts"
-      x-oauth-scopes: ["automations:write", "contacts:read"]
+      x-oauth-scopes: ["automations:write", "contacts:read", "automations:read"]
       operationId: listCrmDeals
       tags:
         - CRM
@@ -65151,7 +65154,7 @@ paths:
   /v1/crm/{accountId}/deals/{dealId}:
     get:
       x-resource-group: "contacts"
-      x-oauth-scopes: ["automations:write", "contacts:read"]
+      x-oauth-scopes: ["automations:write", "contacts:read", "automations:read"]
       operationId: getCrmDeal
       tags:
         - CRM
@@ -65265,7 +65268,7 @@ paths:
   /v1/crm/{accountId}/owners:
     get:
       x-resource-group: "contacts"
-      x-oauth-scopes: ["automations:write", "contacts:read"]
+      x-oauth-scopes: ["automations:write", "contacts:read", "automations:read"]
       operationId: listCrmOwners
       tags:
         - CRM
@@ -65685,7 +65688,7 @@ paths:
   /v1/accounts/{accountId}/slack-members:
     get:
       x-resource-group: "contacts"
-      x-oauth-scopes: ["automations:write", "contacts:read"]
+      x-oauth-scopes: ["automations:write", "contacts:read", "automations:read"]
       operationId: listSlackMembers
       tags: [Slack]
       summary: List Slack workspace members
@@ -66020,7 +66023,7 @@ paths:
   /v1/discord/guilds/{guildId}/members:
     get:
       x-resource-group: "contacts"
-      x-oauth-scopes: ["automations:write", "contacts:read"]
+      x-oauth-scopes: ["automations:write", "contacts:read", "automations:read"]
       operationId: listDiscordGuildMembers
       tags: [Discord]
       summary: List Discord guild members
@@ -66061,7 +66064,7 @@ paths:
   /v1/discord/guilds/{guildId}/members/search:
     get:
       x-resource-group: "contacts"
-      x-oauth-scopes: ["automations:write", "contacts:read"]
+      x-oauth-scopes: ["automations:write", "contacts:read", "automations:read"]
       operationId: searchDiscordGuildMembers
       tags: [Discord]
       summary: Search Discord guild members
@@ -66094,7 +66097,7 @@ paths:
   /v1/discord/guilds/{guildId}/members/{userId}:
     get:
       x-resource-group: "contacts"
-      x-oauth-scopes: ["automations:write", "contacts:read"]
+      x-oauth-scopes: ["automations:write", "contacts:read", "automations:read"]
       operationId: getDiscordGuildMember
       tags: [Discord]
       summary: Get a Discord guild member
@@ -66983,7 +66986,7 @@ paths:
   /v1/webhooks/settings:
     get:
       x-resource-group: "webhooks"
-      x-oauth-scopes: ["automations:write"]
+      x-oauth-scopes: ["automations:write", "automations:read"]
       operationId: getWebhookSettings
       tags: [Webhooks]
       summary: List webhooks
@@ -67377,7 +67380,7 @@ paths:
   /v1/webhooks/logs:
     get:
       x-resource-group: "webhooks"
-      x-oauth-scopes: ["automations:write"]
+      x-oauth-scopes: ["automations:write", "automations:read"]
       operationId: getWebhookLogs
       tags: [Webhooks]
       summary: List webhook delivery logs
@@ -69266,7 +69269,7 @@ paths:
   /v1/calendar/calendars:
     get:
       x-resource-group: "calendar"
-      x-oauth-scopes: ["calendar:write"]
+      x-oauth-scopes: ["calendar:write", "calendar:read"]
       operationId: listCalendars
       tags: [Calendar]
       summary: List calendars
@@ -69289,7 +69292,7 @@ paths:
   /v1/calendar/events:
     get:
       x-resource-group: "calendar"
-      x-oauth-scopes: ["calendar:write"]
+      x-oauth-scopes: ["calendar:write", "calendar:read"]
       operationId: listCalendarEvents
       tags: [Calendar]
       summary: List events in a window
@@ -69405,7 +69408,7 @@ paths:
   /v1/calendar/events/{eventId}:
     get:
       x-resource-group: "calendar"
-      x-oauth-scopes: ["calendar:write"]
+      x-oauth-scopes: ["calendar:write", "calendar:read"]
       operationId: getCalendarEvent
       tags: [Calendar]
       summary: Get an event
@@ -69494,7 +69497,7 @@ paths:
   /v1/calendar/events/{eventId}/instances:
     get:
       x-resource-group: "calendar"
-      x-oauth-scopes: ["calendar:write"]
+      x-oauth-scopes: ["calendar:write", "calendar:read"]
       operationId: listCalendarEventInstances
       tags: [Calendar]
       summary: List the occurrences of a recurring event
@@ -69567,7 +69570,7 @@ paths:
   /v1/calendar/free-busy:
     post:
       x-resource-group: "calendar"
-      x-oauth-scopes: ["calendar:write"]
+      x-oauth-scopes: ["calendar:write", "calendar:read"]
       operationId: calendarFreeBusy
       tags: [Calendar]
       summary: Busy blocks for one or more accounts
@@ -69643,7 +69646,7 @@ paths:
   /v1/calendar/availability:
     post:
       x-resource-group: "calendar"
-      x-oauth-scopes: ["calendar:write"]
+      x-oauth-scopes: ["calendar:write", "calendar:read"]
       operationId: calendarAvailability
       tags: [Calendar]
       summary: Find meeting slots across accounts
@@ -69704,7 +69707,7 @@ paths:
   /v1/files:
     get:
       x-resource-group: "files"
-      x-oauth-scopes: ["files:write"]
+      x-oauth-scopes: ["files:write", "files:read"]
       operationId: listFiles
       tags: [Files]
       summary: List files in a folder or search the drive
@@ -69879,7 +69882,7 @@ paths:
   /v1/files/{fileId}:
     get:
       x-resource-group: "files"
-      x-oauth-scopes: ["files:write"]
+      x-oauth-scopes: ["files:write", "files:read"]
       operationId: getFile
       tags: [Files]
       summary: Get a file or folder
@@ -69966,7 +69969,7 @@ paths:
   /v1/files/{fileId}/download:
     get:
       x-resource-group: "files"
-      x-oauth-scopes: ["files:write"]
+      x-oauth-scopes: ["files:write", "files:read"]
       operationId: downloadFile
       tags: [Files]
       summary: Download a file
@@ -69988,7 +69991,7 @@ paths:
   /v1/files/{fileId}/share-link:
     get:
       x-resource-group: "files"
-      x-oauth-scopes: ["files:write"]
+      x-oauth-scopes: ["files:write", "files:read"]
       operationId: getFileShareLink
       tags: [Files]
       summary: Get an anyone-with-the-link share link
@@ -77224,7 +77227,7 @@ paths:
   /v1/whatsapp/call-permissions:
     get:
       x-resource-group: "contacts"
-      x-oauth-scopes: ["automations:write", "contacts:read"]
+      x-oauth-scopes: ["automations:write", "contacts:read", "automations:read"]
       operationId: getWhatsAppCallPermissions
       tags: [WhatsApp Calling]
       summary: Check call permission
@@ -79347,7 +79350,7 @@ paths:
   /v1/sms/opt-outs:
     get:
       x-resource-group: "contacts"
-      x-oauth-scopes: ["automations:write", "contacts:read"]
+      x-oauth-scopes: ["automations:write", "contacts:read", "automations:read"]
       operationId: listSmsOptOuts
       tags: [SMS]
       summary: List SMS opt-outs
@@ -81615,7 +81618,7 @@ paths:
   /v1/whatsapp/number-info:
     get:
       x-resource-group: "contacts"
-      x-oauth-scopes: ["automations:write", "contacts:read"]
+      x-oauth-scopes: ["automations:write", "contacts:read", "automations:read"]
       operationId: getWhatsAppNumberInfo
       tags: [WhatsApp Phone Numbers]
       summary: Get number status
@@ -81789,7 +81792,7 @@ paths:
   /v1/whatsapp/block-users/status:
     get:
       x-resource-group: "contacts"
-      x-oauth-scopes: ["automations:write", "contacts:read"]
+      x-oauth-scopes: ["automations:write", "contacts:read", "automations:read"]
       operationId: getWhatsAppBlockStatus
       tags: [WhatsApp]
       summary: Check if a user is blocked
@@ -81819,7 +81822,7 @@ paths:
   /v1/whatsapp/block-users:
     get:
       x-resource-group: "contacts"
-      x-oauth-scopes: ["automations:write", "contacts:read"]
+      x-oauth-scopes: ["automations:write", "contacts:read", "automations:read"]
       operationId: getWhatsAppBlockedUsers
       tags: [WhatsApp]
       summary: List blocked users
@@ -87174,7 +87177,7 @@ paths:
   /v1/contacts:
     get:
       x-resource-group: "contacts"
-      x-oauth-scopes: ["automations:write", "contacts:read"]
+      x-oauth-scopes: ["automations:write", "contacts:read", "automations:read"]
       operationId: listContacts
       summary: List contacts
       description: List and search contacts for a profile. Supports filtering by tags, platform, subscription status, and text search on name, email and company.
@@ -87299,7 +87302,7 @@ paths:
   /v1/contacts/groups:
     get:
       x-resource-group: "contacts"
-      x-oauth-scopes: ["automations:write", "contacts:read"]
+      x-oauth-scopes: ["automations:write", "contacts:read", "automations:read"]
       operationId: listContactGroups
       summary: List contact groups
       description: |-
@@ -87343,7 +87346,7 @@ paths:
   /v1/contacts/autocomplete:
     get:
       x-resource-group: "contacts"
-      x-oauth-scopes: ["automations:write", "contacts:read"]
+      x-oauth-scopes: ["automations:write", "contacts:read", "automations:read"]
       operationId: autocompleteContacts
       summary: Search people
       description: |-
@@ -87400,7 +87403,7 @@ paths:
   /v1/contacts/{contactId}:
     get:
       x-resource-group: "contacts"
-      x-oauth-scopes: ["automations:write", "contacts:read"]
+      x-oauth-scopes: ["automations:write", "contacts:read", "automations:read"]
       operationId: getContact
       summary: Get contact
       description: Returns a contact with all associated messaging channels.
@@ -87519,7 +87522,7 @@ paths:
   /v1/contacts/{contactId}/channels:
     get:
       x-resource-group: "contacts"
-      x-oauth-scopes: ["automations:write", "contacts:read"]
+      x-oauth-scopes: ["automations:write", "contacts:read", "automations:read"]
       operationId: getContactChannels
       summary: List channels for a contact
       description: Returns all messaging channels linked to a contact (e.g. Instagram DM, Telegram, WhatsApp).
@@ -109193,7 +109196,7 @@ paths:
   /v1/ads/leads:
     get:
       x-resource-group: "contacts"
-      x-oauth-scopes: ["automations:write", "contacts:read"]
+      x-oauth-scopes: ["automations:write", "contacts:read", "automations:read"]
       operationId: listLeads
       tags: ["Lead Gen"]
       x-platforms: ["meta", "google", "linkedin"]
@@ -109267,7 +109270,7 @@ paths:
   /v1/ads/leads/counts:
     get:
       x-resource-group: "contacts"
-      x-oauth-scopes: ["automations:write", "contacts:read"]
+      x-oauth-scopes: ["automations:write", "contacts:read", "automations:read"]
       operationId: countLeads
       tags: ["Lead Gen"]
       x-platforms: ["meta"]
@@ -109715,7 +109718,7 @@ paths:
   /v1/ads/lead-forms/{formId}/leads:
     get:
       x-resource-group: "contacts"
-      x-oauth-scopes: ["automations:write", "contacts:read"]
+      x-oauth-scopes: ["automations:write", "contacts:read", "automations:read"]
       operationId: listFormLeads
       tags: ["Lead Gen"]
       x-platforms: ["meta"]
@@ -120900,7 +120903,7 @@ paths:
   /v1/accounts/{accountId}/products:
     get:
       x-resource-group: "commerce"
-      x-oauth-scopes: ["commerce:write"]
+      x-oauth-scopes: ["commerce:write", "commerce:read"]
       operationId: listProducts
       deprecated: true
       tags: ["Products"]
@@ -120949,7 +120952,7 @@ paths:
   /v1/accounts/{accountId}/products/{productId}:
     get:
       x-resource-group: "commerce"
-      x-oauth-scopes: ["commerce:write"]
+      x-oauth-scopes: ["commerce:write", "commerce:read"]
       operationId: getProduct
       deprecated: true
       tags: ["Products"]
@@ -121079,7 +121082,7 @@ paths:
   /v1/commerce/store:
     get:
       x-resource-group: "commerce"
-      x-oauth-scopes: ["commerce:write"]
+      x-oauth-scopes: ["commerce:write", "commerce:read"]
       operationId: getCommerceStore
       tags: ["Commerce"]
       x-platforms: ["shopify", "woocommerce"]
@@ -121115,7 +121118,7 @@ paths:
   /v1/commerce/orders:
     get:
       x-resource-group: "commerce"
-      x-oauth-scopes: ["commerce:write"]
+      x-oauth-scopes: ["commerce:write", "commerce:read"]
       operationId: listCommerceOrders
       tags:
         - Commerce
@@ -121237,7 +121240,7 @@ paths:
   /v1/commerce/orders/{orderId}:
     get:
       x-resource-group: "commerce"
-      x-oauth-scopes: ["commerce:write"]
+      x-oauth-scopes: ["commerce:write", "commerce:read"]
       operationId: getCommerceOrder
       tags:
         - Commerce
@@ -121697,7 +121700,7 @@ paths:
   /v1/commerce/draft-orders/{draftOrderId}:
     get:
       x-resource-group: "commerce"
-      x-oauth-scopes: ["commerce:write"]
+      x-oauth-scopes: ["commerce:write", "commerce:read"]
       operationId: getCommerceDraftOrder
       tags:
         - Commerce
@@ -121799,7 +121802,7 @@ paths:
   /v1/commerce/customers:
     get:
       x-resource-group: "commerce"
-      x-oauth-scopes: ["commerce:write"]
+      x-oauth-scopes: ["commerce:write", "commerce:read"]
       operationId: listCommerceCustomers
       tags:
         - Commerce
@@ -121877,7 +121880,7 @@ paths:
   /v1/commerce/customers/{customerId}:
     get:
       x-resource-group: "commerce"
-      x-oauth-scopes: ["commerce:write"]
+      x-oauth-scopes: ["commerce:write", "commerce:read"]
       operationId: getCommerceCustomer
       tags:
         - Commerce
@@ -121925,7 +121928,7 @@ paths:
   /v1/commerce/products:
     get:
       x-resource-group: "commerce"
-      x-oauth-scopes: ["commerce:write"]
+      x-oauth-scopes: ["commerce:write", "commerce:read"]
       operationId: listCommerceProducts
       tags: ["Commerce"]
       x-platforms: ["shopify", "woocommerce"]
@@ -122109,7 +122112,7 @@ paths:
   /v1/commerce/products/{productId}:
     get:
       x-resource-group: "commerce"
-      x-oauth-scopes: ["commerce:write"]
+      x-oauth-scopes: ["commerce:write", "commerce:read"]
       operationId: getCommerceProduct
       tags: ["Commerce"]
       x-platforms: ["shopify", "woocommerce"]
@@ -122244,7 +122247,7 @@ paths:
   /v1/commerce/collections:
     get:
       x-resource-group: "commerce"
-      x-oauth-scopes: ["commerce:write"]
+      x-oauth-scopes: ["commerce:write", "commerce:read"]
       operationId: listCommerceCollections
       tags: ["Commerce"]
       x-platforms: ["shopify", "woocommerce"]
@@ -122332,7 +122335,7 @@ paths:
   /v1/commerce/collections/{collectionId}:
     get:
       x-resource-group: "commerce"
-      x-oauth-scopes: ["commerce:write"]
+      x-oauth-scopes: ["commerce:write", "commerce:read"]
       operationId: getCommerceCollection
       tags: ["Commerce"]
       x-platforms: ["shopify", "woocommerce"]
@@ -122810,7 +122813,7 @@ paths:
   /v1/commerce/products/{productId}/metafields:
     get:
       x-resource-group: "commerce"
-      x-oauth-scopes: ["commerce:write"]
+      x-oauth-scopes: ["commerce:write", "commerce:read"]
       operationId: listCommerceProductMetafields
       tags: ["Commerce"]
       x-platforms: ["shopify", "woocommerce"]
@@ -122950,7 +122953,7 @@ paths:
   /v1/commerce/collections/{collectionId}/metafields:
     get:
       x-resource-group: "commerce"
-      x-oauth-scopes: ["commerce:write"]
+      x-oauth-scopes: ["commerce:write", "commerce:read"]
       operationId: listCommerceCollectionMetafields
       tags: ["Commerce"]
       x-platforms: ["shopify"]
@@ -123184,7 +123187,7 @@ paths:
   /v1/commerce/pages:
     get:
       x-resource-group: "commerce"
-      x-oauth-scopes: ["commerce:write"]
+      x-oauth-scopes: ["commerce:write", "commerce:read"]
       operationId: listCommercePages
       tags: ["Commerce"]
       x-platforms: ["shopify", "woocommerce"]
@@ -123253,7 +123256,7 @@ paths:
   /v1/commerce/pages/{pageId}:
     get:
       x-resource-group: "commerce"
-      x-oauth-scopes: ["commerce:write"]
+      x-oauth-scopes: ["commerce:write", "commerce:read"]
       operationId: getCommercePage
       tags: ["Commerce"]
       x-platforms: ["shopify", "woocommerce"]
@@ -123349,7 +123352,7 @@ paths:
   /v1/commerce/locations:
     get:
       x-resource-group: "commerce"
-      x-oauth-scopes: ["commerce:write"]
+      x-oauth-scopes: ["commerce:write", "commerce:read"]
       operationId: listCommerceLocations
       tags: ["Commerce"]
       x-platforms: ["shopify", "woocommerce"]
@@ -123378,7 +123381,7 @@ paths:
   /v1/commerce/inventory:
     get:
       x-resource-group: "commerce"
-      x-oauth-scopes: ["commerce:write"]
+      x-oauth-scopes: ["commerce:write", "commerce:read"]
       operationId: listCommerceInventory
       tags: ["Commerce"]
       x-platforms: ["shopify", "woocommerce"]
@@ -123458,7 +123461,7 @@ paths:
   /v1/commerce/channels:
     get:
       x-resource-group: "commerce"
-      x-oauth-scopes: ["commerce:write"]
+      x-oauth-scopes: ["commerce:write", "commerce:read"]
       operationId: listCommerceChannels
       tags: ["Commerce"]
       x-platforms: ["shopify"]
@@ -123487,7 +123490,7 @@ paths:
   /v1/commerce/discounts:
     get:
       x-resource-group: "commerce"
-      x-oauth-scopes: ["commerce:write"]
+      x-oauth-scopes: ["commerce:write", "commerce:read"]
       operationId: listCommerceDiscounts
       tags: ["Commerce"]
       x-platforms: ["shopify", "woocommerce"]
@@ -123571,7 +123574,7 @@ paths:
   /v1/commerce/discounts/{discountId}:
     get:
       x-resource-group: "commerce"
-      x-oauth-scopes: ["commerce:write"]
+      x-oauth-scopes: ["commerce:write", "commerce:read"]
       operationId: getCommerceDiscount
       tags: ["Commerce"]
       x-platforms: ["shopify", "woocommerce"]
@@ -123753,7 +123756,7 @@ paths:
   /v1/commerce/redirects:
     get:
       x-resource-group: "commerce"
-      x-oauth-scopes: ["commerce:write"]
+      x-oauth-scopes: ["commerce:write", "commerce:read"]
       operationId: listCommerceRedirects
       tags: ["Commerce"]
       x-platforms: ["shopify"]
@@ -123887,7 +123890,7 @@ paths:
   /v1/commerce/menus:
     get:
       x-resource-group: "commerce"
-      x-oauth-scopes: ["commerce:write"]
+      x-oauth-scopes: ["commerce:write", "commerce:read"]
       operationId: listCommerceMenus
       tags: ["Commerce"]
       x-platforms: ["shopify"]
@@ -123954,7 +123957,7 @@ paths:
   /v1/commerce/menus/{menuId}:
     get:
       x-resource-group: "commerce"
-      x-oauth-scopes: ["commerce:write"]
+      x-oauth-scopes: ["commerce:write", "commerce:read"]
       operationId: getCommerceMenu
       tags: ["Commerce"]
       x-platforms: ["shopify"]
@@ -124053,7 +124056,7 @@ paths:
   /v1/commerce/metaobject-definitions:
     get:
       x-resource-group: "commerce"
-      x-oauth-scopes: ["commerce:write"]
+      x-oauth-scopes: ["commerce:write", "commerce:read"]
       operationId: listCommerceMetaobjectDefinitions
       tags: ["Commerce"]
       x-platforms: ["shopify"]
@@ -124082,7 +124085,7 @@ paths:
   /v1/commerce/metaobjects:
     get:
       x-resource-group: "commerce"
-      x-oauth-scopes: ["commerce:write"]
+      x-oauth-scopes: ["commerce:write", "commerce:read"]
       operationId: listCommerceMetaobjects
       tags: ["Commerce"]
       x-platforms: ["shopify"]
@@ -124159,7 +124162,7 @@ paths:
   /v1/commerce/metaobjects/{metaobjectId}:
     get:
       x-resource-group: "commerce"
-      x-oauth-scopes: ["commerce:write"]
+      x-oauth-scopes: ["commerce:write", "commerce:read"]
       operationId: getCommerceMetaobject
       tags: ["Commerce"]
       x-platforms: ["shopify"]
@@ -124263,7 +124266,7 @@ paths:
   /v1/commerce/markets:
     get:
       x-resource-group: "commerce"
-      x-oauth-scopes: ["commerce:write"]
+      x-oauth-scopes: ["commerce:write", "commerce:read"]
       operationId: listCommerceMarkets
       tags: ["Commerce"]
       x-platforms: ["shopify"]
@@ -124292,7 +124295,7 @@ paths:
   /v1/commerce/price-lists:
     get:
       x-resource-group: "commerce"
-      x-oauth-scopes: ["commerce:write"]
+      x-oauth-scopes: ["commerce:write", "commerce:read"]
       operationId: listCommercePriceLists
       tags: ["Commerce"]
       x-platforms: ["shopify"]
@@ -124541,7 +124544,7 @@ paths:
   /v1/commerce/catalog-syncs:
     get:
       x-resource-group: "commerce"
-      x-oauth-scopes: ["commerce:write"]
+      x-oauth-scopes: ["commerce:write", "commerce:read"]
       operationId: listCommerceCatalogSyncs
       tags: ["Commerce"]
       x-platforms: ["shopify", "woocommerce"]
@@ -124619,7 +124622,7 @@ paths:
   /v1/commerce/catalog-syncs/{syncId}:
     get:
       x-resource-group: "commerce"
-      x-oauth-scopes: ["commerce:write"]
+      x-oauth-scopes: ["commerce:write", "commerce:read"]
       operationId: getCommerceCatalogSync
       tags: ["Commerce"]
       x-platforms: ["shopify", "woocommerce"]
@@ -125618,7 +125621,7 @@ paths:
         '422': { $ref: '#/components/responses/IdempotencyKeyReused' }
     get:
       x-resource-group: "creator_campaigns"
-      x-oauth-scopes: ["campaigns:write"]
+      x-oauth-scopes: ["campaigns:write", "campaigns:read"]
       operationId: listCreatorCampaigns
       tags: [Creator Campaigns]
       summary: List creator campaigns
@@ -125663,7 +125666,7 @@ paths:
   /v1/creator-campaigns/{campaignId}:
     get:
       x-resource-group: "creator_campaigns"
-      x-oauth-scopes: ["campaigns:write"]
+      x-oauth-scopes: ["campaigns:write", "campaigns:read"]
       operationId: getCreatorCampaign
       tags: [Creator Campaigns]
       summary: Get creator campaign
@@ -125935,7 +125938,7 @@ paths:
         '422': { $ref: '#/components/responses/IdempotencyKeyReused' }
     get:
       x-resource-group: "creator_campaigns"
-      x-oauth-scopes: ["campaigns:write"]
+      x-oauth-scopes: ["campaigns:write", "campaigns:read"]
       operationId: listCampaignParticipants
       tags: [Creator Campaigns]
       summary: List campaign participants
@@ -125977,7 +125980,7 @@ paths:
   /v1/creator-campaigns/{campaignId}/participants/{participantId}:
     get:
       x-resource-group: "creator_campaigns"
-      x-oauth-scopes: ["campaigns:write"]
+      x-oauth-scopes: ["campaigns:write", "campaigns:read"]
       operationId: getCampaignParticipant
       tags: [Creator Campaigns]
       summary: Get campaign participant
@@ -126454,7 +126457,7 @@ paths:
         '429': { $ref: '#/components/responses/PaymentAttemptsLimited' }
     get:
       x-resource-group: "creator_campaigns"
-      x-oauth-scopes: ["campaigns:write"]
+      x-oauth-scopes: ["campaigns:write", "campaigns:read"]
       operationId: listCampaignPayoutBatches
       tags: [Creator Campaigns]
       summary: List payout batches
@@ -126568,7 +126571,7 @@ paths:
   /v1/creator-campaigns/{campaignId}/submissions:
     get:
       x-resource-group: "creator_campaigns"
-      x-oauth-scopes: ["campaigns:write"]
+      x-oauth-scopes: ["campaigns:write", "campaigns:read"]
       operationId: listCampaignSubmissions
       tags: [Creator Campaigns]
       summary: List campaign submissions
@@ -126638,7 +126641,7 @@ paths:
   /v1/creator-campaigns/{campaignId}/submissions/{submissionId}:
     get:
       x-resource-group: "creator_campaigns"
-      x-oauth-scopes: ["campaigns:write"]
+      x-oauth-scopes: ["campaigns:write", "campaigns:read"]
       operationId: getCampaignSubmission
       tags: [Creator Campaigns]
       summary: Get campaign submission
@@ -126827,7 +126830,7 @@ paths:
   /v1/creator-campaigns/{campaignId}/drafts:
     get:
       x-resource-group: "creator_campaigns"
-      x-oauth-scopes: ["campaigns:write"]
+      x-oauth-scopes: ["campaigns:write", "campaigns:read"]
       operationId: listCampaignDrafts
       tags: [Creator Campaigns]
       summary: List campaign drafts
@@ -126876,7 +126879,7 @@ paths:
   /v1/creator-campaigns/{campaignId}/drafts/{draftId}:
     get:
       x-resource-group: "creator_campaigns"
-      x-oauth-scopes: ["campaigns:write"]
+      x-oauth-scopes: ["campaigns:write", "campaigns:read"]
       operationId: getCampaignDraft
       tags: [Creator Campaigns]
       summary: Get campaign draft
@@ -127064,7 +127067,7 @@ paths:
   /v1/creator-campaigns/{campaignId}/samples:
     get:
       x-resource-group: "creator_campaigns"
-      x-oauth-scopes: ["campaigns:write"]
+      x-oauth-scopes: ["campaigns:write", "campaigns:read"]
       operationId: listCampaignSamples
       tags: [Creator Campaigns]
       summary: List campaign sample requests
@@ -127258,7 +127261,7 @@ paths:
   /v1/creator-campaigns/{campaignId}/payables:
     get:
       x-resource-group: "creator_campaigns"
-      x-oauth-scopes: ["campaigns:write"]
+      x-oauth-scopes: ["campaigns:write", "campaigns:read"]
       operationId: listCampaignPayables
       tags: [Creator Campaigns]
       summary: List campaign payables
@@ -127337,7 +127340,7 @@ paths:
   /v1/creator-campaigns/{campaignId}/ledger:
     get:
       x-resource-group: "creator_campaigns"
-      x-oauth-scopes: ["campaigns:write"]
+      x-oauth-scopes: ["campaigns:write", "campaigns:read"]
       operationId: listCampaignLedger
       tags: [Creator Campaigns]
       summary: List campaign ledger
@@ -127397,7 +127400,7 @@ paths:
   /v1/creator-campaigns/{campaignId}/orders:
     get:
       x-resource-group: "creator_campaigns"
-      x-oauth-scopes: ["campaigns:write"]
+      x-oauth-scopes: ["campaigns:write", "campaigns:read"]
       operationId: listCampaignOrders
       tags: [Creator Campaigns]
       summary: List campaign orders
@@ -127479,7 +127482,7 @@ paths:
   /v1/creator-campaigns/{campaignId}/report:
     get:
       x-resource-group: "creator_campaigns"
-      x-oauth-scopes: ["campaigns:write"]
+      x-oauth-scopes: ["campaigns:write", "campaigns:read"]
       operationId: getCampaignReport
       tags: [Creator Campaigns]
       summary: Get campaign report
@@ -127592,7 +127595,7 @@ paths:
   /v1/creator-campaigns/{campaignId}/ad-results:
     get:
       x-resource-group: "creator_campaigns"
-      x-oauth-scopes: ["campaigns:write"]
+      x-oauth-scopes: ["campaigns:write", "campaigns:read"]
       operationId: getCampaignAdResults
       tags: [Creator Campaigns]
       summary: Get campaign ad results
