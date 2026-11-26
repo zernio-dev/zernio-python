@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.835.1"
+  version: "1.835.2"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -74185,7 +74185,7 @@ paths:
                         canHide: { type: boolean, description: "Whether hide is supported for this comment's platform (Facebook, Instagram, Threads, X, TikTok). It does not check each comment: X needs a conversation started by the account, and Threads only hides top-level replies. Always present." }
                         canLike: { type: boolean, description: "Whether this comment can be liked (Facebook, X, Bluesky, Reddit, LinkedIn, TikTok). Always present." }
                         isHidden: { type: boolean, description: "Whether the comment is currently hidden. On Instagram accounts connected through Facebook Login, Meta leaves hidden comments (and their replies) out of the list entirely, so they never appear with isHidden true; Instagram Login accounts and Facebook Pages return them with isHidden true." }
-                        isLiked: { type: boolean, description: Whether the current user has liked this comment }
+                        isLiked: { type: boolean, description: 'Whether the connected account has liked this comment. Read on Facebook, Bluesky, Reddit and TikTok only. On every other platform (Instagram, X, LinkedIn, Threads, YouTube and the rest) it is never true, even for comments the account liked, so treat false or a missing value there as unknown.' }
                         attachment:
                           allOf:
                             - $ref: '#/components/schemas/CommentAttachment'
