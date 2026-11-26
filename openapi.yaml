@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.835.0"
+  version: "1.835.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -23561,7 +23561,7 @@ components:
             objectStoryId: { type: [string, "null"], description: "Meta creative `object_story_id` (the SHARE reference). Frequently absent, because Meta omits it for SHARE creatives. Use effectiveObjectStoryId instead." }
             effectiveObjectStoryId: { type: [string, "null"], description: "Meta `effective_object_story_id`, the `{pageId}_{postId}` of the Facebook post the ad's engagement (comments) lives on. Pass to GET /v1/ads?effectiveObjectStoryId= to map a Business-Manager-visible post back to this ad; GET /v1/ads/{adId}/comments resolves comments against it." }
             pageId: { type: [string, "null"], description: "Facebook Page backing the creative (Meta only). What the `pageId` filter on /v1/ads, /v1/ads/campaigns and /v1/ads/tree matches against. Absent for non-Meta ads and rare Meta creatives with no page signal." }
-            effectiveInstagramMediaId: { type: [string, "null"], description: "Meta `effective_instagram_media_id`, the Instagram media ID of the boosted post the ad's engagement lives on. Pass to GET /v1/ads?effectiveInstagramMediaId= to map a Business-Manager-visible IG post back to this ad." }
+            effectiveInstagramMediaId: { type: [string, "null"], description: "Meta `effective_instagram_media_id`, the Instagram media the ad's engagement lives on. For a boosted reel it can differ from the reel you boosted: Meta's promoted rendition, not a duplicate. Pass to GET /v1/ads?effectiveInstagramMediaId= to map a Business-Manager-visible IG post back to this ad." }
             instagramUserId: { type: [string, "null"], description: "Meta `instagram_user_id`, the Instagram-scoped business ID that owns the boosted media." }
             instagramPermalinkUrl: { type: [string, "null"], description: "Meta `instagram_permalink_url`, the public Instagram post URL of the boosted media." }
             mediaUrls:
@@ -89916,7 +89916,7 @@ paths:
         - { name: adSetId, in: query, schema: { type: string }, description: "Platform ad set ID (filter ads within an ad set, the /{adset_id}/ads read of an adset-centric dashboard)." }
         - { name: platformAdId, in: query, schema: { type: string }, description: "Meta ad ID. Returns the ad with this platform-side ad ID." }
         - { name: effectiveObjectStoryId, in: query, schema: { type: string }, description: "Facebook `{pageId}_{postId}` of the post the ad's engagement lives on (Meta `effective_object_story_id`). Use to map a Business-Manager-visible post back to the Zernio ad." }
-        - { name: effectiveInstagramMediaId, in: query, schema: { type: string }, description: "Instagram media ID of the boosted post (Meta `effective_instagram_media_id`). Use to map a Business-Manager-visible IG post back to the Zernio ad." }
+        - { name: effectiveInstagramMediaId, in: query, schema: { type: string }, description: "Instagram media ID of the boosted post (Meta `effective_instagram_media_id`). Use to map a Business-Manager-visible IG post back to the Zernio ad. For a boosted reel it can differ from the media ID you boosted (`platformPostId`), so filter by the ID shown on the ad, not the original reel ID." }
         - { name: fromDate, in: query, schema: { type: string, format: date }, description: "Start of metrics date range (YYYY-MM-DD). Defaults to 90 days ago." }
         - { name: toDate, in: query, schema: { type: string, format: date }, description: "End of metrics date range (YYYY-MM-DD). Defaults to today. Max 730-day range." }
         - { name: view, in: query, schema: { type: string, enum: [full, summary], default: full }, description: "`full` (default) returns every field. `summary` is about 80% smaller per ad and keeps only:\n\n- `_id`, `name`, `platform`, `status`, `platformStatus`, `servingStatuses` (left out when empty), `configuredStatus`, `reviewStatus`, `rejectionReason`, `goal`.\n- The platform ids, `accountId`, `profileId`, `campaignName`, `adSetName`, `budget`, `currency`, `isExternal`, `creativeType`, `platformCreatedAt`, `createdAt`.\n- `postId` as the post id, not the expanded post.\n- `creative` with only `headline`, `body` (cut to 200 characters), `linkUrl`, `callToAction` and `effectiveObjectStoryId`.\n- `metrics` without `costPerAction` and without any metric that is 0: an absent metric means 0.\n\nRead one ad with `platformAdId` and `view=full` for the rest." }

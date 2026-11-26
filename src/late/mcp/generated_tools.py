@@ -6975,7 +6975,7 @@ def register_generated_tools(mcp, _get_client):
                 ad_set_id: Platform ad set ID (filter ads within an ad set, the /{adset_id}/ads read of an adset-centric dashboard).
                 platform_ad_id: Meta ad ID. Returns the ad with this platform-side ad ID.
                 effective_object_story_id: Facebook `{pageId}_{postId}` of the post the ad's engagement lives on (Meta `effective_object_story_id`). Use to map a Business-Manager-visible post back to the Zernio ad.
-                effective_instagram_media_id: Instagram media ID of the boosted post (Meta `effective_instagram_media_id`). Use to map a Business-Manager-visible IG post back to the Zernio ad.
+                effective_instagram_media_id: Instagram media ID of the boosted post (Meta `effective_instagram_media_id`). Use to map a Business-Manager-visible IG post back to the Zernio ad. For a boosted reel it can differ from the media ID you boosted (`platformPostId`), so filter by the ID shown on the ad, not the original reel ID.
                 from_date: Start of metrics date range (YYYY-MM-DD). Defaults to 90 days ago.
                 to_date: End of metrics date range (YYYY-MM-DD). Defaults to today. Max 730-day range.
                 view: `full` (default) returns every field. `summary` is about 80% smaller per ad and keeps only:
