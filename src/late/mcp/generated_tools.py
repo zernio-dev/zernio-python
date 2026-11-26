@@ -15956,21 +15956,21 @@ def register_generated_tools(mcp, _get_client):
 
             - Response shape matches /v1/analytics/instagram/account-insights.
             - Max 89 days, defaults to last 30 days.
-            - Requires the user.info.stats scope on the account (412 if missing).
+            - Requires the user.info.stats scope on the account, or user.insights on an account connected through Zernio's TikTok Business connection (412 if missing).
 
             ### Daily account metrics
 
             `video_views`, `likes`, `comments`, `shares` and `profile_views` are TikTok's daily figures for the whole account, read from the TikTok Business Accounts API. They count every video of the account, not only recent ones, so they differ from GET /v1/analytics/daily-metrics, which sums per-post analytics.
 
             - With `metricType=time_series` each day is one entry in `values`. With `total_value` the total is the sum over the range.
-            - The latest day available is yesterday, and TikTok can take 24-48 hours to settle a day. Days after the latest available one ...
+            - The latest day available is ...
 
             Args:
                 account_id: The Zernio SocialAccount ID for the TikTok account. (required)
                 metrics: Comma-separated list. Defaults to
         "follower_count,likes_count,video_count,followers_gained,followers_lost".
 
-        Live profile counters (requires user.info.stats scope):
+        Live profile counters (requires user.info.stats, or user.insights on a TikTok Business connection):
           - follower_count  (cumulative; time series joined from AccountStats)
           - following_count (cumulative; time series joined from AccountStats.metadata)
           - likes_count     (cumulative; time series joined from AccountStats.metadata)
