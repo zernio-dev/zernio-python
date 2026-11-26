@@ -82,6 +82,12 @@ OAUTH_SCOPES = [
     "ads:read",
     "contacts:read",
     "messaging:read",
+    "commerce:read",
+    "calendar:read",
+    "files:read",
+    "campaigns:read",
+    "money:read",
+    "automations:read",
 ]
 
 # Documentation
