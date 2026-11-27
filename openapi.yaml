@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.865.0"
+  version: "1.866.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -7559,6 +7559,38 @@ components:
         platformPostId:
           type: string
           description: The Facebook post ID that was changed.
+        message:
+          type: string
+    SetPostCommentsEnabledRequest:
+      type: object
+      required:
+        - platform
+        - enabled
+      properties:
+        platform:
+          type: string
+          description: Must be `instagram`. Any other value answers 400 `platform_not_supported`.
+          example: instagram
+        accountId:
+          type: string
+          description: Which Instagram account's copy to change when the post was published to several Instagram accounts. Required in that case.
+        enabled:
+          type: boolean
+          description: true turns comments on, false turns them off.
+    SetPostCommentsEnabledResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        commentsEnabled:
+          type: boolean
+          description: Whether comments are now on for the post.
+        platformPostId:
+          type: string
+          description: The Instagram media ID that was changed.
+        accountId:
+          type: string
+          description: The Zernio account whose post was changed.
         message:
           type: string
     BalanceRequiredError:
@@ -48649,6 +48681,74 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: Facebook API call failed
+  /v1/posts/{postId}/comments-enabled:
+    post:
+      x-resource-group: "publishing"
+      x-oauth-scopes: ["posts:write"]
+      x-platforms: [instagram]
+      operationId: setPostCommentsEnabled
+      tags: [Posts]
+      summary: Turn comments on or off
+      description: |
+        Turns comments on or off on a published Instagram post, Reel or carousel, after publishing. Works for accounts connected through Instagram Login and through Facebook Login.
+
+        Only Instagram posts are supported; any other platform answers 400 `platform_not_supported`. To turn comments off at publish time instead, send `commentsEnabled: false` in the Instagram platform options when creating the post.
+      parameters:
+        - name: postId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SetPostCommentsEnabledRequest'
+            example:
+              platform: instagram
+              enabled: false
+      responses:
+        '200':
+          description: 'Comments setting applied on Instagram'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SetPostCommentsEnabledResponse'
+              example:
+                success: true
+                commentsEnabled: false
+                platformPostId: '18063237463112345'
+                accountId: '64e1f0a9e2b5af0012ab34cd'
+                message: Comments turned off for the Instagram post
+        '400':
+          x-summary: "The request is invalid, like a post not on Instagram or not published, or Instagram rejected it: fix it and retry."
+          description: >-
+            Invalid request: invalid postId, accountId or enabled, the post or the chosen account is not on Instagram
+            (`platform_not_supported`), the Instagram entry is not published or has no platform post ID, no access
+            token, or Instagram rejected the change.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: The post was published to several Instagram accounts and no accountId was sent (ambiguous_account).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Instagram API call failed
   /v1/posts/{postId}/edit:
     post:
       x-resource-group: "publishing"

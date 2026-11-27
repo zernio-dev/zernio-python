@@ -193,6 +193,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `posts.pin_post()` | Pin post |
 | `posts.retry_post()` | Retry failed post |
 | `posts.review_post()` | Approve or reject a post |
+| `posts.set_post_comments_enabled()` | Turn comments on or off |
 | `posts.unpin_post()` | Unpin post |
 | `posts.unpublish_post()` | Unpublish post |
 

@@ -345,6 +345,24 @@ class PostsResource:
         )
         return self._client._post(f"/v1/posts/{post_id}/unpin", data=payload)
 
+    def set_post_comments_enabled(
+        self,
+        post_id: str,
+        platform: str,
+        enabled: bool,
+        *,
+        account_id: str | None = None,
+    ) -> dict[str, Any]:
+        """Turn comments on or off"""
+        payload = self._build_body(
+            {
+                "platform": platform,
+                "accountId": account_id,
+                "enabled": enabled,
+            }
+        )
+        return self._client._post(f"/v1/posts/{post_id}/comments-enabled", data=payload)
+
     def edit_post(
         self,
         post_id: str,
@@ -648,6 +666,26 @@ class PostsResource:
             }
         )
         return await self._client._apost(f"/v1/posts/{post_id}/unpin", data=payload)
+
+    async def aset_post_comments_enabled(
+        self,
+        post_id: str,
+        platform: str,
+        enabled: bool,
+        *,
+        account_id: str | None = None,
+    ) -> dict[str, Any]:
+        """Turn comments on or off (async)"""
+        payload = self._build_body(
+            {
+                "platform": platform,
+                "accountId": account_id,
+                "enabled": enabled,
+            }
+        )
+        return await self._client._apost(
+            f"/v1/posts/{post_id}/comments-enabled", data=payload
+        )
 
     async def aedit_post(
         self,

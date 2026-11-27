@@ -49359,6 +49359,42 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="Turn comments on or off",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def posts_set_post_comments_enabled(
+        post_id: str, platform: str, enabled: bool, account_id: str | None = None
+    ) -> str:
+        """Turn comments on or off
+
+        Turns comments on or off on a published Instagram post, Reel or carousel, after publishing. Works for accounts connected through Instagram Login and through Facebook Login.
+
+        Only Instagram posts are supported; any other platform answers 400 `platform_not_supported`. To turn comments off at publish time instead, send `commentsEnabled: false` in the Instagram platform options when creating the post.
+
+        Platforms: instagram
+
+        Args:
+            post_id: (required)
+            platform: Must be `instagram`. Any other value answers 400 `platform_not_supported`. (required)
+            account_id: Which Instagram account's copy to change when the post was published to several Instagram accounts. Required in that case.
+            enabled: true turns comments on, false turns them off. (required)"""
+        client = _get_client()
+        try:
+            response = client.posts.set_post_comments_enabled(
+                post_id=post_id,
+                platform=platform,
+                account_id=account_id,
+                enabled=enabled,
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="Edit published post",
             readOnlyHint=False,
             destructiveHint=True,
@@ -64154,6 +64190,7 @@ TOOL_OAUTH_SCOPES: dict[str, tuple[str, ...]] = {
     ),
     "posts_pin_post": ("posts:write",),
     "posts_review_post": ("posts:write",),
+    "posts_set_post_comments_enabled": ("posts:write",),
     "posts_unpin_post": ("posts:write",),
     "posts_unpublish_post": ("posts:write",),
     "posts_update_post": ("posts:write",),
