@@ -34724,23 +34724,25 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Get attribution metrics
 
-        Shows a LinkedIn conversion rule's attributed conversions, value, leads and cost over time.
+        Shows the conversions an ad network credited to a destination over time, bucketed by date.
 
-        LinkedIn-only today. Returns conversion-attribution metrics
-        (`externalWebsiteConversions`, `externalWebsitePostClickConversions`,
-        `externalWebsitePostViewConversions`, `conversionValueInLocalCurrency`,
-        `qualifiedLeads`, `costInLocalCurrency`) bucketed by date.
+        **LinkedIn** (a conversion rule): `externalWebsiteConversions`, `externalWebsitePostClickConversions`,
+        `externalWebsitePostViewConversions`, `conversionValueInLocalCurrency`, `qualifiedLeads`, `costInLocalCurrency`.
 
-        Date-range constraints (passed through from LinkedIn):
+        **Google Ads** (a conversion action, `destinationId` as `customers/{customerId}/conversionActions/{id}` or the bare id; `adAccountId` is the customer id):
+        `conversions`, `conversionsValue`, `allConversions`, `allConversionsValue`. Dates are in the Google Ads account's time zone,
+        days with no conversions have no row, and month and year buckets are cut to the asked range.
+
+        Other platforms answer 405.
+
+        Date-range constraints on LinkedIn:
         - `granularity=DAILY` is retained for ~6 months only
         - `granularity=ALL` with a range > 6 months auto-rounds to month boundaries
         - `granularity=MONTHLY`/`YEARLY` retains 24 months
 
-        Throttle: LinkedIn caps adAnalytics at 45M metric values per 5-minute
-        window across the calling token. Single-rule queries are well within
-        that limit; surfaces as 429 if hit.
+        Throttle: LinkedIn caps adAnalytics at 45M metric values per 5-minute ...
 
-        Platforms: linkedin
+        Platforms: linkedin, google
 
         Args:
             account_id: The connected ads account (SocialAccount ID). (required)
@@ -35208,7 +35210,7 @@ def register_generated_tools(mcp, _get_client):
 
         The first path of `GET /v1/ads/conversions/destinations/{destinationId}/metrics` (`getAdConversionMetrics`), which does the same with `accountId` as a parameter. It keeps working.
 
-        Platforms: linkedin
+        Platforms: linkedin, google
 
         Args:
             account_id: (required)
