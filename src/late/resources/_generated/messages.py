@@ -426,6 +426,20 @@ class MessagesResource:
             f"/v1/inbox/conversations/{conversation_id}/thread-control", data=payload
         )
 
+    def get_messenger_contact(
+        self, conversation_id: str, account_id: str
+    ) -> dict[str, Any]:
+        """Get a Messenger contact's language, time zone and gender"""
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
+        )
+        return self._client._get(
+            f"/v1/inbox/conversations/{conversation_id}/messenger-contact",
+            params=params,
+        )
+
     def accept_conversation_request(
         self, conversation_id: str, account_id: str, message: str
     ) -> dict[str, Any]:
@@ -899,6 +913,20 @@ class MessagesResource:
         )
         return await self._client._apost(
             f"/v1/inbox/conversations/{conversation_id}/thread-control", data=payload
+        )
+
+    async def aget_messenger_contact(
+        self, conversation_id: str, account_id: str
+    ) -> dict[str, Any]:
+        """Get a Messenger contact's language, time zone and gender (async)"""
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
+        )
+        return await self._client._aget(
+            f"/v1/inbox/conversations/{conversation_id}/messenger-contact",
+            params=params,
         )
 
     async def aaccept_conversation_request(

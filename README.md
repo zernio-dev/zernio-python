@@ -1488,6 +1488,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `messages.get_inbox_conversation_messages()` | List messages |
 | `messages.get_inbox_unread_count()` | Count unread conversations |
 | `messages.get_message_attachment()` | Resolve message attachment |
+| `messages.get_messenger_contact()` | Get a Messenger contact's language, time zone and gender |
 | `messages.update_inbox_conversation()` | Update conversation status |
 | `messages.delete_inbox_conversation()` | Delete conversation |
 | `messages.delete_inbox_label()` | Delete a conversation label |

@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.864.5"
+  version: "1.865.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -73061,6 +73061,74 @@ paths:
           description: Inbox addon required
         '404':
           description: Account or conversation not found
+
+  /v1/inbox/conversations/{conversationId}/messenger-contact:
+    get:
+      x-resource-group: "messages"
+      x-oauth-scopes: ["messaging:write", "messaging:read"]
+      x-platforms: [facebook]
+      operationId: getMessengerContact
+      summary: Get a Messenger contact's language, time zone and gender
+      description: |
+        Reads the language, time zone and gender of the person in a Facebook Messenger conversation, live from Meta with the Page token.
+
+        Available on Facebook Page conversations only. Instagram and every other platform answer 400 `platform_not_supported`.
+
+        Meta shares each field only when the person made it available, so any field can be `null`. A null field is not an error.
+      tags: [Messages]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: conversationId
+          in: path
+          required: true
+          schema: { type: string }
+          description: The conversation ID
+        - name: accountId
+          in: query
+          required: true
+          schema: { type: string }
+          description: The Facebook social account ID
+      responses:
+        '200':
+          description: The contact's details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    required: [locale, timezone, gender]
+                    properties:
+                      locale:
+                        type: [string, "null"]
+                        description: 'Locale as Meta reports it, for example `es_ES`.'
+                      timezone:
+                        type: [number, "null"]
+                        description: 'Offset from UTC in hours, fractional for half-hour zones (for example -5.5).'
+                      gender:
+                        type: [string, "null"]
+                        description: 'Gender as Meta reports it, for example `female` or `male`.'
+              example:
+                data:
+                  locale: es_ES
+                  timezone: 1
+                  gender: female
+        '400':
+          description: 'Invalid accountId, a conversation that is not on Facebook (code platform_not_supported), or Meta refused the read (code platform_api_error)'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403':
+          description: Inbox addon required
+        '404':
+          description: Account or conversation not found
+        '502':
+          description: 'Meta did not name the person in the thread, or Meta failed (code platform_api_error)'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
 
   /v1/inbox/conversations/{conversationId}/accept:
     post:

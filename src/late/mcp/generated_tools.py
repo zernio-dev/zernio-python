@@ -44699,6 +44699,37 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="Get a Messenger contact's language, time zone and gender",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def messages_get_messenger_contact(conversation_id: str, account_id: str) -> str:
+        """Get a Messenger contact's language, time zone and gender
+
+        Reads the language, time zone and gender of the person in a Facebook Messenger conversation, live from Meta with the Page token.
+
+        Available on Facebook Page conversations only. Instagram and every other platform answer 400 `platform_not_supported`.
+
+        Meta shares each field only when the person made it available, so any field can be `null`. A null field is not an error.
+
+        Platforms: facebook
+
+        Args:
+            conversation_id: The conversation ID (required)
+            account_id: The Facebook social account ID (required)"""
+        client = _get_client()
+        try:
+            response = client.messages.get_messenger_contact(
+                conversation_id=conversation_id, account_id=account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="Accept a message request",
             readOnlyHint=False,
             destructiveHint=True,
@@ -63977,6 +64008,10 @@ TOOL_OAUTH_SCOPES: dict[str, tuple[str, ...]] = {
         "messaging:write",
     ),
     "messages_get_message_attachment": (
+        "messaging:read",
+        "messaging:write",
+    ),
+    "messages_get_messenger_contact": (
         "messaging:read",
         "messaging:write",
     ),
