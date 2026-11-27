@@ -185,6 +185,7 @@ class AdCreativesResource:
         link_url: str,
         *,
         stage: bool | None = None,
+        validate_only: bool | None = None,
         description: str | None = None,
         call_to_action: str | None = "LEARN_MORE",
         call_to_action_link: Any | None = None,
@@ -203,6 +204,7 @@ class AdCreativesResource:
         payload = self._build_body(
             {
                 "stage": stage,
+                "validateOnly": validate_only,
                 "accountId": account_id,
                 "adAccountId": ad_account_id,
                 "headline": headline,
@@ -522,6 +524,7 @@ class AdCreativesResource:
         link_url: str,
         *,
         stage: bool | None = None,
+        validate_only: bool | None = None,
         description: str | None = None,
         call_to_action: str | None = "LEARN_MORE",
         call_to_action_link: Any | None = None,
@@ -540,6 +543,7 @@ class AdCreativesResource:
         payload = self._build_body(
             {
                 "stage": stage,
+                "validateOnly": validate_only,
                 "accountId": account_id,
                 "adAccountId": ad_account_id,
                 "headline": headline,

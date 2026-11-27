@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.863.0"
+  version: "1.864.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -26171,6 +26171,20 @@ components:
                 type: string
                 enum: [budget_unknown, at_limit, already_at_amount]
                 description: 'Why it would have been skipped. Absent when it would have acted.'
+    AdWriteValidationResult:
+      type: object
+      required: [node, status]
+      properties:
+        node: { type: string, enum: [adSet, ad, creative], description: 'The object Meta validated.' }
+        status: { type: string, enum: [validated] }
+    AdWriteValidation:
+      type: object
+      description: 'The answer to a single-object Meta write sent with validateOnly: Meta checked every write and nothing was changed on Meta or in Zernio.'
+      required: [validateOnly, results, message]
+      properties:
+        validateOnly: { type: boolean, description: 'Always true.' }
+        results: { type: array, items: { $ref: '#/components/schemas/AdWriteValidationResult' } }
+        message: { type: string }
     StagedAdChange:
       type: object
       description: 'An ad write that was validated and stored with `stage: true`, waiting to be confirmed or discarded.'
@@ -96868,6 +96882,20 @@ paths:
               type: object
               required: [platform]
               properties:
+                validateOnly:
+                  type: boolean
+                  description: |
+                    Meta only. Sends every write of this update to Meta with `execution_options: ["validate_only"]`. Meta checks it and changes nothing; Zernio stores nothing and fires no webhook.
+
+                    - Answers `200` with `{ validateOnly: true, results, message }`, the shape of a validateOnly POST /v1/ads/create.
+
+                    - The checks Zernio runs before the write (body, bid strategy, live ads allowance) run as for a real update.
+
+                    - `true` on any other platform is a 400 naming `validateOnly`; `false` is ignored.
+
+                    - Cannot be combined with `stage` (400 `mutually_exclusive_fields`). Counts toward the Meta ad account write guard.
+
+                    - Idempotency-Key storage is bypassed, so the real update can reuse the key.
                 stage: { type: boolean, description: 'Send true to stage this change instead of applying it. Nothing is written to the ad network; the response is `202` with the staged change and its diff. Apply it with POST /v1/ads/changes/{changeId}/confirm. Meta, Google, TikTok, X, Snapchat and Reddit; cannot be combined with `validateOnly` or `dryRun`.' }
                 platform: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit, snapchat] }
                 budget:
@@ -97137,6 +97165,9 @@ paths:
               schema:
                 type: object
                 properties:
+                  validateOnly: { type: boolean, description: 'Present and true when the request was sent with validateOnly: nothing was changed. The other fields of a real update are then absent.' }
+                  results: { type: array, description: 'validateOnly only: one entry, the object Meta validated.', items: { $ref: '#/components/schemas/AdWriteValidationResult' } }
+                  message: { type: string, description: 'validateOnly only: what was validated.' }
                   budget: { $ref: '#/components/schemas/AdBudget' }
                   budgetLevel: { type: string, enum: [adset] }
                   status: { type: string, enum: [active, paused], description: 'As in PUT /v1/ads/ad-sets/{adSetId}/status: delivery derived from the switches read back.' }
@@ -97848,6 +97879,22 @@ paths:
             schema:
               type: object
               properties:
+                validateOnly:
+                  type: boolean
+                  description: |
+                    Meta only. Sends every write of this update to Meta with `execution_options: ["validate_only"]`. Meta checks it and changes nothing; Zernio stores nothing and fires no webhook.
+
+                    - Answers `200` with `{ validateOnly: true, results, message }`, the shape of a validateOnly POST /v1/ads/create.
+
+                    - The checks Zernio runs before the write (body, bid strategy, live ads allowance) run as for a real update.
+
+                    - `true` on any other platform is a 400 naming `validateOnly`; `false` is ignored.
+
+                    - Cannot be combined with `stage` (400 `mutually_exclusive_fields`). Counts toward the Meta ad account write guard.
+
+                    - Idempotency-Key storage is bypassed, so the real update can reuse the key.
+
+                    - A `creative` other than `existingCreativeId` is a 400: a dry run returns no creative id to link to the ad. Check a new creative with POST /v1/ads/creatives and `validateOnly`, create it, then send its id as `creative.existingCreativeId`.
                 stage: { type: boolean, description: 'Send true to stage this change instead of applying it. Nothing is written to the ad network; the response is `202` with the staged change and its diff. Apply it with POST /v1/ads/changes/{changeId}/confirm. Meta, Google, TikTok, X, Snapchat and Reddit; cannot be combined with `validateOnly` or `dryRun`.' }
                 headlines:
                   type: array
@@ -98093,6 +98140,8 @@ paths:
               schema:
                 type: object
                 properties:
+                  validateOnly: { type: boolean, description: 'Present and true when the request was sent with validateOnly: nothing was changed. The other fields of a real update are then absent.' }
+                  results: { type: array, description: 'validateOnly only: one entry, the object Meta validated.', items: { $ref: '#/components/schemas/AdWriteValidationResult' } }
                   ad: { $ref: '#/components/schemas/Ad' }
                   message: { type: string }
         '400':
@@ -102381,6 +102430,16 @@ paths:
               required: [accountId, adAccountId, headline, body, linkUrl]
               properties:
                 stage: { type: boolean, description: 'Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.' }
+                validateOnly:
+                  type: boolean
+                  description: |
+                    Sends the creative to Meta with `execution_options: ["validate_only"]`. Meta checks it and creates nothing.
+
+                    - No image is uploaded: `imageUrl` and the card images are sent by URL.
+
+                    - Answers `200` with `{ validateOnly: true, results, message }`, the shape of a validateOnly POST /v1/ads/create.
+
+                    - `false` is ignored. Cannot be combined with `stage`. Counts toward the Meta ad account write guard.
                 accountId: { type: string, description: "Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token and Page." }
                 adAccountId: { type: string, description: "Platform ad account id (Meta act_<n>, Google customer id, LinkedIn account id, ...)." }
                 headline: { type: string, maxLength: 255 }
@@ -102459,6 +102518,12 @@ paths:
         '403': { $ref: '#/components/responses/AdAccountNotSelected' }
         '409': { $ref: '#/components/responses/AccountConnectionRequired' }
         '404': { $ref: '#/components/responses/AccountUnavailable' }
+        '200':
+          description: 'Sent with `validateOnly: true`. Meta validated the creative and nothing was created or uploaded.'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AdWriteValidation' }
+              example: { validateOnly: true, results: [{ node: creative, status: validated }], message: 'Meta validated the creative; nothing was created or uploaded.' }
         '201':
           description: Creative created
           content:

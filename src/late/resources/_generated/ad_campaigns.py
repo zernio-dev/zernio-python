@@ -1047,6 +1047,7 @@ class AdCampaignsResource:
         platform: str,
         *,
         idempotency_key: str | None = None,
+        validate_only: bool | None = None,
         stage: bool | None = None,
         budget: dict[str, Any] | None = None,
         status: str | None = None,
@@ -1071,6 +1072,7 @@ class AdCampaignsResource:
         """Update an ad set"""
         payload = self._build_body(
             {
+                "validateOnly": validate_only,
                 "stage": stage,
                 "platform": platform,
                 "budget": budget,
@@ -1275,6 +1277,7 @@ class AdCampaignsResource:
         ad_id: str,
         *,
         idempotency_key: str | None = None,
+        validate_only: bool | None = None,
         stage: bool | None = None,
         headlines: list[Any] | None = None,
         descriptions: list[Any] | None = None,
@@ -1292,6 +1295,7 @@ class AdCampaignsResource:
         """Update ad"""
         payload = self._build_body(
             {
+                "validateOnly": validate_only,
                 "stage": stage,
                 "headlines": headlines,
                 "descriptions": descriptions,
@@ -3195,6 +3199,7 @@ class AdCampaignsResource:
         platform: str,
         *,
         idempotency_key: str | None = None,
+        validate_only: bool | None = None,
         stage: bool | None = None,
         budget: dict[str, Any] | None = None,
         status: str | None = None,
@@ -3219,6 +3224,7 @@ class AdCampaignsResource:
         """Update an ad set (async)"""
         payload = self._build_body(
             {
+                "validateOnly": validate_only,
                 "stage": stage,
                 "platform": platform,
                 "budget": budget,
@@ -3425,6 +3431,7 @@ class AdCampaignsResource:
         ad_id: str,
         *,
         idempotency_key: str | None = None,
+        validate_only: bool | None = None,
         stage: bool | None = None,
         headlines: list[Any] | None = None,
         descriptions: list[Any] | None = None,
@@ -3442,6 +3449,7 @@ class AdCampaignsResource:
         """Update ad (async)"""
         payload = self._build_body(
             {
+                "validateOnly": validate_only,
                 "stage": stage,
                 "headlines": headlines,
                 "descriptions": descriptions,
