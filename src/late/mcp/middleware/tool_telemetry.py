@@ -2,6 +2,7 @@
 
 import asyncio
 import json
+import re
 import time
 from collections.abc import Callable
 from contextvars import ContextVar
@@ -29,6 +30,18 @@ from late.mcp.telemetry import (
 from late.mcp.user_agent import calling_client, calling_user_agent
 
 _REJECTED_RESULT_PREFIX = "❌"
+
+# The API's error envelope carries a stable `code`, the rejected `param` and,
+# for platform errors, the `platform`. Only short identifier-like strings are
+# logged: a value with spaces or other characters is message text, which may
+# hold user data.
+_ERROR_DETAIL_FIELDS = {
+    "code": "error_code",
+    "param": "error_param",
+    "platform": "error_platform",
+}
+_MACHINE_CODE = re.compile(r"[A-Za-z0-9_.:-]+")
+_MAX_ERROR_CODE_CHARS = 64
 
 _SENTRY_STATUS_BY_OUTCOME = {
     "ok": "ok",
@@ -106,6 +119,16 @@ def _invalid_arguments_fields(exc: InvalidArgumentsError) -> dict[str, Any]:
     return fields
 
 
+def _api_error_detail_fields(exc: LateAPIError) -> dict[str, Any]:
+    details = exc.details if isinstance(exc.details, dict) else {}
+    fields: dict[str, Any] = {}
+    for key, field in _ERROR_DETAIL_FIELDS.items():
+        value = details.get(key)
+        if isinstance(value, str) and _MACHINE_CODE.fullmatch(value):
+            fields[field] = value[:_MAX_ERROR_CODE_CHARS]
+    return fields
+
+
 def _error_fields(exc: Exception) -> dict[str, Any]:
     if isinstance(exc, InvalidArgumentsError):
         return _invalid_arguments_fields(exc)
@@ -116,6 +139,7 @@ def _error_fields(exc: Exception) -> dict[str, Any]:
     fields: dict[str, Any] = {"error_type": type(cause).__name__}
     if isinstance(cause, LateAPIError):
         fields["status_code"] = cause.status_code
+        fields.update(_api_error_detail_fields(cause))
     if isinstance(cause, LateRateLimitError) and cause.retry_after is not None:
         fields["retry_after_s"] = cause.retry_after
     return fields
