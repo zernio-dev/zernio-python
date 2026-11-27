@@ -17,7 +17,7 @@ from fastmcp.server.auth import AccessToken
 from fastmcp.server.transforms.search import BM25SearchTransform
 from sentry_sdk.transport import Transport
 
-from late.client.exceptions import LateAPIError
+from late.client.exceptions import LateAPIError, LateRateLimitError
 from late.mcp import telemetry, user_agent
 from late.mcp.middleware import (
     ToolGuidanceMiddleware,
@@ -128,6 +128,82 @@ async def test_every_tool_call_logs_its_outcome_and_latency(
     assert isinstance(line["duration_ms"], int)
     assert datetime.fromisoformat(line["ts"]).tzinfo is not None
     assert fields.items() <= line.items()
+
+
+async def test_an_api_error_logs_its_machine_code_and_platform(caplog) -> None:
+    caplog.set_level(logging.INFO, logger="late.mcp.tools")
+    server = _server()
+
+    @server.tool
+    def meta_rejected() -> str:
+        raise ToolError("Error: nope") from LateAPIError(
+            "The user is not available",
+            status_code=400,
+            details={
+                "error": "The user is not available",
+                "code": "recipient_unavailable",
+                "platform": "instagram",
+            },
+        )
+
+    async with Client(server) as client:
+        await client.call_tool("meta_rejected", {}, raise_on_error=False)
+
+    [line] = _logged(caplog)
+    assert {
+        "outcome": "error",
+        "error_type": "LateAPIError",
+        "status_code": 400,
+        "error_code": "recipient_unavailable",
+        "error_platform": "instagram",
+    }.items() <= line.items()
+    assert "The user is not available" not in json.dumps(line)
+
+
+def test_an_api_error_without_details_adds_no_code_fields() -> None:
+    fields = tool_telemetry._error_fields(LateAPIError("nope", status_code=400))
+
+    assert fields == {"error_type": "LateAPIError", "status_code": 400}
+
+
+def test_a_rate_limit_error_logs_its_platform_quota_code() -> None:
+    exc = LateRateLimitError(
+        "Quota exhausted",
+        details={"code": "platform_rate_limited", "platform": "facebook"},
+    )
+
+    fields = tool_telemetry._error_fields(exc)
+
+    assert fields["error_code"] == "platform_rate_limited"
+    assert fields["error_platform"] == "facebook"
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        42,
+        None,
+        ["recipient_unavailable"],
+        {"code": "x"},
+        "",
+        "Message text from the user: call me at 555-0100",
+    ],
+)
+def test_error_codes_that_are_not_short_machine_strings_are_dropped(value) -> None:
+    exc = LateAPIError(
+        "nope", status_code=400, details={"code": value, "platform": value}
+    )
+
+    fields = tool_telemetry._error_fields(exc)
+
+    assert "error_code" not in fields
+    assert "error_platform" not in fields
+
+
+def test_a_huge_error_code_is_truncated() -> None:
+    exc = LateAPIError("nope", status_code=400, details={"code": "x" * 10_000})
+
+    assert tool_telemetry._error_fields(exc)["error_code"] == "x" * 64
 
 
 async def test_rejected_arguments_log_which_fields_failed_without_values(
