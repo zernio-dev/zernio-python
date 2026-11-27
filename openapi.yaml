@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.861.1"
+  version: "1.862.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -112944,7 +112944,9 @@ paths:
                         eventIndex: { type: integer, description: Index into the submitted events array. }
                         eventId: { type: string, description: Echoes back the eventId of the failed event. }
                         message: { type: string }
-                        code: { oneOf: [{ type: string }, { type: integer }] }
+                        code: { oneOf: [{ type: string }, { type: integer }], description: 'The platform''s error code. For Google Ads and Campaign Manager 360, Google''s reason for this event (`EVENT_TIME_INVALID`, `REQUIRED_FIELD_MISSING`...) when Google named this event with one.' }
+                        field: { type: string, description: 'Google Ads and Campaign Manager 360 only: the event field Google refused (`event_timestamp`, `currency`...), without the `events.events[N].` prefix. Absent when Google named the event but no field.' }
+                        scope: { type: string, enum: [event, batch, batch_rejected], description: "Google Ads and Campaign Manager 360 only, when Google refused the request. Absent for other platforms.\n\n- `event`: Google named this event, and `message` is its own violation.\n- `batch`: the refusal is about the whole request (destination, account, an outage) and is copied to every event of it.\n- `batch_rejected`: Google did not name this event, but its resend without the named events failed too. `message` is that resend's error." }
                         platformError:
                           type: object
                           additionalProperties: true
@@ -113894,7 +113896,9 @@ paths:
                               eventIndex: { type: integer, description: 'Position of the event in the request''s `events` array, counted from 0, also when repeats or events this destination does not take were left out.' }
                               eventId: { type: string }
                               message: { type: string }
-                              code: { oneOf: [{ type: string }, { type: integer }] }
+                              code: { oneOf: [{ type: string }, { type: integer }], description: 'The platform''s error code. For Google Ads and Campaign Manager 360, Google''s reason for this event (`EVENT_TIME_INVALID`, `REQUIRED_FIELD_MISSING`...) when Google named this event with one.' }
+                              field: { type: string, description: 'Google Ads and Campaign Manager 360 only: the event field Google refused (`event_timestamp`, `currency`...), without the `events.events[N].` prefix. Absent when Google named the event but no field.' }
+                              scope: { type: string, enum: [event, batch, batch_rejected], description: "Google Ads and Campaign Manager 360 only, when Google refused the request. Absent for other platforms.\n\n- `event`: Google named this event, and `message` is its own violation.\n- `batch`: the refusal is about the whole request (destination, account, an outage) and is copied to every event of it.\n- `batch_rejected`: Google did not name this event, but its resend without the named events failed too. `message` is that resend's error." }
                         error: { type: string, description: 'Set when the destination could not be reached at all (account disconnected, unsupported platform, platform error).' }
                         retrying: { type: boolean, description: 'The destination failed for now (platform error, timeout, rate limit) and the send is queued for retries; its outcome shows on GET /v1/events/{eventId}.' }
                         traceId: { type: string, description: 'The platform trace ID of the send (Meta `fbtrace_id`, Google `requestId`, TikTok `request_id`), to quote to the platform support. Absent when the platform returns none.' }
