@@ -1,5 +1,6 @@
 """FastMCP middlewares that wrap every tool call."""
 
+from late.mcp.middleware.argument_names import ArgumentNamesMiddleware
 from late.mcp.middleware.feedback_source import FEEDBACK_TOOL, FeedbackSourceMiddleware
 from late.mcp.middleware.missing_scope import MissingScopeMiddleware
 from late.mcp.middleware.rate_limit import RateLimitGuidanceMiddleware
@@ -11,6 +12,7 @@ from late.mcp.middleware.well_formed_output import (
 )
 
 __all__ = [
+    "ArgumentNamesMiddleware",
     "FEEDBACK_TOOL",
     "FeedbackSourceMiddleware",
     "MissingScopeMiddleware",
