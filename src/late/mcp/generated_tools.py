@@ -42947,7 +42947,9 @@ def register_generated_tools(mcp, _get_client):
 
         Lists the leads submitted through one Meta lead form.
 
-        It serves the leads Zernio stored when the form has any, newest stored first. Otherwise it reads them live from Meta. No parameter forces a live read.
+        It serves the leads Zernio stored when the form has at least one stored lead matching `since`, newest stored first. Otherwise it reads them live from Meta. No parameter forces a live read, but a `since` later than every stored lead reads the first page live.
+
+        Stored reads are all or nothing per form: once a stored lead matches, a lead the webhook missed appears only after recovery stores it.
 
         ### Accounts
 
@@ -42960,13 +42962,7 @@ def register_generated_tools(mcp, _get_client):
 
         Leads are stored within seconds through Meta's webhook. A recovery pass stores the leads the webhook missed and sends them as `lead.received` too.
 
-        Recovered leads usually arrive within 15 minutes for Pages with a lead in the last 7 days, up to 4 hours for Pages with forms but no recent lead, and up to 3 days for a Page's first lead form. Failing Meta reads add up to 24 hours.
-
-        Reading this endpoint does not trigger that pass. A live read that finds leads only moves the Page's next pass forward.
-
-        ### What recovery skips
-
-        For a form with no stored lead, recovery reaches back ...
+        Recovered leads usually arrive within 15 minutes for Pages with a lead in the last 7 days, up to 4 hours for Pages with forms but no recent lead, and up to 3 days for a Page's first lead ...
 
         Platforms: meta
 
