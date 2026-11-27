@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.856.1"
+  version: "1.856.2"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -115387,7 +115387,7 @@ paths:
                             Present when the platform locks event type to the
                             destination (Google conversion actions, LinkedIn
                             conversion rules).
-                        status: { type: string, enum: [active, inactive] }
+                        status: { type: string, enum: [active, inactive], description: "On Google Ads, `inactive` also marks an action Zernio cannot send to: one that is not enabled, or whose source is not an import of conversions from clicks (`UPLOAD_CLICKS`)." }
                         adAccountId:
                           type: string
                           description: |
@@ -116145,7 +116145,7 @@ paths:
                             Present when the platform locks event type to the
                             destination (Google conversion actions, LinkedIn
                             conversion rules).
-                        status: { type: string, enum: [active, inactive] }
+                        status: { type: string, enum: [active, inactive], description: "On Google Ads, `inactive` also marks an action Zernio cannot send to: one that is not enabled, or whose source is not an import of conversions from clicks (`UPLOAD_CLICKS`)." }
                         adAccountId:
                           type: string
                           description: |
