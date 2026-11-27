@@ -142,6 +142,7 @@ async def test_an_api_error_logs_its_machine_code_and_platform(caplog) -> None:
             details={
                 "error": "The user is not available",
                 "code": "recipient_unavailable",
+                "param": "conversationId",
                 "platform": "instagram",
             },
         )
@@ -155,6 +156,7 @@ async def test_an_api_error_logs_its_machine_code_and_platform(caplog) -> None:
         "error_type": "LateAPIError",
         "status_code": 400,
         "error_code": "recipient_unavailable",
+        "error_param": "conversationId",
         "error_platform": "instagram",
     }.items() <= line.items()
     assert "The user is not available" not in json.dumps(line)
@@ -164,6 +166,25 @@ def test_an_api_error_without_details_adds_no_code_fields() -> None:
     fields = tool_telemetry._error_fields(LateAPIError("nope", status_code=400))
 
     assert fields == {"error_type": "LateAPIError", "status_code": 400}
+
+
+def test_an_api_error_logs_the_parameter_it_rejected() -> None:
+    exc = LateAPIError(
+        "Invalid enum value",
+        status_code=400,
+        details={"code": "invalid_enum_value", "param": "metrics.0"},
+    )
+
+    fields = tool_telemetry._error_fields(exc)
+
+    assert fields["error_param"] == "metrics.0"
+    assert "error_platform" not in fields
+
+
+def test_an_api_error_without_a_param_logs_none() -> None:
+    exc = LateAPIError("nope", status_code=400, details={"code": "bad_request"})
+
+    assert "error_param" not in tool_telemetry._error_fields(exc)
 
 
 def test_a_rate_limit_error_logs_its_platform_quota_code() -> None:
@@ -191,19 +212,27 @@ def test_a_rate_limit_error_logs_its_platform_quota_code() -> None:
 )
 def test_error_codes_that_are_not_short_machine_strings_are_dropped(value) -> None:
     exc = LateAPIError(
-        "nope", status_code=400, details={"code": value, "platform": value}
+        "nope",
+        status_code=400,
+        details={"code": value, "param": value, "platform": value},
     )
 
     fields = tool_telemetry._error_fields(exc)
 
     assert "error_code" not in fields
+    assert "error_param" not in fields
     assert "error_platform" not in fields
 
 
 def test_a_huge_error_code_is_truncated() -> None:
-    exc = LateAPIError("nope", status_code=400, details={"code": "x" * 10_000})
+    exc = LateAPIError(
+        "nope", status_code=400, details={"code": "x" * 10_000, "param": "y" * 100}
+    )
 
-    assert tool_telemetry._error_fields(exc)["error_code"] == "x" * 64
+    fields = tool_telemetry._error_fields(exc)
+
+    assert fields["error_code"] == "x" * 64
+    assert fields["error_param"] == "y" * 64
 
 
 async def test_rejected_arguments_log_which_fields_failed_without_values(

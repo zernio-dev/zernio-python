@@ -31,10 +31,15 @@ from late.mcp.user_agent import calling_client, calling_user_agent
 
 _REJECTED_RESULT_PREFIX = "❌"
 
-# The API's error envelope carries a stable `code` and, for platform errors,
-# the `platform`. Only short identifier-like strings are logged: a value with
-# spaces or other characters is message text, which may hold user data.
-_ERROR_DETAIL_FIELDS = {"code": "error_code", "platform": "error_platform"}
+# The API's error envelope carries a stable `code`, the rejected `param` and,
+# for platform errors, the `platform`. Only short identifier-like strings are
+# logged: a value with spaces or other characters is message text, which may
+# hold user data.
+_ERROR_DETAIL_FIELDS = {
+    "code": "error_code",
+    "param": "error_param",
+    "platform": "error_platform",
+}
 _MACHINE_CODE = re.compile(r"[A-Za-z0-9_.:-]+")
 _MAX_ERROR_CODE_CHARS = 64
 
