@@ -186,6 +186,18 @@ async def test_get_post_unwraps_populated_account_and_keeps_only_declared_fields
 
 
 @respx.mock
+async def test_get_post_takes_the_camelcase_post_id():
+    respx.get(f"{API}/v1/posts/post_1").mock(
+        return_value=httpx.Response(200, json={"post": POST})
+    )
+    respx.get(f"{API}/v1/accounts").mock(
+        return_value=httpx.Response(200, json=ACCOUNTS)
+    )
+    result = await _call("get_post", postId="post_1")
+    assert not result.is_error, result.content[0].text
+
+
+@respx.mock
 async def test_schedule_post_requires_known_accounts_and_a_timezone():
     respx.get(f"{API}/v1/accounts").mock(
         return_value=httpx.Response(200, json=ACCOUNTS)

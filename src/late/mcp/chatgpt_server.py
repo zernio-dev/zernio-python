@@ -33,6 +33,7 @@ from late.mcp.chatgpt_tools import (
 from late.mcp.generated_tools import TOOL_OAUTH_SCOPES
 from late.mcp.media_items import media_item
 from late.mcp.middleware import (
+    ArgumentNamesMiddleware,
     MissingScopeMiddleware,
     RateLimitGuidanceMiddleware,
     WellFormedOutputMiddleware,
@@ -557,6 +558,7 @@ chatgpt_mcp = FastMCP(
 chatgpt_mcp.add_middleware(WellFormedOutputMiddleware())
 chatgpt_mcp.add_middleware(RateLimitGuidanceMiddleware())
 chatgpt_mcp.add_middleware(MissingScopeMiddleware(scopes_by_tool=TOOL_OAUTH_SCOPES))
+chatgpt_mcp.add_middleware(ArgumentNamesMiddleware())
 chatgpt_mcp.add_transform(WellFormedOutputTransform())
 
 

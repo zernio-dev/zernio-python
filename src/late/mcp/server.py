@@ -54,6 +54,7 @@ from .idempotency import same_arguments_key
 from .media_items import media_item
 from .middleware import (
     FEEDBACK_TOOL,
+    ArgumentNamesMiddleware,
     FeedbackSourceMiddleware,
     RateLimitGuidanceMiddleware,
     ToolGuidanceMiddleware,
@@ -411,6 +412,9 @@ details.
 
 mcp.add_middleware(WellFormedOutputMiddleware())
 mcp.add_middleware(RateLimitGuidanceMiddleware())
+# Before ToolGuidance, which reads call_tool's name; outside ToolTelemetry
+# (added last in http_server), which then records the call as it ran.
+mcp.add_middleware(ArgumentNamesMiddleware(aliases={_CALL_TOOL: {"tool_name": "name"}}))
 mcp.add_middleware(
     ToolGuidanceMiddleware(
         search_tool=_SEARCH_TOOL,
