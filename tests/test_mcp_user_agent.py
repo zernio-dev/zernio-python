@@ -130,3 +130,14 @@ def test_the_full_calling_user_agent_is_capped(monkeypatch):
     _incoming(monkeypatch, "/mcp", "Agent/1.0 " + "x" * 500)
 
     assert user_agent.calling_user_agent() == ("Agent/1.0 " + "x" * 500)[:200]
+
+
+def test_a_non_ascii_client_name_is_reduced_to_ascii(monkeypatch):
+    # Starlette hands the UTF-8 bytes back latin-1 decoded; httpx would refuse
+    # to send them on in the outbound User-Agent.
+    _incoming(monkeypatch, "/mcp", "Café-țară/2.0")
+
+    value = mcp_user_agent()
+
+    assert value == "zernio-mcp (mcp; Caf-ar)"
+    value.encode("ascii")

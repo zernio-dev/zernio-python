@@ -24,6 +24,7 @@ from .exceptions import (
     LateNotFoundError,
     LateRateLimitError,
     LateTimeoutError,
+    LateValidationError,
 )
 from .rate_limiter import RateLimiter
 
@@ -73,8 +74,50 @@ def _retry_after_seconds(value: str | None) -> float | None:
     return max(0.0, (when - datetime.now(timezone.utc)).total_seconds())
 
 
+# What h11 (under httpx) sends: printable ASCII, with spaces or tabs only
+# between other characters.
+_UNSENDABLE_HEADER_CHAR = re.compile(r"[^\x20-\x7e\t]")
+_SECRET_HEADER_HINTS = ("token", "authorization", "secret", "cookie", "api-key")
+_HEADER_VALUE_FIXES = {
+    "idempotency-key": "Use a plain ASCII key, e.g. a UUID.",
+    "x-request-id": "Use a plain ASCII id, e.g. a UUID.",
+}
+
+
+def _check_header_value(name: str, value: str) -> None:
+    """Raise LateValidationError when httpx/h11 could not send ``value``.
+
+    httpx raised a bare UnicodeEncodeError for a caller's Idempotency-Key
+    holding human text (Sentry ZERNIO-MCP-11) and h11 a LocalProtocolError for
+    a leading or trailing space. The message names the header and the first
+    offending character and position, never the value itself, and hides even
+    the character for headers that carry secrets.
+    """
+    bad = _UNSENDABLE_HEADER_CHAR.search(value)
+    if bad:
+        secret = any(hint in name.lower() for hint in _SECRET_HEADER_HINTS)
+        char = "a character that cannot be sent" if secret else repr(bad.group())
+        problem = f"a value with {char} at position {bad.start()}"
+    elif value[:1] in (" ", "\t"):
+        problem = "a value with leading whitespace"
+    elif value[-1:] in (" ", "\t"):
+        problem = "a value with trailing whitespace"
+    else:
+        return
+    fix = _HEADER_VALUE_FIXES.get(name.lower(), "Use a plain ASCII value.")
+    raise LateValidationError(
+        f"{name} header value must contain only printable ASCII characters "
+        f"(no accents, emoji, line breaks or leading/trailing spaces); got "
+        f"{problem}. {fix}",
+        field=name,
+    )
+
+
 def _with_request_id(headers: dict[str, str] | None) -> dict[str, str]:
     merged = dict(headers or {})
+    for name, value in merged.items():
+        if isinstance(value, str):
+            _check_header_value(name, value)
     merged.setdefault("x-request-id", str(uuid.uuid4()))
     return merged
 

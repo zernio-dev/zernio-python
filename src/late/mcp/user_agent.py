@@ -1,3 +1,5 @@
+import re
+
 from fastmcp.server.dependencies import get_http_headers, get_http_request
 
 from late.mcp.constants import ENDPOINT_CHATGPT
@@ -7,6 +9,9 @@ _USER_AGENT_MAX = 200
 # The client name lands inside an RFC 9110 comment: these would close it early
 # or split it into a second field.
 _COMMENT_DELIMITERS = str.maketrans("", "", "();")
+# Outbound header values must be printable ASCII: httpx refuses anything else,
+# and Starlette decodes an inbound UTF-8 User-Agent as latin-1 ("CafÃ©").
+_NOT_HEADER_SAFE = re.compile(r"[^\x20-\x7e]")
 
 
 def calling_user_agent() -> str:
@@ -35,7 +40,9 @@ def mcp_user_agent() -> str:
     the hosted server runs one deployment at a time, so the deploy history
     already dates a request.
     """
-    client = calling_client().translate(_COMMENT_DELIMITERS).strip()
+    client = _NOT_HEADER_SAFE.sub(
+        "", calling_client().translate(_COMMENT_DELIMITERS)
+    ).strip()
     surface = _surface()
     comment = f"{surface}; {client}" if client else surface
     return f"zernio-mcp ({comment})"
