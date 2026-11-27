@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.857.1"
+  version: "1.858.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -647,6 +647,10 @@ tags:
       Staged ad changes. Send a supported ad write with `stage: true` and it is validated and stored instead of applied. Read the change to see its before/after diff, confirm it to apply it, or discard it. A staged change does not expire. Requires the Ads add-on.
 
       Edits of campaigns, ad sets and ads can be staged on Meta, Google, TikTok, X, Snapchat and Reddit. Creates can be staged on Meta and Google only.
+
+      `stage` is a boolean in a body. In the query it is `true`, `1`, `false` or `0`. Any other value answers `400`, so a request is never sent because the flag was misspelled.
+
+      A staged body is at most 256 KB and names at most 50 temporary uploads.
   - name: Automations
     description: |
       One API for every automation: ad rules that check ads on a schedule, event automations that run when something happens in Zernio, and scheduled automations that check posts. Each has a `trigger`, the `subjects` it checks, the `steps` it takes and its `limits`.
@@ -26176,7 +26180,7 @@ components:
             method: { type: string, enum: [POST, PUT, PATCH, DELETE] }
             path: { type: string, description: 'The path of the write, for example /v1/ads/keywords.', example: /v1/ads/keywords }
             params: { type: object, additionalProperties: { type: string }, description: 'The path values of the staged request, by the names in `path`.', example: { labelId: '22292442088' } }
-            query: { type: object, additionalProperties: { type: string }, description: 'The query values of the staged request, without `stage`.' }
+            query: { type: object, additionalProperties: { oneOf: [{ type: string }, { type: array, items: { type: string } }] }, description: 'The query values of the staged request, without `stage`. A key that was sent more than once holds every value, in the order sent.' }
         platform: { type: string, description: 'The ad platform of the object, as the write route names it.', example: facebook }
         accountId: { type: string, description: The connected account the write goes through. }
         adAccountId: { type: string, description: The ad account id on the platform. }
@@ -26192,7 +26196,7 @@ components:
           enum: [staged, confirming, confirmed, failed]
           description: |
             - `staged`: waiting to be confirmed or discarded.
-            - `confirming`: a confirm is running. A change left here for 15 minutes ends as `failed` with error code `change_outcome_unknown`, and is never applied again automatically.
+            - `confirming`: a confirm is running. A change left here for about 18 minutes ends as `failed` with error code `change_outcome_unknown`, and is never applied again automatically.
             - `confirmed`: applied. `result` holds what the write returned.
             - `failed`: not applied. `error` says why.
         diff:
@@ -26235,7 +26239,7 @@ components:
           properties:
             code: { type: string, description: 'An error code, or `target_changed` when the object changed on the ad network after staging.' }
             message: { type: [string, "null"] }
-            details: { type: object, additionalProperties: true, description: 'Creates only. What the failed create reported, such as objects it had already made on the ad network.' }
+            details: { type: object, additionalProperties: true, description: 'Only on a failed change. What the write reported: the objects a failed create had already made, the fields an update had written (`appliedFields`), or the result of each item of a list write that failed in part.' }
       example:
         id: 6790a1b2c3d4e5f6a7b8c9d0
         type: ad_set_update
@@ -93400,7 +93404,9 @@ paths:
 
         The new change holds the same request. It is checked for the calling user, and an edit is read against the current values of its object. The failed change stays readable until it is deleted.
 
-        A failed create cannot be staged again (`409`): it may have made part of its objects on the ad network, which its `error.details` lists. Stage a new create instead.
+        A failed create cannot be staged again (`409`): it may have made part of its objects on the ad network, which its `error.details` lists. Stage a new create instead. This covers every change with `creates: true`.
+
+        Also refused with `409`: a change that failed as `change_outcome_unknown`, and a change whose kept uploads were deleted or moved to an earlier restage.
       security:
         - bearerAuth: []
       parameters:
@@ -93434,7 +93440,7 @@ paths:
           $ref: '#/components/responses/NotFound'
         '409':
           x-summary: "Only a failed edit or a failed request can be staged again."
-          description: 'The change did not fail, or it is a failed create (`invalid_resource_state`).'
+          description: 'Code `invalid_resource_state`. The change did not fail, it creates an object, nobody knows how it ended, or its kept uploads are gone.'
           content:
             application/json:
               schema:
@@ -93516,6 +93522,8 @@ paths:
             - `change_target_changed`: the object changed on the ad network after the change was staged. `details.current` carries its current values.
             - `change_not_staged`: the change has already failed.
             - `change_outcome_unknown`: another confirm of this change is running, or one started and never recorded how it ended. Read the change, and check the object on the ad network before staging a new one.
+            - `change_partly_applied`: a write on a list was sent and some items failed. The change ends as `failed`, and `details` holds the result of each item.
+            - `invalid_resource_state`: the change was edited while this confirm started. Nothing was sent and it is still staged. Read it and confirm again.
           content:
             application/json:
               schema:
