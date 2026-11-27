@@ -11985,6 +11985,8 @@ def register_generated_tools(mcp, _get_client):
         - **Meta:** the ad-set `optimization_goal` (e.g. `LANDING_PAGE_VIEWS`, `LINK_CLICKS`, `REACH`, `IMPRESSIONS`, `OFFSITE_CONVERSIONS`, `THRUPLAY`, `LEAD_GENERATION`).
 
         On Meta it overrides the default derived from `goal` (e.g. `traffic` defaults to `LINK_CLICKS`). It is forwarded verbatim; Meta validates compatibility with the campaign objective and rejects incompatible combinations.
+
+        With `goal: engagement`, `POST_ENGAGEMENT` also sets the ad set's destination to `ON_POST` (Ads Manager's Engagement, On your ad, Post engagement), as POST /v1/ads/boost does.
                 billing_event: Meta only. Explicit ad-set `billing_event`. Defaults to `IMPRESSIONS`. Forwarded verbatim to Meta, which validates compatibility with the optimization goal.
                 buying_type: Meta only. Buying type. Defaults to AUCTION and is explicitly sent on new campaigns, including validateOnly. Reusing existingCampaignId does not change the campaign.
 
