@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.855.0"
+  version: "1.856.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -91118,7 +91118,7 @@ paths:
         What an automation can contain and where each part works, built from the same checks that validate a save, so it never offers what saving refuses.
 
         - `schema`: the JSON Schema of the body of `POST /v1/automations`.
-        - `triggers`: every trigger, tagged with its `kind`. Ad rule and scheduled triggers list their intervals; event triggers list each event with its facts.
+        - `triggers`: every trigger, tagged with its `kind`, with the `label`, `description`, picker `group`, `resourceGroup` and allowed `steps` a trigger picker shows. Ad rule and scheduled triggers list their intervals; event triggers list each event with its facts.
         - The other sections describe ad rules: per subject (campaign, ad set, ad) its metrics and steps with the platforms that accept them, plus filters, groups, alerts, conditions, limits and approval.
       security:
         - bearerAuth: []
@@ -91139,11 +91139,14 @@ paths:
                     type: array
                     items:
                       type: object
-                      required: [kind, type]
+                      required: [kind, group, resourceGroup, type, label, description, steps]
                       properties:
                         kind: { type: string, enum: [ad_rule, event, scheduled, sequence, comment, workflow] }
+                        group: { type: string, enum: [social, messaging, ads], description: 'Where a trigger picker files it: the same groups as the template marketplace.' }
+                        resourceGroup: { type: [string, "null"], enum: [messages, ads, null], description: 'The API key resource group its kind needs to create one.' }
                         type: { type: string, description: '`schedule`, `enrollment`, a comment door such as `comment.keyword` (comment to DM), a flow trigger such as `inbound_message`, or the Zernio event name.', example: post.failed }
-                        label: { type: string, description: Event triggers only. }
+                        label: { type: string, description: 'Its short name, such as `Ad rule schedule`.' }
+                        description: { type: string, description: 'One line on when it starts and what the automation does then.' }
                         subject: { type: string, description: 'What an event is about, such as `post` or `account`.' }
                         scope: { type: object, description: 'Which of `profileId`, `accountId`, `accountIds` and `platformPostId` the trigger needs.' }
                         platforms: { type: array, items: { type: string }, description: 'The platforms a sequence, comment to DM or flow trigger runs on.' }
@@ -91158,7 +91161,7 @@ paths:
                         every: { type: array, items: { type: string } }
                         times: { type: object, description: 'Ad rule trigger only: the weekly set times it takes.' }
                         filterOperators: { type: array, items: { type: string } }
-                        steps: { type: array, items: { type: string }, description: 'The step types the trigger takes. For an event, only those its subject can reach.' }
+                        steps: { type: array, items: { type: string }, description: 'The step types allowed after the trigger. For an event, only those its subject can reach.' }
                         boost: { type: object, description: 'Scheduled trigger only: the platforms, goals, most days and most boosts a day of `ads.boost_post`.' }
                         limits: { type: array, items: { type: string } }
                   subjects:
