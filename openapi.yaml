@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.854.3"
+  version: "1.854.4"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -72412,7 +72412,7 @@ paths:
             Conflict. One of:
 
             - The same Idempotency-Key is still processing. Retry after a short backoff.
-            - On Facebook and Instagram, another app owns the thread under Meta's conversation routing (code not_thread_owner, Meta subcode 2534037 in platformError). `details.ownerAppId` names the owner when Meta reports it.
+            - On Facebook and Instagram, another app owns the thread under Meta's conversation routing (code not_thread_owner, Meta subcode 2534037, or 2018300 on Messenger, in platformError). `details.ownerAppId` names the owner when Meta reports it.
 
             On accounts connected through a Facebook Page, Zernio already tried take_thread_control once before answering not_thread_owner, so Meta refused it. Make Zernio the default app in the account's conversation routing settings and allow it to take control of conversations, or wait for the owning app to pass the thread.
 
