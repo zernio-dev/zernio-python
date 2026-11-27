@@ -5,12 +5,14 @@ contentType, mediaItems); every tool takes snake_case, so pydantic rejected
 several hundred calls a day from 100+ users (Axiom zernio-mcp, 2026-11).
 
 A key the tool does not take is renamed only when, with case, underscores and
-hyphens ignored, it names exactly one parameter the call did not also pass.
-An explicit snake_case value is never overwritten and an unknown key is left
-for validation to reject. FastMCP runs the middleware again for the tool
+hyphens ignored, it names exactly one parameter that the call did not also
+pass and no other key claims. An explicit snake_case value is never
+overwritten, nested keys are left as they are (dict parameters go to the API
+verbatim), and an unknown key is left for validation to reject. FastMCP runs the middleware again for the tool
 call_tool dispatches, so proxied arguments are covered too.
 """
 
+from collections import Counter
 from collections.abc import Mapping
 from typing import Any
 
@@ -92,20 +94,17 @@ def _renamed(
     aliases: dict[str, str],
 ) -> dict[str, Any] | None:
     """The arguments with misnamed keys renamed, or None when none were."""
-    renamed: dict[str, Any] = {}
-    changed = False
-    for key, value in arguments.items():
-        target = None
-        if key not in names:
-            target = aliases.get(key) or by_folded.get(_folded(key))
-        if (
-            target
-            and target in names
-            and target not in arguments
-            and target not in renamed
-        ):
-            renamed[target] = value
-            changed = True
-        else:
-            renamed[key] = value
-    return renamed if changed else None
+    targets: dict[str, str] = {}
+    for key in arguments:
+        if key in names:
+            continue
+        target = aliases.get(key) or by_folded.get(_folded(key))
+        if target and target in names and target not in arguments:
+            targets[key] = target
+    claims = Counter(targets.values())
+    # Two keys claiming one parameter (postId and PostID): which value was
+    # meant is unknowable, so both are left for validation to reject.
+    targets = {key: target for key, target in targets.items() if claims[target] == 1}
+    if not targets:
+        return None
+    return {targets.get(key, key): value for key, value in arguments.items()}
