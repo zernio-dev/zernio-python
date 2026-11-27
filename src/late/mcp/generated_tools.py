@@ -12114,7 +12114,7 @@ def register_generated_tools(mcp, _get_client):
         sitelinks: list[dict[str, Any]] | None = None,
         callouts: list[str] | None = None,
         structured_snippets: list[dict[str, Any]] | None = None,
-        advantage_audience: str | None = None,
+        advantage_audience: bool | Literal[0, 1] | None = None,
         attribution_spec: list[dict[str, Any]] | None = None,
         gender: Literal["all", "male", "female"] = "all",
         bid_strategy: Literal[
@@ -14702,7 +14702,7 @@ def register_generated_tools(mcp, _get_client):
         date_preset: str | None = None,
         from_date: str | None = None,
         to_date: str | None = None,
-        time_increment: str | None = None,
+        time_increment: int | Literal["monthly", "all_days"] | None = None,
     ) -> str:
         """Submit async insights report
 
@@ -41250,7 +41250,7 @@ def register_generated_tools(mcp, _get_client):
         language_code: str | None = None,
         phone_number: str | None = None,
         email_address: str | None = None,
-        mailer_contact: str | None = None,
+        mailer_contact: dict[str, Any] | str | None = None,
         context: dict[str, Any] | None = None,
     ) -> str:
         """Start a verification
@@ -45166,7 +45166,7 @@ def register_generated_tools(mcp, _get_client):
         ]
         | None = None,
         special_ad_category_country: list[str] | None = None,
-        advantage_audience: str | None = None,
+        advantage_audience: bool | Literal[0, 1] | None = None,
         objective: Literal["OUTCOME_ENGAGEMENT", "OUTCOME_SALES", "OUTCOME_LEADS"]
         | None = None,
         status: Literal["ACTIVE", "PAUSED"] | None = None,
@@ -45727,7 +45727,7 @@ def register_generated_tools(mcp, _get_client):
         ]
         | None = None,
         special_ad_category_country: list[str] | None = None,
-        advantage_audience: str | None = None,
+        advantage_audience: bool | Literal[0, 1] | None = None,
         objective: Literal["OUTCOME_ENGAGEMENT", "OUTCOME_SALES", "OUTCOME_LEADS"]
         | None = None,
         status: Literal["ACTIVE", "PAUSED"] | None = None,
@@ -46240,7 +46240,7 @@ def register_generated_tools(mcp, _get_client):
         ]
         | None = None,
         special_ad_category_country: list[str] | None = None,
-        advantage_audience: str | None = None,
+        advantage_audience: bool | Literal[0, 1] | None = None,
         objective: Literal["OUTCOME_ENGAGEMENT", "OUTCOME_SALES", "OUTCOME_LEADS"]
         | None = None,
         status: Literal["ACTIVE", "PAUSED"] | None = None,
@@ -47209,7 +47209,7 @@ def register_generated_tools(mcp, _get_client):
         date_preset: str | None = None,
         from_date: str | None = None,
         to_date: str | None = None,
-        time_increment: str | None = None,
+        time_increment: int | Literal["monthly", "all_days"] | None = None,
         limit: int = 500,
         cursor: str | None = None,
     ) -> str:
@@ -59822,7 +59822,7 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def whatsapp_flows_upload_whats_app_flow_json(
-        flow_id: str, account_id: str, flow_json: str
+        flow_id: str, account_id: str, flow_json: dict[str, Any] | str
     ) -> str:
         """Upload flow JSON
 

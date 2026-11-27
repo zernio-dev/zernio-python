@@ -282,10 +282,54 @@ def _string_enum_literal(schema: dict[str, Any]) -> str | None:
     return f"Literal[{', '.join(repr(v) for v in values)}]"
 
 
+# Union member order: Pydantic's smart mode keeps an exact type match (`True`
+# stays a bool, `1` an int, `"1"` a str when str is a member), and coerces
+# in this order otherwise, so `"7"` becomes 7 before the str branch is tried.
+_UNION_ORDER = ("boolean", "integer", "number", "object", "array", "string")
+
+
+def _mixed_union_type(schema: dict[str, Any], spec: dict[str, Any] | None) -> str | None:
+    """A Python union for a mixed-type `anyOf`/`oneOf`, one member per branch
+    type, such as `int | Literal['monthly', 'all_days']` for Meta's
+    `timeIncrement`, `bool | Literal[0, 1]` for `advantageAudience` or
+    `dict[str, Any] | str` for `flow_json`.
+
+    The API does not coerce JSON bodies, so the `str` fallback broke these:
+    the tool rejected `7`, `true` or an object, and sent `"7"` as a string.
+    None when a branch has no concrete JSON type, which keeps that fallback.
+    """
+    for combinator in ("anyOf", "oneOf"):
+        branches = schema.get(combinator)
+        if not isinstance(branches, list):
+            continue
+        resolved = [_resolve_schema(b, spec) for b in branches]
+        resolved = [b for b in resolved if isinstance(b, dict) and b.get("type") != "null"]
+        if not resolved or any(b.get("type") not in _UNION_ORDER for b in resolved):
+            return None
+        members: list[str] = []
+        for json_type in _UNION_ORDER:
+            same = [b for b in resolved if b["type"] == json_type]
+            if json_type == "string" and same:
+                literals = [_string_enum_literal(b) for b in same]
+                merged = list(dict.fromkeys(v for b in same for v in b.get("enum") or [] if v is not None))
+                members.append(f"Literal[{', '.join(map(repr, merged))}]" if all(literals) else "str")
+                continue
+            for b in same:
+                ints = [v for v in b.get("enum") or [] if v is not None]
+                if json_type == "integer" and ints and all(type(v) is int for v in ints):
+                    members.append(f"Literal[{', '.join(map(repr, ints))}]")
+                else:
+                    members.append(get_python_type(b, True, spec)[0].removesuffix(" | None"))
+        return " | ".join(dict.fromkeys(members))
+    return None
+
+
 def get_python_type(
     schema: dict[str, Any],
     required: bool = True,
     spec: dict[str, Any] | None = None,
+    *,
+    body: bool = False,
 ) -> tuple[str, str]:
     """Convert OpenAPI schema to a Python type annotation and default literal.
 
@@ -401,6 +445,12 @@ def get_python_type(
     elif schema_type == "object":
         type_str = "dict[str, Any] | None"
         default_str = "None"
+    elif body and (mixed := _mixed_union_type(schema, spec)):
+        # JSON body fields only. Query and path values reach the API as text
+        # it coerces, and a `str` param forwards the agent's text unchanged;
+        # a union would let lax mode rewrite it (`"1"` -> True -> `true`).
+        type_str = mixed if required else f"{mixed} | None"
+        default_str = "" if required else "None"
     else:
         # Fallback for schemas we couldn't classify (mixed-type oneOf,
         # unknown shapes). Type as str, but default to None when optional
@@ -716,7 +766,7 @@ def _extract_parameters(
                 if not py_name:  # Was just "_"
                     continue
             is_required = prop_name in required_props
-            type_str, default_str = get_python_type(prop_schema, is_required, spec)
+            type_str, default_str = get_python_type(prop_schema, is_required, spec, body=True)
 
             add_param({
                 "name": py_name,
