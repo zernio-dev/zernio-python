@@ -59729,6 +59729,7 @@ def register_generated_tools(mcp, _get_client):
         - name
         - business verification
         - timezone
+        - billing currency
         - health_status
 
         ### Why live

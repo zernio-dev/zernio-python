@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.854.0"
+  version: "1.854.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -81650,6 +81650,7 @@ paths:
         - name
         - business verification
         - timezone
+        - billing currency
         - health_status
 
         ### Why live
@@ -81686,6 +81687,7 @@ paths:
                       name: { type: string }
                       business_verification_status: { type: string, description: "verified, not_verified, pending, ..." }
                       timezone_id: { type: string, description: Meta integer timezone-enum id }
+                      currency: { type: [string, "null"], description: 'ISO 4217 currency of the WABA''s payment method (for example USD or BRL). Null when Meta does not return it.' }
                       health_status: { type: object }
         '400': { description: Phone number ID not found on account }
         '401': { $ref: '#/components/responses/Unauthorized' }
@@ -81750,13 +81752,14 @@ paths:
             application/json:
               schema:
                 type: object
-                required: [accountId, phoneNumber, granularity, start, end, dataPoints]
+                required: [accountId, phoneNumber, granularity, start, end, currency, dataPoints]
                 properties:
                   accountId: { type: string }
                   phoneNumber: { type: string, description: 'The number the data is scoped to, digits only.' }
                   granularity: { type: string, enum: [HALF_HOUR, DAILY, MONTHLY] }
                   start: { type: string, format: date-time }
                   end: { type: string, format: date-time }
+                  currency: { type: [string, "null"], description: 'ISO 4217 currency every `cost` is in, from the WABA''s payment method (for example USD or BRL). Null when Meta does not return it.' }
                   dataPoints:
                     type: array
                     items:
@@ -81771,13 +81774,14 @@ paths:
                         pricingType: { type: [string, "null"], description: 'Set when dimensions includes PRICING_TYPE.' }
                         pricingCategory: { type: [string, "null"], description: 'Set when dimensions includes PRICING_CATEGORY.' }
                         volume: { type: [integer, "null"], description: Messages delivered. }
-                        cost: { type: [number, "null"], description: 'Approximate charge, in the currency of the WABA''s payment method.' }
+                        cost: { type: [number, "null"], description: 'Approximate charge, in the currency given by `currency`.' }
               example:
                 accountId: '66e000000000000000000001'
                 phoneNumber: '34600000000'
                 granularity: DAILY
                 start: '2026-09-01T00:00:00.000Z'
                 end: '2026-09-30T00:00:00.000Z'
+                currency: USD
                 dataPoints:
                   - { start: '2026-09-01T00:00:00.000Z', end: '2026-09-02T00:00:00.000Z', phoneNumber: null, country: ES, tier: null, pricingType: null, pricingCategory: MARKETING, volume: 12, cost: 0.73 }
         '400':
