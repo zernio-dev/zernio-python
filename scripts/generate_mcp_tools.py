@@ -282,6 +282,33 @@ def _string_enum_literal(schema: dict[str, Any]) -> str | None:
     return f"Literal[{', '.join(repr(v) for v in values)}]"
 
 
+def _int_or_string_enum(schema: dict[str, Any], spec: dict[str, Any] | None) -> str | None:
+    """`int | Literal[...]` for `anyOf`/`oneOf: [integer, string enum]`, such
+    as Meta's `timeIncrement` (1-90 days per row, or monthly / all_days).
+
+    The `str` fallback for mixed unions broke these in JSON bodies, which the
+    API does not coerce: the tool rejected `7` and forwarded `"7"` as a
+    string, which the API answered with a 400. Pydantic's lax mode still turns
+    `"7"` into `7`. Only this exact shape is handled; None otherwise.
+    """
+    for combinator in ("anyOf", "oneOf"):
+        branches = schema.get(combinator)
+        if not isinstance(branches, list):
+            continue
+        resolved = [_resolve_schema(b, spec) for b in branches]
+        resolved = [b for b in resolved if isinstance(b, dict) and b.get("type") != "null"]
+        integers = [b for b in resolved if b.get("type") == "integer" and not b.get("enum")]
+        strings = [b for b in resolved if b.get("type") == "string"]
+        if len(integers) != 1 or not strings or len(integers) + len(strings) != len(resolved):
+            return None
+        literals = [_string_enum_literal(b) for b in strings]
+        if not all(literals):
+            return None
+        merged = list(dict.fromkeys(v for b in strings for v in b["enum"] if v is not None))
+        return f"int | Literal[{', '.join(repr(v) for v in merged)}]"
+    return None
+
+
 def get_python_type(
     schema: dict[str, Any],
     required: bool = True,
@@ -401,6 +428,9 @@ def get_python_type(
     elif schema_type == "object":
         type_str = "dict[str, Any] | None"
         default_str = "None"
+    elif int_or_enum := _int_or_string_enum(schema, spec):
+        type_str = int_or_enum if required else f"{int_or_enum} | None"
+        default_str = "" if required else "None"
     else:
         # Fallback for schemas we couldn't classify (mixed-type oneOf,
         # unknown shapes). Type as str, but default to None when optional

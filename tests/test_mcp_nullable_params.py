@@ -60,3 +60,34 @@ def test_string_union_keeps_every_branch_enum(generator):
 def test_string_union_with_an_open_branch_is_plain_str(generator):
     schema = {"oneOf": [{"$ref": "#/components/schemas/AdStatus"}, {"type": "string"}]}
     assert generator.get_python_type(schema, required=False, spec=AD_STATUS_SPEC)[0] == "str | None"
+
+
+TIME_INCREMENT = {
+    "anyOf": [
+        {"type": "string", "enum": ["monthly", "all_days"]},
+        {"type": "integer", "minimum": 1, "maximum": 90},
+    ]
+}
+
+
+def test_integer_or_string_enum_union_is_int_or_literal(generator):
+    # A JSON body is not coerced by the API, so `str` sent days as "7".
+    assert generator.get_python_type(TIME_INCREMENT, required=False, spec=SPEC) == (
+        "int | Literal['monthly', 'all_days'] | None",
+        "None",
+    )
+    one_of = {"oneOf": list(reversed(TIME_INCREMENT["anyOf"])) + [{"type": "null"}]}
+    assert generator.get_python_type(one_of, required=True, spec=SPEC) == ("int | Literal['monthly', 'all_days']", "")
+
+
+@pytest.mark.parametrize(
+    "branches",
+    [
+        [{"type": "string"}, {"type": "integer"}],
+        [{"type": "string", "enum": ["monthly"]}, {"type": "number"}],
+        [{"type": "string", "enum": ["monthly"]}, {"type": "integer"}, {"type": "boolean"}],
+        [{"type": "string", "enum": ["monthly"]}, {"type": "integer"}, {"type": "integer"}],
+    ],
+)
+def test_other_mixed_unions_keep_the_str_fallback(generator, branches):
+    assert generator.get_python_type({"anyOf": branches}, required=False, spec=SPEC)[0] == "str | None"

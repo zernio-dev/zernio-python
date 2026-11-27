@@ -14702,7 +14702,7 @@ def register_generated_tools(mcp, _get_client):
         date_preset: str | None = None,
         from_date: str | None = None,
         to_date: str | None = None,
-        time_increment: str | None = None,
+        time_increment: int | Literal["monthly", "all_days"] | None = None,
     ) -> str:
         """Submit async insights report
 
@@ -47209,7 +47209,7 @@ def register_generated_tools(mcp, _get_client):
         date_preset: str | None = None,
         from_date: str | None = None,
         to_date: str | None = None,
-        time_increment: str | None = None,
+        time_increment: int | Literal["monthly", "all_days"] | None = None,
         limit: int = 500,
         cursor: str | None = None,
     ) -> str:
