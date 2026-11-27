@@ -53,6 +53,37 @@ async def test_advantage_audience_keeps_bool_or_int(given: object, sent: object)
     assert type(bodies[0]["advantageAudience"]) is type(sent)
 
 
+AD_CREATORS = {
+    "messaging_ads_create_messaging_ad": ("/v1/ads/messaging", {}),
+    "messaging_ads_create_call_ad": ("/v1/ads/call", {"phone_number": "+14155550123", "link_url": "https://example.com"}),
+    "messaging_ads_create_ctwa_ad": ("/v1/ads/ctwa", {}),
+}
+
+
+@pytest.mark.parametrize("tool", AD_CREATORS)
+@pytest.mark.parametrize("given", [True, 1])
+async def test_every_messaging_ad_creator_sends_advantage_audience_as_given(tool: str, given: object) -> None:
+    path, extra = AD_CREATORS[tool]
+    arguments = {"account_id": "acc_1", "ad_account_id": "act_1", "name": "Ad", **extra, "advantage_audience": given}
+
+    is_error, text, bodies = await _call("POST", f"{BASE}{path}", tool, arguments)
+
+    assert not is_error, text
+    assert type(bodies[0]["advantageAudience"]) is type(given)
+
+
+async def test_mailer_contact_object_is_sent_as_an_object() -> None:
+    is_error, text, bodies = await _call(
+        "POST",
+        f"{BASE}/v1/accounts/acc_1/gmb-verifications",
+        "gmb_verifications_start_google_business_verification",
+        {"account_id": "acc_1", "method": "ADDRESS", "mailer_contact": {"name": "Ana"}},
+    )
+
+    assert not is_error, text
+    assert bodies[0]["mailerContact"] == {"name": "Ana"}
+
+
 @pytest.mark.parametrize("given", [2, -1, "maybe"])
 async def test_advantage_audience_outside_the_api_values_is_rejected(given: object) -> None:
     is_error, text, bodies = await _standalone_ad(given)
