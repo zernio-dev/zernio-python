@@ -11158,10 +11158,14 @@ def register_generated_tools(mcp, _get_client):
                 bodies: Meta only. Extra primary-text options Meta rotates on the boosted post (asset_feed_spec.bodies with DEGREES_OF_FREEDOM). The post keeps its own text as one of the options. Works for Facebook posts and Instagram media.
 
         Under a conversions or traffic goal, Meta also wants a website URL on the options, taken from `linkUrl` (send it with a `callToAction`). Engagement boosts need none.
-                retry_on_server_error: Meta only (a 400 elsewhere). When Meta answers a create with a 5xx and reading the parent back by name finds no such object, Zernio sends the create again (at most 3 POSTs per object, never for an object created ACTIVE) and reports it in `recoveredWrites`.
+                retry_on_server_error: Meta only. `true` returns a 400 elsewhere, `false` is ignored there.
+
+        When Meta answers a create with a 5xx and reading the parent back by name finds no such object, Zernio sends the create again (at most 3 POSTs per object, never for an object created ACTIVE) and reports it in `recoveredWrites`.
 
         `false` never sends it again: the request fails with 502 and `details.unconfirmedWrite`, so you can check the parent yourself. One object found by name is still reused.
-                rehost_on_instagram_video_rejection: Meta only (a 400 elsewhere). Controls the fallback when Meta refuses an existing Instagram video as the ad (subcode 1815279).
+                rehost_on_instagram_video_rejection: Meta only. `true` returns a 400 elsewhere, `false` is ignored there.
+
+        Controls the fallback when Meta refuses an existing Instagram video as the ad (subcode 1815279).
 
         - First, Zernio copies the video into the ad account and retries on the original post.
         - Then it falls back to a new Facebook video in a new Page post, which does not show the original post's likes and comments.
@@ -12024,7 +12028,9 @@ def register_generated_tools(mcp, _get_client):
         - Omitted or false: keeps Meta's default.
         - Applies to new creatives (single, creatives[] and adSetId attach); rejected with existingCreativeId.
         - Meta rejects it when the campaign uses Website and App conversion locations.
-                retry_on_server_error: Meta only (a 400 elsewhere). When Meta answers a create with a 5xx and reading the parent back by name finds no such object, Zernio sends the create again (at most 3 POSTs per object, never for an object created ACTIVE) and reports it in `recoveredWrites`.
+                retry_on_server_error: Meta only. `true` returns a 400 elsewhere, `false` is ignored there.
+
+        When Meta answers a create with a 5xx and reading the parent back by name finds no such object, Zernio sends the create again (at most 3 POSTs per object, never for an object created ACTIVE) and reports it in `recoveredWrites`.
 
         `false` never sends it again: the request fails with 502 and `details.unconfirmedWrite`, so you can check the parent yourself. One object found by name is still reused.
                 validate_only: Validate the request without creating anything. Supported on Meta, TikTok, ChatGPT (OpenAI) and Google Performance Max / Demand Gen. Any other platform, or a Google campaignType other than pmax or demand_gen, returns 501 `feature_not_available`.
