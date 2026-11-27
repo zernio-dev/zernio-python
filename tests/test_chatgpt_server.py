@@ -198,6 +198,36 @@ async def test_get_post_takes_the_camelcase_post_id():
 
 
 @respx.mock
+async def test_list_posts_clamps_an_oversized_limit_instead_of_rejecting_it():
+    # ChatGPT regularly asks for more than 50 posts; the call used to fail
+    # schema validation ("limit: less_than_equal") before reaching the API.
+    route = respx.get(f"{API}/v1/posts").mock(
+        return_value=httpx.Response(
+            200, json={"posts": [POST], "pagination": {"total": 120}}
+        )
+    )
+    result = await _call("list_posts", limit=100)
+    assert not result.is_error, result.content
+    assert route.calls.last.request.url.params["limit"] == "50"
+    assert result.structured_content["total"] == 120
+    text = result.content[0].text
+    assert "1 of 120" in text
+    assert "50 is the most one call returns" in text and "capped" in text
+
+
+@respx.mock
+async def test_list_posts_does_not_mention_clamping_for_a_normal_limit():
+    route = respx.get(f"{API}/v1/posts").mock(
+        return_value=httpx.Response(
+            200, json={"posts": [POST], "pagination": {"total": 1}}
+        )
+    )
+    result = await _call("list_posts", limit=10)
+    assert route.calls.last.request.url.params["limit"] == "10"
+    assert "capped" not in result.content[0].text
+
+
+@respx.mock
 async def test_schedule_post_requires_known_accounts_and_a_timezone():
     respx.get(f"{API}/v1/accounts").mock(
         return_value=httpx.Response(200, json=ACCOUNTS)
