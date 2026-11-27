@@ -42537,6 +42537,56 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="Search public Instagram media by hashtag",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def instagram_search_instagram_hashtag(
+        account_id: str, hashtag: str, limit: int = 24
+    ) -> str:
+        """Search public Instagram media by hashtag
+
+        Resolves a hashtag to its Instagram hashtag ID, then returns the top
+        and the recent public media carrying it, read through one of your
+        connected Instagram accounts. Useful for trend, content and
+        competitor research.
+
+        Requires an Instagram account connected via **Facebook Login**. Meta
+        serves hashtag search on graph.facebook.com only, so accounts
+        connected with classic Instagram Login receive a 400
+        (`instagram_hashtag_search_requires_facebook_login`) and must be
+        reconnected choosing the Facebook option.
+
+        **Weekly limit:** Meta lets one Instagram account search at most 30
+        unique hashtags in a rolling 7 days.
+
+        - Searching a hashtag again inside the window does not count twice.
+        - `recentlySearchedCount` shows how much of the budget is used.
+        - Past the limit the request answers 429
+          `instagram_hashtag_search_limit_reached` until older searches leave
+          the window.
+        - Another connected account has its own budget.
+
+        `recentMedia` only holds media published in the last 24 hours. Meta
+        returns ...
+
+        Args:
+            account_id: The ID of a connected Instagram account (Facebook Login). (required)
+            hashtag: One hashtag: letters, digits or "_", with or without the leading #. Case-insensitive. (required)
+            limit: How many media to return in each of topMedia and recentMedia."""
+        client = _get_client()
+        try:
+            response = client.instagram.search_instagram_hashtag(
+                account_id=account_id, hashtag=hashtag, limit=limit
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="List the collaborators of an Instagram post",
             readOnlyHint=True,
             destructiveHint=False,
@@ -63850,6 +63900,10 @@ TOOL_OAUTH_SCOPES: dict[str, tuple[str, ...]] = {
     "instagram_list_instagram_stories": ("analytics:read",),
     "instagram_list_instagram_tagged_media": ("analytics:read",),
     "instagram_search_instagram_audio": (
+        "accounts:read",
+        "accounts:write",
+    ),
+    "instagram_search_instagram_hashtag": (
         "accounts:read",
         "accounts:write",
     ),

@@ -1447,6 +1447,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `instagram.get_instagram_publishing_limit()` | Get Instagram publishing limit |
 | `instagram.get_instagram_story_insights()` | Get Instagram story insights |
 | `instagram.search_instagram_audio()` | Search Instagram audio |
+| `instagram.search_instagram_hashtag()` | Search public Instagram media by hashtag |
 
 ### Lead Gen
 | Method | Description |

@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.864.4"
+  version: "1.864.5"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -16445,6 +16445,47 @@ components:
           required: [id]
           properties:
             id: { type: string, description: Instagram media ID of the post. }
+
+    InstagramHashtagMedia:
+      type: object
+      required: [id, caption, mediaType, mediaProductType, mediaUrl, thumbnailUrl, permalink, timestamp, likeCount, commentsCount]
+      properties:
+        id: { type: string, description: Instagram media ID of a public post carrying the hashtag. }
+        caption: { type: [string, "null"] }
+        mediaType: { type: [string, "null"], description: 'IMAGE, VIDEO or CAROUSEL_ALBUM.', example: IMAGE }
+        mediaProductType: { type: [string, "null"], description: Always null. Meta does not serve it on hashtag media. }
+        mediaUrl: { type: [string, "null"], description: 'Temporary CDN URL. Meta omits it for videos with copyrighted audio and for carousel albums.' }
+        thumbnailUrl: { type: [string, "null"], description: Always null. Meta does not serve it on hashtag media. }
+        permalink: { type: [string, "null"], description: Public Instagram URL of the post. }
+        timestamp: { type: [string, "null"], description: 'Publication time as Meta returns it (ISO 8601).' }
+        likeCount: { type: [integer, "null"], description: Null when the owner hides like counts. }
+        commentsCount: { type: [integer, "null"] }
+
+    InstagramHashtagResearch:
+      type: object
+      required: [hashtag, topMedia, recentMedia, recentlySearchedCount, weeklySearchLimit]
+      properties:
+        hashtag:
+          type: object
+          required: [id, name]
+          properties:
+            id: { type: string, description: Instagram hashtag ID that Meta resolved for the name. }
+            name: { type: string, description: 'The hashtag as searched: lowercased, without the leading #.', example: interiordesign }
+        topMedia:
+          type: array
+          description: The most popular public media carrying the hashtag (Meta's top_media edge).
+          items: { $ref: '#/components/schemas/InstagramHashtagMedia' }
+        recentMedia:
+          type: array
+          description: "Public media carrying the hashtag published in the last 24 hours, newest first (Meta's recent_media edge)."
+          items: { $ref: '#/components/schemas/InstagramHashtagMedia' }
+        recentlySearchedCount:
+          type: [integer, "null"]
+          description: 'Unique hashtags this account searched in the rolling 7-day window, this one included. Null when Meta does not report it.'
+        weeklySearchLimit:
+          type: integer
+          description: Unique hashtags one Instagram account may search in a rolling 7 days.
+          example: 30
 
     InstagramBusinessDiscovery:
       type: object
@@ -62333,6 +62374,76 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
         '409': { $ref: '#/components/responses/AccountConnectionRequired' }
+
+  /v1/accounts/{accountId}/instagram/hashtag-search:
+    get:
+      x-resource-group: "accounts"
+      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      operationId: searchInstagramHashtag
+      tags: [Instagram]
+      summary: Search public Instagram media by hashtag
+      description: |
+        Resolves a hashtag to its Instagram hashtag ID, then returns the top
+        and the recent public media carrying it, read through one of your
+        connected Instagram accounts. Useful for trend, content and
+        competitor research.
+
+        Requires an Instagram account connected via **Facebook Login**. Meta
+        serves hashtag search on graph.facebook.com only, so accounts
+        connected with classic Instagram Login receive a 400
+        (`instagram_hashtag_search_requires_facebook_login`) and must be
+        reconnected choosing the Facebook option.
+
+        **Weekly limit:** Meta lets one Instagram account search at most 30
+        unique hashtags in a rolling 7 days.
+
+        - Searching a hashtag again inside the window does not count twice.
+        - `recentlySearchedCount` shows how much of the budget is used.
+        - Past the limit the request answers 429
+          `instagram_hashtag_search_limit_reached` until older searches leave
+          the window.
+        - Another connected account has its own budget.
+
+        `recentMedia` only holds media published in the last 24 hours. Meta
+        returns no media for hashtags it considers sensitive or offensive,
+        and never returns the author's username. Media URLs are temporary.
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          description: 'The ID of a connected Instagram account (Facebook Login).'
+          schema: { type: string }
+        - name: hashtag
+          in: query
+          required: true
+          description: 'One hashtag: letters, digits or "_", with or without the leading #. Case-insensitive.'
+          schema: { type: string, maxLength: 101, example: interiordesign }
+        - name: limit
+          in: query
+          required: false
+          description: 'How many media to return in each of topMedia and recentMedia.'
+          schema: { type: integer, minimum: 1, maximum: 50, default: 24 }
+      responses:
+        '200':
+          description: The hashtag with its top and recent media
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/InstagramHashtagResearch' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404':
+          x-summary: "The account is not reachable by the caller, or Instagram has no such hashtag: check both values."
+          description: 'The account is not reachable by the caller (`account_not_found`), or Instagram has no hashtag by that name (`instagram_hashtag_not_found`).'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '409': { $ref: '#/components/responses/AccountConnectionRequired' }
+        '429':
+          x-summary: "This account already searched 30 unique hashtags in the last 7 days: search one it already searched, or wait for older searches to leave the window."
+          description: 'The account reached Meta''s limit of 30 unique hashtags per rolling 7 days (`instagram_hashtag_search_limit_reached`, type `rate_limit_error`). Hashtags already searched in the window still work.'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
 
   /v1/accounts/{accountId}/instagram/media/{mediaId}/collaborators:
     get:

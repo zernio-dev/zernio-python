@@ -157,6 +157,20 @@ class InstagramResource:
             f"/v1/accounts/{account_id}/instagram/business-discovery", params=params
         )
 
+    def search_instagram_hashtag(
+        self, account_id: str, hashtag: str, *, limit: int | None = 24
+    ) -> dict[str, Any]:
+        """Search public Instagram media by hashtag"""
+        params = self._build_query(
+            {
+                "hashtag": hashtag,
+                "limit": limit,
+            }
+        )
+        return self._client._get(
+            f"/v1/accounts/{account_id}/instagram/hashtag-search", params=params
+        )
+
     def list_instagram_media_collaborators(
         self, account_id: str, media_id: str
     ) -> dict[str, Any]:
@@ -265,6 +279,20 @@ class InstagramResource:
         )
         return await self._client._aget(
             f"/v1/accounts/{account_id}/instagram/business-discovery", params=params
+        )
+
+    async def asearch_instagram_hashtag(
+        self, account_id: str, hashtag: str, *, limit: int | None = 24
+    ) -> dict[str, Any]:
+        """Search public Instagram media by hashtag (async)"""
+        params = self._build_query(
+            {
+                "hashtag": hashtag,
+                "limit": limit,
+            }
+        )
+        return await self._client._aget(
+            f"/v1/accounts/{account_id}/instagram/hashtag-search", params=params
         )
 
     async def alist_instagram_media_collaborators(
