@@ -172,6 +172,7 @@ class ConversionsResource:
         name: str,
         type: str,
         *,
+        stage: bool | None = None,
         ad_account_id: str | None = None,
         customer_id: str | None = None,
         default_value: float | None = None,
@@ -186,6 +187,7 @@ class ConversionsResource:
         """Create conversion action"""
         payload = self._build_body(
             {
+                "stage": stage,
                 "accountId": account_id,
                 "adAccountId": ad_account_id,
                 "customerId": customer_id,
@@ -225,12 +227,14 @@ class ConversionsResource:
         account_id: str,
         goals: list[Any],
         *,
+        stage: bool | None = None,
         ad_account_id: str | None = None,
         customer_id: str | None = None,
     ) -> dict[str, Any]:
         """Update account conversion goals"""
         payload = self._build_body(
             {
+                "stage": stage,
                 "accountId": account_id,
                 "adAccountId": ad_account_id,
                 "customerId": customer_id,
@@ -244,6 +248,7 @@ class ConversionsResource:
         action_id: str,
         account_id: str,
         *,
+        stage: bool | None = None,
         ad_account_id: str | None = None,
         customer_id: str | None = None,
         name: str | None = None,
@@ -260,6 +265,7 @@ class ConversionsResource:
         """Update a conversion action's settings"""
         payload = self._build_body(
             {
+                "stage": stage,
                 "accountId": account_id,
                 "adAccountId": ad_account_id,
                 "customerId": customer_id,
@@ -302,12 +308,14 @@ class ConversionsResource:
         name: str,
         conversion_action_ids: list[str],
         *,
+        stage: bool | None = None,
         ad_account_id: str | None = None,
         customer_id: str | None = None,
     ) -> dict[str, Any]:
         """Create a custom conversion goal"""
         payload = self._build_body(
             {
+                "stage": stage,
                 "accountId": account_id,
                 "adAccountId": ad_account_id,
                 "customerId": customer_id,
@@ -322,6 +330,7 @@ class ConversionsResource:
         goal_id: str,
         account_id: str,
         *,
+        stage: bool | None = None,
         ad_account_id: str | None = None,
         customer_id: str | None = None,
         name: str | None = None,
@@ -330,6 +339,7 @@ class ConversionsResource:
         """Update a custom conversion goal"""
         payload = self._build_body(
             {
+                "stage": stage,
                 "accountId": account_id,
                 "adAccountId": ad_account_id,
                 "customerId": customer_id,
@@ -346,12 +356,14 @@ class ConversionsResource:
         goal_id: str,
         account_id: str,
         *,
+        stage: bool | None = None,
         ad_account_id: str | None = None,
         customer_id: str | None = None,
     ) -> dict[str, Any]:
         """Remove a custom conversion goal"""
         params = self._build_query(
             {
+                "stage": stage,
                 "accountId": account_id,
                 "adAccountId": ad_account_id,
                 "customerId": customer_id,
@@ -1198,6 +1210,7 @@ class ConversionsResource:
         name: str,
         type: str,
         *,
+        stage: bool | None = None,
         ad_account_id: str | None = None,
         customer_id: str | None = None,
         default_value: float | None = None,
@@ -1212,6 +1225,7 @@ class ConversionsResource:
         """Create conversion action (async)"""
         payload = self._build_body(
             {
+                "stage": stage,
                 "accountId": account_id,
                 "adAccountId": ad_account_id,
                 "customerId": customer_id,
@@ -1251,12 +1265,14 @@ class ConversionsResource:
         account_id: str,
         goals: list[Any],
         *,
+        stage: bool | None = None,
         ad_account_id: str | None = None,
         customer_id: str | None = None,
     ) -> dict[str, Any]:
         """Update account conversion goals (async)"""
         payload = self._build_body(
             {
+                "stage": stage,
                 "accountId": account_id,
                 "adAccountId": ad_account_id,
                 "customerId": customer_id,
@@ -1270,6 +1286,7 @@ class ConversionsResource:
         action_id: str,
         account_id: str,
         *,
+        stage: bool | None = None,
         ad_account_id: str | None = None,
         customer_id: str | None = None,
         name: str | None = None,
@@ -1286,6 +1303,7 @@ class ConversionsResource:
         """Update a conversion action's settings (async)"""
         payload = self._build_body(
             {
+                "stage": stage,
                 "accountId": account_id,
                 "adAccountId": ad_account_id,
                 "customerId": customer_id,
@@ -1330,12 +1348,14 @@ class ConversionsResource:
         name: str,
         conversion_action_ids: list[str],
         *,
+        stage: bool | None = None,
         ad_account_id: str | None = None,
         customer_id: str | None = None,
     ) -> dict[str, Any]:
         """Create a custom conversion goal (async)"""
         payload = self._build_body(
             {
+                "stage": stage,
                 "accountId": account_id,
                 "adAccountId": ad_account_id,
                 "customerId": customer_id,
@@ -1352,6 +1372,7 @@ class ConversionsResource:
         goal_id: str,
         account_id: str,
         *,
+        stage: bool | None = None,
         ad_account_id: str | None = None,
         customer_id: str | None = None,
         name: str | None = None,
@@ -1360,6 +1381,7 @@ class ConversionsResource:
         """Update a custom conversion goal (async)"""
         payload = self._build_body(
             {
+                "stage": stage,
                 "accountId": account_id,
                 "adAccountId": ad_account_id,
                 "customerId": customer_id,
@@ -1376,12 +1398,14 @@ class ConversionsResource:
         goal_id: str,
         account_id: str,
         *,
+        stage: bool | None = None,
         ad_account_id: str | None = None,
         customer_id: str | None = None,
     ) -> dict[str, Any]:
         """Remove a custom conversion goal (async)"""
         params = self._build_query(
             {
+                "stage": stage,
                 "accountId": account_id,
                 "adAccountId": ad_account_id,
                 "customerId": customer_id,

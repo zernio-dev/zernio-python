@@ -3552,6 +3552,7 @@ def register_generated_tools(mcp, _get_client):
             ]
         ]
         | None,
+        stage: bool | None = None,
     ) -> str:
         """Assign a user to a Page
 
@@ -3565,6 +3566,7 @@ def register_generated_tools(mcp, _get_client):
         Platforms: meta
 
         Args:
+            stage: Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.
             account_id: Zernio SocialAccount id used to resolve the Meta token. (required)
             page_id: Facebook Page id. (required)
             business_id: Business portfolio the user belongs to. (required)
@@ -3573,6 +3575,7 @@ def register_generated_tools(mcp, _get_client):
         client = _get_client()
         try:
             response = client.ad_accounts.assign_page_user(
+                stage=stage,
                 account_id=account_id,
                 page_id=page_id,
                 business_id=business_id,
@@ -3592,7 +3595,7 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def ad_accounts_remove_page_user(
-        account_id: str, page_id: str, user_id: str
+        account_id: str, page_id: str, user_id: str, stage: bool | None = None
     ) -> str:
         """Remove a user from a Page
 
@@ -3601,13 +3604,14 @@ def register_generated_tools(mcp, _get_client):
         Platforms: meta
 
         Args:
+            stage: Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later.
             account_id: Zernio SocialAccount id used to resolve the Meta token. (required)
             page_id: Facebook Page id. (required)
             user_id: Business-scoped user id. (required)"""
         client = _get_client()
         try:
             response = client.ad_accounts.remove_page_user(
-                account_id=account_id, page_id=page_id, user_id=user_id
+                stage=stage, account_id=account_id, page_id=page_id, user_id=user_id
             )
             return _format_response(response)
         except Exception as e:
@@ -3676,6 +3680,7 @@ def register_generated_tools(mcp, _get_client):
     def ad_accounts_create_ad_label(
         account_id: str,
         name: str,
+        stage: bool | None = None,
         ad_account_id: str | None = None,
         customer_id: str | None = None,
         background_color: str | None = None,
@@ -3692,6 +3697,7 @@ def register_generated_tools(mcp, _get_client):
         Platforms: google
 
         Args:
+            stage: Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.
             account_id: Zernio SocialAccount id (Google Ads) (required)
             ad_account_id: Google customer id. Required when the connection has multiple customers.
             customer_id: Alias of adAccountId
@@ -3701,6 +3707,7 @@ def register_generated_tools(mcp, _get_client):
         client = _get_client()
         try:
             response = client.ad_accounts.create_ad_label(
+                stage=stage,
                 account_id=account_id,
                 ad_account_id=ad_account_id,
                 customer_id=customer_id,
@@ -3723,6 +3730,7 @@ def register_generated_tools(mcp, _get_client):
     def ad_accounts_update_ad_label(
         label_id: str,
         account_id: str,
+        stage: bool | None = None,
         ad_account_id: str | None = None,
         customer_id: str | None = None,
         name: str | None = None,
@@ -3739,6 +3747,7 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             label_id: Google label id (required)
+            stage: Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.
             account_id: Zernio SocialAccount id (Google Ads) (required)
             ad_account_id: Google customer id. Required when the connection has multiple customers.
             customer_id: Alias of adAccountId
@@ -3749,6 +3758,7 @@ def register_generated_tools(mcp, _get_client):
         try:
             response = client.ad_accounts.update_ad_label(
                 label_id=label_id,
+                stage=stage,
                 account_id=account_id,
                 ad_account_id=ad_account_id,
                 customer_id=customer_id,
@@ -3771,6 +3781,7 @@ def register_generated_tools(mcp, _get_client):
     def ad_accounts_remove_ad_label(
         label_id: str,
         account_id: str,
+        stage: bool | None = None,
         ad_account_id: str | None = None,
         customer_id: str | None = None,
     ) -> str:
@@ -3783,6 +3794,7 @@ def register_generated_tools(mcp, _get_client):
         Platforms: google
 
         Args:
+            stage: Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later.
             label_id: Google label id (required)
             account_id: Zernio SocialAccount id (Google Ads) (required)
             ad_account_id: Google customer id. Required when the connection has multiple customers.
@@ -3790,6 +3802,7 @@ def register_generated_tools(mcp, _get_client):
         client = _get_client()
         try:
             response = client.ad_accounts.remove_ad_label(
+                stage=stage,
                 label_id=label_id,
                 account_id=account_id,
                 ad_account_id=ad_account_id,
@@ -3810,6 +3823,7 @@ def register_generated_tools(mcp, _get_client):
     def ad_accounts_attach_ad_label(
         label_id: str,
         account_id: str,
+        stage: bool | None = None,
         ad_account_id: str | None = None,
         customer_id: str | None = None,
         campaign_ids: list[str] | None = None,
@@ -3836,6 +3850,7 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             label_id: Google label id (required)
+            stage: Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.
             account_id: Zernio SocialAccount id (Google Ads) (required)
             ad_account_id: Google customer id. Required when the connection has multiple customers.
             customer_id: Alias of adAccountId
@@ -3847,6 +3862,7 @@ def register_generated_tools(mcp, _get_client):
         try:
             response = client.ad_accounts.attach_ad_label(
                 label_id=label_id,
+                stage=stage,
                 account_id=account_id,
                 ad_account_id=ad_account_id,
                 customer_id=customer_id,
@@ -3870,6 +3886,7 @@ def register_generated_tools(mcp, _get_client):
     def ad_accounts_detach_ad_label(
         label_id: str,
         account_id: str,
+        stage: bool | None = None,
         ad_account_id: str | None = None,
         customer_id: str | None = None,
         campaign_ids: list[str] | None = None,
@@ -3886,6 +3903,7 @@ def register_generated_tools(mcp, _get_client):
         Platforms: google
 
         Args:
+            stage: Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later.
             label_id: Google label id (required)
             account_id: Zernio Google Ads connection id. (required)
             ad_account_id: Platform ad account ID (Google customer ID, digits only). Required when the connection has multiple customers.
@@ -3897,6 +3915,7 @@ def register_generated_tools(mcp, _get_client):
         client = _get_client()
         try:
             response = client.ad_accounts.detach_ad_label(
+                stage=stage,
                 label_id=label_id,
                 account_id=account_id,
                 ad_account_id=ad_account_id,
@@ -3969,6 +3988,7 @@ def register_generated_tools(mcp, _get_client):
         budget_value_type: Literal["ABSOLUTE", "MULTIPLIER"],
         time_start: int,
         time_end: int,
+        stage: bool | None = None,
         campaign_id: str | None = None,
         ad_set_id: str | None = None,
         recurrence_type: Literal["ONE_TIME", "WEEKLY", "MONTHLY"] | None = None,
@@ -3989,6 +4009,7 @@ def register_generated_tools(mcp, _get_client):
         Platforms: meta
 
         Args:
+            stage: Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.
             account_id: Zernio SocialAccount id used to resolve the Meta token. (required)
             campaign_id: Platform campaign id. Exactly one of campaignId / adSetId.
             ad_set_id: Platform ad set id. Exactly one of campaignId / adSetId.
@@ -4001,6 +4022,7 @@ def register_generated_tools(mcp, _get_client):
         client = _get_client()
         try:
             response = client.ad_accounts.create_high_demand_period(
+                stage=stage,
                 account_id=account_id,
                 campaign_id=campaign_id,
                 ad_set_id=ad_set_id,
@@ -4080,6 +4102,7 @@ def register_generated_tools(mcp, _get_client):
         ad_account_id: str,
         name: str,
         rules: list[dict[str, Any]] | None,
+        stage: bool | None = None,
     ) -> str:
         """Create a value rule set
 
@@ -4107,6 +4130,7 @@ def register_generated_tools(mcp, _get_client):
         Platforms: meta
 
         Args:
+            stage: Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.
             account_id: Zernio SocialAccount id (posting or ads variant); its platform decides where the campaign is created. (required)
             ad_account_id: Platform ad account id (Meta act_<n>, Google customer id, LinkedIn account id, ...). (required)
             name: (required)
@@ -4114,6 +4138,7 @@ def register_generated_tools(mcp, _get_client):
         client = _get_client()
         try:
             response = client.ad_accounts.create_value_rule_set(
+                stage=stage,
                 account_id=account_id,
                 ad_account_id=ad_account_id,
                 name=name,
@@ -4171,6 +4196,7 @@ def register_generated_tools(mcp, _get_client):
         account_id: str,
         name: str,
         rules: list[dict[str, Any]] | None,
+        stage: bool | None = None,
     ) -> str:
         """Replace a value rule set
 
@@ -4197,6 +4223,7 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             value_rule_set_id: Platform value rule set id. (required)
+            stage: Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.
             account_id: Zernio SocialAccount id (posting or ads variant); its platform decides where the campaign is created. (required)
             name: Required: the update replaces the whole set. (required)
             rules: The COMPLETE rule list. Omitting a rule deletes it on Meta. Each item is an object with keys: id (string) - Platform rule id. Echo it on `PUT` to KEEP this rule, omit it to CREATE a new one. A rule left out of the array entirely is DELETED.; name (string, required); adjustSign (one of: INCREASE, DECREASE; required) - Direction of the adjustment. There is no signed value field.; adjustValue (integer, required) - Unsigned percentage magnitude. `INCREASE` accepts 1-1000, `DECREASE` accepts 1-90. 0 is out of range on both.; status (string) - Meta returns `ACTIVE` here but documents no enum for the field. Treat it as a passthrough: echo whatever the `GET` returned, and do not synthesize values.; criteria (list of objects with keys id, criteriaType, operator, criteriaValues, criteriaValueTypes, required) - All criteria on a rule must match for the rule to fire. (required)"""
@@ -4204,6 +4231,7 @@ def register_generated_tools(mcp, _get_client):
         try:
             response = client.ad_accounts.update_value_rule_set(
                 value_rule_set_id=value_rule_set_id,
+                stage=stage,
                 account_id=account_id,
                 name=name,
                 rules=rules,
@@ -4221,7 +4249,7 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def ad_accounts_delete_value_rule_set(
-        value_rule_set_id: str, account_id: str
+        value_rule_set_id: str, account_id: str, stage: bool | None = None
     ) -> str:
         """Delete a value rule set
 
@@ -4235,12 +4263,13 @@ def register_generated_tools(mcp, _get_client):
         Platforms: meta
 
         Args:
+            stage: Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later.
             value_rule_set_id: Platform value rule set id. (required)
             account_id: Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token. (required)"""
         client = _get_client()
         try:
             response = client.ad_accounts.delete_value_rule_set(
-                value_rule_set_id=value_rule_set_id, account_id=account_id
+                stage=stage, value_rule_set_id=value_rule_set_id, account_id=account_id
             )
             return _format_response(response)
         except Exception as e:
@@ -4307,6 +4336,7 @@ def register_generated_tools(mcp, _get_client):
     def ad_accounts_create_ad_negative_keyword_list(
         account_id: str,
         name: str,
+        stage: bool | None = None,
         ad_account_id: str | None = None,
         customer_id: str | None = None,
         platform: Literal[
@@ -4333,6 +4363,7 @@ def register_generated_tools(mcp, _get_client):
         Platforms: google
 
         Args:
+            stage: Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.
             account_id: Zernio SocialAccount id. (required)
             ad_account_id: Platform ad account ID (Google customer ID, digits only). Required when the connection has multiple customers.
             customer_id: Alias of adAccountId, kept for existing callers
@@ -4343,6 +4374,7 @@ def register_generated_tools(mcp, _get_client):
         client = _get_client()
         try:
             response = client.ad_accounts.create_ad_negative_keyword_list(
+                stage=stage,
                 account_id=account_id,
                 ad_account_id=ad_account_id,
                 customer_id=customer_id,
@@ -4420,6 +4452,7 @@ def register_generated_tools(mcp, _get_client):
         list_id: str,
         account_id: str,
         name: str,
+        stage: bool | None = None,
         ad_account_id: str | None = None,
         customer_id: str | None = None,
         platform: Literal[
@@ -4446,6 +4479,7 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             list_id: (required)
+            stage: Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.
             account_id: Zernio SocialAccount id. (required)
             ad_account_id: Platform ad account ID (Google customer ID, digits only). Required when the connection has multiple customers.
             customer_id: Alias of adAccountId, kept for existing callers
@@ -4456,6 +4490,7 @@ def register_generated_tools(mcp, _get_client):
         try:
             response = client.ad_accounts.update_ad_negative_keyword_list(
                 list_id=list_id,
+                stage=stage,
                 account_id=account_id,
                 ad_account_id=ad_account_id,
                 customer_id=customer_id,
@@ -4478,6 +4513,7 @@ def register_generated_tools(mcp, _get_client):
     def ad_accounts_delete_ad_negative_keyword_list(
         list_id: str,
         account_id: str,
+        stage: bool | None = None,
         ad_account_id: str | None = None,
         customer_id: str | None = None,
         platform: Literal[
@@ -4503,6 +4539,7 @@ def register_generated_tools(mcp, _get_client):
         Platforms: google
 
         Args:
+            stage: Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later.
             list_id: (required)
             account_id: (required)
             ad_account_id
@@ -4512,6 +4549,7 @@ def register_generated_tools(mcp, _get_client):
         client = _get_client()
         try:
             response = client.ad_accounts.delete_ad_negative_keyword_list(
+                stage=stage,
                 list_id=list_id,
                 account_id=account_id,
                 ad_account_id=ad_account_id,
@@ -4535,6 +4573,7 @@ def register_generated_tools(mcp, _get_client):
         list_id: str,
         account_id: str,
         keywords: list[Any] | None,
+        stage: bool | None = None,
         ad_account_id: str | None = None,
         customer_id: str | None = None,
         platform: Literal[
@@ -4568,6 +4607,7 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             list_id: (required)
+            stage: Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.
             account_id: Zernio SocialAccount id. (required)
             ad_account_id: Platform ad account ID (Google customer ID, digits only). Required when the connection has multiple customers.
             customer_id: Alias of adAccountId, kept for existing callers
@@ -4578,6 +4618,7 @@ def register_generated_tools(mcp, _get_client):
         try:
             response = client.ad_accounts.replace_ad_negative_keyword_list_keywords(
                 list_id=list_id,
+                stage=stage,
                 account_id=account_id,
                 ad_account_id=ad_account_id,
                 customer_id=customer_id,
@@ -4600,6 +4641,7 @@ def register_generated_tools(mcp, _get_client):
     def ad_accounts_edit_ad_negative_keyword_list_keywords(
         list_id: str,
         account_id: str,
+        stage: bool | None = None,
         ad_account_id: str | None = None,
         customer_id: str | None = None,
         platform: Literal[
@@ -4634,6 +4676,7 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             list_id: (required)
+            stage: Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.
             account_id: Zernio SocialAccount id. (required)
             ad_account_id: Platform ad account ID (Google customer ID, digits only). Required when the connection has multiple customers.
             customer_id: Alias of adAccountId, kept for existing callers
@@ -4645,6 +4688,7 @@ def register_generated_tools(mcp, _get_client):
         try:
             response = client.ad_accounts.edit_ad_negative_keyword_list_keywords(
                 list_id=list_id,
+                stage=stage,
                 account_id=account_id,
                 ad_account_id=ad_account_id,
                 customer_id=customer_id,
@@ -4704,6 +4748,7 @@ def register_generated_tools(mcp, _get_client):
     def ad_accounts_add_account_callouts(
         account_id: str,
         callouts: list[str] | None,
+        stage: bool | None = None,
         ad_account_id: str | None = None,
         customer_id: str | None = None,
     ) -> str:
@@ -4716,6 +4761,7 @@ def register_generated_tools(mcp, _get_client):
         Platforms: google
 
         Args:
+            stage: Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.
             account_id: Zernio Google Ads connection id. (required)
             ad_account_id: Platform ad account ID (Google customer ID, digits only). Required when the connection has multiple customers.
             customer_id: Alias of adAccountId, kept for existing callers
@@ -4723,6 +4769,7 @@ def register_generated_tools(mcp, _get_client):
         client = _get_client()
         try:
             response = client.ad_accounts.add_account_callouts(
+                stage=stage,
                 account_id=account_id,
                 ad_account_id=ad_account_id,
                 customer_id=customer_id,
@@ -4743,6 +4790,7 @@ def register_generated_tools(mcp, _get_client):
     def ad_accounts_update_account_callouts(
         account_id: str,
         updates: list[dict[str, Any]] | None,
+        stage: bool | None = None,
         ad_account_id: str | None = None,
         customer_id: str | None = None,
     ) -> str:
@@ -4755,6 +4803,7 @@ def register_generated_tools(mcp, _get_client):
         Platforms: google
 
         Args:
+            stage: Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.
             account_id: Zernio Google Ads connection id. (required)
             ad_account_id: Platform ad account ID (Google customer ID, digits only). Required when the connection has multiple customers.
             customer_id: Alias of adAccountId, kept for existing callers
@@ -4762,6 +4811,7 @@ def register_generated_tools(mcp, _get_client):
         client = _get_client()
         try:
             response = client.ad_accounts.update_account_callouts(
+                stage=stage,
                 account_id=account_id,
                 ad_account_id=ad_account_id,
                 customer_id=customer_id,
@@ -4782,6 +4832,7 @@ def register_generated_tools(mcp, _get_client):
     def ad_accounts_remove_account_callout(
         account_id: str,
         asset_id: str,
+        stage: bool | None = None,
         ad_account_id: str | None = None,
         customer_id: str | None = None,
     ) -> str:
@@ -4794,6 +4845,7 @@ def register_generated_tools(mcp, _get_client):
         Platforms: google
 
         Args:
+            stage: Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later.
             account_id: Zernio Google Ads connection id. (required)
             ad_account_id: Platform ad account ID (Google customer ID, digits only). Required when the connection has multiple customers.
             customer_id: Alias of adAccountId, kept for existing callers
@@ -4801,6 +4853,7 @@ def register_generated_tools(mcp, _get_client):
         client = _get_client()
         try:
             response = client.ad_accounts.remove_account_callout(
+                stage=stage,
                 account_id=account_id,
                 ad_account_id=ad_account_id,
                 customer_id=customer_id,
@@ -4857,6 +4910,7 @@ def register_generated_tools(mcp, _get_client):
     def ad_accounts_add_account_sitelinks(
         account_id: str,
         sitelinks: list[dict[str, Any]] | None,
+        stage: bool | None = None,
         ad_account_id: str | None = None,
         customer_id: str | None = None,
     ) -> str:
@@ -4869,6 +4923,7 @@ def register_generated_tools(mcp, _get_client):
         Platforms: google
 
         Args:
+            stage: Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.
             account_id: Zernio Google Ads connection id. (required)
             ad_account_id: Platform ad account ID (Google customer ID, digits only). Required when the connection has multiple customers.
             customer_id: Alias of adAccountId, kept for existing callers
@@ -4876,6 +4931,7 @@ def register_generated_tools(mcp, _get_client):
         client = _get_client()
         try:
             response = client.ad_accounts.add_account_sitelinks(
+                stage=stage,
                 account_id=account_id,
                 ad_account_id=ad_account_id,
                 customer_id=customer_id,
@@ -4896,6 +4952,7 @@ def register_generated_tools(mcp, _get_client):
     def ad_accounts_update_account_sitelinks(
         account_id: str,
         updates: list[dict[str, Any]] | None,
+        stage: bool | None = None,
         ad_account_id: str | None = None,
         customer_id: str | None = None,
     ) -> str:
@@ -4908,6 +4965,7 @@ def register_generated_tools(mcp, _get_client):
         Platforms: google
 
         Args:
+            stage: Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.
             account_id: Zernio Google Ads connection id. (required)
             ad_account_id: Platform ad account ID (Google customer ID, digits only). Required when the connection has multiple customers.
             customer_id: Alias of adAccountId, kept for existing callers
@@ -4915,6 +4973,7 @@ def register_generated_tools(mcp, _get_client):
         client = _get_client()
         try:
             response = client.ad_accounts.update_account_sitelinks(
+                stage=stage,
                 account_id=account_id,
                 ad_account_id=ad_account_id,
                 customer_id=customer_id,
@@ -4935,6 +4994,7 @@ def register_generated_tools(mcp, _get_client):
     def ad_accounts_remove_account_sitelink(
         account_id: str,
         asset_id: str,
+        stage: bool | None = None,
         ad_account_id: str | None = None,
         customer_id: str | None = None,
     ) -> str:
@@ -4947,6 +5007,7 @@ def register_generated_tools(mcp, _get_client):
         Platforms: google
 
         Args:
+            stage: Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later.
             account_id: Zernio Google Ads connection id. (required)
             ad_account_id: Platform ad account ID (Google customer ID, digits only). Required when the connection has multiple customers.
             customer_id: Alias of adAccountId, kept for existing callers
@@ -4954,6 +5015,7 @@ def register_generated_tools(mcp, _get_client):
         client = _get_client()
         try:
             response = client.ad_accounts.remove_account_sitelink(
+                stage=stage,
                 account_id=account_id,
                 ad_account_id=ad_account_id,
                 customer_id=customer_id,
@@ -5010,6 +5072,7 @@ def register_generated_tools(mcp, _get_client):
     def ad_accounts_add_account_structured_snippets(
         account_id: str,
         structured_snippets: list[dict[str, Any]] | None,
+        stage: bool | None = None,
         ad_account_id: str | None = None,
         customer_id: str | None = None,
     ) -> str:
@@ -5022,6 +5085,7 @@ def register_generated_tools(mcp, _get_client):
         Platforms: google
 
         Args:
+            stage: Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.
             account_id: Zernio Google Ads connection id. (required)
             ad_account_id: Platform ad account ID (Google customer ID, digits only). Required when the connection has multiple customers.
             customer_id: Alias of adAccountId, kept for existing callers
@@ -5029,6 +5093,7 @@ def register_generated_tools(mcp, _get_client):
         client = _get_client()
         try:
             response = client.ad_accounts.add_account_structured_snippets(
+                stage=stage,
                 account_id=account_id,
                 ad_account_id=ad_account_id,
                 customer_id=customer_id,
@@ -5049,6 +5114,7 @@ def register_generated_tools(mcp, _get_client):
     def ad_accounts_update_account_structured_snippets(
         account_id: str,
         updates: list[dict[str, Any]] | None,
+        stage: bool | None = None,
         ad_account_id: str | None = None,
         customer_id: str | None = None,
     ) -> str:
@@ -5061,6 +5127,7 @@ def register_generated_tools(mcp, _get_client):
         Platforms: google
 
         Args:
+            stage: Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.
             account_id: Zernio Google Ads connection id. (required)
             ad_account_id: Platform ad account ID (Google customer ID, digits only). Required when the connection has multiple customers.
             customer_id: Alias of adAccountId, kept for existing callers
@@ -5068,6 +5135,7 @@ def register_generated_tools(mcp, _get_client):
         client = _get_client()
         try:
             response = client.ad_accounts.update_account_structured_snippets(
+                stage=stage,
                 account_id=account_id,
                 ad_account_id=ad_account_id,
                 customer_id=customer_id,
@@ -5088,6 +5156,7 @@ def register_generated_tools(mcp, _get_client):
     def ad_accounts_remove_account_structured_snippet(
         account_id: str,
         asset_id: str,
+        stage: bool | None = None,
         ad_account_id: str | None = None,
         customer_id: str | None = None,
     ) -> str:
@@ -5100,6 +5169,7 @@ def register_generated_tools(mcp, _get_client):
         Platforms: google
 
         Args:
+            stage: Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later.
             account_id: Zernio Google Ads connection id. (required)
             ad_account_id: Platform ad account ID (Google customer ID, digits only). Required when the connection has multiple customers.
             customer_id: Alias of adAccountId, kept for existing callers
@@ -5107,6 +5177,7 @@ def register_generated_tools(mcp, _get_client):
         client = _get_client()
         try:
             response = client.ad_accounts.remove_account_structured_snippet(
+                stage=stage,
                 account_id=account_id,
                 ad_account_id=ad_account_id,
                 customer_id=customer_id,
@@ -5175,6 +5246,7 @@ def register_generated_tools(mcp, _get_client):
         account_id: str,
         manager_customer_id: str,
         client_customer_id: str,
+        stage: bool | None = None,
         validate_only: bool = False,
     ) -> str:
         """Invite a client account to a manager
@@ -5193,6 +5265,7 @@ def register_generated_tools(mcp, _get_client):
         Platforms: google
 
         Args:
+            stage: Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.
             account_id: Google ads SocialAccount id. (required)
             manager_customer_id: Manager customer id, digits only. (required)
             client_customer_id: Client customer id to invite, digits only. (required)
@@ -5200,6 +5273,7 @@ def register_generated_tools(mcp, _get_client):
         client = _get_client()
         try:
             response = client.ad_accounts.invite_ad_account_to_manager(
+                stage=stage,
                 account_id=account_id,
                 manager_customer_id=manager_customer_id,
                 client_customer_id=client_customer_id,
@@ -5223,6 +5297,7 @@ def register_generated_tools(mcp, _get_client):
         client_customer_id: str,
         manager_link_id: str,
         action: Literal["accept", "decline", "cancel", "unlink"],
+        stage: bool | None = None,
         validate_only: bool = False,
     ) -> str:
         """Accept, decline, cancel or end a manager link
@@ -5242,6 +5317,7 @@ def register_generated_tools(mcp, _get_client):
         Platforms: google
 
         Args:
+            stage: Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.
             account_id: Google ads SocialAccount id. (required)
             manager_customer_id: Manager customer id, digits only. (required)
             client_customer_id: Client customer id, digits only. (required)
@@ -5251,6 +5327,7 @@ def register_generated_tools(mcp, _get_client):
         client = _get_client()
         try:
             response = client.ad_accounts.update_ad_account_manager_link(
+                stage=stage,
                 account_id=account_id,
                 manager_customer_id=manager_customer_id,
                 client_customer_id=client_customer_id,
@@ -5313,6 +5390,7 @@ def register_generated_tools(mcp, _get_client):
         account_id: str,
         ad_account_id: str,
         payments_account_id: str,
+        stage: bool | None = None,
         spending_limit: float | None = None,
         budget_name: str = "Zernio account budget",
         purchase_order_number: str | None = None,
@@ -5344,6 +5422,7 @@ def register_generated_tools(mcp, _get_client):
         Platforms: google
 
         Args:
+            stage: Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.
             account_id: Google ads SocialAccount id. (required)
             ad_account_id: Google Ads customer id to bill, digits only. (required)
             payments_account_id: Monthly invoicing payments account from GET /v1/ads/accounts/billing. (required)
@@ -5354,6 +5433,7 @@ def register_generated_tools(mcp, _get_client):
         client = _get_client()
         try:
             response = client.ad_accounts.set_up_ad_account_billing(
+                stage=stage,
                 account_id=account_id,
                 ad_account_id=ad_account_id,
                 payments_account_id=payments_account_id,
@@ -5421,6 +5501,7 @@ def register_generated_tools(mcp, _get_client):
         ad_account_id: str,
         email_address: str,
         access_role: Literal["ADMIN", "STANDARD", "READ_ONLY", "EMAIL_ONLY"],
+        stage: bool | None = None,
         validate_only: bool = False,
     ) -> str:
         """Invite a user to an ad account by email
@@ -5446,6 +5527,7 @@ def register_generated_tools(mcp, _get_client):
         Platforms: google
 
         Args:
+            stage: Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.
             account_id: Google ads SocialAccount id. (required)
             ad_account_id: Google Ads customer id to invite the user to, digits only. (required)
             email_address: (required)
@@ -5454,6 +5536,7 @@ def register_generated_tools(mcp, _get_client):
         client = _get_client()
         try:
             response = client.ad_accounts.invite_ad_account_user(
+                stage=stage,
                 account_id=account_id,
                 ad_account_id=ad_account_id,
                 email_address=email_address,
@@ -5473,7 +5556,10 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def ad_accounts_revoke_ad_account_user_invitation(
-        account_id: str, ad_account_id: str, invitation_id: str
+        account_id: str,
+        ad_account_id: str,
+        invitation_id: str,
+        stage: bool | None = None,
     ) -> str:
         """Revoke a user access invitation
 
@@ -5484,12 +5570,14 @@ def register_generated_tools(mcp, _get_client):
         Platforms: google
 
         Args:
+            stage: Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later.
             account_id: Google ads SocialAccount id. (required)
             ad_account_id: Google Ads customer id, digits only. (required)
             invitation_id: Numeric invitation id from GET /v1/ads/accounts/user-invitations. (required)"""
         client = _get_client()
         try:
             response = client.ad_accounts.revoke_ad_account_user_invitation(
+                stage=stage,
                 account_id=account_id,
                 ad_account_id=ad_account_id,
                 invitation_id=invitation_id,
@@ -5544,7 +5632,10 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def ad_accounts_withdraw_ad_account_user_invitation_approval(
-        account_id: str, ad_account_id: str, multi_party_auth_review_id: str
+        account_id: str,
+        ad_account_id: str,
+        multi_party_auth_review_id: str,
+        stage: bool | None = None,
     ) -> str:
         """Withdraw an invitation awaiting multi-party approval
 
@@ -5559,12 +5650,14 @@ def register_generated_tools(mcp, _get_client):
         Platforms: google
 
         Args:
+            stage: Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later.
             account_id: Google ads SocialAccount id. (required)
             ad_account_id: Google Ads customer id, digits only. (required)
             multi_party_auth_review_id: Numeric review id from POST /v1/ads/accounts/user-invitations or GET /v1/ads/accounts/user-invitations/pending-approvals. (required)"""
         client = _get_client()
         try:
             response = client.ad_accounts.withdraw_ad_account_user_invitation_approval(
+                stage=stage,
                 account_id=account_id,
                 ad_account_id=ad_account_id,
                 multi_party_auth_review_id=multi_party_auth_review_id,
@@ -5620,6 +5713,7 @@ def register_generated_tools(mcp, _get_client):
         ad_account_id: str,
         user_id: str,
         tasks: list[Literal["MANAGE", "ADVERTISE", "ANALYZE", "DRAFT"]] | None,
+        stage: bool | None = None,
     ) -> str:
         """Assign a user to an ad account
 
@@ -5632,6 +5726,7 @@ def register_generated_tools(mcp, _get_client):
         Platforms: meta
 
         Args:
+            stage: Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.
             account_id: Zernio SocialAccount id used to resolve the Meta token. (required)
             ad_account_id: Meta ad account id (act_<n>). (required)
             user_id: Business-scoped user id from GET /v1/ads/businesses/users. (required)
@@ -5639,6 +5734,7 @@ def register_generated_tools(mcp, _get_client):
         client = _get_client()
         try:
             response = client.ad_accounts.assign_ad_account_user(
+                stage=stage,
                 account_id=account_id,
                 ad_account_id=ad_account_id,
                 user_id=user_id,
@@ -5657,7 +5753,7 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def ad_accounts_remove_ad_account_user(
-        account_id: str, ad_account_id: str, user_id: str
+        account_id: str, ad_account_id: str, user_id: str, stage: bool | None = None
     ) -> str:
         """Remove a user from an ad account
 
@@ -5666,13 +5762,17 @@ def register_generated_tools(mcp, _get_client):
         Platforms: meta
 
         Args:
+            stage: Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later.
             account_id: Zernio SocialAccount id used to resolve the Meta token. (required)
             ad_account_id: Meta ad account id (act_<n>). (required)
             user_id: Business-scoped user id. (required)"""
         client = _get_client()
         try:
             response = client.ad_accounts.remove_ad_account_user(
-                account_id=account_id, ad_account_id=ad_account_id, user_id=user_id
+                stage=stage,
+                account_id=account_id,
+                ad_account_id=ad_account_id,
+                user_id=user_id,
             )
             return _format_response(response)
         except Exception as e:
@@ -5943,6 +6043,7 @@ def register_generated_tools(mcp, _get_client):
     def ad_accounts_update_ad_account(
         account_id: str,
         ad_account_id: str,
+        stage: bool | None = None,
         name: str | None = None,
         spend_cap: float | None = None,
         reset_amount_spent: bool | None = None,
@@ -5974,6 +6075,7 @@ def register_generated_tools(mcp, _get_client):
         Platforms: meta, google
 
         Args:
+            stage: Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.
             account_id: Account ID (metaads, or a facebook/instagram posting account) (required)
             ad_account_id: Meta ad account ID (act_...) (required)
             name: New ad account name.
@@ -5986,6 +6088,7 @@ def register_generated_tools(mcp, _get_client):
         client = _get_client()
         try:
             response = client.ad_accounts.update_ad_account(
+                stage=stage,
                 account_id=account_id,
                 ad_account_id=ad_account_id,
                 name=name,
@@ -6319,6 +6422,7 @@ def register_generated_tools(mcp, _get_client):
     )
     def ad_audiences_update_ad_audience(
         audience_id: str,
+        stage: bool | None = None,
         name: str | None = None,
         description: str | None = None,
         spec: dict[str, Any] | None = None,
@@ -6343,13 +6447,18 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             audience_id: (required)
+            stage: Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.
             name
             description
             spec: Full replacement for the stored targeting spec. Object with keys: userOs (list of string) - Meta only. Operating systems and version ranges, such as iOS_ver_14.0_and_above or Android. Emitted as user_os. May also be supplied inside targeting.; userDevice (list of string) - Meta only. Device models such as iPhone. Emitted as user_device. May also be supplied inside targeting.; countries (list of string) - ISO 3166-1 alpha-2 country codes (e.g. ['US']).; regions (list of any) - Region/state targeting. `key` is the platform location ID from /v1/ads/targeting/search?dimension=geo&geoType=region. An entry may also be that id as a plain ...; cities (list of any) - City targeting. Optional `radius` + `distanceUnit` extend beyond the city limits; both must be set together or both omitted. `radius` is only honoured on ...; zips (list of objects with keys key, name) - Postal/ZIP targeting. `key` is the platform's postal location ID (e.g. Meta `US:94304`). Supported on Meta, Google, TikTok, Pinterest, X.; metros (list of objects with keys key, name) - DMA / metro-area targeting. `key` is the platform's metro ID (e.g. Meta `DMA:807`).; countryGroups (list of string) - Meta only. Continents and trade blocs (`geo_locations.country_groups`), for targeting a whole region without listing its countries. Combines with `countries` ...; places (list of objects with keys key) - Meta only. Named points of interest to target. `key` from /v1/ads/targeting/search.; neighborhoods (list of objects with keys key) - Meta only. Named neighbourhood areas to target. `key` from /v1/ads/targeting/search.; customLocations (list of objects with keys latitude, longitude, radius, distanceUnit, name, address) - Point-radius (lat/lng) targeting (Meta custom_locations / Google proximity). Honoured on Meta and Google; ignored on platforms without radius support.; excludedLocations (object with keys countries, countryGroups, regions, cities, zips, places, neighborhoods, customLocations) - Geo to exclude from the audience. Mirrors the inclusion geo shape. - Meta (excluded_geo_locations): excluded cities can carry a radius catchment, and excluded ...; ageMin (integer) - Minimum age. - Applied on Meta, TikTok, Pinterest, LinkedIn, X and Google Search/Display (Google excludes the age ranges outside the request). - Rejected with ...; ageMax (integer) - Maximum age. Same per-platform application and clamping as ageMin.; gender (one of: all, male, female) - Restrict by gender. 'all' (default) targets everyone. Applied on Meta, TikTok, Pinterest, LinkedIn, X, Reddit and Google Search/Display (Google excludes the ...; incomeTier (one of: top_5, top_10, top_10_25, top_25_50) - Normalized household-income tier (ZIP/percentile based). Meta and TikTok express all four. Google maps only `top_10` (its INCOME_RANGE_90_UP); other tiers on ...; languages (list of string) - Language codes restricting the audience by language. Applied on Meta, Google, TikTok, LinkedIn, X, Pinterest and Reddit; rejected with 400 on OpenAI. A code ...; interests (list of objects with keys id, name) - Interest entities from /v1/ads/targeting/search?dimension=interest. Each carries the platform's opaque id. - Google: applied as ad-group interest criteria ...; behaviors (list of objects with keys id, name) - Behaviour entities from /v1/ads/targeting/search?dimension=behavior (Meta, TikTok and LinkedIn). **On TikTok** they target people who, in the picked ...; workPositions (list of objects with keys id, name) - Meta only. Job title entities from /v1/ads/targeting/search?dimension=workPosition. Not interchangeable with the LinkedIn `jobTitles` URN fragments.; workEmployers (list of objects with keys id, name) - Meta only. Employer entities from /v1/ads/targeting/search?dimension=workEmployer.; workIndustries (list of objects with keys id, name) - Meta only. Work-industry entities from /v1/ads/targeting/search?dimension=workIndustry. Not interchangeable with the LinkedIn `industries` URN fragments.; industries (list of string) - LinkedIn B2B only. Industry URN id fragments, or the full urn:li:industry:* URN from /v1/ads/targeting/search?dimension=industry.; companySizes (list of string) - LinkedIn B2B only. Single-letter size codes (A to I), or the full urn:li:staffCountRange:* URN from /v1/ads/targeting/search?dimension=companySize.; seniorities (list of string) - LinkedIn B2B only. Seniority URN id fragments, or the full urn:li:seniority:* URN from /v1/ads/targeting/search?dimension=seniority.; jobFunctions (list of string) - LinkedIn B2B only. Function URN id fragments, or the full urn:li:function:* URN from /v1/ads/targeting/search?dimension=jobFunction.; skills (list of string) - LinkedIn B2B only. Member skills (e.g. Python, Recruiting): skill URN id fragments, or the full urn:li:skill:* URN from ...; audienceInclude (list of string) - Platform audience IDs to include, as returned by GET /v1/ads/audiences: - Meta: custom audience ids. - TikTok: audience ids. - Pinterest: customer list ids. - ...; audienceExclude (list of string) - Platform audience IDs to exclude; same ID formats as audienceInclude. Not supported on OpenAI (400).; communities (list of string) - Reddit only (400 elsewhere). Subreddits to target, by name, with or without the `r/` prefix (e.g. `['marketing', 'r/startups']`), as returned by ...; excludedCommunities (list of string) - Reddit only (400 elsewhere). Subreddits to exclude, named like `communities`.; conversationKeywords (list of string) - Reddit only (400 elsewhere). Keywords that place the ad in Reddit conversations about them, as returned by ...; excludedConversationKeywords (list of string) - Reddit only (400 elsewhere). Conversation keywords to keep the ad away from."""
         client = _get_client()
         try:
             response = client.ad_audiences.update_ad_audience(
-                audience_id=audience_id, name=name, description=description, spec=spec
+                audience_id=audience_id,
+                stage=stage,
+                name=name,
+                description=description,
+                spec=spec,
             )
             return _format_response(response)
         except Exception as e:
@@ -6363,7 +6472,9 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=True,
         )
     )
-    def ad_audiences_delete_ad_audience(audience_id: str) -> str:
+    def ad_audiences_delete_ad_audience(
+        audience_id: str, stage: bool | None = None
+    ) -> str:
         """Delete custom audience
 
         Removes a custom audience from its ad platform (archiving it where the platform does not delete).
@@ -6385,10 +6496,13 @@ def register_generated_tools(mcp, _get_client):
         Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit, snapchat
 
         Args:
+            stage: Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later.
             audience_id: (required)"""
         client = _get_client()
         try:
-            response = client.ad_audiences.delete_ad_audience(audience_id=audience_id)
+            response = client.ad_audiences.delete_ad_audience(
+                stage=stage, audience_id=audience_id
+            )
             return _format_response(response)
         except Exception as e:
             raise ToolError(f"Error: {e}") from e
@@ -6481,7 +6595,9 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def ad_audiences_replace_ad_audience_companies(
-        audience_id: str, companies: list[dict[str, Any]] | None
+        audience_id: str,
+        companies: list[dict[str, Any]] | None,
+        stage: bool | None = None,
     ) -> str:
         """Replace audience companies
 
@@ -6505,11 +6621,12 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             audience_id: The Zernio audience id (the id field of GET /v1/ads/audiences), not the platform segment id. (required)
+            stage: Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.
             companies: The complete company list. Each row needs at least one of name, domain, website or linkedinPageUrl. Each item is an object with keys: name (string); domain (string); website (string); linkedinPageUrl (string) (required)"""
         client = _get_client()
         try:
             response = client.ad_audiences.replace_ad_audience_companies(
-                audience_id=audience_id, companies=companies
+                audience_id=audience_id, stage=stage, companies=companies
             )
             return _format_response(response)
         except Exception as e:
@@ -7097,6 +7214,7 @@ def register_generated_tools(mcp, _get_client):
     def ad_campaigns_apply_google_recommendations(
         account_id: str,
         recommendations: list[dict[str, Any]] | None,
+        stage: bool | None = None,
         ad_account_id: str | None = None,
     ) -> str:
         """Apply Google Ads recommendations
@@ -7119,12 +7237,14 @@ def register_generated_tools(mcp, _get_client):
         Platforms: google
 
         Args:
+            stage: Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.
             account_id: Google ads SocialAccount id. (required)
             ad_account_id: Google customer id, digits only. Required when the connection has several customers.
             recommendations: Each item is an object with keys: resourceName (string, required) - Recommendation resource name from the list, or its id.; parameters (object) - One key, such as campaignBudget, keyword, textAd, targetCpaOptIn, targetRoasOptIn, callAsset, calloutAsset, sitelinkAsset, moveUnusedBudget, ... (required)"""
         client = _get_client()
         try:
             response = client.ad_campaigns.apply_google_recommendations(
+                stage=stage,
                 account_id=account_id,
                 ad_account_id=ad_account_id,
                 recommendations=recommendations,
@@ -7144,6 +7264,7 @@ def register_generated_tools(mcp, _get_client):
     def ad_campaigns_dismiss_google_recommendations(
         account_id: str,
         resource_names: list[str] | None,
+        stage: bool | None = None,
         ad_account_id: str | None = None,
     ) -> str:
         """Dismiss Google Ads recommendations
@@ -7155,12 +7276,14 @@ def register_generated_tools(mcp, _get_client):
         Platforms: google
 
         Args:
+            stage: Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.
             account_id: Google ads SocialAccount id. (required)
             ad_account_id: Google customer id, digits only. Required when the connection has several customers.
             resource_names: Recommendation resource names from the list, or their ids. (required)"""
         client = _get_client()
         try:
             response = client.ad_campaigns.dismiss_google_recommendations(
+                stage=stage,
                 account_id=account_id,
                 ad_account_id=ad_account_id,
                 resource_names=resource_names,
@@ -7235,6 +7358,7 @@ def register_generated_tools(mcp, _get_client):
             "MAXIMIZE_CONVERSION_VALUE",
             "TARGET_IMPRESSION_SHARE",
         ],
+        stage: bool | None = None,
         ad_account_id: str | None = None,
         customer_id: str | None = None,
         target_cpa: float | None = None,
@@ -7250,6 +7374,7 @@ def register_generated_tools(mcp, _get_client):
         Platforms: google
 
         Args:
+            stage: Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.
             account_id: Google ads SocialAccount id. (required)
             ad_account_id: Platform ad account ID (Google customer ID, digits only). Defaults to the account's connected customer.
             customer_id: Alias of adAccountId, kept for existing callers
@@ -7261,6 +7386,7 @@ def register_generated_tools(mcp, _get_client):
         client = _get_client()
         try:
             response = client.ad_campaigns.create_bid_strategy(
+                stage=stage,
                 account_id=account_id,
                 ad_account_id=ad_account_id,
                 customer_id=customer_id,
@@ -7285,6 +7411,7 @@ def register_generated_tools(mcp, _get_client):
     def ad_campaigns_update_bid_strategy(
         strategy_id: str,
         account_id: str,
+        stage: bool | None = None,
         ad_account_id: str | None = None,
         customer_id: str | None = None,
         name: str | None = None,
@@ -7319,6 +7446,7 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             strategy_id: Numeric Google Ads bid strategy id. (required)
+            stage: Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.
             account_id: Google ads SocialAccount id. (required)
             ad_account_id: Platform ad account ID (Google customer ID, digits only). Defaults to the account's connected customer.
             customer_id: Alias of adAccountId, kept for existing callers
@@ -7331,6 +7459,7 @@ def register_generated_tools(mcp, _get_client):
         try:
             response = client.ad_campaigns.update_bid_strategy(
                 strategy_id=strategy_id,
+                stage=stage,
                 account_id=account_id,
                 ad_account_id=ad_account_id,
                 customer_id=customer_id,
@@ -7389,6 +7518,7 @@ def register_generated_tools(mcp, _get_client):
         account_id: str,
         name: str,
         amount: float,
+        stage: bool | None = None,
         ad_account_id: str | None = None,
         type: Literal["daily", "lifetime"] = "daily",
     ) -> str:
@@ -7404,6 +7534,7 @@ def register_generated_tools(mcp, _get_client):
         Platforms: google
 
         Args:
+            stage: Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.
             account_id: Google ads SocialAccount id. (required)
             ad_account_id: Platform ad account ID (Google customer ID, digits only). Defaults to the account's connected customer.
             name: (required)
@@ -7412,6 +7543,7 @@ def register_generated_tools(mcp, _get_client):
         client = _get_client()
         try:
             response = client.ad_campaigns.create_shared_budget(
+                stage=stage,
                 account_id=account_id,
                 ad_account_id=ad_account_id,
                 name=name,
@@ -7507,6 +7639,7 @@ def register_generated_tools(mcp, _get_client):
         account_id: str,
         ad_set_id: str,
         keywords: list[Any] | None,
+        stage: bool | None = None,
         negative: bool = False,
         idempotency_key: str | None = None,
     ) -> str:
@@ -7527,6 +7660,7 @@ def register_generated_tools(mcp, _get_client):
         Platforms: google, amazon
 
         Args:
+            stage: Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.
             account_id: Account ID (Google Ads) (required)
             ad_set_id: Google ad group ID to add the keywords to (required)
             keywords: (required)
@@ -7535,6 +7669,7 @@ def register_generated_tools(mcp, _get_client):
         client = _get_client()
         try:
             response = client.ad_campaigns.add_ad_keywords(
+                stage=stage,
                 account_id=account_id,
                 ad_set_id=ad_set_id,
                 keywords=keywords,
@@ -7555,6 +7690,7 @@ def register_generated_tools(mcp, _get_client):
     )
     def ad_campaigns_update_ad_keyword(
         keyword_id: str,
+        stage: bool | None = None,
         status: Literal["active", "paused"] | None = None,
         cpc_bid: float | None = None,
         idempotency_key: str | None = None,
@@ -7577,6 +7713,7 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             keyword_id: Zernio keyword ID (`id`), or Google's native `{adSetId}~{platformCriterionId}` (the tail of `resourceName`, e.g. 1234567890~987654321). A bare criterion id is rejected because it is only unique within its ad group. (required)
+            stage: Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.
             status
             cpc_bid: Max CPC bid for this keyword, in the ad account currency. Takes effect only under Manual CPC bidding.
             idempotency_key: Optional key you choose (e.g. a UUID), one per logical action, up to 255 characters. Sent as the Idempotency-Key header. If this call times out or the chat stops, retry with the same key: within 24 hours you get the original result instead of a second copy, or 409 while the first call is still processing (retry shortly). Use a new key for a new action."""
@@ -7584,6 +7721,7 @@ def register_generated_tools(mcp, _get_client):
         try:
             response = client.ad_campaigns.update_ad_keyword(
                 keyword_id=keyword_id,
+                stage=stage,
                 status=status,
                 cpc_bid=cpc_bid,
                 idempotency_key=idempotency_key,
@@ -7601,7 +7739,7 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def ad_campaigns_remove_ad_keyword(
-        keyword_id: str, idempotency_key: str | None = None
+        keyword_id: str, stage: bool | None = None, idempotency_key: str | None = None
     ) -> str:
         """Remove a Search keyword
 
@@ -7616,12 +7754,13 @@ def register_generated_tools(mcp, _get_client):
         Platforms: google, amazon
 
         Args:
+            stage: Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later.
             keyword_id: Zernio keyword ID (`id`), or Google's native `{adSetId}~{platformCriterionId}` (the tail of `resourceName`, e.g. 1234567890~987654321). A bare criterion id is rejected because it is only unique within its ad group. (required)
             idempotency_key: Optional key you choose (e.g. a UUID), one per logical action, up to 255 characters. Sent as the Idempotency-Key header. If this call times out or the chat stops, retry with the same key: within 24 hours you get the original result instead of a second copy, or 409 while the first call is still processing (retry shortly). Use a new key for a new action."""
         client = _get_client()
         try:
             response = client.ad_campaigns.remove_ad_keyword(
-                keyword_id=keyword_id, idempotency_key=idempotency_key
+                stage=stage, keyword_id=keyword_id, idempotency_key=idempotency_key
             )
             return _format_response(response)
         except Exception as e:
@@ -8064,7 +8203,9 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def ad_campaigns_update_campaign_ad_schedule(
-        campaign_id: str, schedule: list[dict[str, Any]] | None
+        campaign_id: str,
+        schedule: list[dict[str, Any]] | None,
+        stage: bool | None = None,
     ) -> str:
         """Replace a campaign's ad schedule (dayparting)
 
@@ -8093,11 +8234,12 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             campaign_id: Numeric Google platform campaign id. (required)
+            stage: Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.
             schedule: The complete set of windows. Required, so clearing the schedule is always deliberate rather than an omission. Each item is an object with keys: dayOfWeek (one of: MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, SUNDAY; required); startHour (integer, required); startMinute (one of: 0, 15, 30, 45) - Quarter-hours only.; endHour (integer, required) - 24 means midnight at the end of the day.; endMinute (one of: 0, 15, 30, 45) - Quarter-hours only. Must be 0 when endHour is 24.; bidModifier (number) - Bid adjustment for this window. Null runs it at the campaign bid. (required)"""
         client = _get_client()
         try:
             response = client.ad_campaigns.update_campaign_ad_schedule(
-                campaign_id=campaign_id, schedule=schedule
+                campaign_id=campaign_id, stage=stage, schedule=schedule
             )
             return _format_response(response)
         except Exception as e:
@@ -8349,6 +8491,7 @@ def register_generated_tools(mcp, _get_client):
             "tradedesk",
             "snapchat",
         ],
+        stage: bool | None = None,
         account_id: str | None = None,
         ad_account_id: str | None = None,
     ) -> str:
@@ -8376,6 +8519,7 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             campaign_id: Platform campaign ID (required)
+            stage: Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.
             platform: (required)
             account_id: Zernio SocialAccount id owning the ad account. Required only to delete an EMPTY campaign (zero ads), which has no local Ad documents to resolve a token from.
             ad_account_id: X only, for an EMPTY campaign that was never synced: the X ad account id the campaign belongs to (lowercase letters and digits). The synced campaign's ad account wins when there is one. Also accepted on the query string."""
@@ -8383,6 +8527,7 @@ def register_generated_tools(mcp, _get_client):
         try:
             response = client.ad_campaigns.delete_ad_campaign(
                 campaign_id=campaign_id,
+                stage=stage,
                 platform=platform,
                 account_id=account_id,
                 ad_account_id=ad_account_id,
@@ -8459,6 +8604,7 @@ def register_generated_tools(mcp, _get_client):
     def ad_campaigns_replace_campaign_negative_keywords(
         campaign_id: str,
         keywords: list[Any] | None,
+        stage: bool | None = None,
         platform: Literal[
             "facebook",
             "instagram",
@@ -8497,6 +8643,7 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             campaign_id: Platform campaign ID (required)
+            stage: Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.
             platform: Optional and NOT authoritative: the resolved campaign's own platform decides 200 vs 501, never this hint.
             keywords: (required)
             idempotency_key: Optional key you choose (e.g. a UUID), one per logical action, up to 255 characters. Sent as the Idempotency-Key header. If this call times out or the chat stops, retry with the same key: within 24 hours you get the original result instead of a second copy, or 409 while the first call is still processing (retry shortly). Use a new key for a new action."""
@@ -8504,6 +8651,7 @@ def register_generated_tools(mcp, _get_client):
         try:
             response = client.ad_campaigns.replace_campaign_negative_keywords(
                 campaign_id=campaign_id,
+                stage=stage,
                 platform=platform,
                 keywords=keywords,
                 idempotency_key=idempotency_key,
@@ -8522,6 +8670,7 @@ def register_generated_tools(mcp, _get_client):
     )
     def ad_campaigns_edit_campaign_negative_keywords(
         campaign_id: str,
+        stage: bool | None = None,
         platform: Literal[
             "facebook",
             "instagram",
@@ -8557,6 +8706,7 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             campaign_id: Platform campaign ID (required)
+            stage: Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.
             platform: Optional and NOT authoritative: the resolved campaign's own platform decides 200 vs 501, never this hint.
             add: Negative keywords to add. Send at least one entry in add or remove.
             remove: Negative keywords to remove. Bare strings mean broad match.
@@ -8565,6 +8715,7 @@ def register_generated_tools(mcp, _get_client):
         try:
             response = client.ad_campaigns.edit_campaign_negative_keywords(
                 campaign_id=campaign_id,
+                stage=stage,
                 platform=platform,
                 add=add,
                 remove=remove,
@@ -8585,6 +8736,7 @@ def register_generated_tools(mcp, _get_client):
     def ad_campaigns_bulk_update_ad_campaign_status(
         status: Literal["active", "paused"],
         campaigns: list[dict[str, Any]] | None,
+        stage: bool | None = None,
         idempotency_key: str | None = None,
     ) -> str:
         """Pause or resume many campaigns
@@ -8600,13 +8752,17 @@ def register_generated_tools(mcp, _get_client):
         Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit, microsoft, amazon, tradedesk, snapchat
 
         Args:
+            stage: Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.
             status: (required)
             campaigns: Each item is an object with keys: platformCampaignId (string, required) - The campaign id on the ad platform (e.g. the numeric Google campaign id), not a Zernio id.; platform (one of: facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit, microsoft, googleads, tiktokads, linkedinads, pinterestads, xads, openaiads, redditads, microsoftads, snapchat, snapchatads; required) - The ad platform, e.g. `google` for Google Ads. The ads connection slug (`googleads`, `tiktokads`, ...) is accepted as an alias. `metaads` is not: send ... (required)
             idempotency_key: Optional key you choose (e.g. a UUID), one per logical action, up to 255 characters. Sent as the Idempotency-Key header. If this call times out or the chat stops, retry with the same key: within 24 hours you get the original result instead of a second copy, or 409 while the first call is still processing (retry shortly). Use a new key for a new action."""
         client = _get_client()
         try:
             response = client.ad_campaigns.bulk_update_ad_campaign_status(
-                status=status, campaigns=campaigns, idempotency_key=idempotency_key
+                stage=stage,
+                status=status,
+                campaigns=campaigns,
+                idempotency_key=idempotency_key,
             )
             return _format_response(response)
         except Exception as e:
@@ -8623,6 +8779,7 @@ def register_generated_tools(mcp, _get_client):
     def ad_campaigns_duplicate_ad_campaign(
         campaign_id: str,
         platform: Literal["facebook", "instagram", "tiktok", "linkedin", "google"],
+        stage: bool | None = None,
         deep_copy: bool = True,
         status_option: Literal["ACTIVE", "PAUSED", "INHERITED_FROM_SOURCE"] = "PAUSED",
         start_time: str | None = None,
@@ -8659,6 +8816,7 @@ def register_generated_tools(mcp, _get_client):
 
             Args:
                 campaign_id: Source platform campaign ID (required)
+                stage: Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.
                 platform: (required)
                 deep_copy: Copy child ad sets + ads + creatives + targeting
                 status_option: ACTIVE = launch the clone immediately (spends the moment LinkedIn approves it). PAUSED = clone stays DRAFT, safe default. Google only accepts PAUSED. INHERITED_FROM_SOURCE = mirror each entity's source status per-entity. Duplicating an ACTIVE campaign this way starts a second front of spend.
@@ -8683,6 +8841,7 @@ def register_generated_tools(mcp, _get_client):
         try:
             response = client.ad_campaigns.duplicate_ad_campaign(
                 campaign_id=campaign_id,
+                stage=stage,
                 platform=platform,
                 deep_copy=deep_copy,
                 status_option=status_option,
@@ -9013,6 +9172,7 @@ def register_generated_tools(mcp, _get_client):
     def ad_campaigns_duplicate_ad_set(
         ad_set_id: str,
         platform: Literal["facebook", "instagram", "tiktok"],
+        stage: bool | None = None,
         campaign_id: str | None = None,
         deep_copy: bool = True,
         status_option: Literal["ACTIVE", "PAUSED", "INHERITED_FROM_SOURCE"] = "PAUSED",
@@ -9045,6 +9205,7 @@ def register_generated_tools(mcp, _get_client):
 
             Args:
                 ad_set_id: Source platform ad set ID (required)
+                stage: Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.
                 platform: (required)
                 campaign_id: Destination platform campaign id (defaults to the source's campaign)
                 deep_copy: Copy child ads + creatives
@@ -9071,6 +9232,7 @@ def register_generated_tools(mcp, _get_client):
         try:
             response = client.ad_campaigns.duplicate_ad_set(
                 ad_set_id=ad_set_id,
+                stage=stage,
                 platform=platform,
                 campaign_id=campaign_id,
                 deep_copy=deep_copy,
@@ -9098,6 +9260,7 @@ def register_generated_tools(mcp, _get_client):
     )
     def ad_campaigns_duplicate_ad(
         ad_id: str,
+        stage: bool | None = None,
         ad_set_id: str | None = None,
         status_option: Literal["ACTIVE", "PAUSED", "INHERITED_FROM_SOURCE"] = "PAUSED",
         rename_strategy: Literal["DEEP_RENAME", "ONLY_TOP_LEVEL_RENAME", "NO_RENAME"]
@@ -9130,6 +9293,7 @@ def register_generated_tools(mcp, _get_client):
 
             Args:
                 ad_id: Zernio ad ID or platform ad ID (required)
+                stage: Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.
                 ad_set_id: Destination platform ad set id (defaults to the source's ad set)
                 status_option
                 rename_strategy: Meta's native `rename_strategy` values. An ad has no copied children, so `DEEP_RENAME` and `ONLY_TOP_LEVEL_RENAME` both rename the copy with `renamePrefix` / `renameSuffix`, and `NO_RENAME` keeps the source name. With no rename option at all, Meta appends its own ` - Copy` suffix.
@@ -9146,6 +9310,7 @@ def register_generated_tools(mcp, _get_client):
         try:
             response = client.ad_campaigns.duplicate_ad(
                 ad_id=ad_id,
+                stage=stage,
                 ad_set_id=ad_set_id,
                 status_option=status_option,
                 rename_strategy=rename_strategy,
@@ -9389,7 +9554,7 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=True,
         )
     )
-    def ad_campaigns_delete_ad_set(ad_set_id: str) -> str:
+    def ad_campaigns_delete_ad_set(ad_set_id: str, stage: bool | None = None) -> str:
         """Delete an ad set
 
         Deletes an ad set and its ads while keeping the campaign, archiving it instead on platforms without a hard delete.
@@ -9405,10 +9570,13 @@ def register_generated_tools(mcp, _get_client):
         Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit, amazon, tradedesk, snapchat
 
         Args:
+            stage: Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later.
             ad_set_id: Platform ad set ID (required)"""
         client = _get_client()
         try:
-            response = client.ad_campaigns.delete_ad_set(ad_set_id=ad_set_id)
+            response = client.ad_campaigns.delete_ad_set(
+                stage=stage, ad_set_id=ad_set_id
+            )
             return _format_response(response)
         except Exception as e:
             raise ToolError(f"Error: {e}") from e
@@ -10020,7 +10188,7 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=True,
         )
     )
-    def ad_campaigns_delete_ad(ad_id: str) -> str:
+    def ad_campaigns_delete_ad(ad_id: str, stage: bool | None = None) -> str:
         """Cancel an ad
 
         Deletes an ad on the platform while keeping its history, and removes empty parents only when they were created through this API.
@@ -10046,10 +10214,11 @@ def register_generated_tools(mcp, _get_client):
         Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit, microsoft, amazon, tradedesk, snapchat
 
         Args:
+            stage: Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later.
             ad_id: (required)"""
         client = _get_client()
         try:
-            response = client.ad_campaigns.delete_ad(ad_id=ad_id)
+            response = client.ad_campaigns.delete_ad(stage=stage, ad_id=ad_id)
             return _format_response(response)
         except Exception as e:
             raise ToolError(f"Error: {e}") from e
@@ -10168,6 +10337,7 @@ def register_generated_tools(mcp, _get_client):
     def ad_campaigns_attach_campaign_assets(
         campaign_id: str,
         account_id: str,
+        stage: bool | None = None,
         ad_account_id: str | None = None,
         customer_id: str | None = None,
         sitelinks: list[dict[str, Any]] | None = None,
@@ -10185,6 +10355,7 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             campaign_id: Numeric Google platform id. (required)
+            stage: Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.
             account_id: Zernio Google Ads connection id. (required)
             ad_account_id: Platform ad account ID (Google customer ID, digits only). Required when the connection has multiple customers.
             customer_id: Alias of adAccountId, kept for existing callers
@@ -10196,6 +10367,7 @@ def register_generated_tools(mcp, _get_client):
         try:
             response = client.ad_campaigns.attach_campaign_assets(
                 campaign_id=campaign_id,
+                stage=stage,
                 account_id=account_id,
                 ad_account_id=ad_account_id,
                 customer_id=customer_id,
@@ -10220,6 +10392,7 @@ def register_generated_tools(mcp, _get_client):
         campaign_id: str,
         account_id: str,
         updates: list[dict[str, Any]] | None,
+        stage: bool | None = None,
         ad_account_id: str | None = None,
         customer_id: str | None = None,
     ) -> str:
@@ -10233,6 +10406,7 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             campaign_id: Numeric Google platform id. (required)
+            stage: Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.
             account_id: Zernio Google Ads connection id. (required)
             ad_account_id: Platform ad account ID (Google customer ID, digits only). Required when the connection has multiple customers.
             customer_id: Alias of adAccountId, kept for existing callers
@@ -10241,6 +10415,7 @@ def register_generated_tools(mcp, _get_client):
         try:
             response = client.ad_campaigns.update_campaign_assets(
                 campaign_id=campaign_id,
+                stage=stage,
                 account_id=account_id,
                 ad_account_id=ad_account_id,
                 customer_id=customer_id,
@@ -10263,6 +10438,7 @@ def register_generated_tools(mcp, _get_client):
         account_id: str,
         asset_resource_names: list[str] | None,
         campaign_asset_resource_names: list[str] | None,
+        stage: bool | None = None,
         ad_account_id: str | None = None,
         customer_id: str | None = None,
     ) -> str:
@@ -10275,6 +10451,7 @@ def register_generated_tools(mcp, _get_client):
         Platforms: google
 
         Args:
+            stage: Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later.
             campaign_id: Numeric Google platform id. (required)
             account_id: Zernio Google Ads connection id. (required)
             ad_account_id: Platform ad account ID (Google customer ID, digits only). Required when the connection has multiple customers.
@@ -10284,6 +10461,7 @@ def register_generated_tools(mcp, _get_client):
         client = _get_client()
         try:
             response = client.ad_campaigns.remove_campaign_assets(
+                stage=stage,
                 campaign_id=campaign_id,
                 account_id=account_id,
                 ad_account_id=ad_account_id,
@@ -10345,6 +10523,7 @@ def register_generated_tools(mcp, _get_client):
     def ad_campaigns_attach_ad_group_assets(
         ad_set_id: str,
         account_id: str,
+        stage: bool | None = None,
         ad_account_id: str | None = None,
         customer_id: str | None = None,
         sitelinks: list[dict[str, Any]] | None = None,
@@ -10362,6 +10541,7 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             ad_set_id: Numeric Google platform id. (required)
+            stage: Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.
             account_id: Zernio Google Ads connection id. (required)
             ad_account_id: Platform ad account ID (Google customer ID, digits only). Required when the connection has multiple customers.
             customer_id: Alias of adAccountId, kept for existing callers
@@ -10373,6 +10553,7 @@ def register_generated_tools(mcp, _get_client):
         try:
             response = client.ad_campaigns.attach_ad_group_assets(
                 ad_set_id=ad_set_id,
+                stage=stage,
                 account_id=account_id,
                 ad_account_id=ad_account_id,
                 customer_id=customer_id,
@@ -10397,6 +10578,7 @@ def register_generated_tools(mcp, _get_client):
         ad_set_id: str,
         account_id: str,
         updates: list[dict[str, Any]] | None,
+        stage: bool | None = None,
         ad_account_id: str | None = None,
         customer_id: str | None = None,
     ) -> str:
@@ -10410,6 +10592,7 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             ad_set_id: Numeric Google platform id. (required)
+            stage: Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.
             account_id: Zernio Google Ads connection id. (required)
             ad_account_id: Platform ad account ID (Google customer ID, digits only). Required when the connection has multiple customers.
             customer_id: Alias of adAccountId, kept for existing callers
@@ -10418,6 +10601,7 @@ def register_generated_tools(mcp, _get_client):
         try:
             response = client.ad_campaigns.update_ad_group_assets(
                 ad_set_id=ad_set_id,
+                stage=stage,
                 account_id=account_id,
                 ad_account_id=ad_account_id,
                 customer_id=customer_id,
@@ -10440,6 +10624,7 @@ def register_generated_tools(mcp, _get_client):
         account_id: str,
         asset_resource_names: list[str] | None,
         ad_group_asset_resource_names: list[str] | None,
+        stage: bool | None = None,
         ad_account_id: str | None = None,
         customer_id: str | None = None,
     ) -> str:
@@ -10452,6 +10637,7 @@ def register_generated_tools(mcp, _get_client):
         Platforms: google
 
         Args:
+            stage: Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later.
             ad_set_id: Numeric Google platform id. (required)
             account_id: Zernio Google Ads connection id. (required)
             ad_account_id: Platform ad account ID (Google customer ID, digits only). Required when the connection has multiple customers.
@@ -10461,6 +10647,7 @@ def register_generated_tools(mcp, _get_client):
         client = _get_client()
         try:
             response = client.ad_campaigns.remove_ad_group_assets(
+                stage=stage,
                 ad_set_id=ad_set_id,
                 account_id=account_id,
                 ad_account_id=ad_account_id,
@@ -10741,6 +10928,7 @@ def register_generated_tools(mcp, _get_client):
     def ad_campaigns_replace_campaign_negative_keyword_lists(
         campaign_id: str,
         list_ids: list[str] | None,
+        stage: bool | None = None,
         platform: Literal[
             "facebook",
             "instagram",
@@ -10765,6 +10953,7 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             campaign_id: (required)
+            stage: Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.
             platform: Optional courtesy field. The resolved account or campaign determines support; other platforms return 501.
             list_ids: (required)
             idempotency_key: Optional key you choose (e.g. a UUID), one per logical action, up to 255 characters. Sent as the Idempotency-Key header. If this call times out or the chat stops, retry with the same key: within 24 hours you get the original result instead of a second copy, or 409 while the first call is still processing (retry shortly). Use a new key for a new action."""
@@ -10772,6 +10961,7 @@ def register_generated_tools(mcp, _get_client):
         try:
             response = client.ad_campaigns.replace_campaign_negative_keyword_lists(
                 campaign_id=campaign_id,
+                stage=stage,
                 platform=platform,
                 list_ids=list_ids,
                 idempotency_key=idempotency_key,
@@ -10790,6 +10980,7 @@ def register_generated_tools(mcp, _get_client):
     )
     def ad_campaigns_edit_campaign_negative_keyword_lists(
         campaign_id: str,
+        stage: bool | None = None,
         platform: Literal[
             "facebook",
             "instagram",
@@ -10818,6 +11009,7 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             campaign_id: (required)
+            stage: Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.
             platform: Optional courtesy field. The resolved account or campaign determines support; other platforms return 501.
             add: Shared negative keyword list ids to attach. Send at least one entry in add or remove.
             remove: Shared negative keyword list ids to detach.
@@ -10826,6 +11018,7 @@ def register_generated_tools(mcp, _get_client):
         try:
             response = client.ad_campaigns.edit_campaign_negative_keyword_lists(
                 campaign_id=campaign_id,
+                stage=stage,
                 platform=platform,
                 add=add,
                 remove=remove,
@@ -10856,6 +11049,7 @@ def register_generated_tools(mcp, _get_client):
             "conversions",
             "app_promotion",
         ],
+        stage: bool | None = None,
         creative_features: dict[str, Any] | None = None,
         post_id: str | None = None,
         platform_post_id: str | None = None,
@@ -10967,6 +11161,7 @@ def register_generated_tools(mcp, _get_client):
             Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit
 
             Args:
+                stage: Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.
                 creative_features
                 post_id: The Zernio post id (24 hex characters) returned when the post was created through Zernio. Send this or platformPostId. A value that is not a Zernio id is boosted as the platform post id, the same as platformPostId; a Zernio id that matches no post is a 404 on postId.
                 platform_post_id: Platform post ID (alternative to postId).
@@ -11211,6 +11406,7 @@ def register_generated_tools(mcp, _get_client):
         client = _get_client()
         try:
             response = client.ad_campaigns.boost_post(
+                stage=stage,
                 creative_features=creative_features,
                 post_id=post_id,
                 platform_post_id=platform_post_id,
@@ -11328,6 +11524,7 @@ def register_generated_tools(mcp, _get_client):
         campaign_id: str,
         name: str,
         final_urls: list[str] | None,
+        stage: bool | None = None,
         final_mobile_urls: list[str] | None = None,
         path1: str | None = None,
         path2: str | None = None,
@@ -11348,6 +11545,7 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             campaign_id: Google Ads campaign id. (required)
+            stage: Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.
             name: Unique within the campaign. (required)
             final_urls: (required)
             final_mobile_urls
@@ -11361,6 +11559,7 @@ def register_generated_tools(mcp, _get_client):
         try:
             response = client.ad_campaigns.create_google_asset_group(
                 campaign_id=campaign_id,
+                stage=stage,
                 name=name,
                 final_urls=final_urls,
                 final_mobile_urls=final_mobile_urls,
@@ -11417,6 +11616,7 @@ def register_generated_tools(mcp, _get_client):
     def ad_campaigns_update_google_asset_group(
         campaign_id: str,
         asset_group_id: str,
+        stage: bool | None = None,
         name: str | None = None,
         status: Literal["ENABLED", "PAUSED"] | None = None,
         final_urls: list[str] | None = None,
@@ -11436,6 +11636,7 @@ def register_generated_tools(mcp, _get_client):
         Args:
             campaign_id: Google Ads campaign id. (required)
             asset_group_id: Google asset group id. (required)
+            stage: Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.
             name
             status
             final_urls
@@ -11448,6 +11649,7 @@ def register_generated_tools(mcp, _get_client):
             response = client.ad_campaigns.update_google_asset_group(
                 campaign_id=campaign_id,
                 asset_group_id=asset_group_id,
+                stage=stage,
                 name=name,
                 status=status,
                 final_urls=final_urls,
@@ -11469,7 +11671,10 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def ad_campaigns_remove_google_asset_group(
-        campaign_id: str, asset_group_id: str, validate_only: bool = False
+        campaign_id: str,
+        asset_group_id: str,
+        stage: bool | None = None,
+        validate_only: bool = False,
     ) -> str:
         """Remove a Performance Max asset group
 
@@ -11480,12 +11685,14 @@ def register_generated_tools(mcp, _get_client):
         Platforms: google
 
         Args:
+            stage: Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later.
             campaign_id: (required)
             asset_group_id: (required)
             validate_only"""
         client = _get_client()
         try:
             response = client.ad_campaigns.remove_google_asset_group(
+                stage=stage,
                 campaign_id=campaign_id,
                 asset_group_id=asset_group_id,
                 validate_only=validate_only,
@@ -11505,6 +11712,7 @@ def register_generated_tools(mcp, _get_client):
     def ad_campaigns_edit_google_asset_group_assets(
         campaign_id: str,
         asset_group_id: str,
+        stage: bool | None = None,
         link: list[dict[str, Any]] | None = None,
         unlink: list[dict[str, Any]] | None = None,
         validate_only: bool = False,
@@ -11524,6 +11732,7 @@ def register_generated_tools(mcp, _get_client):
         Args:
             campaign_id: Google Ads campaign id. (required)
             asset_group_id: Google asset group id. (required)
+            stage: Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.
             link: Each item is an object with keys: fieldType (string, required) - Google AssetFieldType, such as HEADLINE, LONG_HEADLINE, DESCRIPTION, BUSINESS_NAME, MARKETING_IMAGE, SQUARE_MARKETING_IMAGE, PORTRAIT_MARKETING_IMAGE, LOGO, ...; asset (string) - Existing asset id or resource name customers/{customerId}/assets/{assetId}. Must belong to the campaign's ad account.; text (string) - Text assets link as HEADLINE, LONG_HEADLINE, DESCRIPTION or BUSINESS_NAME.; imageUrl (string) - Public http(s) image. Links as an image role or LOGO / LANDSCAPE_LOGO.; youtubeVideoId (string) - Links as YOUTUBE_VIDEO.
             unlink: Each item is an object with keys: fieldType (string, required); asset (string, required) - Asset id or resource name, as returned in the asset group's assets.
             validate_only"""
@@ -11532,6 +11741,7 @@ def register_generated_tools(mcp, _get_client):
             response = client.ad_campaigns.edit_google_asset_group_assets(
                 campaign_id=campaign_id,
                 asset_group_id=asset_group_id,
+                stage=stage,
                 link=link,
                 unlink=unlink,
                 validate_only=validate_only,
@@ -11552,6 +11762,7 @@ def register_generated_tools(mcp, _get_client):
         campaign_id: str,
         asset_group_id: str,
         tree: dict[str, Any] | None,
+        stage: bool | None = None,
         validate_only: bool = False,
     ) -> str:
         """Replace an asset group's listing-group tree
@@ -11568,6 +11779,7 @@ def register_generated_tools(mcp, _get_client):
         Args:
             campaign_id: Google Ads campaign id. (required)
             asset_group_id: Google asset group id. (required)
+            stage: Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.
             tree: Object with keys: children (list of objects with keys dimension, excluded, children) (required)
             validate_only"""
         client = _get_client()
@@ -11575,6 +11787,7 @@ def register_generated_tools(mcp, _get_client):
             response = client.ad_campaigns.replace_google_listing_group_filters(
                 campaign_id=campaign_id,
                 asset_group_id=asset_group_id,
+                stage=stage,
                 tree=tree,
                 validate_only=validate_only,
             )
@@ -12815,6 +13028,7 @@ def register_generated_tools(mcp, _get_client):
     )
     def ad_campaigns_update_campaign_conversion_goals(
         campaign_id: str,
+        stage: bool | None = None,
         goals: list[dict[str, Any]] | None = None,
         goal_config_level: Literal["CUSTOMER", "CAMPAIGN"] | None = None,
         custom_conversion_goal_id: str | None = None,
@@ -12837,6 +13051,7 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             campaign_id: Google campaign id (required)
+            stage: Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.
             goals: Each item is an object with keys: category (string, required) - Google ConversionActionCategory, e.g. PURCHASE, SIGNUP, SUBMIT_LEAD_FORM; origin (string, required) - Google ConversionOrigin, e.g. WEBSITE, APP, CALL_FROM_ADS, STORE, GOOGLE_HOSTED; biddable (boolean, required)
             goal_config_level
             custom_conversion_goal_id: Custom goal to bid on, or null to clear"""
@@ -12844,6 +13059,7 @@ def register_generated_tools(mcp, _get_client):
         try:
             response = client.ad_campaigns.update_campaign_conversion_goals(
                 campaign_id=campaign_id,
+                stage=stage,
                 goals=goals,
                 goal_config_level=goal_config_level,
                 custom_conversion_goal_id=custom_conversion_goal_id,
@@ -12962,11 +13178,13 @@ def register_generated_tools(mcp, _get_client):
 
         Send the new body: the same kind of body as the route the change was staged on, without `stage`. It passes the checks of staging again for the calling user. The object is read again, so the diff and the changed-since check start from its current values.
 
-        A change of type `operation` stores a whole request and cannot be edited in place (`409`): discard it and stage the request again.
+        A change of type `operation` stores a whole request. Its new body goes through the route of that write, which checks it as a new staged request. The path and the query stay as they were staged.
+
+        Such an edit answers what that route answers when it refuses the body, and the change stays as it was. A request without a body has nothing to edit (`409`).
 
         ### Refresh
 
-        Send no body. The object is read again with the body the change already holds. Use it on a change that reads `stale: true` after a confirm answered `409` `change_target_changed`: once refreshed it can be confirmed.
+        Send no body. The object is read again with the body the change already holds. Use it on a change that reads `stale: true` after a confirm answered `409` `change_target_changed`: once refreshed it can be ...
 
         Platforms: meta, google
 
@@ -13013,24 +13231,37 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=True,
         )
     )
-    def ad_changes_restage_ad_change(change_id: str) -> str:
+    def ad_changes_restage_ad_change(
+        change_id: str, acknowledge: bool | None = None
+    ) -> str:
         """Stage a failed ad change again
 
         Makes a new staged change from a change that failed at confirm. Nothing is written to the ad network.
 
-        The new change holds the same request. It is checked for the calling user, and an edit is read against the current values of its object. The failed change stays readable until it is deleted.
+        The new change holds the same request. It is checked for the calling user, and an edit is read against the current values of its object. The failed change stays readable until it is deleted, with `restaged: true`.
 
-        A failed create cannot be staged again (`409`): it may have made part of its objects on the ad network, which its `error.details` lists. Stage a new create instead. This covers every change with `creates: true`.
+        ### A change that may have made objects
 
-        Also refused with `409`: a change that failed as `change_outcome_unknown`, and a change whose kept uploads were deleted or moved to an earlier restage.
+        The new change sends the same request again at confirm. A failed create may have made part of its objects on the ad network, and they would be made a second time.
+
+        Such a change answers `409` with `param: \"acknowledge\"`. `details.leftBehind` lists the objects the failure left, and `details.outcomeUnknown` is true when nothing tells what was made. Send `acknowledge: true` to stage it again anyway.
+
+        A failed create that left nothing behind is staged again without it.
+
+        ### Refused
+
+        A change that did not fail, a failed change that was already staged again, and a change whose kept uploads were deleted or moved to an earlier restage ...
 
         Platforms: meta, google
 
         Args:
-            change_id: The id of the failed change. (required)"""
+            change_id: The id of the failed change. (required)
+            acknowledge: Send true after a `409` with `param: "acknowledge"`: the caller has seen what the failed change left on the ad network, or that nobody knows what it left."""
         client = _get_client()
         try:
-            response = client.ad_changes.restage_ad_change(change_id=change_id)
+            response = client.ad_changes.restage_ad_change(
+                change_id=change_id, acknowledge=acknowledge
+            )
             return _format_response(response)
         except Exception as e:
             raise ToolError(f"Error: {e}") from e
@@ -13324,6 +13555,7 @@ def register_generated_tools(mcp, _get_client):
         headline: str,
         body: str,
         link_url: str,
+        stage: bool | None = None,
         description: str | None = None,
         call_to_action: str = "LEARN_MORE",
         call_to_action_link: str | None = None,
@@ -13361,6 +13593,7 @@ def register_generated_tools(mcp, _get_client):
             Platforms: meta
 
             Args:
+                stage: Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.
                 account_id: Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token and Page. (required)
                 ad_account_id: Platform ad account id (Meta act_<n>, Google customer id, LinkedIn account id, ...). (required)
                 headline: (required)
@@ -13397,6 +13630,7 @@ def register_generated_tools(mcp, _get_client):
         client = _get_client()
         try:
             response = client.ad_creatives.create_ad_creative(
+                stage=stage,
                 account_id=account_id,
                 ad_account_id=ad_account_id,
                 headline=headline,
@@ -13472,7 +13706,7 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def ad_creatives_update_ad_creative(
-        creative_id: str, account_id: str, name: str
+        creative_id: str, account_id: str, name: str, stage: bool | None = None
     ) -> str:
         """Rename a creative
 
@@ -13486,12 +13720,13 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             creative_id: Platform creative id (required)
+            stage: Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.
             account_id: Zernio SocialAccount id (posting or ads variant); its platform decides where the campaign is created. (required)
             name: (required)"""
         client = _get_client()
         try:
             response = client.ad_creatives.update_ad_creative(
-                creative_id=creative_id, account_id=account_id, name=name
+                creative_id=creative_id, stage=stage, account_id=account_id, name=name
             )
             return _format_response(response)
         except Exception as e:
@@ -13505,7 +13740,9 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=True,
         )
     )
-    def ad_creatives_delete_ad_creative(creative_id: str, account_id: str) -> str:
+    def ad_creatives_delete_ad_creative(
+        creative_id: str, account_id: str, stage: bool | None = None
+    ) -> str:
         """Delete a creative
 
         Deletes a Meta creative from the library, which Meta only allows when no ad uses it.
@@ -13516,12 +13753,13 @@ def register_generated_tools(mcp, _get_client):
         Platforms: meta
 
         Args:
+            stage: Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later.
             creative_id: Platform creative id (required)
             account_id: Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token. (required)"""
         client = _get_client()
         try:
             response = client.ad_creatives.delete_ad_creative(
-                creative_id=creative_id, account_id=account_id
+                stage=stage, creative_id=creative_id, account_id=account_id
             )
             return _format_response(response)
         except Exception as e:
@@ -13782,7 +14020,7 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def ad_creatives_delete_ad_video(
-        video_id: str, account_id: str, ad_account_id: str
+        video_id: str, account_id: str, ad_account_id: str, stage: bool | None = None
     ) -> str:
         """Delete an ad video
 
@@ -13797,13 +14035,17 @@ def register_generated_tools(mcp, _get_client):
         Platforms: meta
 
         Args:
+            stage: Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later.
             video_id: Meta ad video id (numeric). (required)
             account_id: Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token. (required)
             ad_account_id: Meta ad account id (act_<n>) that owns the video. (required)"""
         client = _get_client()
         try:
             response = client.ad_creatives.delete_ad_video(
-                video_id=video_id, account_id=account_id, ad_account_id=ad_account_id
+                stage=stage,
+                video_id=video_id,
+                account_id=account_id,
+                ad_account_id=ad_account_id,
             )
             return _format_response(response)
         except Exception as e:
@@ -13888,7 +14130,10 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def ad_creatives_set_partnership_ad_permission(
-        account_id: str, creator_username: str, revoke: bool | None = None
+        account_id: str,
+        creator_username: str,
+        stage: bool | None = None,
+        revoke: bool | None = None,
     ) -> str:
         """Set partnership permission
 
@@ -13899,13 +14144,17 @@ def register_generated_tools(mcp, _get_client):
         Platforms: meta
 
         Args:
+            stage: Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.
             account_id: (required)
             creator_username: (required)
             revoke"""
         client = _get_client()
         try:
             response = client.ad_creatives.set_partnership_ad_permission(
-                account_id=account_id, creator_username=creator_username, revoke=revoke
+                stage=stage,
+                account_id=account_id,
+                creator_username=creator_username,
+                revoke=revoke,
             )
             return _format_response(response)
         except Exception as e:
@@ -32980,6 +33229,7 @@ def register_generated_tools(mcp, _get_client):
         account_id: str,
         name: str,
         type: Literal["WEBPAGE", "UPLOAD_CLICKS"],
+        stage: bool | None = None,
         ad_account_id: str | None = None,
         customer_id: str | None = None,
         default_value: float | None = None,
@@ -33029,6 +33279,7 @@ def register_generated_tools(mcp, _get_client):
         Platforms: google
 
         Args:
+            stage: Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.
             account_id: SocialAccount ID. Must be a `googleads` account. (required)
             ad_account_id: Platform ad account ID (Google customer ID, digits only). Resolved automatically when the connection has exactly one accessible customer.
             customer_id: Alias of adAccountId, kept for existing callers
@@ -33045,6 +33296,7 @@ def register_generated_tools(mcp, _get_client):
         client = _get_client()
         try:
             response = client.conversions.create_conversion_action(
+                stage=stage,
                 account_id=account_id,
                 ad_account_id=ad_account_id,
                 customer_id=customer_id,
@@ -33117,6 +33369,7 @@ def register_generated_tools(mcp, _get_client):
     def conversions_update_ad_conversion_goals(
         account_id: str,
         goals: list[dict[str, Any]] | None,
+        stage: bool | None = None,
         ad_account_id: str | None = None,
         customer_id: str | None = None,
     ) -> str:
@@ -33131,6 +33384,7 @@ def register_generated_tools(mcp, _get_client):
         Platforms: google
 
         Args:
+            stage: Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.
             account_id: Zernio SocialAccount id (Google Ads) (required)
             ad_account_id: Google customer id. Required when the connection has multiple customers.
             customer_id: Alias of adAccountId
@@ -33138,6 +33392,7 @@ def register_generated_tools(mcp, _get_client):
         client = _get_client()
         try:
             response = client.conversions.update_ad_conversion_goals(
+                stage=stage,
                 account_id=account_id,
                 ad_account_id=ad_account_id,
                 customer_id=customer_id,
@@ -33158,6 +33413,7 @@ def register_generated_tools(mcp, _get_client):
     def conversions_update_conversion_action(
         action_id: str,
         account_id: str,
+        stage: bool | None = None,
         ad_account_id: str | None = None,
         customer_id: str | None = None,
         name: str | None = None,
@@ -33215,6 +33471,7 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             action_id: Google conversion action id (required)
+            stage: Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.
             account_id: Zernio SocialAccount id (Google Ads) (required)
             ad_account_id: Google customer id. Required when the connection has multiple customers.
             customer_id: Alias of adAccountId
@@ -33232,6 +33489,7 @@ def register_generated_tools(mcp, _get_client):
         try:
             response = client.conversions.update_conversion_action(
                 action_id=action_id,
+                stage=stage,
                 account_id=account_id,
                 ad_account_id=ad_account_id,
                 customer_id=customer_id,
@@ -33298,6 +33556,7 @@ def register_generated_tools(mcp, _get_client):
         account_id: str,
         name: str,
         conversion_action_ids: list[str] | None,
+        stage: bool | None = None,
         ad_account_id: str | None = None,
         customer_id: str | None = None,
     ) -> str:
@@ -33310,6 +33569,7 @@ def register_generated_tools(mcp, _get_client):
         Platforms: google
 
         Args:
+            stage: Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.
             account_id: Zernio SocialAccount id (Google Ads) (required)
             ad_account_id: Google customer id. Required when the connection has multiple customers.
             customer_id: Alias of adAccountId
@@ -33318,6 +33578,7 @@ def register_generated_tools(mcp, _get_client):
         client = _get_client()
         try:
             response = client.conversions.create_custom_conversion_goal(
+                stage=stage,
                 account_id=account_id,
                 ad_account_id=ad_account_id,
                 customer_id=customer_id,
@@ -33339,6 +33600,7 @@ def register_generated_tools(mcp, _get_client):
     def conversions_update_custom_conversion_goal(
         goal_id: str,
         account_id: str,
+        stage: bool | None = None,
         ad_account_id: str | None = None,
         customer_id: str | None = None,
         name: str | None = None,
@@ -33354,6 +33616,7 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             goal_id: Google custom conversion goal id (required)
+            stage: Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.
             account_id: Zernio SocialAccount id (Google Ads) (required)
             ad_account_id: Google customer id. Required when the connection has multiple customers.
             customer_id: Alias of adAccountId
@@ -33363,6 +33626,7 @@ def register_generated_tools(mcp, _get_client):
         try:
             response = client.conversions.update_custom_conversion_goal(
                 goal_id=goal_id,
+                stage=stage,
                 account_id=account_id,
                 ad_account_id=ad_account_id,
                 customer_id=customer_id,
@@ -33384,6 +33648,7 @@ def register_generated_tools(mcp, _get_client):
     def conversions_remove_custom_conversion_goal(
         goal_id: str,
         account_id: str,
+        stage: bool | None = None,
         ad_account_id: str | None = None,
         customer_id: str | None = None,
     ) -> str:
@@ -33396,6 +33661,7 @@ def register_generated_tools(mcp, _get_client):
         Platforms: google
 
         Args:
+            stage: Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later.
             goal_id: Google custom conversion goal id (required)
             account_id: Zernio SocialAccount id (Google Ads) (required)
             ad_account_id: Google customer id. Required when the connection has multiple customers.
@@ -33403,6 +33669,7 @@ def register_generated_tools(mcp, _get_client):
         client = _get_client()
         try:
             response = client.conversions.remove_custom_conversion_goal(
+                stage=stage,
                 goal_id=goal_id,
                 account_id=account_id,
                 ad_account_id=ad_account_id,
@@ -42794,6 +43061,7 @@ def register_generated_tools(mcp, _get_client):
         account_id: str,
         name: str,
         privacy_policy_url: str,
+        stage: bool | None = None,
         questions: list[dict[str, Any]] | None = None,
         privacy_policy_link_text: str | None = None,
         follow_up_action_url: str | None = None,
@@ -42831,6 +43099,7 @@ def register_generated_tools(mcp, _get_client):
         Platforms: meta, linkedin
 
         Args:
+            stage: Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.
             account_id: (required)
             name: (required)
             questions: Deprecated (Meta legacy shape): use platformSpecificData.questions. Each item is an object with keys: type (string, required) - EMAIL, PHONE, FULL_NAME, FIRST_NAME, LAST_NAME, CUSTOM, …; key (string) - CUSTOM questions only.; label (string) - CUSTOM questions only.; options (list of objects with keys key, value); inline_context (string)
@@ -42848,6 +43117,7 @@ def register_generated_tools(mcp, _get_client):
         client = _get_client()
         try:
             response = client.lead_gen.create_lead_form(
+                stage=stage,
                 account_id=account_id,
                 name=name,
                 questions=questions,
@@ -42914,7 +43184,9 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=True,
         )
     )
-    def lead_gen_archive_lead_form(form_id: str, account_id: str) -> str:
+    def lead_gen_archive_lead_form(
+        form_id: str, account_id: str, stage: bool | None = None
+    ) -> str:
         """Archive a lead form
 
             Archives a lead form so it can no longer be used (neither Meta nor LinkedIn allows deleting one).
@@ -42924,6 +43196,7 @@ def register_generated_tools(mcp, _get_client):
             Platforms: meta, linkedin
 
             Args:
+                stage: Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later.
                 form_id: Numeric form id (Meta leadgen_form id or LinkedIn leadForm id). (required)
                 account_id: Connected Meta ads, facebook, instagram or linkedin ads account id (selects the platform).
 
@@ -42932,7 +43205,7 @@ def register_generated_tools(mcp, _get_client):
         client = _get_client()
         try:
             response = client.lead_gen.archive_lead_form(
-                form_id=form_id, account_id=account_id
+                stage=stage, form_id=form_id, account_id=account_id
             )
             return _format_response(response)
         except Exception as e:
@@ -44682,6 +44955,7 @@ def register_generated_tools(mcp, _get_client):
         account_id: str,
         ad_account_id: str,
         name: str,
+        stage: bool | None = None,
         retry_on_server_error: bool = True,
         creative_features: dict[str, Any] | None = None,
         tracking: dict[str, Any] | None = None,
@@ -44833,6 +45107,7 @@ def register_generated_tools(mcp, _get_client):
             Safe to retry: an identical call within 24 hours returns the first result instead of creating a second one, and answers 409 while the first is still running. To create another on purpose, or if that 409 does not clear, change an argument such as the name.
 
             Args:
+                stage: Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.
                 retry_on_server_error: When Meta answers a create with a 5xx and reading the parent back by name finds no such object, Zernio sends the create again (at most 3 POSTs per object, never for an object created ACTIVE) and reports it in `recoveredWrites`.
 
         `false` never sends it again: the request fails with 502 and `details.unconfirmedWrite`, so you can check the parent yourself. One object found by name is still reused.
@@ -45053,6 +45328,7 @@ def register_generated_tools(mcp, _get_client):
                 idempotency_key: Optional key you choose (e.g. a UUID), one per logical action, up to 255 characters. Sent as the Idempotency-Key header. If this call times out or the chat stops, retry with the same key: within 24 hours you get the original result instead of a second copy, or 409 while the first call is still processing (retry shortly). Use a new key for a new action."""
         client = _get_client()
         same_arguments: dict[str, Any] = {
+            "stage": stage,
             "retry_on_server_error": retry_on_server_error,
             "creative_features": creative_features,
             "tracking": tracking,
@@ -45136,6 +45412,7 @@ def register_generated_tools(mcp, _get_client):
         }
         try:
             response = client.messaging_ads.create_messaging_ad(
+                stage=stage,
                 retry_on_server_error=retry_on_server_error,
                 creative_features=creative_features,
                 tracking=tracking,
@@ -45239,6 +45516,7 @@ def register_generated_tools(mcp, _get_client):
         name: str,
         phone_number: str,
         link_url: str,
+        stage: bool | None = None,
         retry_on_server_error: bool = True,
         creative_features: dict[str, Any] | None = None,
         tracking: dict[str, Any] | None = None,
@@ -45377,6 +45655,7 @@ def register_generated_tools(mcp, _get_client):
             Safe to retry: an identical call within 24 hours returns the first result instead of creating a second one, and answers 409 while the first is still running. To create another on purpose, or if that 409 does not clear, change an argument such as the name.
 
             Args:
+                stage: Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.
                 retry_on_server_error: When Meta answers a create with a 5xx and reading the parent back by name finds no such object, Zernio sends the create again (at most 3 POSTs per object, never for an object created ACTIVE) and reports it in `recoveredWrites`.
 
         `false` never sends it again: the request fails with 502 and `details.unconfirmedWrite`, so you can check the parent yourself. One object found by name is still reused.
@@ -45574,6 +45853,7 @@ def register_generated_tools(mcp, _get_client):
                 idempotency_key: Optional key you choose (e.g. a UUID), one per logical action, up to 255 characters. Sent as the Idempotency-Key header. If this call times out or the chat stops, retry with the same key: within 24 hours you get the original result instead of a second copy, or 409 while the first call is still processing (retry shortly). Use a new key for a new action."""
         client = _get_client()
         same_arguments: dict[str, Any] = {
+            "stage": stage,
             "retry_on_server_error": retry_on_server_error,
             "creative_features": creative_features,
             "tracking": tracking,
@@ -45653,6 +45933,7 @@ def register_generated_tools(mcp, _get_client):
         }
         try:
             response = client.messaging_ads.create_call_ad(
+                stage=stage,
                 retry_on_server_error=retry_on_server_error,
                 creative_features=creative_features,
                 tracking=tracking,
@@ -45748,6 +46029,7 @@ def register_generated_tools(mcp, _get_client):
         account_id: str,
         ad_account_id: str,
         name: str,
+        stage: bool | None = None,
         retry_on_server_error: bool = True,
         creative_features: dict[str, Any] | None = None,
         tracking: dict[str, Any] | None = None,
@@ -45882,6 +46164,7 @@ def register_generated_tools(mcp, _get_client):
             Safe to retry: an identical call within 24 hours returns the first result instead of creating a second one, and answers 409 while the first is still running. To create another on purpose, or if that 409 does not clear, change an argument such as the name.
 
             Args:
+                stage: Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.
                 retry_on_server_error: When Meta answers a create with a 5xx and reading the parent back by name finds no such object, Zernio sends the create again (at most 3 POSTs per object, never for an object created ACTIVE) and reports it in `recoveredWrites`.
 
         `false` never sends it again: the request fails with 502 and `details.unconfirmedWrite`, so you can check the parent yourself. One object found by name is still reused.
@@ -46077,6 +46360,7 @@ def register_generated_tools(mcp, _get_client):
                 idempotency_key: Optional key you choose (e.g. a UUID), one per logical action, up to 255 characters. Sent as the Idempotency-Key header. If this call times out or the chat stops, retry with the same key: within 24 hours you get the original result instead of a second copy, or 409 while the first call is still processing (retry shortly). Use a new key for a new action."""
         client = _get_client()
         same_arguments: dict[str, Any] = {
+            "stage": stage,
             "retry_on_server_error": retry_on_server_error,
             "creative_features": creative_features,
             "tracking": tracking,
@@ -46154,6 +46438,7 @@ def register_generated_tools(mcp, _get_client):
         }
         try:
             response = client.messaging_ads.create_ctwa_ad(
+                stage=stage,
                 retry_on_server_error=retry_on_server_error,
                 creative_features=creative_features,
                 tracking=tracking,
@@ -52690,6 +52975,7 @@ def register_generated_tools(mcp, _get_client):
     )
     def tracking_tags_update_ad_tracking_tags(
         ad_id: str,
+        stage: bool | None = None,
         url_tags: list[dict[str, Any]] | None = None,
         creative: dict[str, Any] | None = None,
         tracking_url_template: str | None = None,
@@ -52721,6 +53007,7 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             ad_id: (required)
+            stage: Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.
             url_tags: Meta only. Click-URL params appended to a freshly-rebuilt creative. Meta dynamic macros ({{ad.id}}, {{campaign.id}}, {{placement}}, ...) are sent through unescaped so Meta expands them; every other character is percent-encoded. Each item is an object with keys: key (string, required); value (string, required)
             creative: Meta only. OPTIONAL: omit to preserve the existing creative verbatim (default). Provide it only to rebuild the creative explicitly, or for creatives whose object_story_spec Meta strips. Object with keys: headline (string, required); body (string, required); callToAction (string, required); linkUrl (string, required); imageUrl (string, required); videoUrl (string); callToActionLink (string) - The Get Directions button location, required to rebuild a `GET_DIRECTIONS` image creative (400 without it). Only with `callToAction: GET_DIRECTIONS`.
             tracking_url_template: Google only. Full tracking template (must contain {lpurl}).
@@ -52731,6 +53018,7 @@ def register_generated_tools(mcp, _get_client):
         try:
             response = client.tracking_tags.update_ad_tracking_tags(
                 ad_id=ad_id,
+                stage=stage,
                 url_tags=url_tags,
                 creative=creative,
                 tracking_url_template=tracking_url_template,

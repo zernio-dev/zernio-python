@@ -107,6 +107,7 @@ class TrackingTagsResource:
         self,
         ad_id: str,
         *,
+        stage: bool | None = None,
         url_tags: list[dict[str, Any]] | None = None,
         creative: dict[str, Any] | None = None,
         tracking_url_template: str | None = None,
@@ -117,6 +118,7 @@ class TrackingTagsResource:
         """Set ad tracking tags"""
         payload = self._build_body(
             {
+                "stage": stage,
                 "urlTags": url_tags,
                 "creative": creative,
                 "trackingUrlTemplate": tracking_url_template,
@@ -482,6 +484,7 @@ class TrackingTagsResource:
         self,
         ad_id: str,
         *,
+        stage: bool | None = None,
         url_tags: list[dict[str, Any]] | None = None,
         creative: dict[str, Any] | None = None,
         tracking_url_template: str | None = None,
@@ -492,6 +495,7 @@ class TrackingTagsResource:
         """Set ad tracking tags (async)"""
         payload = self._build_body(
             {
+                "stage": stage,
                 "urlTags": url_tags,
                 "creative": creative,
                 "trackingUrlTemplate": tracking_url_template,

@@ -184,6 +184,7 @@ class AdCreativesResource:
         body: str,
         link_url: str,
         *,
+        stage: bool | None = None,
         description: str | None = None,
         call_to_action: str | None = "LEARN_MORE",
         call_to_action_link: Any | None = None,
@@ -201,6 +202,7 @@ class AdCreativesResource:
         """Create a standalone creative"""
         payload = self._build_body(
             {
+                "stage": stage,
                 "accountId": account_id,
                 "adAccountId": ad_account_id,
                 "headline": headline,
@@ -244,21 +246,25 @@ class AdCreativesResource:
         return self._client._get(f"/v1/ads/creatives/{creative_id}", params=params)
 
     def update_ad_creative(
-        self, creative_id: str, account_id: str, name: str
+        self, creative_id: str, account_id: str, name: str, *, stage: bool | None = None
     ) -> dict[str, Any]:
         """Rename a creative"""
         payload = self._build_body(
             {
+                "stage": stage,
                 "accountId": account_id,
                 "name": name,
             }
         )
         return self._client._put(f"/v1/ads/creatives/{creative_id}", data=payload)
 
-    def delete_ad_creative(self, creative_id: str, account_id: str) -> dict[str, Any]:
+    def delete_ad_creative(
+        self, creative_id: str, account_id: str, *, stage: bool | None = None
+    ) -> dict[str, Any]:
         """Delete a creative"""
         params = self._build_query(
             {
+                "stage": stage,
                 "accountId": account_id,
             }
         )
@@ -363,11 +369,17 @@ class AdCreativesResource:
         return self._client._get(f"/v1/ads/videos/{video_id}", params=params)
 
     def delete_ad_video(
-        self, video_id: str, account_id: str, ad_account_id: str
+        self,
+        video_id: str,
+        account_id: str,
+        ad_account_id: str,
+        *,
+        stage: bool | None = None,
     ) -> dict[str, Any]:
         """Delete an ad video"""
         params = self._build_query(
             {
+                "stage": stage,
                 "accountId": account_id,
                 "adAccountId": ad_account_id,
             }
@@ -406,11 +418,17 @@ class AdCreativesResource:
         return self._client._get("/v1/ads/partnership-permissions", params=params)
 
     def set_partnership_ad_permission(
-        self, account_id: str, creator_username: str, *, revoke: bool | None = None
+        self,
+        account_id: str,
+        creator_username: str,
+        *,
+        stage: bool | None = None,
+        revoke: bool | None = None,
     ) -> dict[str, Any]:
         """Set partnership permission"""
         payload = self._build_body(
             {
+                "stage": stage,
                 "accountId": account_id,
                 "creatorUsername": creator_username,
                 "revoke": revoke,
@@ -503,6 +521,7 @@ class AdCreativesResource:
         body: str,
         link_url: str,
         *,
+        stage: bool | None = None,
         description: str | None = None,
         call_to_action: str | None = "LEARN_MORE",
         call_to_action_link: Any | None = None,
@@ -520,6 +539,7 @@ class AdCreativesResource:
         """Create a standalone creative (async)"""
         payload = self._build_body(
             {
+                "stage": stage,
                 "accountId": account_id,
                 "adAccountId": ad_account_id,
                 "headline": headline,
@@ -565,11 +585,12 @@ class AdCreativesResource:
         )
 
     async def aupdate_ad_creative(
-        self, creative_id: str, account_id: str, name: str
+        self, creative_id: str, account_id: str, name: str, *, stage: bool | None = None
     ) -> dict[str, Any]:
         """Rename a creative (async)"""
         payload = self._build_body(
             {
+                "stage": stage,
                 "accountId": account_id,
                 "name": name,
             }
@@ -579,11 +600,12 @@ class AdCreativesResource:
         )
 
     async def adelete_ad_creative(
-        self, creative_id: str, account_id: str
+        self, creative_id: str, account_id: str, *, stage: bool | None = None
     ) -> dict[str, Any]:
         """Delete a creative (async)"""
         params = self._build_query(
             {
+                "stage": stage,
                 "accountId": account_id,
             }
         )
@@ -690,11 +712,17 @@ class AdCreativesResource:
         return await self._client._aget(f"/v1/ads/videos/{video_id}", params=params)
 
     async def adelete_ad_video(
-        self, video_id: str, account_id: str, ad_account_id: str
+        self,
+        video_id: str,
+        account_id: str,
+        ad_account_id: str,
+        *,
+        stage: bool | None = None,
     ) -> dict[str, Any]:
         """Delete an ad video (async)"""
         params = self._build_query(
             {
+                "stage": stage,
                 "accountId": account_id,
                 "adAccountId": ad_account_id,
             }
@@ -735,11 +763,17 @@ class AdCreativesResource:
         )
 
     async def aset_partnership_ad_permission(
-        self, account_id: str, creator_username: str, *, revoke: bool | None = None
+        self,
+        account_id: str,
+        creator_username: str,
+        *,
+        stage: bool | None = None,
+        revoke: bool | None = None,
     ) -> dict[str, Any]:
         """Set partnership permission (async)"""
         payload = self._build_body(
             {
+                "stage": stage,
                 "accountId": account_id,
                 "creatorUsername": creator_username,
                 "revoke": revoke,

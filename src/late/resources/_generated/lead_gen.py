@@ -226,6 +226,7 @@ class LeadGenResource:
         name: str,
         privacy_policy_url: str,
         *,
+        stage: bool | None = None,
         questions: list[dict[str, Any]] | None = None,
         privacy_policy_link_text: str | None = None,
         follow_up_action_url: str | None = None,
@@ -241,6 +242,7 @@ class LeadGenResource:
         """Create a lead form"""
         payload = self._build_body(
             {
+                "stage": stage,
                 "accountId": account_id,
                 "name": name,
                 "questions": questions,
@@ -271,10 +273,13 @@ class LeadGenResource:
         )
         return self._client._get(f"/v1/ads/lead-forms/{form_id}", params=params)
 
-    def archive_lead_form(self, form_id: str, account_id: str) -> dict[str, Any]:
+    def archive_lead_form(
+        self, form_id: str, account_id: str, *, stage: bool | None = None
+    ) -> dict[str, Any]:
         """Archive a lead form"""
         params = self._build_query(
             {
+                "stage": stage,
                 "accountId": account_id,
             }
         )
@@ -453,6 +458,7 @@ class LeadGenResource:
         name: str,
         privacy_policy_url: str,
         *,
+        stage: bool | None = None,
         questions: list[dict[str, Any]] | None = None,
         privacy_policy_link_text: str | None = None,
         follow_up_action_url: str | None = None,
@@ -468,6 +474,7 @@ class LeadGenResource:
         """Create a lead form (async)"""
         payload = self._build_body(
             {
+                "stage": stage,
                 "accountId": account_id,
                 "name": name,
                 "questions": questions,
@@ -498,10 +505,13 @@ class LeadGenResource:
         )
         return await self._client._aget(f"/v1/ads/lead-forms/{form_id}", params=params)
 
-    async def aarchive_lead_form(self, form_id: str, account_id: str) -> dict[str, Any]:
+    async def aarchive_lead_form(
+        self, form_id: str, account_id: str, *, stage: bool | None = None
+    ) -> dict[str, Any]:
         """Archive a lead form (async)"""
         params = self._build_query(
             {
+                "stage": stage,
                 "accountId": account_id,
             }
         )

@@ -106,6 +106,7 @@ class MessagingAdsResource:
         name: str,
         *,
         idempotency_key: str | None = None,
+        stage: bool | None = None,
         retry_on_server_error: bool | None = True,
         creative_features: Any | None = None,
         tracking: Any | None = None,
@@ -187,6 +188,7 @@ class MessagingAdsResource:
         """Create messaging ad"""
         payload = self._build_body(
             {
+                "stage": stage,
                 "retryOnServerError": retry_on_server_error,
                 "creativeFeatures": creative_features,
                 "tracking": tracking,
@@ -283,6 +285,7 @@ class MessagingAdsResource:
         link_url: str,
         *,
         idempotency_key: str | None = None,
+        stage: bool | None = None,
         retry_on_server_error: bool | None = True,
         creative_features: Any | None = None,
         tracking: Any | None = None,
@@ -358,6 +361,7 @@ class MessagingAdsResource:
         """Create Click-to-Call ad"""
         payload = self._build_body(
             {
+                "stage": stage,
                 "retryOnServerError": retry_on_server_error,
                 "creativeFeatures": creative_features,
                 "tracking": tracking,
@@ -448,6 +452,7 @@ class MessagingAdsResource:
         name: str,
         *,
         idempotency_key: str | None = None,
+        stage: bool | None = None,
         retry_on_server_error: bool | None = True,
         creative_features: Any | None = None,
         tracking: Any | None = None,
@@ -523,6 +528,7 @@ class MessagingAdsResource:
         """Create CTWA ad (deprecated)"""
         payload = self._build_body(
             {
+                "stage": stage,
                 "retryOnServerError": retry_on_server_error,
                 "creativeFeatures": creative_features,
                 "tracking": tracking,
@@ -611,6 +617,7 @@ class MessagingAdsResource:
         name: str,
         *,
         idempotency_key: str | None = None,
+        stage: bool | None = None,
         retry_on_server_error: bool | None = True,
         creative_features: Any | None = None,
         tracking: Any | None = None,
@@ -692,6 +699,7 @@ class MessagingAdsResource:
         """Create messaging ad (async)"""
         payload = self._build_body(
             {
+                "stage": stage,
                 "retryOnServerError": retry_on_server_error,
                 "creativeFeatures": creative_features,
                 "tracking": tracking,
@@ -790,6 +798,7 @@ class MessagingAdsResource:
         link_url: str,
         *,
         idempotency_key: str | None = None,
+        stage: bool | None = None,
         retry_on_server_error: bool | None = True,
         creative_features: Any | None = None,
         tracking: Any | None = None,
@@ -865,6 +874,7 @@ class MessagingAdsResource:
         """Create Click-to-Call ad (async)"""
         payload = self._build_body(
             {
+                "stage": stage,
                 "retryOnServerError": retry_on_server_error,
                 "creativeFeatures": creative_features,
                 "tracking": tracking,
@@ -955,6 +965,7 @@ class MessagingAdsResource:
         name: str,
         *,
         idempotency_key: str | None = None,
+        stage: bool | None = None,
         retry_on_server_error: bool | None = True,
         creative_features: Any | None = None,
         tracking: Any | None = None,
@@ -1030,6 +1041,7 @@ class MessagingAdsResource:
         """Create CTWA ad (deprecated) (async)"""
         payload = self._build_body(
             {
+                "stage": stage,
                 "retryOnServerError": retry_on_server_error,
                 "creativeFeatures": creative_features,
                 "tracking": tracking,

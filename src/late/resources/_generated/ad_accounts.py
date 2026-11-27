@@ -348,10 +348,13 @@ class AdAccountsResource:
         business_id: str,
         user_id: str,
         tasks: list[str],
+        *,
+        stage: bool | None = None,
     ) -> dict[str, Any]:
         """Assign a user to a Page"""
         payload = self._build_body(
             {
+                "stage": stage,
                 "accountId": account_id,
                 "pageId": page_id,
                 "businessId": business_id,
@@ -362,11 +365,12 @@ class AdAccountsResource:
         return self._client._post("/v1/ads/page-users", data=payload)
 
     def remove_page_user(
-        self, account_id: str, page_id: str, user_id: str
+        self, account_id: str, page_id: str, user_id: str, *, stage: bool | None = None
     ) -> dict[str, Any]:
         """Remove a user from a Page"""
         params = self._build_query(
             {
+                "stage": stage,
                 "accountId": account_id,
                 "pageId": page_id,
                 "userId": user_id,
@@ -400,6 +404,7 @@ class AdAccountsResource:
         account_id: str,
         name: str,
         *,
+        stage: bool | None = None,
         ad_account_id: str | None = None,
         customer_id: str | None = None,
         background_color: str | None = None,
@@ -408,6 +413,7 @@ class AdAccountsResource:
         """Create a Google Ads label"""
         payload = self._build_body(
             {
+                "stage": stage,
                 "accountId": account_id,
                 "adAccountId": ad_account_id,
                 "customerId": customer_id,
@@ -423,6 +429,7 @@ class AdAccountsResource:
         label_id: str,
         account_id: str,
         *,
+        stage: bool | None = None,
         ad_account_id: str | None = None,
         customer_id: str | None = None,
         name: str | None = None,
@@ -432,6 +439,7 @@ class AdAccountsResource:
         """Update a Google Ads label"""
         payload = self._build_body(
             {
+                "stage": stage,
                 "accountId": account_id,
                 "adAccountId": ad_account_id,
                 "customerId": customer_id,
@@ -447,12 +455,14 @@ class AdAccountsResource:
         label_id: str,
         account_id: str,
         *,
+        stage: bool | None = None,
         ad_account_id: str | None = None,
         customer_id: str | None = None,
     ) -> dict[str, Any]:
         """Remove a Google Ads label"""
         params = self._build_query(
             {
+                "stage": stage,
                 "accountId": account_id,
                 "adAccountId": ad_account_id,
                 "customerId": customer_id,
@@ -465,6 +475,7 @@ class AdAccountsResource:
         label_id: str,
         account_id: str,
         *,
+        stage: bool | None = None,
         ad_account_id: str | None = None,
         customer_id: str | None = None,
         campaign_ids: list[str] | None = None,
@@ -475,6 +486,7 @@ class AdAccountsResource:
         """Attach a Google Ads label"""
         payload = self._build_body(
             {
+                "stage": stage,
                 "accountId": account_id,
                 "adAccountId": ad_account_id,
                 "customerId": customer_id,
@@ -493,6 +505,7 @@ class AdAccountsResource:
         label_id: str,
         account_id: str,
         *,
+        stage: bool | None = None,
         ad_account_id: str | None = None,
         customer_id: str | None = None,
         campaign_ids: list[str] | None = None,
@@ -503,6 +516,7 @@ class AdAccountsResource:
         """Detach a Google Ads label"""
         params = self._build_query(
             {
+                "stage": stage,
                 "accountId": account_id,
                 "adAccountId": ad_account_id,
                 "customerId": customer_id,
@@ -545,6 +559,7 @@ class AdAccountsResource:
         time_start: int,
         time_end: int,
         *,
+        stage: bool | None = None,
         campaign_id: str | None = None,
         ad_set_id: str | None = None,
         recurrence_type: str | None = None,
@@ -553,6 +568,7 @@ class AdAccountsResource:
         """Schedule a budget increase"""
         payload = self._build_body(
             {
+                "stage": stage,
                 "accountId": account_id,
                 "campaignId": campaign_id,
                 "adSetId": ad_set_id,
@@ -586,11 +602,18 @@ class AdAccountsResource:
         return self._client._get("/v1/ads/value-rule-sets", params=params)
 
     def create_value_rule_set(
-        self, account_id: str, ad_account_id: str, name: str, rules: list[Any]
+        self,
+        account_id: str,
+        ad_account_id: str,
+        name: str,
+        rules: list[Any],
+        *,
+        stage: bool | None = None,
     ) -> dict[str, Any]:
         """Create a value rule set"""
         payload = self._build_body(
             {
+                "stage": stage,
                 "accountId": account_id,
                 "adAccountId": ad_account_id,
                 "name": name,
@@ -613,11 +636,18 @@ class AdAccountsResource:
         )
 
     def update_value_rule_set(
-        self, value_rule_set_id: str, account_id: str, name: str, rules: list[Any]
+        self,
+        value_rule_set_id: str,
+        account_id: str,
+        name: str,
+        rules: list[Any],
+        *,
+        stage: bool | None = None,
     ) -> dict[str, Any]:
         """Replace a value rule set"""
         payload = self._build_body(
             {
+                "stage": stage,
                 "accountId": account_id,
                 "name": name,
                 "rules": rules,
@@ -628,11 +658,12 @@ class AdAccountsResource:
         )
 
     def delete_value_rule_set(
-        self, value_rule_set_id: str, account_id: str
+        self, value_rule_set_id: str, account_id: str, *, stage: bool | None = None
     ) -> dict[str, Any]:
         """Delete a value rule set"""
         params = self._build_query(
             {
+                "stage": stage,
                 "accountId": account_id,
             }
         )
@@ -667,6 +698,7 @@ class AdAccountsResource:
         name: str,
         *,
         idempotency_key: str | None = None,
+        stage: bool | None = None,
         ad_account_id: str | None = None,
         customer_id: str | None = None,
         platform: str | None = None,
@@ -675,6 +707,7 @@ class AdAccountsResource:
         """Create a negative keyword list"""
         payload = self._build_body(
             {
+                "stage": stage,
                 "accountId": account_id,
                 "adAccountId": ad_account_id,
                 "customerId": customer_id,
@@ -719,6 +752,7 @@ class AdAccountsResource:
         name: str,
         *,
         idempotency_key: str | None = None,
+        stage: bool | None = None,
         ad_account_id: str | None = None,
         customer_id: str | None = None,
         platform: str | None = None,
@@ -726,6 +760,7 @@ class AdAccountsResource:
         """Rename a negative keyword list"""
         payload = self._build_body(
             {
+                "stage": stage,
                 "accountId": account_id,
                 "adAccountId": ad_account_id,
                 "customerId": customer_id,
@@ -747,6 +782,7 @@ class AdAccountsResource:
         list_id: str,
         account_id: str,
         *,
+        stage: bool | None = None,
         idempotency_key: str | None = None,
         ad_account_id: str | None = None,
         customer_id: str | None = None,
@@ -755,6 +791,7 @@ class AdAccountsResource:
         """Delete a negative keyword list"""
         params = self._build_query(
             {
+                "stage": stage,
                 "accountId": account_id,
                 "adAccountId": ad_account_id,
                 "customerId": customer_id,
@@ -777,6 +814,7 @@ class AdAccountsResource:
         keywords: list[Any],
         *,
         idempotency_key: str | None = None,
+        stage: bool | None = None,
         ad_account_id: str | None = None,
         customer_id: str | None = None,
         platform: str | None = None,
@@ -784,6 +822,7 @@ class AdAccountsResource:
         """Replace negative list keywords"""
         payload = self._build_body(
             {
+                "stage": stage,
                 "accountId": account_id,
                 "adAccountId": ad_account_id,
                 "customerId": customer_id,
@@ -806,6 +845,7 @@ class AdAccountsResource:
         account_id: str,
         *,
         idempotency_key: str | None = None,
+        stage: bool | None = None,
         ad_account_id: str | None = None,
         customer_id: str | None = None,
         platform: str | None = None,
@@ -815,6 +855,7 @@ class AdAccountsResource:
         """Add or remove negative list keywords"""
         payload = self._build_body(
             {
+                "stage": stage,
                 "accountId": account_id,
                 "adAccountId": ad_account_id,
                 "customerId": customer_id,
@@ -854,12 +895,14 @@ class AdAccountsResource:
         account_id: str,
         callouts: list[str],
         *,
+        stage: bool | None = None,
         ad_account_id: str | None = None,
         customer_id: str | None = None,
     ) -> dict[str, Any]:
         """Add account callouts"""
         payload = self._build_body(
             {
+                "stage": stage,
                 "accountId": account_id,
                 "adAccountId": ad_account_id,
                 "customerId": customer_id,
@@ -873,12 +916,14 @@ class AdAccountsResource:
         account_id: str,
         updates: list[dict[str, Any]],
         *,
+        stage: bool | None = None,
         ad_account_id: str | None = None,
         customer_id: str | None = None,
     ) -> dict[str, Any]:
         """Update account callouts"""
         payload = self._build_body(
             {
+                "stage": stage,
                 "accountId": account_id,
                 "adAccountId": ad_account_id,
                 "customerId": customer_id,
@@ -892,12 +937,14 @@ class AdAccountsResource:
         account_id: str,
         asset_id: str,
         *,
+        stage: bool | None = None,
         ad_account_id: str | None = None,
         customer_id: str | None = None,
     ) -> dict[str, Any]:
         """Remove account callout"""
         params = self._build_query(
             {
+                "stage": stage,
                 "accountId": account_id,
                 "adAccountId": ad_account_id,
                 "customerId": customer_id,
@@ -928,12 +975,14 @@ class AdAccountsResource:
         account_id: str,
         sitelinks: list[Any],
         *,
+        stage: bool | None = None,
         ad_account_id: str | None = None,
         customer_id: str | None = None,
     ) -> dict[str, Any]:
         """Add account sitelinks"""
         payload = self._build_body(
             {
+                "stage": stage,
                 "accountId": account_id,
                 "adAccountId": ad_account_id,
                 "customerId": customer_id,
@@ -947,12 +996,14 @@ class AdAccountsResource:
         account_id: str,
         updates: list[dict[str, Any]],
         *,
+        stage: bool | None = None,
         ad_account_id: str | None = None,
         customer_id: str | None = None,
     ) -> dict[str, Any]:
         """Update account sitelinks"""
         payload = self._build_body(
             {
+                "stage": stage,
                 "accountId": account_id,
                 "adAccountId": ad_account_id,
                 "customerId": customer_id,
@@ -966,12 +1017,14 @@ class AdAccountsResource:
         account_id: str,
         asset_id: str,
         *,
+        stage: bool | None = None,
         ad_account_id: str | None = None,
         customer_id: str | None = None,
     ) -> dict[str, Any]:
         """Remove account sitelink"""
         params = self._build_query(
             {
+                "stage": stage,
                 "accountId": account_id,
                 "adAccountId": ad_account_id,
                 "customerId": customer_id,
@@ -1002,12 +1055,14 @@ class AdAccountsResource:
         account_id: str,
         structured_snippets: list[Any],
         *,
+        stage: bool | None = None,
         ad_account_id: str | None = None,
         customer_id: str | None = None,
     ) -> dict[str, Any]:
         """Add account snippets"""
         payload = self._build_body(
             {
+                "stage": stage,
                 "accountId": account_id,
                 "adAccountId": ad_account_id,
                 "customerId": customer_id,
@@ -1021,12 +1076,14 @@ class AdAccountsResource:
         account_id: str,
         updates: list[dict[str, Any]],
         *,
+        stage: bool | None = None,
         ad_account_id: str | None = None,
         customer_id: str | None = None,
     ) -> dict[str, Any]:
         """Update account snippets"""
         payload = self._build_body(
             {
+                "stage": stage,
                 "accountId": account_id,
                 "adAccountId": ad_account_id,
                 "customerId": customer_id,
@@ -1040,12 +1097,14 @@ class AdAccountsResource:
         account_id: str,
         asset_id: str,
         *,
+        stage: bool | None = None,
         ad_account_id: str | None = None,
         customer_id: str | None = None,
     ) -> dict[str, Any]:
         """Remove account snippet"""
         params = self._build_query(
             {
+                "stage": stage,
                 "accountId": account_id,
                 "adAccountId": ad_account_id,
                 "customerId": customer_id,
@@ -1079,11 +1138,13 @@ class AdAccountsResource:
         manager_customer_id: str,
         client_customer_id: str,
         *,
+        stage: bool | None = None,
         validate_only: bool | None = False,
     ) -> dict[str, Any]:
         """Invite a client account to a manager"""
         payload = self._build_body(
             {
+                "stage": stage,
                 "accountId": account_id,
                 "managerCustomerId": manager_customer_id,
                 "clientCustomerId": client_customer_id,
@@ -1100,11 +1161,13 @@ class AdAccountsResource:
         manager_link_id: str,
         action: str,
         *,
+        stage: bool | None = None,
         validate_only: bool | None = False,
     ) -> dict[str, Any]:
         """Accept, decline, cancel or end a manager link"""
         payload = self._build_body(
             {
+                "stage": stage,
                 "accountId": account_id,
                 "managerCustomerId": manager_customer_id,
                 "clientCustomerId": client_customer_id,
@@ -1133,6 +1196,7 @@ class AdAccountsResource:
         ad_account_id: str,
         payments_account_id: str,
         *,
+        stage: bool | None = None,
         spending_limit: float | None = None,
         budget_name: str | None = "Zernio account budget",
         purchase_order_number: str | None = None,
@@ -1141,6 +1205,7 @@ class AdAccountsResource:
         """Set up ad account billing (monthly invoicing)"""
         payload = self._build_body(
             {
+                "stage": stage,
                 "accountId": account_id,
                 "adAccountId": ad_account_id,
                 "paymentsAccountId": payments_account_id,
@@ -1171,11 +1236,13 @@ class AdAccountsResource:
         email_address: str,
         access_role: Any,
         *,
+        stage: bool | None = None,
         validate_only: bool | None = False,
     ) -> dict[str, Any]:
         """Invite a user to an ad account by email"""
         payload = self._build_body(
             {
+                "stage": stage,
                 "accountId": account_id,
                 "adAccountId": ad_account_id,
                 "emailAddress": email_address,
@@ -1186,11 +1253,17 @@ class AdAccountsResource:
         return self._client._post("/v1/ads/accounts/user-invitations", data=payload)
 
     def revoke_ad_account_user_invitation(
-        self, account_id: str, ad_account_id: str, invitation_id: str
+        self,
+        account_id: str,
+        ad_account_id: str,
+        invitation_id: str,
+        *,
+        stage: bool | None = None,
     ) -> dict[str, Any]:
         """Revoke a user access invitation"""
         params = self._build_query(
             {
+                "stage": stage,
                 "accountId": account_id,
                 "adAccountId": ad_account_id,
                 "invitationId": invitation_id,
@@ -1213,11 +1286,17 @@ class AdAccountsResource:
         )
 
     def withdraw_ad_account_user_invitation_approval(
-        self, account_id: str, ad_account_id: str, multi_party_auth_review_id: str
+        self,
+        account_id: str,
+        ad_account_id: str,
+        multi_party_auth_review_id: str,
+        *,
+        stage: bool | None = None,
     ) -> dict[str, Any]:
         """Withdraw an invitation awaiting multi-party approval"""
         params = self._build_query(
             {
+                "stage": stage,
                 "accountId": account_id,
                 "adAccountId": ad_account_id,
                 "multiPartyAuthReviewId": multi_party_auth_review_id,
@@ -1241,11 +1320,18 @@ class AdAccountsResource:
         return self._client._get("/v1/ads/accounts/users", params=params)
 
     def assign_ad_account_user(
-        self, account_id: str, ad_account_id: str, user_id: str, tasks: list[str]
+        self,
+        account_id: str,
+        ad_account_id: str,
+        user_id: str,
+        tasks: list[str],
+        *,
+        stage: bool | None = None,
     ) -> dict[str, Any]:
         """Assign a user to an ad account"""
         payload = self._build_body(
             {
+                "stage": stage,
                 "accountId": account_id,
                 "adAccountId": ad_account_id,
                 "userId": user_id,
@@ -1255,11 +1341,17 @@ class AdAccountsResource:
         return self._client._post("/v1/ads/accounts/users", data=payload)
 
     def remove_ad_account_user(
-        self, account_id: str, ad_account_id: str, user_id: str
+        self,
+        account_id: str,
+        ad_account_id: str,
+        user_id: str,
+        *,
+        stage: bool | None = None,
     ) -> dict[str, Any]:
         """Remove a user from an ad account"""
         params = self._build_query(
             {
+                "stage": stage,
                 "accountId": account_id,
                 "adAccountId": ad_account_id,
                 "userId": user_id,
@@ -1349,6 +1441,7 @@ class AdAccountsResource:
         account_id: str,
         ad_account_id: str,
         *,
+        stage: bool | None = None,
         name: str | None = None,
         spend_cap: Any | None = None,
         reset_amount_spent: bool | None = None,
@@ -1360,6 +1453,7 @@ class AdAccountsResource:
         """Update ad account settings"""
         payload = self._build_body(
             {
+                "stage": stage,
                 "accountId": account_id,
                 "adAccountId": ad_account_id,
                 "name": name,
@@ -1703,10 +1797,13 @@ class AdAccountsResource:
         business_id: str,
         user_id: str,
         tasks: list[str],
+        *,
+        stage: bool | None = None,
     ) -> dict[str, Any]:
         """Assign a user to a Page (async)"""
         payload = self._build_body(
             {
+                "stage": stage,
                 "accountId": account_id,
                 "pageId": page_id,
                 "businessId": business_id,
@@ -1717,11 +1814,12 @@ class AdAccountsResource:
         return await self._client._apost("/v1/ads/page-users", data=payload)
 
     async def aremove_page_user(
-        self, account_id: str, page_id: str, user_id: str
+        self, account_id: str, page_id: str, user_id: str, *, stage: bool | None = None
     ) -> dict[str, Any]:
         """Remove a user from a Page (async)"""
         params = self._build_query(
             {
+                "stage": stage,
                 "accountId": account_id,
                 "pageId": page_id,
                 "userId": user_id,
@@ -1755,6 +1853,7 @@ class AdAccountsResource:
         account_id: str,
         name: str,
         *,
+        stage: bool | None = None,
         ad_account_id: str | None = None,
         customer_id: str | None = None,
         background_color: str | None = None,
@@ -1763,6 +1862,7 @@ class AdAccountsResource:
         """Create a Google Ads label (async)"""
         payload = self._build_body(
             {
+                "stage": stage,
                 "accountId": account_id,
                 "adAccountId": ad_account_id,
                 "customerId": customer_id,
@@ -1778,6 +1878,7 @@ class AdAccountsResource:
         label_id: str,
         account_id: str,
         *,
+        stage: bool | None = None,
         ad_account_id: str | None = None,
         customer_id: str | None = None,
         name: str | None = None,
@@ -1787,6 +1888,7 @@ class AdAccountsResource:
         """Update a Google Ads label (async)"""
         payload = self._build_body(
             {
+                "stage": stage,
                 "accountId": account_id,
                 "adAccountId": ad_account_id,
                 "customerId": customer_id,
@@ -1802,12 +1904,14 @@ class AdAccountsResource:
         label_id: str,
         account_id: str,
         *,
+        stage: bool | None = None,
         ad_account_id: str | None = None,
         customer_id: str | None = None,
     ) -> dict[str, Any]:
         """Remove a Google Ads label (async)"""
         params = self._build_query(
             {
+                "stage": stage,
                 "accountId": account_id,
                 "adAccountId": ad_account_id,
                 "customerId": customer_id,
@@ -1820,6 +1924,7 @@ class AdAccountsResource:
         label_id: str,
         account_id: str,
         *,
+        stage: bool | None = None,
         ad_account_id: str | None = None,
         customer_id: str | None = None,
         campaign_ids: list[str] | None = None,
@@ -1830,6 +1935,7 @@ class AdAccountsResource:
         """Attach a Google Ads label (async)"""
         payload = self._build_body(
             {
+                "stage": stage,
                 "accountId": account_id,
                 "adAccountId": ad_account_id,
                 "customerId": customer_id,
@@ -1848,6 +1954,7 @@ class AdAccountsResource:
         label_id: str,
         account_id: str,
         *,
+        stage: bool | None = None,
         ad_account_id: str | None = None,
         customer_id: str | None = None,
         campaign_ids: list[str] | None = None,
@@ -1858,6 +1965,7 @@ class AdAccountsResource:
         """Detach a Google Ads label (async)"""
         params = self._build_query(
             {
+                "stage": stage,
                 "accountId": account_id,
                 "adAccountId": ad_account_id,
                 "customerId": customer_id,
@@ -1900,6 +2008,7 @@ class AdAccountsResource:
         time_start: int,
         time_end: int,
         *,
+        stage: bool | None = None,
         campaign_id: str | None = None,
         ad_set_id: str | None = None,
         recurrence_type: str | None = None,
@@ -1908,6 +2017,7 @@ class AdAccountsResource:
         """Schedule a budget increase (async)"""
         payload = self._build_body(
             {
+                "stage": stage,
                 "accountId": account_id,
                 "campaignId": campaign_id,
                 "adSetId": ad_set_id,
@@ -1941,11 +2051,18 @@ class AdAccountsResource:
         return await self._client._aget("/v1/ads/value-rule-sets", params=params)
 
     async def acreate_value_rule_set(
-        self, account_id: str, ad_account_id: str, name: str, rules: list[Any]
+        self,
+        account_id: str,
+        ad_account_id: str,
+        name: str,
+        rules: list[Any],
+        *,
+        stage: bool | None = None,
     ) -> dict[str, Any]:
         """Create a value rule set (async)"""
         payload = self._build_body(
             {
+                "stage": stage,
                 "accountId": account_id,
                 "adAccountId": ad_account_id,
                 "name": name,
@@ -1968,11 +2085,18 @@ class AdAccountsResource:
         )
 
     async def aupdate_value_rule_set(
-        self, value_rule_set_id: str, account_id: str, name: str, rules: list[Any]
+        self,
+        value_rule_set_id: str,
+        account_id: str,
+        name: str,
+        rules: list[Any],
+        *,
+        stage: bool | None = None,
     ) -> dict[str, Any]:
         """Replace a value rule set (async)"""
         payload = self._build_body(
             {
+                "stage": stage,
                 "accountId": account_id,
                 "name": name,
                 "rules": rules,
@@ -1983,11 +2107,12 @@ class AdAccountsResource:
         )
 
     async def adelete_value_rule_set(
-        self, value_rule_set_id: str, account_id: str
+        self, value_rule_set_id: str, account_id: str, *, stage: bool | None = None
     ) -> dict[str, Any]:
         """Delete a value rule set (async)"""
         params = self._build_query(
             {
+                "stage": stage,
                 "accountId": account_id,
             }
         )
@@ -2022,6 +2147,7 @@ class AdAccountsResource:
         name: str,
         *,
         idempotency_key: str | None = None,
+        stage: bool | None = None,
         ad_account_id: str | None = None,
         customer_id: str | None = None,
         platform: str | None = None,
@@ -2030,6 +2156,7 @@ class AdAccountsResource:
         """Create a negative keyword list (async)"""
         payload = self._build_body(
             {
+                "stage": stage,
                 "accountId": account_id,
                 "adAccountId": ad_account_id,
                 "customerId": customer_id,
@@ -2074,6 +2201,7 @@ class AdAccountsResource:
         name: str,
         *,
         idempotency_key: str | None = None,
+        stage: bool | None = None,
         ad_account_id: str | None = None,
         customer_id: str | None = None,
         platform: str | None = None,
@@ -2081,6 +2209,7 @@ class AdAccountsResource:
         """Rename a negative keyword list (async)"""
         payload = self._build_body(
             {
+                "stage": stage,
                 "accountId": account_id,
                 "adAccountId": ad_account_id,
                 "customerId": customer_id,
@@ -2102,6 +2231,7 @@ class AdAccountsResource:
         list_id: str,
         account_id: str,
         *,
+        stage: bool | None = None,
         idempotency_key: str | None = None,
         ad_account_id: str | None = None,
         customer_id: str | None = None,
@@ -2110,6 +2240,7 @@ class AdAccountsResource:
         """Delete a negative keyword list (async)"""
         params = self._build_query(
             {
+                "stage": stage,
                 "accountId": account_id,
                 "adAccountId": ad_account_id,
                 "customerId": customer_id,
@@ -2132,6 +2263,7 @@ class AdAccountsResource:
         keywords: list[Any],
         *,
         idempotency_key: str | None = None,
+        stage: bool | None = None,
         ad_account_id: str | None = None,
         customer_id: str | None = None,
         platform: str | None = None,
@@ -2139,6 +2271,7 @@ class AdAccountsResource:
         """Replace negative list keywords (async)"""
         payload = self._build_body(
             {
+                "stage": stage,
                 "accountId": account_id,
                 "adAccountId": ad_account_id,
                 "customerId": customer_id,
@@ -2161,6 +2294,7 @@ class AdAccountsResource:
         account_id: str,
         *,
         idempotency_key: str | None = None,
+        stage: bool | None = None,
         ad_account_id: str | None = None,
         customer_id: str | None = None,
         platform: str | None = None,
@@ -2170,6 +2304,7 @@ class AdAccountsResource:
         """Add or remove negative list keywords (async)"""
         payload = self._build_body(
             {
+                "stage": stage,
                 "accountId": account_id,
                 "adAccountId": ad_account_id,
                 "customerId": customer_id,
@@ -2209,12 +2344,14 @@ class AdAccountsResource:
         account_id: str,
         callouts: list[str],
         *,
+        stage: bool | None = None,
         ad_account_id: str | None = None,
         customer_id: str | None = None,
     ) -> dict[str, Any]:
         """Add account callouts (async)"""
         payload = self._build_body(
             {
+                "stage": stage,
                 "accountId": account_id,
                 "adAccountId": ad_account_id,
                 "customerId": customer_id,
@@ -2228,12 +2365,14 @@ class AdAccountsResource:
         account_id: str,
         updates: list[dict[str, Any]],
         *,
+        stage: bool | None = None,
         ad_account_id: str | None = None,
         customer_id: str | None = None,
     ) -> dict[str, Any]:
         """Update account callouts (async)"""
         payload = self._build_body(
             {
+                "stage": stage,
                 "accountId": account_id,
                 "adAccountId": ad_account_id,
                 "customerId": customer_id,
@@ -2247,12 +2386,14 @@ class AdAccountsResource:
         account_id: str,
         asset_id: str,
         *,
+        stage: bool | None = None,
         ad_account_id: str | None = None,
         customer_id: str | None = None,
     ) -> dict[str, Any]:
         """Remove account callout (async)"""
         params = self._build_query(
             {
+                "stage": stage,
                 "accountId": account_id,
                 "adAccountId": ad_account_id,
                 "customerId": customer_id,
@@ -2283,12 +2424,14 @@ class AdAccountsResource:
         account_id: str,
         sitelinks: list[Any],
         *,
+        stage: bool | None = None,
         ad_account_id: str | None = None,
         customer_id: str | None = None,
     ) -> dict[str, Any]:
         """Add account sitelinks (async)"""
         payload = self._build_body(
             {
+                "stage": stage,
                 "accountId": account_id,
                 "adAccountId": ad_account_id,
                 "customerId": customer_id,
@@ -2302,12 +2445,14 @@ class AdAccountsResource:
         account_id: str,
         updates: list[dict[str, Any]],
         *,
+        stage: bool | None = None,
         ad_account_id: str | None = None,
         customer_id: str | None = None,
     ) -> dict[str, Any]:
         """Update account sitelinks (async)"""
         payload = self._build_body(
             {
+                "stage": stage,
                 "accountId": account_id,
                 "adAccountId": ad_account_id,
                 "customerId": customer_id,
@@ -2321,12 +2466,14 @@ class AdAccountsResource:
         account_id: str,
         asset_id: str,
         *,
+        stage: bool | None = None,
         ad_account_id: str | None = None,
         customer_id: str | None = None,
     ) -> dict[str, Any]:
         """Remove account sitelink (async)"""
         params = self._build_query(
             {
+                "stage": stage,
                 "accountId": account_id,
                 "adAccountId": ad_account_id,
                 "customerId": customer_id,
@@ -2359,12 +2506,14 @@ class AdAccountsResource:
         account_id: str,
         structured_snippets: list[Any],
         *,
+        stage: bool | None = None,
         ad_account_id: str | None = None,
         customer_id: str | None = None,
     ) -> dict[str, Any]:
         """Add account snippets (async)"""
         payload = self._build_body(
             {
+                "stage": stage,
                 "accountId": account_id,
                 "adAccountId": ad_account_id,
                 "customerId": customer_id,
@@ -2380,12 +2529,14 @@ class AdAccountsResource:
         account_id: str,
         updates: list[dict[str, Any]],
         *,
+        stage: bool | None = None,
         ad_account_id: str | None = None,
         customer_id: str | None = None,
     ) -> dict[str, Any]:
         """Update account snippets (async)"""
         payload = self._build_body(
             {
+                "stage": stage,
                 "accountId": account_id,
                 "adAccountId": ad_account_id,
                 "customerId": customer_id,
@@ -2401,12 +2552,14 @@ class AdAccountsResource:
         account_id: str,
         asset_id: str,
         *,
+        stage: bool | None = None,
         ad_account_id: str | None = None,
         customer_id: str | None = None,
     ) -> dict[str, Any]:
         """Remove account snippet (async)"""
         params = self._build_query(
             {
+                "stage": stage,
                 "accountId": account_id,
                 "adAccountId": ad_account_id,
                 "customerId": customer_id,
@@ -2440,11 +2593,13 @@ class AdAccountsResource:
         manager_customer_id: str,
         client_customer_id: str,
         *,
+        stage: bool | None = None,
         validate_only: bool | None = False,
     ) -> dict[str, Any]:
         """Invite a client account to a manager (async)"""
         payload = self._build_body(
             {
+                "stage": stage,
                 "accountId": account_id,
                 "managerCustomerId": manager_customer_id,
                 "clientCustomerId": client_customer_id,
@@ -2461,11 +2616,13 @@ class AdAccountsResource:
         manager_link_id: str,
         action: str,
         *,
+        stage: bool | None = None,
         validate_only: bool | None = False,
     ) -> dict[str, Any]:
         """Accept, decline, cancel or end a manager link (async)"""
         payload = self._build_body(
             {
+                "stage": stage,
                 "accountId": account_id,
                 "managerCustomerId": manager_customer_id,
                 "clientCustomerId": client_customer_id,
@@ -2496,6 +2653,7 @@ class AdAccountsResource:
         ad_account_id: str,
         payments_account_id: str,
         *,
+        stage: bool | None = None,
         spending_limit: float | None = None,
         budget_name: str | None = "Zernio account budget",
         purchase_order_number: str | None = None,
@@ -2504,6 +2662,7 @@ class AdAccountsResource:
         """Set up ad account billing (monthly invoicing) (async)"""
         payload = self._build_body(
             {
+                "stage": stage,
                 "accountId": account_id,
                 "adAccountId": ad_account_id,
                 "paymentsAccountId": payments_account_id,
@@ -2536,11 +2695,13 @@ class AdAccountsResource:
         email_address: str,
         access_role: Any,
         *,
+        stage: bool | None = None,
         validate_only: bool | None = False,
     ) -> dict[str, Any]:
         """Invite a user to an ad account by email (async)"""
         payload = self._build_body(
             {
+                "stage": stage,
                 "accountId": account_id,
                 "adAccountId": ad_account_id,
                 "emailAddress": email_address,
@@ -2553,11 +2714,17 @@ class AdAccountsResource:
         )
 
     async def arevoke_ad_account_user_invitation(
-        self, account_id: str, ad_account_id: str, invitation_id: str
+        self,
+        account_id: str,
+        ad_account_id: str,
+        invitation_id: str,
+        *,
+        stage: bool | None = None,
     ) -> dict[str, Any]:
         """Revoke a user access invitation (async)"""
         params = self._build_query(
             {
+                "stage": stage,
                 "accountId": account_id,
                 "adAccountId": ad_account_id,
                 "invitationId": invitation_id,
@@ -2582,11 +2749,17 @@ class AdAccountsResource:
         )
 
     async def awithdraw_ad_account_user_invitation_approval(
-        self, account_id: str, ad_account_id: str, multi_party_auth_review_id: str
+        self,
+        account_id: str,
+        ad_account_id: str,
+        multi_party_auth_review_id: str,
+        *,
+        stage: bool | None = None,
     ) -> dict[str, Any]:
         """Withdraw an invitation awaiting multi-party approval (async)"""
         params = self._build_query(
             {
+                "stage": stage,
                 "accountId": account_id,
                 "adAccountId": ad_account_id,
                 "multiPartyAuthReviewId": multi_party_auth_review_id,
@@ -2610,11 +2783,18 @@ class AdAccountsResource:
         return await self._client._aget("/v1/ads/accounts/users", params=params)
 
     async def aassign_ad_account_user(
-        self, account_id: str, ad_account_id: str, user_id: str, tasks: list[str]
+        self,
+        account_id: str,
+        ad_account_id: str,
+        user_id: str,
+        tasks: list[str],
+        *,
+        stage: bool | None = None,
     ) -> dict[str, Any]:
         """Assign a user to an ad account (async)"""
         payload = self._build_body(
             {
+                "stage": stage,
                 "accountId": account_id,
                 "adAccountId": ad_account_id,
                 "userId": user_id,
@@ -2624,11 +2804,17 @@ class AdAccountsResource:
         return await self._client._apost("/v1/ads/accounts/users", data=payload)
 
     async def aremove_ad_account_user(
-        self, account_id: str, ad_account_id: str, user_id: str
+        self,
+        account_id: str,
+        ad_account_id: str,
+        user_id: str,
+        *,
+        stage: bool | None = None,
     ) -> dict[str, Any]:
         """Remove a user from an ad account (async)"""
         params = self._build_query(
             {
+                "stage": stage,
                 "accountId": account_id,
                 "adAccountId": ad_account_id,
                 "userId": user_id,
@@ -2718,6 +2904,7 @@ class AdAccountsResource:
         account_id: str,
         ad_account_id: str,
         *,
+        stage: bool | None = None,
         name: str | None = None,
         spend_cap: Any | None = None,
         reset_amount_spent: bool | None = None,
@@ -2729,6 +2916,7 @@ class AdAccountsResource:
         """Update ad account settings (async)"""
         payload = self._build_body(
             {
+                "stage": stage,
                 "accountId": account_id,
                 "adAccountId": ad_account_id,
                 "name": name,

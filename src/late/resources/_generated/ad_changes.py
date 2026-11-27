@@ -136,9 +136,16 @@ class AdChangesResource:
         """Discard a staged ad change"""
         return self._client._delete(f"/v1/ads/changes/{change_id}")
 
-    def restage_ad_change(self, change_id: str) -> dict[str, Any]:
+    def restage_ad_change(
+        self, change_id: str, *, acknowledge: bool | None = None
+    ) -> dict[str, Any]:
         """Stage a failed ad change again"""
-        return self._client._post(f"/v1/ads/changes/{change_id}/restage")
+        payload = self._build_body(
+            {
+                "acknowledge": acknowledge,
+            }
+        )
+        return self._client._post(f"/v1/ads/changes/{change_id}/restage", data=payload)
 
     def confirm_ad_change(self, change_id: str) -> dict[str, Any]:
         """Confirm a staged ad change"""
@@ -181,9 +188,18 @@ class AdChangesResource:
         """Discard a staged ad change (async)"""
         return await self._client._adelete(f"/v1/ads/changes/{change_id}")
 
-    async def arestage_ad_change(self, change_id: str) -> dict[str, Any]:
+    async def arestage_ad_change(
+        self, change_id: str, *, acknowledge: bool | None = None
+    ) -> dict[str, Any]:
         """Stage a failed ad change again (async)"""
-        return await self._client._apost(f"/v1/ads/changes/{change_id}/restage")
+        payload = self._build_body(
+            {
+                "acknowledge": acknowledge,
+            }
+        )
+        return await self._client._apost(
+            f"/v1/ads/changes/{change_id}/restage", data=payload
+        )
 
     async def aconfirm_ad_change(self, change_id: str) -> dict[str, Any]:
         """Confirm a staged ad change (async)"""

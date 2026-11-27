@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.859.0"
+  version: "1.860.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -6370,6 +6370,7 @@ components:
         - `startDate` / `endDate` in the ad account timezone;
         - `existingCampaignId` to add a new ad set to a campaign you already have.
       properties:
+        stage: { type: boolean, description: 'Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.' }
         retryOnServerError:
           type: boolean
           default: true
@@ -24083,6 +24084,7 @@ components:
       required: [accountId]
       description: At least one id across the four target lists. Up to 1000 ids per list.
       properties:
+        stage: { type: boolean, description: 'Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.' }
         accountId: { type: string, description: Zernio SocialAccount id (Google Ads) }
         adAccountId: { type: string, pattern: '^\d+$', description: 'Google customer id. Required when the connection has multiple customers.' }
         customerId: { type: string, pattern: '^\d+$', deprecated: true, description: Alias of adAccountId }
@@ -26161,7 +26163,7 @@ components:
     StagedAdChange:
       type: object
       description: 'An ad write that was validated and stored with `stage: true`, waiting to be confirmed or discarded.'
-      required: [id, type, platform, accountId, adAccountId, targetId, status, diff, createdBy, createdAt, finishedAt]
+      required: [id, type, platform, accountId, adAccountId, targetId, status, diff, body, createdBy, createdAt, finishedAt]
       properties:
         id: { type: string, description: 'The change id, used in /v1/ads/changes/{changeId}.' }
         type:
@@ -26191,6 +26193,16 @@ components:
           type: [string, "null"]
           description: 'The name of the object when the change was staged, or the name a create will give it. Null when it is not known.'
         creates: { type: boolean, description: 'Present and true when the change creates a new object. Every diff entry then has `before: null` and `beforeAvailable: false`.' }
+        leftBehind:
+          type: array
+          description: 'Only on a failed change that makes an object, when its failure recorded objects it left on the ad network. Staging the change again makes them a second time at confirm.'
+          items:
+            type: object
+            required: [type, id]
+            properties:
+              type: { type: string, description: 'The kind of object, for example `campaign`, `adset`, `ad_set`, `ad`, `creative`, `asset_group` or `budget`.' }
+              id: { type: string, description: The id of the object on the ad network. }
+        restaged: { type: boolean, description: 'Present and true on a failed change that a new change was already staged from. It cannot be staged again.' }
         status:
           type: string
           enum: [staged, confirming, confirmed, failed]
@@ -26224,6 +26236,13 @@ components:
                 type: array
                 items: {}
                 description: 'Only on a list of plain values (strings or numbers) with `beforeAvailable` true: the values in `before` that are not in `after`. Order is ignored.'
+        body:
+          type: object
+          additionalProperties: true
+          description: |
+            The stored request body of the change: what the confirm sends. For type `operation` it is the body of the staged request, without its path and query values, and it is empty for a write that has no body.
+
+            It holds the keys that `diff` leaves out: `accountId`, `adAccountId`, `allowSharedBudgetUpdate`, and every value equal to the one on the ad network. To edit a change, send this body back to PATCH /v1/ads/changes/{changeId} with the changed values in place, because the edit replaces the whole stored body.
         createdBy: { type: string, description: The user who staged the change. }
         confirmedBy: { type: [string, "null"], description: 'The user who confirmed the change. Null while nobody has, and after a confirm that left the change staged.' }
         stale: { type: boolean, description: 'Present and true on a staged change whose last confirm was refused with `change_target_changed`. `error` then says why. Refresh it with PATCH /v1/ads/changes/{changeId} (no body), or discard it and stage it again.' }
@@ -26253,6 +26272,7 @@ components:
           - { field: budget.amount, before: 20, after: 30, beforeAvailable: true }
           - { field: targeting.countries, before: [ES, PT], after: [ES, FR], beforeAvailable: true, added: [FR], removed: [PT] }
           - { field: targeting.ageMax, before: 65, after: 45, beforeAvailable: true }
+        body: { name: Autumn sale, budget: { amount: 30, type: daily }, targeting: { countries: [ES, FR], ageMax: 45 } }
         createdBy: 665f1c2ab3d4e5f6a7b8c9d1
         confirmedBy: null
         createdAt: '2026-11-20T10:00:00.000Z'
@@ -90282,6 +90302,7 @@ paths:
               type: object
               required: [accountId, recommendations]
               properties:
+                stage: { type: boolean, description: 'Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.' }
                 accountId: { type: string, description: "Google ads SocialAccount id." }
                 adAccountId: { type: string, description: "Google customer id, digits only. Required when the connection has several customers." }
                 recommendations:
@@ -90345,6 +90366,7 @@ paths:
               type: object
               required: [accountId, resourceNames]
               properties:
+                stage: { type: boolean, description: 'Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.' }
                 accountId: { type: string, description: "Google ads SocialAccount id." }
                 adAccountId: { type: string, description: "Google customer id, digits only. Required when the connection has several customers." }
                 resourceNames: { type: array, minItems: 1, maxItems: 100, items: { type: string }, description: "Recommendation resource names from the list, or their ids." }
@@ -90437,6 +90459,7 @@ paths:
               type: object
               required: [accountId, name, type]
               properties:
+                stage: { type: boolean, description: 'Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.' }
                 accountId: { type: string, description: "Google ads SocialAccount id." }
                 adAccountId: { type: string, description: "Platform ad account ID (Google customer ID, digits only). Defaults to the account's connected customer." }
                 customerId: { type: string, deprecated: true, description: "Alias of adAccountId, kept for existing callers" }
@@ -90504,6 +90527,7 @@ paths:
               type: object
               required: [accountId]
               properties:
+                stage: { type: boolean, description: 'Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.' }
                 accountId: { type: string, description: "Google ads SocialAccount id." }
                 adAccountId: { type: string, description: "Platform ad account ID (Google customer ID, digits only). Defaults to the account's connected customer." }
                 customerId: { type: string, deprecated: true, description: "Alias of adAccountId, kept for existing callers" }
@@ -90605,6 +90629,7 @@ paths:
               type: object
               required: [accountId, name, amount]
               properties:
+                stage: { type: boolean, description: 'Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.' }
                 accountId: { type: string, description: "Google ads SocialAccount id." }
                 adAccountId: { type: string, description: "Platform ad account ID (Google customer ID, digits only). Defaults to the account's connected customer." }
                 name: { type: string, minLength: 1, maxLength: 255 }
@@ -90857,6 +90882,7 @@ paths:
               type: object
               required: [accountId, adSetId, keywords]
               properties:
+                stage: { type: boolean, description: 'Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.' }
                 accountId: { type: string, description: Account ID (Google Ads) }
                 adSetId: { type: string, description: Google ad group ID to add the keywords to }
                 keywords:
@@ -90925,6 +90951,7 @@ paths:
               type: object
               minProperties: 1
               properties:
+                stage: { type: boolean, description: 'Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.' }
                 status: { type: string, enum: [active, paused] }
                 cpcBid: { type: number, exclusiveMinimum: 0, description: 'Max CPC bid for this keyword, in the ad account currency. Takes effect only under Manual CPC bidding.' }
       responses:
@@ -90961,6 +90988,7 @@ paths:
       security:
         - bearerAuth: []
       parameters:
+        - { name: stage, in: query, required: false, schema: { type: boolean }, description: 'Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later.' }
         - $ref: '#/components/parameters/IdempotencyKeyHeader'
         - { name: keywordId, in: path, required: true, schema: { type: string }, description: 'Zernio keyword ID (`id`), or Google''s native `{adSetId}~{platformCriterionId}` (the tail of `resourceName`, e.g. 1234567890~987654321). A bare criterion id is rejected because it is only unique within its ad group.' }
       responses:
@@ -93308,7 +93336,9 @@ paths:
 
         Send the new body: the same kind of body as the route the change was staged on, without `stage`. It passes the checks of staging again for the calling user. The object is read again, so the diff and the changed-since check start from its current values.
 
-        A change of type `operation` stores a whole request and cannot be edited in place (`409`): discard it and stage the request again.
+        A change of type `operation` stores a whole request. Its new body goes through the route of that write, which checks it as a new staged request. The path and the query stay as they were staged.
+
+        Such an edit answers what that route answers when it refuses the body, and the change stays as it was. A request without a body has nothing to edit (`409`).
 
         ### Refresh
 
@@ -93349,8 +93379,8 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
         '409':
-          x-summary: "The change is no longer staged, or it cannot be edited in place."
-          description: 'The change is no longer staged (`change_not_staged`, or `change_outcome_unknown` while a confirm is running), or it is a write staged as its request and a body was sent (`invalid_resource_state`).'
+          x-summary: "The change is no longer staged, or this edit cannot be stored on it."
+          description: 'The change is no longer staged (`change_not_staged`, or `change_outcome_unknown` while a confirm is running). Or code `invalid_resource_state`: the change stores a request without a body, or the new body points at another connection or another object.'
           content:
             application/json:
               schema:
@@ -93402,11 +93432,19 @@ paths:
       description: |
         Makes a new staged change from a change that failed at confirm. Nothing is written to the ad network.
 
-        The new change holds the same request. It is checked for the calling user, and an edit is read against the current values of its object. The failed change stays readable until it is deleted.
+        The new change holds the same request. It is checked for the calling user, and an edit is read against the current values of its object. The failed change stays readable until it is deleted, with `restaged: true`.
 
-        A failed create cannot be staged again (`409`): it may have made part of its objects on the ad network, which its `error.details` lists. Stage a new create instead. This covers every change with `creates: true`.
+        ### A change that may have made objects
 
-        Also refused with `409`: a change that failed as `change_outcome_unknown`, and a change whose kept uploads were deleted or moved to an earlier restage.
+        The new change sends the same request again at confirm. A failed create may have made part of its objects on the ad network, and they would be made a second time.
+
+        Such a change answers `409` with `param: "acknowledge"`. `details.leftBehind` lists the objects the failure left, and `details.outcomeUnknown` is true when nothing tells what was made. Send `acknowledge: true` to stage it again anyway.
+
+        A failed create that left nothing behind is staged again without it.
+
+        ### Refused
+
+        A change that did not fail, a failed change that was already staged again, and a change whose kept uploads were deleted or moved to an earlier restage answer `409`.
       security:
         - bearerAuth: []
       parameters:
@@ -93415,6 +93453,17 @@ paths:
           required: true
           schema: { type: string }
           description: The id of the failed change.
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                acknowledge: { type: boolean, description: 'Send true after a `409` with `param: "acknowledge"`: the caller has seen what the failed change left on the ad network, or that nobody knows what it left.' }
+            example:
+              acknowledge: true
       responses:
         '201':
           description: The new staged change
@@ -93439,8 +93488,8 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
         '409':
-          x-summary: "Only a failed edit or a failed request can be staged again."
-          description: 'Code `invalid_resource_state`. The change did not fail, it creates an object, nobody knows how it ended, or its kept uploads are gone.'
+          x-summary: "The change cannot be staged again, or it needs acknowledge first."
+          description: 'Code `invalid_resource_state`. With `param: "acknowledge"` the change may have made objects on the ad network: `details.leftBehind` lists them and `details.outcomeUnknown` says when nothing is known; send `acknowledge: true`. Without it: the change did not fail, was already staged again, or its kept uploads are gone.'
           content:
             application/json:
               schema:
@@ -94845,6 +94894,7 @@ paths:
               type: object
               required: [schedule]
               properties:
+                stage: { type: boolean, description: 'Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.' }
                 schedule:
                   type: array
                   maxItems: 42
@@ -95253,6 +95303,7 @@ paths:
               type: object
               required: [platform]
               properties:
+                stage: { type: boolean, description: 'Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.' }
                 platform: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit, microsoft, amazon, tradedesk, snapchat] }
                 accountId: { type: string, description: "Zernio SocialAccount id owning the ad account. Required only to delete an EMPTY campaign (zero ads), which has no local Ad documents to resolve a token from." }
                 adAccountId: { type: string, pattern: '^[0-9a-z]{1,32}$', description: "X only, for an EMPTY campaign that was never synced: the X ad account id the campaign belongs to (lowercase letters and digits). The synced campaign's ad account wins when there is one. Also accepted on the query string." }
@@ -95408,6 +95459,7 @@ paths:
               type: object
               required: [keywords]
               properties:
+                stage: { type: boolean, description: 'Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.' }
                 platform: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit], description: 'Optional and NOT authoritative: the resolved campaign''s own platform decides 200 vs 501, never this hint.' }
                 keywords:
                   type: array
@@ -95471,6 +95523,7 @@ paths:
             schema:
               type: object
               properties:
+                stage: { type: boolean, description: 'Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.' }
                 platform: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit], description: 'Optional and NOT authoritative: the resolved campaign''s own platform decides 200 vs 501, never this hint.' }
                 add:
                   type: array
@@ -95537,6 +95590,7 @@ paths:
               type: object
               required: [status, campaigns]
               properties:
+                stage: { type: boolean, description: 'Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.' }
                 status: { type: string, enum: [active, paused] }
                 campaigns:
                   type: array
@@ -95674,6 +95728,7 @@ paths:
               type: object
               required: [platform]
               properties:
+                stage: { type: boolean, description: 'Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.' }
                 platform: { type: string, enum: [facebook, instagram, tiktok, linkedin, google] }
                 deepCopy: { type: boolean, default: true, description: Copy child ad sets + ads + creatives + targeting }
                 statusOption:
@@ -96369,6 +96424,7 @@ paths:
               type: object
               required: [platform]
               properties:
+                stage: { type: boolean, description: 'Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.' }
                 platform: { type: string, enum: [facebook, instagram, tiktok] }
                 campaignId: { type: string, description: Destination platform campaign id (defaults to the source's campaign) }
                 deepCopy: { type: boolean, default: true, description: Copy child ads + creatives }
@@ -96486,6 +96542,7 @@ paths:
             schema:
               type: object
               properties:
+                stage: { type: boolean, description: 'Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.' }
                 adSetId: { type: string, description: Destination platform ad set id (defaults to the source's ad set) }
                 statusOption: { type: string, enum: [ACTIVE, PAUSED, INHERITED_FROM_SOURCE], default: PAUSED }
                 renameStrategy:
@@ -97018,6 +97075,7 @@ paths:
       security:
         - bearerAuth: []
       parameters:
+        - { name: stage, in: query, required: false, schema: { type: boolean }, description: 'Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later.' }
         - { name: adSetId, in: path, required: true, schema: { type: string }, description: Platform ad set ID }
       responses:
         '200':
@@ -98009,6 +98067,7 @@ paths:
       security:
         - bearerAuth: []
       parameters:
+        - { name: stage, in: query, required: false, schema: { type: boolean }, description: 'Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later.' }
         - { name: adId, in: path, required: true, schema: { type: string } }
       responses:
         '200':
@@ -98310,6 +98369,7 @@ paths:
               required:
               - accountId
               properties:
+                stage: { type: boolean, description: 'Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.' }
                 accountId:
                   type: string
                   pattern: ^[a-fA-F0-9]{24}$
@@ -98448,6 +98508,7 @@ paths:
               - accountId
               - updates
               properties:
+                stage: { type: boolean, description: 'Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.' }
                 accountId:
                   type: string
                   pattern: ^[a-fA-F0-9]{24}$
@@ -98519,6 +98580,7 @@ paths:
       security:
       - bearerAuth: []
       parameters:
+      - { name: stage, in: query, required: false, schema: { type: boolean }, description: 'Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later.' }
       - name: campaignId
         in: path
         required: true
@@ -98736,6 +98798,7 @@ paths:
               required:
               - accountId
               properties:
+                stage: { type: boolean, description: 'Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.' }
                 accountId:
                   type: string
                   pattern: ^[a-fA-F0-9]{24}$
@@ -98874,6 +98937,7 @@ paths:
               - accountId
               - updates
               properties:
+                stage: { type: boolean, description: 'Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.' }
                 accountId:
                   type: string
                   pattern: ^[a-fA-F0-9]{24}$
@@ -98946,6 +99010,7 @@ paths:
       security:
       - bearerAuth: []
       parameters:
+      - { name: stage, in: query, required: false, schema: { type: boolean }, description: 'Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later.' }
       - name: adSetId
         in: path
         required: true
@@ -100049,6 +100114,7 @@ paths:
             schema:
               type: object
               properties:
+                stage: { type: boolean, description: 'Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.' }
                 urlTags:
                   type: array
                   description: "Meta only. Click-URL params appended to a freshly-rebuilt creative. Meta dynamic macros ({{ad.id}}, {{campaign.id}}, {{placement}}, ...) are sent through unescaped so Meta expands them; every other character is percent-encoded."
@@ -101667,6 +101733,7 @@ paths:
               type: object
               required: [accountId, pageId, businessId, userId, tasks]
               properties:
+                stage: { type: boolean, description: 'Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.' }
                 accountId: { type: string, description: "Zernio SocialAccount id used to resolve the Meta token." }
                 pageId: { type: string, description: "Facebook Page id." }
                 businessId: { type: string, description: "Business portfolio the user belongs to." }
@@ -101715,6 +101782,7 @@ paths:
       security:
         - bearerAuth: []
       parameters:
+        - { name: stage, in: query, required: false, schema: { type: boolean }, description: 'Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later.' }
         - { name: accountId, in: query, required: true, schema: { type: string }, description: "Zernio SocialAccount id used to resolve the Meta token." }
         - { name: pageId, in: query, required: true, schema: { type: string }, description: "Facebook Page id." }
         - { name: userId, in: query, required: true, schema: { type: string }, description: "Business-scoped user id." }
@@ -101818,6 +101886,7 @@ paths:
               additionalProperties: false
               required: [accountId, name]
               properties:
+                stage: { type: boolean, description: 'Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.' }
                 accountId: { type: string, description: Zernio SocialAccount id (Google Ads) }
                 adAccountId: { type: string, pattern: '^\d+$', description: 'Google customer id. Required when the connection has multiple customers.' }
                 customerId: { type: string, pattern: '^\d+$', deprecated: true, description: Alias of adAccountId }
@@ -101868,6 +101937,7 @@ paths:
               required: [accountId]
               minProperties: 2
               properties:
+                stage: { type: boolean, description: 'Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.' }
                 accountId: { type: string, description: Zernio SocialAccount id (Google Ads) }
                 adAccountId: { type: string, pattern: '^\d+$', description: 'Google customer id. Required when the connection has multiple customers.' }
                 customerId: { type: string, pattern: '^\d+$', deprecated: true, description: Alias of adAccountId }
@@ -101904,6 +101974,7 @@ paths:
       security:
         - bearerAuth: []
       parameters:
+        - { name: stage, in: query, required: false, schema: { type: boolean }, description: 'Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later.' }
         - { name: labelId, in: path, required: true, schema: { type: string, pattern: '^\d+$' }, description: Google label id }
         - { name: accountId, in: query, required: true, schema: { type: string }, description: Zernio SocialAccount id (Google Ads) }
         - { name: adAccountId, in: query, schema: { type: string, pattern: '^\d+$' }, description: 'Google customer id. Required when the connection has multiple customers.' }
@@ -101988,6 +102059,7 @@ paths:
       security:
         - bearerAuth: []
       parameters:
+        - { name: stage, in: query, required: false, schema: { type: boolean }, description: 'Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later.' }
         - { name: labelId, in: path, required: true, schema: { type: string, pattern: '^\d+$' }, description: Google label id }
         - { name: accountId, in: query, required: true, schema: { type: string, pattern: '^[a-fA-F0-9]{24}$' }, description: 'Zernio Google Ads connection id.' }
         - { name: adAccountId, in: query, schema: { type: string, pattern: '^\d+$' }, description: 'Platform ad account ID (Google customer ID, digits only). Required when the connection has multiple customers.' }
@@ -102087,6 +102159,7 @@ paths:
               type: object
               required: [accountId, budgetValue, budgetValueType, timeStart, timeEnd]
               properties:
+                stage: { type: boolean, description: 'Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.' }
                 accountId: { type: string, description: "Zernio SocialAccount id used to resolve the Meta token." }
                 campaignId: { type: string, description: "Platform campaign id. Exactly one of campaignId / adSetId." }
                 adSetId: { type: string, description: "Platform ad set id. Exactly one of campaignId / adSetId." }
@@ -102194,6 +102267,7 @@ paths:
               type: object
               required: [accountId, adAccountId, headline, body, linkUrl]
               properties:
+                stage: { type: boolean, description: 'Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.' }
                 accountId: { type: string, description: "Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token and Page." }
                 adAccountId: { type: string, description: "Platform ad account id (Meta act_<n>, Google customer id, LinkedIn account id, ...)." }
                 headline: { type: string, maxLength: 255 }
@@ -102351,6 +102425,7 @@ paths:
               type: object
               required: [accountId, name]
               properties:
+                stage: { type: boolean, description: 'Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.' }
                 accountId: { type: string, description: "Zernio SocialAccount id (posting or ads variant); its platform decides where the campaign is created." }
                 name: { type: string, maxLength: 255 }
       responses:
@@ -102385,6 +102460,7 @@ paths:
       security:
         - bearerAuth: []
       parameters:
+        - { name: stage, in: query, required: false, schema: { type: boolean }, description: 'Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later.' }
         - { name: creativeId, in: path, required: true, schema: { type: string }, description: Platform creative id }
         - { name: accountId, in: query, required: true, schema: { type: string }, description: "Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token." }
       responses:
@@ -102518,6 +102594,7 @@ paths:
               type: object
               required: [accountId, adAccountId, name, rules]
               properties:
+                stage: { type: boolean, description: 'Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.' }
                 accountId: { type: string, description: "Zernio SocialAccount id (posting or ads variant); its platform decides where the campaign is created." }
                 adAccountId: { type: string, description: "Platform ad account id (Meta act_<n>, Google customer id, LinkedIn account id, ...)." }
                 name: { type: string, minLength: 1, maxLength: 255 }
@@ -102620,6 +102697,7 @@ paths:
               type: object
               required: [accountId, name, rules]
               properties:
+                stage: { type: boolean, description: 'Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.' }
                 accountId: { type: string, description: "Zernio SocialAccount id (posting or ads variant); its platform decides where the campaign is created." }
                 name: { type: string, minLength: 1, maxLength: 255, description: "Required: the update replaces the whole set." }
                 rules:
@@ -102665,6 +102743,7 @@ paths:
       security:
         - bearerAuth: []
       parameters:
+        - { name: stage, in: query, required: false, schema: { type: boolean }, description: 'Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later.' }
         - { name: valueRuleSetId, in: path, required: true, schema: { type: string }, description: "Platform value rule set id." }
         - { name: accountId, in: query, required: true, schema: { type: string }, description: "Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token." }
       responses:
@@ -102824,6 +102903,7 @@ paths:
                 - "accountId"
                 - "name"
               properties:
+                stage: { type: boolean, description: 'Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.' }
                 accountId:
                   type: "string"
                   pattern: "^[a-fA-F0-9]{24}$"
@@ -103086,6 +103166,7 @@ paths:
                 - "accountId"
                 - "name"
               properties:
+                stage: { type: boolean, description: 'Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.' }
                 accountId:
                   type: "string"
                   pattern: "^[a-fA-F0-9]{24}$"
@@ -103177,6 +103258,7 @@ paths:
       security:
         - bearerAuth: []
       parameters:
+        - { name: stage, in: query, required: false, schema: { type: boolean }, description: 'Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later.' }
         - $ref: '#/components/parameters/IdempotencyKeyHeader'
         - name: "listId"
           in: "path"
@@ -103307,6 +103389,7 @@ paths:
                 - "accountId"
                 - "keywords"
               properties:
+                stage: { type: boolean, description: 'Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.' }
                 accountId:
                   type: "string"
                   pattern: "^[a-fA-F0-9]{24}$"
@@ -103431,6 +103514,7 @@ paths:
               required:
                 - "accountId"
               properties:
+                stage: { type: boolean, description: 'Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.' }
                 accountId:
                   type: "string"
                   pattern: "^[a-fA-F0-9]{24}$"
@@ -103653,6 +103737,7 @@ paths:
               required:
                 - "listIds"
               properties:
+                stage: { type: boolean, description: 'Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.' }
                 platform:
                   type: "string"
                   enum:
@@ -103756,6 +103841,7 @@ paths:
               type: "object"
               additionalProperties: false
               properties:
+                stage: { type: boolean, description: 'Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.' }
                 platform:
                   type: "string"
                   enum:
@@ -103938,6 +104024,7 @@ paths:
               - accountId
               - callouts
               properties:
+                stage: { type: boolean, description: 'Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.' }
                 accountId:
                   type: string
                   pattern: ^[a-fA-F0-9]{24}$
@@ -104027,6 +104114,7 @@ paths:
               - accountId
               - updates
               properties:
+                stage: { type: boolean, description: 'Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.' }
                 accountId:
                   type: string
                   pattern: ^[a-fA-F0-9]{24}$
@@ -104118,6 +104206,7 @@ paths:
       security:
       - bearerAuth: []
       parameters:
+      - { name: stage, in: query, required: false, schema: { type: boolean }, description: 'Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later.' }
       - { name: accountId, in: query, required: true, schema: { type: string, pattern: '^[a-fA-F0-9]{24}$' }, description: 'Zernio Google Ads connection id.' }
       - { name: adAccountId, in: query, schema: { type: string, pattern: '^\d+$' }, description: 'Platform ad account ID (Google customer ID, digits only). Required when the connection has multiple customers.' }
       - { name: customerId, in: query, deprecated: true, schema: { type: string, pattern: '^\d+$' }, description: 'Alias of adAccountId, kept for existing callers' }
@@ -104270,6 +104359,7 @@ paths:
               - accountId
               - sitelinks
               properties:
+                stage: { type: boolean, description: 'Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.' }
                 accountId:
                   type: string
                   pattern: ^[a-fA-F0-9]{24}$
@@ -104371,6 +104461,7 @@ paths:
               - accountId
               - updates
               properties:
+                stage: { type: boolean, description: 'Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.' }
                 accountId:
                   type: string
                   pattern: ^[a-fA-F0-9]{24}$
@@ -104480,6 +104571,7 @@ paths:
       security:
       - bearerAuth: []
       parameters:
+      - { name: stage, in: query, required: false, schema: { type: boolean }, description: 'Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later.' }
       - { name: accountId, in: query, required: true, schema: { type: string, pattern: '^[a-fA-F0-9]{24}$' }, description: 'Zernio Google Ads connection id.' }
       - { name: adAccountId, in: query, schema: { type: string, pattern: '^\d+$' }, description: 'Platform ad account ID (Google customer ID, digits only). Required when the connection has multiple customers.' }
       - { name: customerId, in: query, deprecated: true, schema: { type: string, pattern: '^\d+$' }, description: 'Alias of adAccountId, kept for existing callers' }
@@ -104629,6 +104721,7 @@ paths:
               - accountId
               - structuredSnippets
               properties:
+                stage: { type: boolean, description: 'Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.' }
                 accountId:
                   type: string
                   pattern: ^[a-fA-F0-9]{24}$
@@ -104742,6 +104835,7 @@ paths:
               - accountId
               - updates
               properties:
+                stage: { type: boolean, description: 'Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.' }
                 accountId:
                   type: string
                   pattern: ^[a-fA-F0-9]{24}$
@@ -104830,6 +104924,7 @@ paths:
       security:
       - bearerAuth: []
       parameters:
+      - { name: stage, in: query, required: false, schema: { type: boolean }, description: 'Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later.' }
       - { name: accountId, in: query, required: true, schema: { type: string, pattern: '^[a-fA-F0-9]{24}$' }, description: 'Zernio Google Ads connection id.' }
       - { name: adAccountId, in: query, schema: { type: string, pattern: '^\d+$' }, description: 'Platform ad account ID (Google customer ID, digits only). Required when the connection has multiple customers.' }
       - { name: customerId, in: query, deprecated: true, schema: { type: string, pattern: '^\d+$' }, description: 'Alias of adAccountId, kept for existing callers' }
@@ -104996,6 +105091,7 @@ paths:
               additionalProperties: false
               required: [accountId, managerCustomerId, clientCustomerId]
               properties:
+                stage: { type: boolean, description: 'Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.' }
                 accountId: { type: string, description: "Google ads SocialAccount id." }
                 managerCustomerId: { type: string, description: "Manager customer id, digits only." }
                 clientCustomerId: { type: string, description: "Client customer id to invite, digits only." }
@@ -105048,6 +105144,7 @@ paths:
               additionalProperties: false
               required: [accountId, managerCustomerId, clientCustomerId, managerLinkId, action]
               properties:
+                stage: { type: boolean, description: 'Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.' }
                 accountId: { type: string, description: "Google ads SocialAccount id." }
                 managerCustomerId: { type: string, description: "Manager customer id, digits only." }
                 clientCustomerId: { type: string, description: "Client customer id, digits only." }
@@ -105198,6 +105295,7 @@ paths:
               additionalProperties: false
               required: [accountId, adAccountId, paymentsAccountId]
               properties:
+                stage: { type: boolean, description: 'Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.' }
                 accountId: { type: string, pattern: '^[a-fA-F0-9]{24}$', description: "Google ads SocialAccount id." }
                 adAccountId: { type: string, pattern: '^[0-9]+$', description: "Google Ads customer id to bill, digits only." }
                 paymentsAccountId: { type: string, pattern: '^\d{4}-\d{4}-\d{4}-\d{4}$', description: "Monthly invoicing payments account from GET /v1/ads/accounts/billing." }
@@ -105351,6 +105449,7 @@ paths:
               additionalProperties: false
               required: [accountId, adAccountId, emailAddress, accessRole]
               properties:
+                stage: { type: boolean, description: 'Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.' }
                 accountId: { type: string, description: "Google ads SocialAccount id." }
                 adAccountId: { type: string, description: "Google Ads customer id to invite the user to, digits only." }
                 emailAddress: { type: string, format: email }
@@ -105390,6 +105489,7 @@ paths:
       security:
         - bearerAuth: []
       parameters:
+        - { name: stage, in: query, required: false, schema: { type: boolean }, description: 'Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later.' }
         - { name: accountId, in: query, required: true, schema: { type: string }, description: "Google ads SocialAccount id." }
         - { name: adAccountId, in: query, required: true, schema: { type: string }, description: "Google Ads customer id, digits only." }
         - { name: invitationId, in: query, required: true, schema: { type: string }, description: "Numeric invitation id from GET /v1/ads/accounts/user-invitations." }
@@ -105474,6 +105574,7 @@ paths:
       security:
         - bearerAuth: []
       parameters:
+        - { name: stage, in: query, required: false, schema: { type: boolean }, description: 'Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later.' }
         - { name: accountId, in: query, required: true, schema: { type: string }, description: "Google ads SocialAccount id." }
         - { name: adAccountId, in: query, required: true, schema: { type: string }, description: "Google Ads customer id, digits only." }
         - { name: multiPartyAuthReviewId, in: query, required: true, schema: { type: string }, description: "Numeric review id from POST /v1/ads/accounts/user-invitations or GET /v1/ads/accounts/user-invitations/pending-approvals." }
@@ -105557,6 +105658,7 @@ paths:
               type: object
               required: [accountId, adAccountId, userId, tasks]
               properties:
+                stage: { type: boolean, description: 'Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.' }
                 accountId: { type: string, description: "Zernio SocialAccount id used to resolve the Meta token." }
                 adAccountId: { type: string, description: "Meta ad account id (act_<n>)." }
                 userId: { type: string, description: "Business-scoped user id from GET /v1/ads/businesses/users." }
@@ -105602,6 +105704,7 @@ paths:
       security:
         - bearerAuth: []
       parameters:
+        - { name: stage, in: query, required: false, schema: { type: boolean }, description: 'Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later.' }
         - { name: accountId, in: query, required: true, schema: { type: string }, description: "Zernio SocialAccount id used to resolve the Meta token." }
         - { name: adAccountId, in: query, required: true, schema: { type: string }, description: "Meta ad account id (act_<n>)." }
         - { name: userId, in: query, required: true, schema: { type: string }, description: "Business-scoped user id." }
@@ -106308,6 +106411,7 @@ paths:
               type: object
               required: [accountId, adAccountId]
               properties:
+                stage: { type: boolean, description: 'Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.' }
                 accountId: { type: string, description: "Account ID (metaads, or a facebook/instagram posting account)" }
                 adAccountId: { type: string, description: "Meta ad account ID (act_...)" }
                 name: { type: string, maxLength: 255, description: "New ad account name." }
@@ -106543,6 +106647,7 @@ paths:
               type: object
               required: [accountId, adAccountId, name, goal]
               properties:
+                stage: { type: boolean, description: 'Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.' }
                 creativeFeatures: { $ref: '#/components/schemas/MetaCreativeFeatures' }
                 postId: { type: string, description: "The Zernio post id (24 hex characters) returned when the post was created through Zernio. Send this or platformPostId. A value that is not a Zernio id is boosted as the platform post id, the same as platformPostId; a Zernio id that matches no post is a 404 on postId." }
                 platformPostId: { type: string, description: "Platform post ID (alternative to postId).\n\n- Reddit: the post id, with or without the `t3_` prefix.\n- Meta: a Page post id (`<pageId>_<postId>` or the bare post id) or an Instagram media id.\n- Meta Ads business-login connection (platform metaads): the id is resolved live. An Instagram media id is boosted as that media, running as the Instagram account that owns it." }
@@ -107221,6 +107326,7 @@ paths:
               type: object
               required: [name, finalUrls]
               properties:
+                stage: { type: boolean, description: 'Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.' }
                 name: { type: string, minLength: 1, maxLength: 128, description: "Unique within the campaign." }
                 finalUrls: { type: array, minItems: 1, maxItems: 10, items: { type: string, format: uri } }
                 finalMobileUrls: { type: array, minItems: 1, maxItems: 10, items: { type: string, format: uri } }
@@ -107328,6 +107434,7 @@ paths:
             schema:
               type: object
               properties:
+                stage: { type: boolean, description: 'Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.' }
                 name: { type: string, minLength: 1, maxLength: 128 }
                 status: { type: string, enum: [ENABLED, PAUSED] }
                 finalUrls: { type: array, minItems: 1, maxItems: 10, items: { type: string, format: uri } }
@@ -107368,6 +107475,7 @@ paths:
 
         Removes the asset group on Google (status REMOVED, not reversible). Pass validateOnly=true to validate without removing.
       parameters:
+        - { name: stage, in: query, required: false, schema: { type: boolean }, description: 'Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later.' }
         - { name: campaignId, in: path, required: true, schema: { type: string, pattern: '^\d+$' } }
         - { name: assetGroupId, in: path, required: true, schema: { type: string, pattern: '^\d+$' } }
         - { name: validateOnly, in: query, required: false, schema: { type: boolean, default: false } }
@@ -107417,6 +107525,7 @@ paths:
             schema:
               type: object
               properties:
+                stage: { type: boolean, description: 'Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.' }
                 link: { type: array, maxItems: 100, items: { $ref: '#/components/schemas/GoogleAssetGroupAssetLink' } }
                 unlink: { type: array, maxItems: 100, items: { $ref: '#/components/schemas/GoogleAssetGroupAssetUnlink' } }
                 validateOnly: { type: boolean, default: false }
@@ -107470,6 +107579,7 @@ paths:
               type: object
               required: [tree]
               properties:
+                stage: { type: boolean, description: 'Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.' }
                 tree: { $ref: '#/components/schemas/GoogleListingGroupTree' }
                 validateOnly: { type: boolean, default: false }
       responses:
@@ -109571,6 +109681,7 @@ paths:
               type: object
               required: [accountId, name, privacyPolicyUrl]
               properties:
+                stage: { type: boolean, description: 'Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.' }
                 accountId: { type: string }
                 name: { type: string, maxLength: 200 }
                 questions:
@@ -109779,6 +109890,7 @@ paths:
 
         Neither platform hard-deletes a form; this archives it (Meta status=ARCHIVED; LinkedIn state=ARCHIVED via PARTIAL_UPDATE). Meta forms must belong to the Page the accountId manages.
       parameters:
+        - { name: stage, in: query, required: false, schema: { type: boolean }, description: 'Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later.' }
         - { name: formId, in: path, required: true, schema: { type: string }, description: "Numeric form id (Meta leadgen_form id or LinkedIn leadForm id)." }
         - { name: accountId, in: query, required: true, schema: { type: string }, description: "Connected Meta ads, facebook, instagram or linkedin ads account id (selects the platform).\n\n- A Meta ads connection resolves its Page through the Facebook account linked to the same profile.\n- An Instagram account uses the Page its ads run under: its own linked Page, else the Facebook or business-login Meta ads account on the same profile." }
       responses:
@@ -110290,6 +110402,7 @@ paths:
       security:
         - bearerAuth: []
       parameters:
+        - { name: stage, in: query, required: false, schema: { type: boolean }, description: 'Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later.' }
         - { name: videoId, in: path, required: true, schema: { type: string }, description: "Meta ad video id (numeric)." }
         - { name: accountId, in: query, required: true, schema: { type: string }, description: "Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token." }
         - { name: adAccountId, in: query, required: true, schema: { type: string }, description: "Meta ad account id (act_<n>) that owns the video." }
@@ -111898,6 +112011,7 @@ paths:
                   description: "customer_list, website, lookalike or engagement audience (uploaded or derived from a source)."
                   required: [accountId, adAccountId, name, type]
                   properties:
+                    stage: { type: boolean, description: 'Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.' }
                     accountId: { type: string }
                     adAccountId: { type: string, description: "Platform ad account ID. Must start with act_ for Meta; bare platform id for others (Google customer id, X/TikTok/LinkedIn/Pinterest account id)." }
                     name: { type: string, maxLength: 255 }
@@ -112054,6 +112168,7 @@ paths:
                   description: "A reusable, stored TargetingSpec. No member upload step, no adAccountId, the spec is the audience. Reference it later via `savedTargetingId` on POST /v1/ads/create."
                   required: [type, accountId, name, spec]
                   properties:
+                    stage: { type: boolean, description: 'Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.' }
                     type: { type: string, enum: [saved_targeting] }
                     accountId: { type: string, description: "Account ID on the target ad platform." }
                     name: { type: string, maxLength: 255 }
@@ -112155,6 +112270,7 @@ paths:
               type: object
               description: At least one field is required.
               properties:
+                stage: { type: boolean, description: 'Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.' }
                 name: { type: string, maxLength: 255 }
                 description: { type: string }
                 spec:
@@ -112212,6 +112328,7 @@ paths:
       security:
         - bearerAuth: []
       parameters:
+        - { name: stage, in: query, required: false, schema: { type: boolean }, description: 'Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later.' }
         - { name: audienceId, in: path, required: true, schema: { type: string } }
       responses:
         '200':
@@ -112423,6 +112540,7 @@ paths:
               type: object
               required: [companies]
               properties:
+                stage: { type: boolean, description: 'Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.' }
                 companies:
                   type: array
                   minItems: 1
@@ -113050,6 +113168,7 @@ paths:
               type: object
               required: [accountId, name, type]
               properties:
+                stage: { type: boolean, description: 'Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.' }
                 accountId:
                   type: string
                   description: SocialAccount ID. Must be a `googleads` account.
@@ -113180,6 +113299,7 @@ paths:
               additionalProperties: false
               required: [accountId, goals]
               properties:
+                stage: { type: boolean, description: 'Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.' }
                 accountId: { type: string, description: Zernio SocialAccount id (Google Ads) }
                 adAccountId: { type: string, pattern: '^\d+$', description: 'Google customer id. Required when the connection has multiple customers.' }
                 customerId: { type: string, pattern: '^\d+$', deprecated: true, description: Alias of adAccountId }
@@ -113238,6 +113358,7 @@ paths:
               required: [accountId]
               minProperties: 2
               properties:
+                stage: { type: boolean, description: 'Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.' }
                 accountId: { type: string, description: Zernio SocialAccount id (Google Ads) }
                 adAccountId: { type: string, pattern: '^\d+$', description: 'Google customer id. Required when the connection has multiple customers.' }
                 customerId: { type: string, pattern: '^\d+$', deprecated: true, description: Alias of adAccountId }
@@ -113341,6 +113462,7 @@ paths:
               additionalProperties: false
               required: [accountId, name, conversionActionIds]
               properties:
+                stage: { type: boolean, description: 'Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.' }
                 accountId: { type: string, description: Zernio SocialAccount id (Google Ads) }
                 adAccountId: { type: string, pattern: '^\d+$', description: 'Google customer id. Required when the connection has multiple customers.' }
                 customerId: { type: string, pattern: '^\d+$', deprecated: true, description: Alias of adAccountId }
@@ -113390,6 +113512,7 @@ paths:
               required: [accountId]
               minProperties: 2
               properties:
+                stage: { type: boolean, description: 'Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.' }
                 accountId: { type: string, description: Zernio SocialAccount id (Google Ads) }
                 adAccountId: { type: string, pattern: '^\d+$', description: 'Google customer id. Required when the connection has multiple customers.' }
                 customerId: { type: string, pattern: '^\d+$', deprecated: true, description: Alias of adAccountId }
@@ -113425,6 +113548,7 @@ paths:
       security:
         - bearerAuth: []
       parameters:
+        - { name: stage, in: query, required: false, schema: { type: boolean }, description: 'Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later.' }
         - { name: goalId, in: path, required: true, schema: { type: string, pattern: '^\d+$' }, description: Google custom conversion goal id }
         - { name: accountId, in: query, required: true, schema: { type: string }, description: Zernio SocialAccount id (Google Ads) }
         - { name: adAccountId, in: query, schema: { type: string, pattern: '^\d+$' }, description: 'Google customer id. Required when the connection has multiple customers.' }
@@ -115322,6 +115446,7 @@ paths:
               additionalProperties: false
               minProperties: 1
               properties:
+                stage: { type: boolean, description: 'Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.' }
                 goals: { type: array, maxItems: 100, items: { $ref: '#/components/schemas/GoogleBiddableGoalInput' } }
                 goalConfigLevel: { type: string, enum: [CUSTOMER, CAMPAIGN] }
                 customConversionGoalId: { type: [string, "null"], pattern: '^\d+$', description: 'Custom goal to bid on, or null to clear' }
@@ -125192,6 +125317,7 @@ paths:
                 - 'accountId'
                 - 'creatorUsername'
               properties:
+                stage: { type: boolean, description: 'Send true to store this write as a staged change instead of applying it. The response is `202` with the change, and POST /v1/ads/changes/{changeId}/confirm applies it later. Cannot be combined with `validateOnly`.' }
                 accountId: *a7
                 creatorUsername:
                   type: 'string'

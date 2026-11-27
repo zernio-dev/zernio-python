@@ -130,6 +130,7 @@ class AdAudiencesResource:
         self,
         audience_id: str,
         *,
+        stage: bool | None = None,
         name: str | None = None,
         description: str | None = None,
         spec: Any | None = None,
@@ -137,6 +138,7 @@ class AdAudiencesResource:
         """Update an audience"""
         payload = self._build_body(
             {
+                "stage": stage,
                 "name": name,
                 "description": description,
                 "spec": spec,
@@ -144,9 +146,16 @@ class AdAudiencesResource:
         )
         return self._client._put(f"/v1/ads/audiences/{audience_id}", data=payload)
 
-    def delete_ad_audience(self, audience_id: str) -> dict[str, Any]:
+    def delete_ad_audience(
+        self, audience_id: str, *, stage: bool | None = None
+    ) -> dict[str, Any]:
         """Delete custom audience"""
-        return self._client._delete(f"/v1/ads/audiences/{audience_id}")
+        params = self._build_query(
+            {
+                "stage": stage,
+            }
+        )
+        return self._client._delete(f"/v1/ads/audiences/{audience_id}", params=params)
 
     def add_users_to_ad_audience(
         self, audience_id: str, users: list[Any]
@@ -175,11 +184,16 @@ class AdAudiencesResource:
         )
 
     def replace_ad_audience_companies(
-        self, audience_id: str, companies: list[dict[str, Any]]
+        self,
+        audience_id: str,
+        companies: list[dict[str, Any]],
+        *,
+        stage: bool | None = None,
     ) -> dict[str, Any]:
         """Replace audience companies"""
         payload = self._build_body(
             {
+                "stage": stage,
                 "companies": companies,
             }
         )
@@ -218,6 +232,7 @@ class AdAudiencesResource:
         self,
         audience_id: str,
         *,
+        stage: bool | None = None,
         name: str | None = None,
         description: str | None = None,
         spec: Any | None = None,
@@ -225,6 +240,7 @@ class AdAudiencesResource:
         """Update an audience (async)"""
         payload = self._build_body(
             {
+                "stage": stage,
                 "name": name,
                 "description": description,
                 "spec": spec,
@@ -234,9 +250,18 @@ class AdAudiencesResource:
             f"/v1/ads/audiences/{audience_id}", data=payload
         )
 
-    async def adelete_ad_audience(self, audience_id: str) -> dict[str, Any]:
+    async def adelete_ad_audience(
+        self, audience_id: str, *, stage: bool | None = None
+    ) -> dict[str, Any]:
         """Delete custom audience (async)"""
-        return await self._client._adelete(f"/v1/ads/audiences/{audience_id}")
+        params = self._build_query(
+            {
+                "stage": stage,
+            }
+        )
+        return await self._client._adelete(
+            f"/v1/ads/audiences/{audience_id}", params=params
+        )
 
     async def aadd_users_to_ad_audience(
         self, audience_id: str, users: list[Any]
@@ -265,11 +290,16 @@ class AdAudiencesResource:
         )
 
     async def areplace_ad_audience_companies(
-        self, audience_id: str, companies: list[dict[str, Any]]
+        self,
+        audience_id: str,
+        companies: list[dict[str, Any]],
+        *,
+        stage: bool | None = None,
     ) -> dict[str, Any]:
         """Replace audience companies (async)"""
         payload = self._build_body(
             {
+                "stage": stage,
                 "companies": companies,
             }
         )
