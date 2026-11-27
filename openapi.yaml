@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.862.1"
+  version: "1.863.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -16758,6 +16758,17 @@ components:
         connectedTelevisionOnly:
           type: boolean
           description: Restrict delivery to Connected TV inventory.
+        imageLinkFormat:
+          type: string
+          enum: [article, single_image]
+          default: article
+          description: |
+            LinkedIn shape of an `imageUrl` with `linkUrl` ad on POST /v1/ads/create.
+
+            - `article` (default): an article link ad (`content.article`, image as the thumbnail).
+            - `single_image`: a Single Image Ad (the image as the post media, `linkUrl` as the landing page, `callToAction` as the button).
+
+            `single_image` works only with `imageUrl`, returns 400 with `longHeadline` (LinkedIn does not show it on this format), and is rejected on boost.
         carousel:
           type: object
           additionalProperties: false
@@ -107828,7 +107839,7 @@ paths:
 
         ### LinkedIn
 
-        LinkedIn creates a Single Image or Single Video Ad backed by a Direct Sponsored Content "dark post" authored by a Company Page (see `organizationId`).
+        LinkedIn creates an ad backed by a Direct Sponsored Content "dark post" authored by a Company Page (see `organizationId`). An `imageUrl` with `linkUrl` publishes an article link ad by default; set `platformSpecificData.imageLinkFormat: "single_image"` for a Single Image Ad. A `video` publishes a Single Video Ad.
 
         - Supported goals: engagement, traffic, awareness, and video_views.
         - Video ads use the `video` field; video_views requires a video.
