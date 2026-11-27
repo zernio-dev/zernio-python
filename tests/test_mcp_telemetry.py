@@ -19,10 +19,15 @@ from sentry_sdk.transport import Transport
 
 from late.client.exceptions import LateAPIError
 from late.mcp import telemetry, user_agent
-from late.mcp.middleware import ToolTelemetryMiddleware, tool_telemetry
+from late.mcp.middleware import (
+    ToolGuidanceMiddleware,
+    ToolTelemetryMiddleware,
+    tool_telemetry,
+)
 from late.mcp.telemetry import (
     ServerErrorAccessLogFilter,
     init_sentry,
+    is_expected_failure,
     quiet_routine_logs,
 )
 from late.models import AccountsListResponse
@@ -400,6 +405,95 @@ async def test_call_tool_failing_before_it_dispatches_is_still_recorded(caplog) 
 
     [line] = _logged(caplog)
     assert (line["tool"], line["outcome"]) == ("call_tool", "error")
+
+
+def _guided_server() -> FastMCP:
+    """call_tool behind ToolGuidanceMiddleware, in the hosted server's order."""
+    server = _proxied_server()
+
+    async def no_closest_tools(_name, _context):
+        return []
+
+    server.middleware.insert(
+        0,
+        ToolGuidanceMiddleware(
+            search_tool="search_tools",
+            call_tool="call_tool",
+            closest_tools=no_closest_tools,
+        ),
+    )
+    return server
+
+
+_NESTED_CALL = {
+    "name": "call_tool",
+    "arguments": {"name": "hidden_tool", "arguments": {}},
+}
+
+
+async def test_call_tool_wrapped_in_itself_opens_no_sentry_issue(
+    sentry_events, quieted_fastmcp_logs, monkeypatch
+) -> None:
+    # ZERNIO-MCP-W: an agent wrapped call_tool in itself.
+    captured: list[BaseException] = []
+    monkeypatch.setattr(tool_telemetry.sentry_sdk, "capture_exception", captured.append)
+
+    async with Client(_guided_server()) as client:
+        result = await client.call_tool("call_tool", _NESTED_CALL, raise_on_error=False)
+
+    assert result.is_error
+    assert "name='hidden_tool'" in result.content[0].text
+    assert captured == []
+    assert sentry_events.payloads("event") == []
+    assert quieted_fastmcp_logs.records == []
+
+
+async def test_call_tool_wrapped_in_itself_is_counted_as_a_misuse(
+    sentry_events, caplog
+) -> None:
+    caplog.set_level(logging.INFO, logger="late.mcp.tools")
+
+    async with Client(_guided_server()) as client:
+        await client.call_tool("call_tool", _NESTED_CALL, raise_on_error=False)
+
+    [line] = _logged(caplog)
+    assert (line["tool"], line["outcome"], line["misuse"]) == (
+        "call_tool",
+        "error",
+        "nested_call_tool",
+    )
+    [transaction] = sentry_events.payloads("transaction")
+    assert transaction["tags"]["mcp.misuse"] == "nested_call_tool"
+
+
+async def test_other_call_tool_failures_record_no_misuse(caplog) -> None:
+    caplog.set_level(logging.INFO, logger="late.mcp.tools")
+
+    async with Client(_guided_server()) as client:
+        await client.call_tool(
+            "call_tool", {"name": "lead_gen_list_forms", "arguments": {}}, raise_on_error=False
+        )
+
+    [line] = _logged(caplog)
+    assert line["outcome"] == "error"
+    assert "misuse" not in line
+
+
+def _wrapped(cause: Exception) -> ToolError:
+    try:
+        raise ToolError(f"Error calling tool 'call_tool': {cause}") from cause
+    except ToolError as exc:
+        return exc
+
+
+def test_only_the_synthetic_tool_refusal_counts_as_an_expected_value_error() -> None:
+    refusal = ValueError(
+        "'call_tool' is a synthetic search tool and cannot be called via the call_tool proxy"
+    )
+
+    assert is_expected_failure(_wrapped(refusal))
+    assert not is_expected_failure(_wrapped(ValueError("invalid literal for int()")))
+    assert not is_expected_failure(ValueError("invalid literal for int()"))
 
 
 @respx.mock

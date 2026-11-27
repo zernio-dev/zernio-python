@@ -17,6 +17,10 @@ from late.mcp.constants import SERVICE_VERSION
 TOOL_TRANSACTION_OP = "mcp.tool"
 _TOOL_ERROR_LOG_PREFIX = "Error calling tool"
 _INVALID_ARGUMENTS_LOG_PREFIX = "Invalid arguments for tool"
+# Raised as a plain ValueError by fastmcp/server/transforms/search/base.py.
+_SYNTHETIC_TOOL_REFUSAL = (
+    "is a synthetic search tool and cannot be called via the call_tool proxy"
+)
 
 tool_call_logger = logging.getLogger("late.mcp.tools")
 
@@ -110,7 +114,16 @@ def quiet_routine_logs() -> None:
     logging.getLogger("fastmcp.server.server").addFilter(ToolFailureLogFilter())
 
 
+def is_synthetic_tool_refusal(exc: BaseException) -> bool:
+    """FastMCP's call_tool proxy refusing to run itself or the search tool."""
+    cause = exc.__cause__ if isinstance(exc, ToolError) else exc
+    return isinstance(cause, ValueError) and _SYNTHETIC_TOOL_REFUSAL in str(cause)
+
+
 def is_expected_failure(exc: Exception) -> bool:
+    if is_synthetic_tool_refusal(exc):
+        # An agent wrapping call_tool in itself, answered with a hint (ZERNIO-MCP-W).
+        return True
     if isinstance(exc, ToolError) and exc.__cause__ is not None:
         # A generated tool re-wraps what it raised itself, e.g. the refusal
         # of a file too large to return, and FastMCP 4's call_tool re-wraps

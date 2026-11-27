@@ -23,6 +23,7 @@ from late.mcp.telemetry import (
     TOOL_TRANSACTION_OP,
     argument_errors_without_input,
     is_expected_failure,
+    is_synthetic_tool_refusal,
     tool_call_logger,
 )
 from late.mcp.user_agent import calling_client, calling_user_agent
@@ -120,6 +121,14 @@ def _error_fields(exc: Exception) -> dict[str, Any]:
     return fields
 
 
+def _misuse_fields(arguments: dict[str, Any] | None, exc: Exception) -> dict[str, Any]:
+    # Counts agents wrapping call_tool in itself, which FastMCP refuses.
+    if not is_synthetic_tool_refusal(exc):
+        return {}
+    requested = (arguments or {}).get("name")
+    return {"misuse": "nested_call_tool" if requested == _CALL_TOOL else "proxied_search_tool"}
+
+
 class ToolTelemetryMiddleware(Middleware):
     def __init__(self, surface: str) -> None:
         self._surface = surface
@@ -199,8 +208,14 @@ class ToolTelemetryMiddleware(Middleware):
                 fields = {"outcome": "cancelled"}
                 raise
             except Exception as exc:
-                fields = {"outcome": "error", **_error_fields(exc)}
+                fields = {
+                    "outcome": "error",
+                    **_error_fields(exc),
+                    **_misuse_fields(context.message.arguments, exc),
+                }
                 transaction.set_tag("mcp.error_type", fields["error_type"])
+                if "misuse" in fields:
+                    transaction.set_tag("mcp.misuse", fields["misuse"])
                 if "invalid_arguments" in fields:
                     transaction.set_tag(
                         "mcp.invalid_arguments", fields["invalid_arguments"]
