@@ -43790,6 +43790,7 @@ def register_generated_tools(mcp, _get_client):
         cursor: str | None = None,
         account_id: str | None = None,
         tags: str | None = None,
+        unread: bool | None = None,
     ) -> str:
         """List conversations
 
@@ -43824,7 +43825,20 @@ def register_generated_tools(mcp, _get_client):
                 limit: Maximum number of conversations to return; values above 100 are served as 100.
                 cursor: Pagination cursor for next page
                 account_id: Filter by specific account ID
-                tags: Comma-separated contact tags. Returns only conversations whose contact has any of them. Cannot be combined with folder=requests."""
+                tags: Comma-separated contact tags. Returns only conversations whose contact has any of them. Cannot be combined with folder=requests.
+                unread: `true` returns only conversations holding at least one unread incoming message.
+
+        Read state is kept by Zernio, not by the platform. An incoming message stays unread until its conversation is marked read, in one of two ways:
+
+        - POST /v1/inbox/conversations/{conversationId}/read.
+        - On Telegram, Slack, SMS, RCS, iMessage, email and TikTok, reading its messages with GET /v1/inbox/conversations/{conversationId}/messages.
+
+        Messages you send never count, and replayed Meta history is stored as already read.
+
+        - On Bluesky and Reddit, a listed thread whose messages Zernio has not pulled yet (it pulls them when the thread is opened or when background polling reaches it) has no local read state and is not returned.
+        - Cannot be combined with `folder=requests` or `updatedSince`.
+
+        To render a badge without paging, use GET /v1/inbox/unread-count."""
         client = _get_client()
         try:
             response = client.messages.list_inbox_conversations(
@@ -43838,6 +43852,7 @@ def register_generated_tools(mcp, _get_client):
                 cursor=cursor,
                 account_id=account_id,
                 tags=tags,
+                unread=unread,
             )
             return _format_response(response)
         except Exception as e:
@@ -43952,6 +43967,72 @@ def register_generated_tools(mcp, _get_client):
                 template_cards=template_cards,
                 header_media=header_media,
                 header_location=header_location,
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Count unread conversations",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def messages_get_inbox_unread_count(
+        profile_id: str | None = None,
+        platform: Literal[
+            "facebook",
+            "instagram",
+            "twitter",
+            "bluesky",
+            "reddit",
+            "telegram",
+            "whatsapp",
+            "sms",
+            "rcs",
+            "slack",
+            "tiktok",
+            "imessage",
+            "line",
+            "wechat",
+            "google",
+            "microsoft",
+            "imap",
+        ]
+        | None = None,
+        account_id: str | None = None,
+        status: Literal["active", "archived"] | None = None,
+    ) -> str:
+        """Count unread conversations
+
+        Count the conversations holding at least one unread incoming message, across the connected messaging accounts. Use it for an unread badge instead of paging GET /v1/inbox/conversations?unread=true, which lists the same conversations.
+
+        Read state is kept by Zernio, not by the platform. An incoming message stays unread until its conversation is marked read, in one of two ways:
+
+        - POST /v1/inbox/conversations/{conversationId}/read.
+        - On Telegram, Slack, SMS, RCS, iMessage, email and TikTok, reading its messages with GET /v1/inbox/conversations/{conversationId}/messages.
+
+        Messages you send never count, and replayed Meta history is stored as already read.
+
+        - The count stops at 1000. `capped: true` means there are at least that many.
+        - Read from a replica, so it can trail a conversation you just marked read by about a second.
+        - On Bluesky and Reddit, a listed thread whose messages Zernio has not pulled yet has no local read state and is not counted.
+        - In the shared WhatsApp and iMessage ...
+
+        Args:
+            profile_id: Count only accounts in this profile
+            platform: Count only accounts on this platform
+            account_id: Count only this account
+            status: Count only conversations with this status. Both are counted when omitted, as GET /v1/inbox/conversations lists both."""
+        client = _get_client()
+        try:
+            response = client.messages.get_inbox_unread_count(
+                profile_id=profile_id,
+                platform=platform,
+                account_id=account_id,
+                status=status,
             )
             return _format_response(response)
         except Exception as e:
@@ -63792,6 +63873,10 @@ TOOL_OAUTH_SCOPES: dict[str, tuple[str, ...]] = {
         "messaging:write",
     ),
     "messages_get_inbox_conversation_messages": (
+        "messaging:read",
+        "messaging:write",
+    ),
+    "messages_get_inbox_unread_count": (
         "messaging:read",
         "messaging:write",
     ),

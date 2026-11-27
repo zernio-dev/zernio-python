@@ -114,6 +114,7 @@ class MessagesResource:
         cursor: str | None = None,
         account_id: str | None = None,
         tags: str | None = None,
+        unread: bool | None = None,
     ) -> dict[str, Any]:
         """List conversations"""
         params = self._build_query(
@@ -128,6 +129,7 @@ class MessagesResource:
                 "cursor": cursor,
                 "accountId": account_id,
                 "tags": tags,
+                "unread": unread,
             }
         )
         return self._client._get("/v1/inbox/conversations", params=params)
@@ -174,6 +176,25 @@ class MessagesResource:
             }
         )
         return self._client._post("/v1/inbox/conversations", data=payload)
+
+    def get_inbox_unread_count(
+        self,
+        *,
+        profile_id: str | None = None,
+        platform: str | None = None,
+        account_id: str | None = None,
+        status: str | None = None,
+    ) -> dict[str, Any]:
+        """Count unread conversations"""
+        params = self._build_query(
+            {
+                "profileId": profile_id,
+                "platform": platform,
+                "accountId": account_id,
+                "status": status,
+            }
+        )
+        return self._client._get("/v1/inbox/unread-count", params=params)
 
     def search_inbox_conversations(
         self,
@@ -568,6 +589,7 @@ class MessagesResource:
         cursor: str | None = None,
         account_id: str | None = None,
         tags: str | None = None,
+        unread: bool | None = None,
     ) -> dict[str, Any]:
         """List conversations (async)"""
         params = self._build_query(
@@ -582,6 +604,7 @@ class MessagesResource:
                 "cursor": cursor,
                 "accountId": account_id,
                 "tags": tags,
+                "unread": unread,
             }
         )
         return await self._client._aget("/v1/inbox/conversations", params=params)
@@ -628,6 +651,25 @@ class MessagesResource:
             }
         )
         return await self._client._apost("/v1/inbox/conversations", data=payload)
+
+    async def aget_inbox_unread_count(
+        self,
+        *,
+        profile_id: str | None = None,
+        platform: str | None = None,
+        account_id: str | None = None,
+        status: str | None = None,
+    ) -> dict[str, Any]:
+        """Count unread conversations (async)"""
+        params = self._build_query(
+            {
+                "profileId": profile_id,
+                "platform": platform,
+                "accountId": account_id,
+                "status": status,
+            }
+        )
+        return await self._client._aget("/v1/inbox/unread-count", params=params)
 
     async def asearch_inbox_conversations(
         self,
