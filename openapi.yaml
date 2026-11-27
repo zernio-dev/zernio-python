@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.862.0"
+  version: "1.862.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -55026,9 +55026,14 @@ paths:
                     category: "Coffee shop"
                     storeCode: "CS-001"
                 hasMore: false
-        '400': { description: Missing required parameters (profileId or tempToken) }
+        '400':
+          description: 'Missing required parameters (profileId or tempToken), or Google rejected the filter or search expression. In the second case `code` is `invalid_field_value`, `param` is `filter` (or `search` when only search was sent) and `error` quotes Google''s reason.'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { description: 'The connect token was issued for a different profile or platform (INSUFFICIENT_PERMISSIONS).' }
+        '429': { $ref: '#/components/responses/RateLimited' }
         '500': 
           description: Failed to fetch locations (e.g., invalid token, insufficient permissions)
           content:
@@ -63178,7 +63183,6 @@ paths:
                     type: boolean
                     description: True when more locations exist than were returned (use search to narrow down).
                   selectedLocationId: { type: string }
-                  cached: { type: boolean }
               example:
                 locations:
                   - id: "12345678901234567890"
@@ -63189,10 +63193,20 @@ paths:
                     category: "Restaurant"
                     websiteUrl: "https://mybusiness.com"
                 selectedLocationId: "12345678901234567890"
-                cached: true
-        '400': { description: Invalid query parameter (e.g. limit out of range) }
+        '400':
+          description: 'Invalid query parameter (e.g. limit out of range), or Google rejected the filter or search expression. In the second case `code` is `invalid_field_value`, `param` is `filter` (or `search` when only search was sent) and `error` quotes Google''s reason.'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '403':
+          description: 'Google refused access to one of the Business Profile accounts the connection can see (`code` is `platform_api_error`).'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
         '404': { description: Account not found }
+        '429': { $ref: '#/components/responses/RateLimited' }
+        '503': { $ref: '#/components/responses/TemporarilyUnavailable' }
     put:
       x-resource-group: "accounts"
       x-oauth-scopes: ["accounts:write"]
@@ -98090,7 +98104,7 @@ paths:
 
             To fix `ad_account_not_selected`, add the ad account to the selection (GET /v1/connect/{platform}/ads with adAccountIds, which replaces the selection) or use a connection that has it selected.
         '404':
-          description: "Ad not found (`ad_not_found`), or `account_not_found` when the ad's connection is on a profile this API key can't access."
+          description: "Ad not found (`ad_not_found`), or `account_not_found` when the ad's connection is on a profile this API key can't access and no active connection of the same user on the key's profiles reaches the ad account. With one, the write acts through it; with several, the answer is 409 `ambiguous_account`."
           content:
             application/json:
               schema:
@@ -98169,7 +98183,7 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { $ref: '#/components/responses/AdAccountNotSelected' }
         '404':
-          description: "Ad not found (`ad_not_found`), or `account_not_found` when the ad's connection is on a profile this API key can't access."
+          description: "Ad not found (`ad_not_found`), or `account_not_found` when the ad's connection is on a profile this API key can't access and no active connection of the same user on the key's profiles reaches the ad account. With one, the write acts through it; with several, the answer is 409 `ambiguous_account`."
           content:
             application/json:
               schema:
@@ -98275,7 +98289,7 @@ paths:
 
             To fix `ad_account_not_selected`, add the ad account to the selection (GET /v1/connect/{platform}/ads with adAccountIds, which replaces the selection) or use a connection that has it selected.
         '404':
-          description: "Ad not found (`ad_not_found`), or `account_not_found` when the ad's connection is on a profile this API key can't access."
+          description: "Ad not found (`ad_not_found`), or `account_not_found` when the ad's connection is on a profile this API key can't access and no active connection of the same user on the key's profiles reaches the ad account. With one, the write acts through it; with several, the answer is 409 `ambiguous_account`."
           content:
             application/json:
               schema:
