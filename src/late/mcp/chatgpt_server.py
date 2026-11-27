@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import os
 from datetime import datetime, timedelta, timezone
-from typing import Any, Literal
+from typing import Annotated, Any, Literal
 
 import httpx
 from fastmcp import FastMCP
@@ -21,7 +21,7 @@ from fastmcp.exceptions import ToolError
 from fastmcp.server.dependencies import get_access_token
 from fastmcp.tools import ToolResult
 from mcp.types import TextContent, ToolAnnotations
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, BeforeValidator, Field
 
 from late.client.base import _retry_after_seconds
 from late.mcp.auth import build_auth_provider, forget_rejected_token
@@ -52,6 +52,7 @@ _TIMEOUT = 60.0
 _ACCOUNTS_PAGE_SIZE = 100
 _ACCOUNT_LOOKUP_LIMIT = 25
 _USERNAMES_PAGE_SIZE = 500
+_POSTS_PAGE_SIZE_MAX = 50
 _DAY_NAMES = [
     "Monday",
     "Tuesday",
@@ -468,6 +469,20 @@ async def _usernames(posts: list[dict[str, Any]]) -> dict[str, str]:
     }
 
 
+def _cap_posts_limit(value: Any) -> Any:
+    """Clamp an oversized list_posts limit instead of rejecting it.
+
+    The advertised schema keeps ``maximum: 50`` (the definition OpenAI
+    approved), but ChatGPT regularly sends 100 or more anyway, and a
+    ``less_than_equal`` error fails the whole call. This runs before the
+    ``le`` check, so anything above the cap becomes the cap.
+    """
+    is_number = isinstance(value, (int, float)) and not isinstance(value, bool)
+    if is_number and value > _POSTS_PAGE_SIZE_MAX:
+        return _POSTS_PAGE_SIZE_MAX
+    return value
+
+
 def _media_items(media_urls: list[str] | None) -> list[dict[str, str]]:
     return [media_item(url) for url in media_urls or []]
 
@@ -654,7 +669,9 @@ async def list_posts(
     account_id: str | None = Field(
         default=None, description="Only posts targeting this social account"
     ),
-    limit: int = Field(default=20, ge=1, le=50, description="Maximum posts to return"),
+    limit: Annotated[int, BeforeValidator(_cap_posts_limit)] = Field(
+        default=20, ge=1, le=_POSTS_PAGE_SIZE_MAX, description="Maximum posts to return"
+    ),
 ) -> ToolResult:
     params: dict[str, Any] = {"limit": limit, "page": 1, "sortBy": "scheduled-desc"}
     if status:
@@ -675,7 +692,15 @@ async def list_posts(
         + ", ".join(t.platform for t in p.targets)
         for p in posts
     ]
-    return _result(listing, f"{len(posts)} of {total} post(s):\n" + "\n".join(lines))
+    more = ""
+    if limit == _POSTS_PAGE_SIZE_MAX and total > len(posts):
+        more = (
+            f"\n{_POSTS_PAGE_SIZE_MAX} is the most one call returns (larger limits are "
+            "capped); these are the newest. Narrow with status or account_id to see others."
+        )
+    return _result(
+        listing, f"{len(posts)} of {total} post(s):\n" + "\n".join(lines) + more
+    )
 
 
 @chatgpt_mcp.tool(
