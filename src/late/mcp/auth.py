@@ -204,6 +204,33 @@ def _identity_in(response: httpx.Response) -> dict[str, str]:
     }
 
 
+# A client that registered before a scope existed holds the full list of its
+# day, which meant "everything". New scopes are only ever appended to
+# OAUTH_SCOPES, so every earlier full list is a prefix of it, starting from the
+# original 8. Port of expandLegacyFullScope (Schedule-Posts-API
+# libs/oauth/scopes.ts): keep the two in step.
+_ORIGINAL_SCOPE_COUNT = 8
+
+
+def expand_legacy_full_scope(scope: str) -> list[str]:
+    """The scopes an OAuth `scope` string grants, as the Zernio API reads it."""
+    requested = list(dict.fromkeys(scope.split()))
+    granted = set(requested)
+    size = len(granted)
+    is_earlier_full_list = _ORIGINAL_SCOPE_COUNT <= size < len(OAUTH_SCOPES) and (
+        granted.issuperset(OAUTH_SCOPES[:size])
+    )
+    return list(OAUTH_SCOPES) if is_earlier_full_list else requested
+
+
+def _scopes_for(claims: dict[str, str | int]) -> list[str]:
+    """An OAuth token's granted scopes; every scope for an API key."""
+    scope = claims.get("scope")
+    if isinstance(scope, str):
+        return expand_legacy_full_scope(scope)
+    return list(OAUTH_SCOPES)
+
+
 def forget_rejected_token(token: str) -> None:
     _forget(token_cache_key(token))
 
@@ -337,7 +364,7 @@ class ZernioTokenVerifier(TokenVerifier):
         return AccessToken(
             token=token,
             client_id="zernio",
-            scopes=list(OAUTH_SCOPES),
+            scopes=_scopes_for(claims),
             claims=claims,
         )
 
