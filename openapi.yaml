@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.851.0"
+  version: "1.852.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -96621,6 +96621,14 @@ paths:
 
         Other platforms return 400 for either field before anything in the request is written (use PUT /v1/ads/{adId} with `targeting` where that platform supports it).
 
+        `rawTargeting` (Meta only) takes Meta's own snake_case keys, as on create, for what `targeting` cannot express: one `flexible_spec` group ORing several kinds, `exclusions`, and similar.
+
+        - Each raw key replaces the live key of the same name; `null` removes it. Keys you don't send are kept.
+        - A raw `geo_locations` that sends any location list replaces every live location list, as above.
+        - `targeting` and `placements` in the same request are applied on top and win on the same key.
+        - Raw `flexible_spec` with a structured detailed-targeting field (interests, behaviors, work fields, incomeTier), or raw `excluded_geo_locations` with `excludedLocations`, returns 400: send that targeting in one of them.
+        - Other networks, an empty object and the retired `video_feeds` Facebook position return 400.
+
         The live read and the `incomeTier` lookup run before any other field is written, so a 502 or 422 from them leaves the ad set unchanged.
 
         ### Reddit Ads: budget, name and bidding
@@ -96795,6 +96803,10 @@ paths:
                     - the campaign uses campaign budget optimization with no end date (Reddit then takes no end date on its ad groups)
                     - `null` would outlive a campaign budget campaign that ends
                     - `null` is sent for an ad group with a lifetime budget
+                rawTargeting:
+                  type: object
+                  additionalProperties: true
+                  description: "Meta only. Meta-native targeting keys (snake_case, as GET /v1/ads/{adId} returns them) layered over the ad set's live targeting before `targeting` is applied. Each key replaces its live counterpart and `null` removes it."
                 targeting:
                   allOf: [{ $ref: '#/components/schemas/TargetingSpec' }]
                   description: |
