@@ -91,3 +91,32 @@ def test_integer_or_string_enum_union_is_int_or_literal(generator):
 )
 def test_other_mixed_unions_keep_the_str_fallback(generator, branches):
     assert generator.get_python_type({"anyOf": branches}, required=False, spec=SPEC)[0] == "str | None"
+
+
+@pytest.mark.parametrize(
+    ("branches", "expected"),
+    [
+        # advantageAudience: the API takes true/false or 0/1.
+        ([{"type": "integer", "enum": [0, 1]}, {"type": "boolean"}], "bool | Literal[0, 1] | None"),
+        ([{"type": "boolean"}, {"type": "integer"}, {"type": "null"}], "bool | int | None"),
+        # flow_json / mailerContact: a JSON object or a string.
+        ([{"type": "object"}, {"type": "string"}], "dict[str, Any] | str | None"),
+        ([{"type": "string"}, {"type": "object"}, {"type": "null"}], "dict[str, Any] | str | None"),
+    ],
+)
+def test_bool_int_and_object_string_unions_keep_both_types(generator, branches, expected):
+    assert generator.get_python_type({"oneOf": branches}, required=False, spec=SPEC) == (expected, "None")
+
+
+@pytest.mark.parametrize(
+    "branches",
+    [
+        [{"type": "boolean"}, {"type": "integer"}, {"type": "string"}],
+        [{"type": "boolean"}, {"type": "number"}],
+        [{"type": "object"}, {"type": "string", "enum": ["a"]}],
+        [{"type": "object"}, {"type": "array", "items": {"type": "string"}}],
+        [{"type": "object"}, {"type": "string"}, {"type": "string"}],
+    ],
+)
+def test_neighbouring_mixed_unions_keep_the_str_fallback(generator, branches):
+    assert generator.get_python_type({"anyOf": branches}, required=False, spec=SPEC)[0] == "str | None"

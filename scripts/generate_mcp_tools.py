@@ -282,14 +282,21 @@ def _string_enum_literal(schema: dict[str, Any]) -> str | None:
     return f"Literal[{', '.join(repr(v) for v in values)}]"
 
 
-def _int_or_string_enum(schema: dict[str, Any], spec: dict[str, Any] | None) -> str | None:
-    """`int | Literal[...]` for `anyOf`/`oneOf: [integer, string enum]`, such
-    as Meta's `timeIncrement` (1-90 days per row, or monthly / all_days).
+def _mixed_union_type(schema: dict[str, Any], spec: dict[str, Any] | None) -> str | None:
+    """A Python union for the few mixed `anyOf`/`oneOf` shapes the API takes
+    in JSON bodies, which it does not coerce:
 
-    The `str` fallback for mixed unions broke these in JSON bodies, which the
-    API does not coerce: the tool rejected `7` and forwarded `"7"` as a
-    string, which the API answered with a 400. Pydantic's lax mode still turns
-    `"7"` into `7`. Only this exact shape is handled; None otherwise.
+      - integer + string enums -> `int | Literal[...]` (Meta `timeIncrement`:
+        1-90 days, or monthly / all_days). As `str` the tool rejected `7` and
+        sent `"7"`, a 400. Pydantic's lax mode still turns `"7"` into `7`.
+      - boolean + integer -> `bool | int`, or `bool | Literal[0, 1]` when the
+        integer branch is an enum (`advantageAudience`). As `str` the tool
+        rejected `true`.
+      - object + string -> `dict[str, Any] | str` (`flow_json`: a Flow JSON
+        object or its JSON text).
+
+    Pydantic's smart union keeps `True` a bool, `1` an int and a dict a dict.
+    None for any other shape, which keeps the `str` fallback.
     """
     for combinator in ("anyOf", "oneOf"):
         branches = schema.get(combinator)
@@ -297,15 +304,24 @@ def _int_or_string_enum(schema: dict[str, Any], spec: dict[str, Any] | None) -> 
             continue
         resolved = [_resolve_schema(b, spec) for b in branches]
         resolved = [b for b in resolved if isinstance(b, dict) and b.get("type") != "null"]
-        integers = [b for b in resolved if b.get("type") == "integer" and not b.get("enum")]
-        strings = [b for b in resolved if b.get("type") == "string"]
-        if len(integers) != 1 or not strings or len(integers) + len(strings) != len(resolved):
-            return None
-        literals = [_string_enum_literal(b) for b in strings]
-        if not all(literals):
-            return None
-        merged = list(dict.fromkeys(v for b in strings for v in b["enum"] if v is not None))
-        return f"int | Literal[{', '.join(repr(v) for v in merged)}]"
+        by_type: dict[str, list[dict[str, Any]]] = {}
+        for b in resolved:
+            by_type.setdefault(str(b.get("type")), []).append(b)
+        shape = set(by_type)
+        if shape == {"integer", "string"}:
+            integers, strings = by_type["integer"], by_type["string"]
+            if len(integers) != 1 or integers[0].get("enum") or not all(_string_enum_literal(b) for b in strings):
+                return None
+            merged = list(dict.fromkeys(v for b in strings for v in b["enum"] if v is not None))
+            return f"int | Literal[{', '.join(repr(v) for v in merged)}]"
+        if shape == {"boolean", "integer"} and len(resolved) == 2:
+            values = [v for v in by_type["integer"][0].get("enum") or [] if v is not None]
+            if values and all(isinstance(v, int) and not isinstance(v, bool) for v in values):
+                return f"bool | Literal[{', '.join(repr(v) for v in values)}]"
+            return "bool | int"
+        if shape == {"object", "string"} and len(resolved) == 2 and not by_type["string"][0].get("enum"):
+            return "dict[str, Any] | str"
+        return None
     return None
 
 
@@ -428,8 +444,8 @@ def get_python_type(
     elif schema_type == "object":
         type_str = "dict[str, Any] | None"
         default_str = "None"
-    elif int_or_enum := _int_or_string_enum(schema, spec):
-        type_str = int_or_enum if required else f"{int_or_enum} | None"
+    elif mixed := _mixed_union_type(schema, spec):
+        type_str = mixed if required else f"{mixed} | None"
         default_str = "" if required else "None"
     else:
         # Fallback for schemas we couldn't classify (mixed-type oneOf,
