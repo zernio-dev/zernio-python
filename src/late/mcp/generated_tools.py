@@ -6376,6 +6376,83 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="List Meta saved audiences",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def ad_audiences_list_meta_saved_audiences(
+        account_id: str, ad_account_id: str, limit: int = 25, after: str | None = None
+    ) -> str:
+        """List Meta saved audiences
+
+        Lists the saved audiences of a Meta ad account, read live from Meta (`GET /act_X/saved_audiences`).
+
+        These are Meta's own saved audiences, the ones made in Ads Manager, not the Zernio
+        `saved_targeting` audiences of `/v1/ads/audiences`. Meta's Marketing API exposes saved
+        audiences read-only: they are created, edited and deleted in Ads Manager.
+
+        To target an ad set at a saved audience, send its `targeting` as `rawTargeting` on
+        `POST /v1/ads/create`.
+
+        Platforms: meta
+
+        Args:
+            account_id: Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token. (required)
+            ad_account_id: Meta ad account id (act_<n>). (required)
+            limit: Rows per page
+            after: Cursor from paging.after of the previous page."""
+        client = _get_client()
+        try:
+            response = client.ad_audiences.list_meta_saved_audiences(
+                account_id=account_id,
+                ad_account_id=ad_account_id,
+                limit=limit,
+                after=after,
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Read a Meta saved audience",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def ad_audiences_get_meta_saved_audience(
+        saved_audience_id: str, account_id: str, ad_account_id: str
+    ) -> str:
+        """Read a Meta saved audience
+
+        Reads one saved audience of a Meta ad account, including the targeting spec it holds.
+
+        Meta's SavedAudience node does not say which ad account owns it, so the audience is
+        looked up in the named ad account's `GET /act_X/saved_audiences` (up to 1,000 saved
+        audiences). An id that is not on that ad account answers 404.
+
+        Platforms: meta
+
+        Args:
+            saved_audience_id: Meta saved audience id. (required)
+            account_id: Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token. (required)
+            ad_account_id: Meta ad account id (act_<n>) that holds the saved audience. (required)"""
+        client = _get_client()
+        try:
+            response = client.ad_audiences.get_meta_saved_audience(
+                saved_audience_id=saved_audience_id,
+                account_id=account_id,
+                ad_account_id=ad_account_id,
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="List custom audiences",
             readOnlyHint=True,
             destructiveHint=False,
@@ -62328,7 +62405,15 @@ TOOL_OAUTH_SCOPES: dict[str, tuple[str, ...]] = {
         "ads:read",
         "ads:write",
     ),
+    "ad_audiences_get_meta_saved_audience": (
+        "ads:read",
+        "ads:write",
+    ),
     "ad_audiences_list_ad_audiences": (
+        "ads:read",
+        "ads:write",
+    ),
+    "ad_audiences_list_meta_saved_audiences": (
         "ads:read",
         "ads:write",
     ),

@@ -99,6 +99,39 @@ class AdAudiencesResource:
 
         return self._build_body({to_camel(k): v for k, v in kwargs.items()})
 
+    def list_meta_saved_audiences(
+        self,
+        account_id: str,
+        ad_account_id: str,
+        *,
+        limit: int | None = 25,
+        after: str | None = None,
+    ) -> dict[str, Any]:
+        """List Meta saved audiences"""
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "limit": limit,
+                "after": after,
+            }
+        )
+        return self._client._get("/v1/ads/saved-audiences", params=params)
+
+    def get_meta_saved_audience(
+        self, saved_audience_id: str, account_id: str, ad_account_id: str
+    ) -> dict[str, Any]:
+        """Read a Meta saved audience"""
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+            }
+        )
+        return self._client._get(
+            f"/v1/ads/saved-audiences/{saved_audience_id}", params=params
+        )
+
     def list_ad_audiences(
         self,
         account_id: str,
@@ -199,6 +232,39 @@ class AdAudiencesResource:
         )
         return self._client._post(
             f"/v1/ads/audiences/{audience_id}/companies", data=payload
+        )
+
+    async def alist_meta_saved_audiences(
+        self,
+        account_id: str,
+        ad_account_id: str,
+        *,
+        limit: int | None = 25,
+        after: str | None = None,
+    ) -> dict[str, Any]:
+        """List Meta saved audiences (async)"""
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "limit": limit,
+                "after": after,
+            }
+        )
+        return await self._client._aget("/v1/ads/saved-audiences", params=params)
+
+    async def aget_meta_saved_audience(
+        self, saved_audience_id: str, account_id: str, ad_account_id: str
+    ) -> dict[str, Any]:
+        """Read a Meta saved audience (async)"""
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+            }
+        )
+        return await self._client._aget(
+            f"/v1/ads/saved-audiences/{saved_audience_id}", params=params
         )
 
     async def alist_ad_audiences(

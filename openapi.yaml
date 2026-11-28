@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.867.0"
+  version: "1.868.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -22167,6 +22167,26 @@ components:
           maxItems: 4
           items: { $ref: '#/components/schemas/ValueRuleCriterion' }
           description: "All criteria on a rule must match for the rule to fire."
+    MetaSavedAudience:
+      type: object
+      description: "A Meta saved audience (Meta's SavedAudience node), read live from Meta."
+      properties:
+        id: { type: string, description: "Meta saved audience id." }
+        name: { type: [string, "null"] }
+        description: { type: [string, "null"] }
+        approximateCountLowerBound: { type: [integer, "null"], description: "Meta's estimated lower bound on reach." }
+        approximateCountUpperBound: { type: [integer, "null"], description: "Meta's estimated upper bound on reach." }
+        runStatus: { type: [string, "null"], description: "Meta's run_status: whether the saved audience is active or deleted." }
+        sentenceLines:
+          type: array
+          description: "Meta's human-readable targeting summary lines, passed through as Meta returns them."
+          items: {}
+        targeting:
+          type: [object, "null"]
+          additionalProperties: true
+          description: "The Meta targeting spec saved in the audience, in Meta's own snake_case shape. Send it as `rawTargeting` on `POST /v1/ads/create` to target an ad set at this audience."
+        createdAt: { type: [string, "null"], description: "Meta's time_created." }
+        updatedAt: { type: [string, "null"], description: "Meta's time_updated." }
     ValueRuleSet:
       type: object
       additionalProperties: false
@@ -103167,6 +103187,90 @@ paths:
         '400': { description: "Invalid input, the creative is in use, or Meta rejected the delete" }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '501': { description: Only supported on Meta (facebook/instagram) }
+
+  /v1/ads/saved-audiences:
+    get:
+      x-resource-group: "ads"
+      x-oauth-scopes: ["ads:write", "ads:read"]
+      operationId: listMetaSavedAudiences
+      tags: ["Ad Audiences"]
+      x-platforms: ["meta"]
+      summary: List Meta saved audiences
+      description: |-
+        Lists the saved audiences of a Meta ad account, read live from Meta (`GET /act_X/saved_audiences`).
+
+        These are Meta's own saved audiences, the ones made in Ads Manager, not the Zernio
+        `saved_targeting` audiences of `/v1/ads/audiences`. Meta's Marketing API exposes saved
+        audiences read-only: they are created, edited and deleted in Ads Manager.
+
+        To target an ad set at a saved audience, send its `targeting` as `rawTargeting` on
+        `POST /v1/ads/create`.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: accountId, in: query, required: true, schema: { type: string }, description: "Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token." }
+        - { name: adAccountId, in: query, required: true, schema: { type: string }, description: "Meta ad account id (act_<n>)." }
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 25 }, description: Rows per page }
+        - { name: after, in: query, schema: { type: string }, description: "Cursor from paging.after of the previous page." }
+      responses:
+        '200':
+          description: Saved audiences
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  adAccountId: { type: string }
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/MetaSavedAudience' }
+                  paging:
+                    type: object
+                    properties:
+                      after: { type: [string, "null"], description: "Cursor for the next page; null on the last page." }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/AdAccountNotSelected' }
+        '404': { $ref: '#/components/responses/AccountUnavailable' }
+        '409': { $ref: '#/components/responses/AccountConnectionRequired' }
+        '501': { description: "Only supported on Meta ad accounts (facebook/instagram)." }
+
+  /v1/ads/saved-audiences/{savedAudienceId}:
+    get:
+      x-resource-group: "ads"
+      x-oauth-scopes: ["ads:write", "ads:read"]
+      operationId: getMetaSavedAudience
+      tags: ["Ad Audiences"]
+      x-platforms: ["meta"]
+      summary: Read a Meta saved audience
+      description: |-
+        Reads one saved audience of a Meta ad account, including the targeting spec it holds.
+
+        Meta's SavedAudience node does not say which ad account owns it, so the audience is
+        looked up in the named ad account's `GET /act_X/saved_audiences` (up to 1,000 saved
+        audiences). An id that is not on that ad account answers 404.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: savedAudienceId, in: path, required: true, schema: { type: string, pattern: '^\d+$' }, description: "Meta saved audience id." }
+        - { name: accountId, in: query, required: true, schema: { type: string }, description: "Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token." }
+        - { name: adAccountId, in: query, required: true, schema: { type: string }, description: "Meta ad account id (act_<n>) that holds the saved audience." }
+      responses:
+        '200':
+          description: Saved audience
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  adAccountId: { type: string }
+                  savedAudience: { $ref: '#/components/schemas/MetaSavedAudience' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/AdAccountNotSelected' }
+        '404': { description: "The connection is unavailable, or the saved audience is not on this ad account (`resource_not_found`)." }
+        '409': { $ref: '#/components/responses/AccountConnectionRequired' }
+        '501': { description: "Only supported on Meta ad accounts (facebook/instagram)." }
 
   /v1/ads/value-rule-sets:
     get:

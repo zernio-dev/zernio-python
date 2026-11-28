@@ -610,8 +610,10 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | Method | Description |
 |--------|-------------|
 | `ad_audiences.list_ad_audiences()` | List custom audiences |
+| `ad_audiences.list_meta_saved_audiences()` | List Meta saved audiences |
 | `ad_audiences.create_ad_audience()` | Create custom audience |
 | `ad_audiences.get_ad_audience()` | Get audience details |
+| `ad_audiences.get_meta_saved_audience()` | Read a Meta saved audience |
 | `ad_audiences.update_ad_audience()` | Update an audience |
 | `ad_audiences.delete_ad_audience()` | Delete custom audience |
 | `ad_audiences.add_users_to_ad_audience()` | Add users to audience |
