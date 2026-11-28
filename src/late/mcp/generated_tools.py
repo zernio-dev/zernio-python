@@ -45418,6 +45418,7 @@ def register_generated_tools(mcp, _get_client):
         saved_targeting_id: str | None = None,
         targeting: dict[str, Any] | None = None,
         raw_targeting: dict[str, Any] | None = None,
+        meta_saved_audience_id: str | None = None,
         special_ad_categories: list[
             Literal[
                 "HOUSING",
@@ -45611,6 +45612,9 @@ def register_generated_tools(mcp, _get_client):
         Flat fields you also send are layered on top and win per key.
 
         With rawTargeting present the US geo and `advantage_audience: 0` defaults are not injected, so include `targeting_automation` in it (or send `advantageAudience`), as Meta requires it on create.
+                meta_saved_audience_id: The id of a Meta saved audience on `adAccountId` (made in Ads Manager, listed by `GET /v1/ads/saved-audiences`). Its targeting is read live from Meta and used as `rawTargeting` for the new ad set, so flat targeting fields merge on top of it exactly as they do on `rawTargeting`.
+
+        Returns 404 when the id is not on the ad account, 400 `mutually_exclusive_fields` with `rawTargeting` or `savedTargetingId`, and 400 with `adSetId` (an existing ad set keeps its targeting). Meta requires `targeting_automation` on create: send `advantageAudience` when the saved audience does not carry it.
                 special_ad_categories: Meta special ad categories on the new campaign.
                 special_ad_category_country: Countries the special ad category applies to. Requires specialAdCategories.
                 advantage_audience: Meta's Advantage+ audience expansion. `0` or `false` (default) keeps
@@ -45770,6 +45774,7 @@ def register_generated_tools(mcp, _get_client):
             "saved_targeting_id": saved_targeting_id,
             "targeting": targeting,
             "raw_targeting": raw_targeting,
+            "meta_saved_audience_id": meta_saved_audience_id,
             "special_ad_categories": special_ad_categories,
             "special_ad_category_country": special_ad_category_country,
             "advantage_audience": advantage_audience,
@@ -45854,6 +45859,7 @@ def register_generated_tools(mcp, _get_client):
                 saved_targeting_id=saved_targeting_id,
                 targeting=targeting,
                 raw_targeting=raw_targeting,
+                meta_saved_audience_id=meta_saved_audience_id,
                 special_ad_categories=special_ad_categories,
                 special_ad_category_country=special_ad_category_country,
                 advantage_audience=advantage_audience,
@@ -45979,6 +45985,7 @@ def register_generated_tools(mcp, _get_client):
         saved_targeting_id: str | None = None,
         targeting: dict[str, Any] | None = None,
         raw_targeting: dict[str, Any] | None = None,
+        meta_saved_audience_id: str | None = None,
         special_ad_categories: list[
             Literal[
                 "HOUSING",
@@ -46159,6 +46166,9 @@ def register_generated_tools(mcp, _get_client):
         Flat fields you also send are layered on top and win per key.
 
         With rawTargeting present the US geo and `advantage_audience: 0` defaults are not injected, so include `targeting_automation` in it (or send `advantageAudience`), as Meta requires it on create.
+                meta_saved_audience_id: The id of a Meta saved audience on `adAccountId` (made in Ads Manager, listed by `GET /v1/ads/saved-audiences`). Its targeting is read live from Meta and used as `rawTargeting` for the new ad set, so flat targeting fields merge on top of it exactly as they do on `rawTargeting`.
+
+        Returns 404 when the id is not on the ad account, 400 `mutually_exclusive_fields` with `rawTargeting` or `savedTargetingId`, and 400 with `adSetId` (an existing ad set keeps its targeting). Meta requires `targeting_automation` on create: send `advantageAudience` when the saved audience does not carry it.
                 special_ad_categories: Meta special ad categories on the new campaign.
                 special_ad_category_country: Countries the special ad category applies to. Requires specialAdCategories.
                 advantage_audience: Meta's Advantage+ audience expansion. `0` or `false` (default) keeps
@@ -46295,6 +46305,7 @@ def register_generated_tools(mcp, _get_client):
             "saved_targeting_id": saved_targeting_id,
             "targeting": targeting,
             "raw_targeting": raw_targeting,
+            "meta_saved_audience_id": meta_saved_audience_id,
             "special_ad_categories": special_ad_categories,
             "special_ad_category_country": special_ad_category_country,
             "advantage_audience": advantage_audience,
@@ -46375,6 +46386,7 @@ def register_generated_tools(mcp, _get_client):
                 saved_targeting_id=saved_targeting_id,
                 targeting=targeting,
                 raw_targeting=raw_targeting,
+                meta_saved_audience_id=meta_saved_audience_id,
                 special_ad_categories=special_ad_categories,
                 special_ad_category_country=special_ad_category_country,
                 advantage_audience=advantage_audience,
@@ -46492,6 +46504,7 @@ def register_generated_tools(mcp, _get_client):
         saved_targeting_id: str | None = None,
         targeting: dict[str, Any] | None = None,
         raw_targeting: dict[str, Any] | None = None,
+        meta_saved_audience_id: str | None = None,
         special_ad_categories: list[
             Literal[
                 "HOUSING",
@@ -46668,6 +46681,9 @@ def register_generated_tools(mcp, _get_client):
         Flat fields you also send are layered on top and win per key.
 
         With rawTargeting present the US geo and `advantage_audience: 0` defaults are not injected, so include `targeting_automation` in it (or send `advantageAudience`), as Meta requires it on create.
+                meta_saved_audience_id: The id of a Meta saved audience on `adAccountId` (made in Ads Manager, listed by `GET /v1/ads/saved-audiences`). Its targeting is read live from Meta and used as `rawTargeting` for the new ad set, so flat targeting fields merge on top of it exactly as they do on `rawTargeting`.
+
+        Returns 404 when the id is not on the ad account, 400 `mutually_exclusive_fields` with `rawTargeting` or `savedTargetingId`, and 400 with `adSetId` (an existing ad set keeps its targeting). Meta requires `targeting_automation` on create: send `advantageAudience` when the saved audience does not carry it.
                 special_ad_categories: Meta special ad categories on the new campaign.
                 special_ad_category_country: Countries the special ad category applies to. Requires specialAdCategories.
                 advantage_audience: Meta's Advantage+ audience expansion. `0` or `false` (default) keeps
@@ -46802,6 +46818,7 @@ def register_generated_tools(mcp, _get_client):
             "saved_targeting_id": saved_targeting_id,
             "targeting": targeting,
             "raw_targeting": raw_targeting,
+            "meta_saved_audience_id": meta_saved_audience_id,
             "special_ad_categories": special_ad_categories,
             "special_ad_category_country": special_ad_category_country,
             "advantage_audience": advantage_audience,
@@ -46880,6 +46897,7 @@ def register_generated_tools(mcp, _get_client):
                 saved_targeting_id=saved_targeting_id,
                 targeting=targeting,
                 raw_targeting=raw_targeting,
+                meta_saved_audience_id=meta_saved_audience_id,
                 special_ad_categories=special_ad_categories,
                 special_ad_category_country=special_ad_category_country,
                 advantage_audience=advantage_audience,

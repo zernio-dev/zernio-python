@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.869.0"
+  version: "1.870.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -6838,6 +6838,13 @@ components:
             Flat fields you also send are layered on top and win per key.
 
             With rawTargeting present the US geo and `advantage_audience: 0` defaults are not injected, so include `targeting_automation` in it (or send `advantageAudience`), as Meta requires it on create.
+        metaSavedAudienceId:
+          type: string
+          pattern: '^\d+$'
+          description: |
+            The id of a Meta saved audience on `adAccountId` (made in Ads Manager, listed by `GET /v1/ads/saved-audiences`). Its targeting is read live from Meta and used as `rawTargeting` for the new ad set, so flat targeting fields merge on top of it exactly as they do on `rawTargeting`.
+
+            Returns 404 when the id is not on the ad account, 400 `mutually_exclusive_fields` with `rawTargeting` or `savedTargetingId`, and 400 with `adSetId` (an existing ad set keeps its targeting). Meta requires `targeting_automation` on create: send `advantageAudience` when the saved audience does not carry it.
         specialAdCategories:
           type: array
           items: { type: string, enum: [HOUSING, EMPLOYMENT, CREDIT, ISSUES_ELECTIONS_POLITICS, FINANCIAL_PRODUCTS_SERVICES, ONLINE_GAMBLING_AND_GAMING] }
