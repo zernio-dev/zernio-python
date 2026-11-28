@@ -505,6 +505,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 ### Account Settings
 | Method | Description |
 |--------|-------------|
+| `account_settings.list_facebook_blocked_users()` | List the people blocked on a Facebook Page |
 | `account_settings.get_facebook_page_info()` | Get a Facebook Page's public info |
 | `account_settings.get_instagram_ice_breakers()` | Get IG ice breakers |
 | `account_settings.get_messenger_get_started()` | Get FB Get Started button |
@@ -520,12 +521,14 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `account_settings.delete_messenger_ice_breakers()` | Delete FB ice breakers |
 | `account_settings.delete_messenger_menu()` | Delete persistent menu |
 | `account_settings.delete_telegram_commands()` | Delete TG bot commands |
+| `account_settings.block_facebook_user()` | Block a person on a Facebook Page |
 | `account_settings.set_instagram_ice_breakers()` | Set IG ice breakers |
 | `account_settings.set_messenger_get_started()` | Set FB Get Started button |
 | `account_settings.set_messenger_greeting()` | Set FB greeting text |
 | `account_settings.set_messenger_ice_breakers()` | Set FB ice breakers |
 | `account_settings.set_messenger_menu()` | Set persistent menu |
 | `account_settings.set_telegram_commands()` | Set TG bot commands |
+| `account_settings.unblock_facebook_user()` | Unblock a person on a Facebook Page |
 
 ### Ad Accounts
 | Method | Description |

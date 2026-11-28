@@ -282,6 +282,101 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="List the people blocked on a Facebook Page",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def account_settings_list_facebook_blocked_users(
+        account_id: str, limit: int = 25, cursor: str | None = None
+    ) -> str:
+        """List the people blocked on a Facebook Page
+
+        Returns the people blocked on the Page selected on a `facebook` account, as Meta
+        returns them from the Page's `blocked` edge.
+
+        Cursor-paginated: pass `nextCursor` from the previous response as `cursor` to read
+        the next page. `nextCursor` is null when there are no more pages.
+
+        Args:
+            account_id: The ID of a connected Facebook account. (required)
+            limit: Page size.
+            cursor: The `nextCursor` of the previous page."""
+        client = _get_client()
+        try:
+            response = client.account_settings.list_facebook_blocked_users(
+                account_id=account_id, limit=limit, cursor=cursor
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Block a person on a Facebook Page",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def account_settings_block_facebook_user(
+        account_id: str, psid: str | None = None, user_id: str | None = None
+    ) -> str:
+        """Block a person on a Facebook Page
+
+        Blocks one person on the Page selected on a `facebook` account. Send `psid` for a
+        Messenger contact (the participant id of a Facebook inbox conversation) or `userId`
+        for a page-scoped user id or a Page id, never both.
+
+        `blocked` is Meta's answer for the id. Meta refuses to block someone again too soon
+        after unblocking them, and caps how many people a Page can block: both come back
+        as `platform_api_error`.
+
+        Args:
+            account_id: The ID of a connected Facebook account. (required)
+            psid: Page-scoped id of a Messenger contact, the `platformUserId` of a Facebook inbox conversation participant.
+            user_id: A page-scoped Facebook user id or a Page id."""
+        client = _get_client()
+        try:
+            response = client.account_settings.block_facebook_user(
+                account_id=account_id, psid=psid, user_id=user_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Unblock a person on a Facebook Page",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def account_settings_unblock_facebook_user(
+        account_id: str, psid: str | None = None, user_id: str | None = None
+    ) -> str:
+        """Unblock a person on a Facebook Page
+
+        Unblocks one person on the Page selected on a `facebook` account. Pass `psid` for a
+        Messenger contact or `userId` for a page-scoped user id or a Page id, never both.
+
+        Args:
+            account_id: The ID of a connected Facebook account. (required)
+            psid: Page-scoped id of a Messenger contact. Set this or `userId`.
+            user_id: A page-scoped Facebook user id or a Page id. Set this or `psid`."""
+        client = _get_client()
+        try:
+            response = client.account_settings.unblock_facebook_user(
+                account_id=account_id, psid=psid, user_id=user_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="Get persistent menu",
             readOnlyHint=True,
             destructiveHint=False,
@@ -61865,6 +61960,7 @@ TOOL_OAUTH_SCOPES: dict[str, tuple[str, ...]] = {
         "accounts:write",
     ),
     "account_groups_update_account_group": ("accounts:write",),
+    "account_settings_block_facebook_user": ("accounts:write",),
     "account_settings_delete_instagram_ice_breakers": ("accounts:write",),
     "account_settings_delete_messenger_get_started": ("accounts:write",),
     "account_settings_delete_messenger_greeting": ("accounts:write",),
@@ -61903,12 +61999,17 @@ TOOL_OAUTH_SCOPES: dict[str, tuple[str, ...]] = {
         "accounts:read",
         "accounts:write",
     ),
+    "account_settings_list_facebook_blocked_users": (
+        "accounts:read",
+        "accounts:write",
+    ),
     "account_settings_set_instagram_ice_breakers": ("accounts:write",),
     "account_settings_set_messenger_get_started": ("accounts:write",),
     "account_settings_set_messenger_greeting": ("accounts:write",),
     "account_settings_set_messenger_ice_breakers": ("accounts:write",),
     "account_settings_set_messenger_menu": ("accounts:write",),
     "account_settings_set_telegram_commands": ("accounts:write",),
+    "account_settings_unblock_facebook_user": ("accounts:write",),
     "account_settings_update_facebook_page_info": ("accounts:write",),
     "accounts_batch_get_google_business_reviews": ("messaging:write",),
     "accounts_create_google_business_media": ("accounts:write",),

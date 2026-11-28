@@ -129,6 +129,48 @@ class AccountSettingsResource:
             f"/v1/accounts/{account_id}/facebook-page-info", data=payload
         )
 
+    def list_facebook_blocked_users(
+        self, account_id: str, *, limit: int | None = 25, cursor: str | None = None
+    ) -> dict[str, Any]:
+        """List the people blocked on a Facebook Page"""
+        params = self._build_query(
+            {
+                "limit": limit,
+                "cursor": cursor,
+            }
+        )
+        return self._client._get(
+            f"/v1/accounts/{account_id}/facebook-blocked-users", params=params
+        )
+
+    def block_facebook_user(
+        self, account_id: str, *, psid: str | None = None, user_id: str | None = None
+    ) -> dict[str, Any]:
+        """Block a person on a Facebook Page"""
+        payload = self._build_body(
+            {
+                "psid": psid,
+                "userId": user_id,
+            }
+        )
+        return self._client._post(
+            f"/v1/accounts/{account_id}/facebook-blocked-users", data=payload
+        )
+
+    def unblock_facebook_user(
+        self, account_id: str, *, psid: str | None = None, user_id: str | None = None
+    ) -> dict[str, Any]:
+        """Unblock a person on a Facebook Page"""
+        params = self._build_query(
+            {
+                "psid": psid,
+                "userId": user_id,
+            }
+        )
+        return self._client._delete(
+            f"/v1/accounts/{account_id}/facebook-blocked-users", params=params
+        )
+
     def get_messenger_menu(self, account_id: str) -> dict[str, Any]:
         """Get persistent menu"""
         return self._client._get(f"/v1/accounts/{account_id}/messenger-menu")
@@ -287,6 +329,48 @@ class AccountSettingsResource:
         )
         return await self._client._apatch(
             f"/v1/accounts/{account_id}/facebook-page-info", data=payload
+        )
+
+    async def alist_facebook_blocked_users(
+        self, account_id: str, *, limit: int | None = 25, cursor: str | None = None
+    ) -> dict[str, Any]:
+        """List the people blocked on a Facebook Page (async)"""
+        params = self._build_query(
+            {
+                "limit": limit,
+                "cursor": cursor,
+            }
+        )
+        return await self._client._aget(
+            f"/v1/accounts/{account_id}/facebook-blocked-users", params=params
+        )
+
+    async def ablock_facebook_user(
+        self, account_id: str, *, psid: str | None = None, user_id: str | None = None
+    ) -> dict[str, Any]:
+        """Block a person on a Facebook Page (async)"""
+        payload = self._build_body(
+            {
+                "psid": psid,
+                "userId": user_id,
+            }
+        )
+        return await self._client._apost(
+            f"/v1/accounts/{account_id}/facebook-blocked-users", data=payload
+        )
+
+    async def aunblock_facebook_user(
+        self, account_id: str, *, psid: str | None = None, user_id: str | None = None
+    ) -> dict[str, Any]:
+        """Unblock a person on a Facebook Page (async)"""
+        params = self._build_query(
+            {
+                "psid": psid,
+                "userId": user_id,
+            }
+        )
+        return await self._client._adelete(
+            f"/v1/accounts/{account_id}/facebook-blocked-users", params=params
         )
 
     async def aget_messenger_menu(self, account_id: str) -> dict[str, Any]:

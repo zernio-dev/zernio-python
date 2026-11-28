@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.866.0"
+  version: "1.867.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -16420,6 +16420,21 @@ components:
             id: { type: string }
             name: { type: [string, "null"] }
 
+    FacebookBlockedUser:
+      type: object
+      required: [id, name]
+      properties:
+        id: { type: string, description: The id Meta lists the blocked person under. }
+        name: { type: [string, "null"], description: 'The person''s name, null when Meta leaves it out.' }
+    FacebookBlockedUserRef:
+      type: object
+      additionalProperties: false
+      minProperties: 1
+      maxProperties: 1
+      description: Exactly one of `psid` or `userId`.
+      properties:
+        psid: { type: string, pattern: '^\d{1,30}$', description: 'Page-scoped id of a Messenger contact, the `platformUserId` of a Facebook inbox conversation participant.' }
+        userId: { type: string, pattern: '^\d{1,30}$', description: A page-scoped Facebook user id or a Page id. }
     FacebookPageInfo:
       type: object
       required: [about, description, website, phone, emails, hours]
@@ -64094,6 +64109,202 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+
+  /v1/accounts/{accountId}/facebook-blocked-users:
+    get:
+      x-resource-group: "accounts"
+      x-oauth-scopes: ["accounts:read", "accounts:write"]
+      operationId: listFacebookBlockedUsers
+      tags: [Account Settings]
+      summary: List the people blocked on a Facebook Page
+      description: |
+        Returns the people blocked on the Page selected on a `facebook` account, as Meta
+        returns them from the Page's `blocked` edge.
+
+        Cursor-paginated: pass `nextCursor` from the previous response as `cursor` to read
+        the next page. `nextCursor` is null when there are no more pages.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          description: The ID of a connected Facebook account.
+          schema: { type: string }
+        - name: limit
+          in: query
+          required: false
+          description: Page size.
+          schema: { type: integer, minimum: 1, maximum: 100, default: 25 }
+        - name: cursor
+          in: query
+          required: false
+          description: The `nextCursor` of the previous page.
+          schema: { type: string, minLength: 1, maxLength: 1000 }
+      responses:
+        '200':
+          description: One page of blocked people
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, nextCursor]
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/FacebookBlockedUser' }
+                  nextCursor:
+                    type: [string, "null"]
+                    description: Pass as `cursor` to read the next page. Null when there are no more pages.
+        '400':
+          x-summary: "A parameter is invalid, the account is on another platform, or Meta refused the request."
+          description: 'Invalid accountId, limit or cursor, an account on another platform (`platform_not_supported`), or Meta refused the request (`platform_api_error`).'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403':
+          x-summary: "The API key is not scoped to this account, or Meta refused the read."
+          description: 'The API key is not scoped to this account, or Meta refused the read (`platform_api_error`, for example a missing Page permission).'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '404':
+          description: The account is not reachable by the caller (`account_not_found`).
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '409': { $ref: '#/components/responses/AccountConnectionRequired' }
+        '422':
+          x-summary: "The connection has no Facebook Page selected: select a Page or reconnect the account."
+          description: The connection has no Facebook Page selected (`linked_account_required`). Select a Page or reconnect the account.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+    post:
+      x-resource-group: "accounts"
+      x-oauth-scopes: ["accounts:write"]
+      operationId: blockFacebookUser
+      tags: [Account Settings]
+      summary: Block a person on a Facebook Page
+      description: |
+        Blocks one person on the Page selected on a `facebook` account. Send `psid` for a
+        Messenger contact (the participant id of a Facebook inbox conversation) or `userId`
+        for a page-scoped user id or a Page id, never both.
+
+        `blocked` is Meta's answer for the id. Meta refuses to block someone again too soon
+        after unblocking them, and caps how many people a Page can block: both come back
+        as `platform_api_error`.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          description: The ID of a connected Facebook account.
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/FacebookBlockedUserRef' }
+            example:
+              psid: '6123456789012345'
+      responses:
+        '200':
+          description: Meta's answer for the person
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [id, blocked]
+                properties:
+                  id: { type: string, description: The id that was sent. }
+                  blocked: { type: boolean, description: True when Meta blocked the person. }
+        '400':
+          x-summary: "The body is invalid, the account is on another platform, or Meta refused the block."
+          description: 'Invalid accountId, a body without exactly one numeric `psid` or `userId`, an account on another platform (`platform_not_supported`), or Meta refused the block (`platform_api_error`, for example a reblock too soon after unblocking or the block limit).'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403':
+          x-summary: "The API key is not scoped to this account, or Meta refused the block."
+          description: 'The API key is not scoped to this account, or Meta refused the block (`platform_api_error`, for example a missing Page permission).'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '404':
+          description: The account is not reachable by the caller (`account_not_found`).
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '409': { $ref: '#/components/responses/AccountConnectionRequired' }
+        '422':
+          x-summary: "The connection has no Facebook Page selected: select a Page or reconnect the account."
+          description: The connection has no Facebook Page selected (`linked_account_required`). Select a Page or reconnect the account.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+    delete:
+      x-resource-group: "accounts"
+      x-oauth-scopes: ["accounts:write"]
+      operationId: unblockFacebookUser
+      tags: [Account Settings]
+      summary: Unblock a person on a Facebook Page
+      description: |
+        Unblocks one person on the Page selected on a `facebook` account. Pass `psid` for a
+        Messenger contact or `userId` for a page-scoped user id or a Page id, never both.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          description: The ID of a connected Facebook account.
+          schema: { type: string }
+        - name: psid
+          in: query
+          required: false
+          description: Page-scoped id of a Messenger contact. Set this or `userId`.
+          schema: { type: string, pattern: '^\d{1,30}$' }
+        - name: userId
+          in: query
+          required: false
+          description: A page-scoped Facebook user id or a Page id. Set this or `psid`.
+          schema: { type: string, pattern: '^\d{1,30}$' }
+      responses:
+        '200':
+          description: Meta's answer for the person
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [id, unblocked]
+                properties:
+                  id: { type: string, description: The id that was sent. }
+                  unblocked: { type: boolean, description: True when Meta unblocked the person. }
+        '400':
+          x-summary: "The query is invalid, the account is on another platform, or Meta refused the unblock."
+          description: 'Invalid accountId, not exactly one numeric `psid` or `userId`, an account on another platform (`platform_not_supported`), or Meta refused the unblock (`platform_api_error`, for example an unknown id).'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403':
+          description: The API key is not scoped to this account.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '404':
+          description: The account is not reachable by the caller (`account_not_found`).
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '409': { $ref: '#/components/responses/AccountConnectionRequired' }
+        '422':
+          x-summary: "The connection has no Facebook Page selected: select a Page or reconnect the account."
+          description: The connection has no Facebook Page selected (`linked_account_required`). Select a Page or reconnect the account.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
 
   /v1/accounts/{accountId}/reddit-subreddits:
     get:
