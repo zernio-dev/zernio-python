@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.868.0"
+  version: "1.869.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -109226,6 +109226,13 @@ paths:
                     ID of a `saved_targeting` audience (created via POST /v1/ads/audiences). When set, its stored
                     TargetingSpec is expanded as the base targeting; inline fields on this body merge on top. Lets you
                     reuse a named targeting preset without re-sending every field.
+                metaSavedAudienceId:
+                  type: string
+                  pattern: '^\d+$'
+                  description: |
+                    Meta only. The id of a Meta saved audience on `adAccountId` (made in Ads Manager, listed by `GET /v1/ads/saved-audiences`). Its targeting is read live from Meta and used as `rawTargeting` for the new ad set, so camelCase targeting fields merge on top of it exactly as they do on `rawTargeting`.
+
+                    Returns 404 when the id is not on the ad account, 400 `mutually_exclusive_fields` with `rawTargeting` or `savedTargetingId`, and 400 on another network or with `adSetId` (an existing ad set keeps its targeting). Meta requires `targeting_automation` on create: send `advantageAudience` when the saved audience does not carry it.
                 rawTargeting:
                   type: object
                   additionalProperties: true

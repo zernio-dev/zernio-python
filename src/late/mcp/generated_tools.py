@@ -12246,6 +12246,7 @@ def register_generated_tools(mcp, _get_client):
         languages: list[str] | None = None,
         placements: dict[str, Any] | None = None,
         saved_targeting_id: str | None = None,
+        meta_saved_audience_id: str | None = None,
         raw_targeting: dict[str, Any] | None = None,
         special_ad_categories: list[
             Literal[
@@ -12700,6 +12701,9 @@ def register_generated_tools(mcp, _get_client):
                 saved_targeting_id: ID of a `saved_targeting` audience (created via POST /v1/ads/audiences). When set, its stored
         TargetingSpec is expanded as the base targeting; inline fields on this body merge on top. Lets you
         reuse a named targeting preset without re-sending every field.
+                meta_saved_audience_id: Meta only. The id of a Meta saved audience on `adAccountId` (made in Ads Manager, listed by `GET /v1/ads/saved-audiences`). Its targeting is read live from Meta and used as `rawTargeting` for the new ad set, so camelCase targeting fields merge on top of it exactly as they do on `rawTargeting`.
+
+        Returns 404 when the id is not on the ad account, 400 `mutually_exclusive_fields` with `rawTargeting` or `savedTargetingId`, and 400 on another network or with `adSetId` (an existing ad set keeps its targeting). Meta requires `targeting_automation` on create: send `advantageAudience` when the saved audience does not carry it.
                 raw_targeting: Meta only. A raw Meta-native targeting spec (snake_case: `geo_locations`, `age_min`, `excluded_custom_audiences`, `flexible_spec`, `targeting_automation`, `user_os`, `wireless_carrier`, business places, etc.), the exact shape `GET /v1/ads/{adId}` returns for external ads.
 
         Sent alone, it reaches the ad set VERBATIM (the path for cloning a campaign's targeting exactly). Meta validates it and surfaces any errors.
@@ -12997,6 +13001,7 @@ def register_generated_tools(mcp, _get_client):
             "languages": languages,
             "placements": placements,
             "saved_targeting_id": saved_targeting_id,
+            "meta_saved_audience_id": meta_saved_audience_id,
             "raw_targeting": raw_targeting,
             "special_ad_categories": special_ad_categories,
             "special_ad_category_country": special_ad_category_country,
@@ -13125,6 +13130,7 @@ def register_generated_tools(mcp, _get_client):
                 languages=languages,
                 placements=placements,
                 saved_targeting_id=saved_targeting_id,
+                meta_saved_audience_id=meta_saved_audience_id,
                 raw_targeting=raw_targeting,
                 special_ad_categories=special_ad_categories,
                 special_ad_category_country=special_ad_category_country,
